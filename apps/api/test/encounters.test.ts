@@ -96,7 +96,7 @@ describe('GET /patients/:patientId/encounters', () => {
 
     const res = await app.request(`/api/patients/${patientId}/encounters`);
     expect(res.status).toBe(200);
-    const body: any[] = await res.json();
+    const body = (await res.json()) as any[];
     expect(body.map((e) => e.id)).toEqual([late.id, middle.id, early.id]);
   });
 

@@ -75,7 +75,7 @@ describe('GET /api/patients', () => {
 
     const res = await app.request('/api/patients');
     expect(res.status).toBe(200);
-    const body: any[] = await res.json();
+    const body = (await res.json()) as any[];
     expect(body.some((p) => p.id === created.id)).toBe(false);
 
     const all = await app.request('/api/patients?status=all');
@@ -88,7 +88,7 @@ describe('GET /api/patients', () => {
     const query = name.toLowerCase().slice(0, 8);
     const res = await app.request(`/api/patients?q=${encodeURIComponent(query)}`);
     expect(res.status).toBe(200);
-    const body: any[] = await res.json();
+    const body = (await res.json()) as any[];
     expect(body.some((p) => p.fullName === name)).toBe(true);
   });
 
@@ -104,7 +104,7 @@ describe('GET /api/patients', () => {
 
     const res = await app.request('/api/patients?status=archived');
     expect(res.status).toBe(200);
-    const body: any[] = await res.json();
+    const body = (await res.json()) as any[];
     expect(body.some((p) => p.id === created.id)).toBe(true);
   });
 
@@ -112,7 +112,7 @@ describe('GET /api/patients', () => {
     await registerPatient(name);
     const res = await app.request('/api/patients?q=');
     expect(res.status).toBe(200);
-    const body: any[] = await res.json();
+    const body = (await res.json()) as any[];
     expect(body.some((p) => p.id)).toBe(true);
   });
 });
