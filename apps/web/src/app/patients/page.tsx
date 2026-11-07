@@ -1,51 +1,48 @@
-// Foundation smoke page (O-001). Verifies frontend -> Hono API connectivity
-// and that seeded demo data is reachable through the real HTTP path.
-// Replaced by the patient registry (O-003 slice 2).
+// Patient registry page (UI_SPEC §3.1). Server component performs the
+// initial SSR fetch (no caching); the client component owns search/filter
+// afterwards. If the API is down on first load we render an explicit error
+// state instead of stale or empty data.
 
 import type { PatientSummary } from '@nexus-med/contracts';
 
+import { PatientRegistry } from '../../components/patients/registry';
+import { ErrorBanner } from '../../components/primitives';
 import { apiGet } from '../../lib/api/server';
 
 export const dynamic = 'force-dynamic';
 
-export default async function PatientsPage() {
-  let connected = false;
-  let patientCount: number | null = null;
-  let apiError: string | null = null;
+export default async function PatientsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string; status?: string }>;
+}) {
+  const params = await searchParams;
+  const q = params.q?.trim();
+  const status =
+    params.status === 'archived' || params.status === 'all' ? params.status : 'active';
 
+  let initial: PatientSummary[] | null = null;
+  let error: string | null = null;
   try {
-    const patients = await apiGet<PatientSummary[]>('/api/patients?status=all');
-    connected = true;
-    patientCount = patients.length;
-  } catch (error) {
-    apiError = error instanceof Error ? error.message : 'Error desconocido';
+    const query = new URLSearchParams();
+    if (q) query.set('q', q);
+    query.set('status', status);
+    initial = await apiGet<PatientSummary[]>(`/api/patients?${query.toString()}`);
+  } catch (err) {
+    error = err instanceof Error ? err.message : 'Error desconocido';
   }
 
-  return (
-    <>
-      <div className="page-head">
-        <h1>Registro de pacientes</h1>
-      </div>
-      <p className="muted">
-        Vista técnica de fundación — el registro completo llega con la implementación del diseño (O-003).
-      </p>
+  if (error !== null || initial === null) {
+    return (
+      <>
+        <h1>Pacientes</h1>
+        <ErrorBanner
+          message={error ?? 'No se pudo cargar el listado de pacientes.'}
+          retryHref="/patients"
+        />
+      </>
+    );
+  }
 
-      <div className="card">
-        {connected ? (
-          <>
-            <span className="badge badge-edited">API conectada</span>
-            <p>
-              {patientCount !== null
-                ? `${patientCount} registros de pacientes disponibles (datos de demostración).`
-                : 'La API responde, pero no fue posible leer los pacientes.'}
-            </p>
-          </>
-        ) : (
-          <div className="error-banner">
-            <span>API sin conexión: {apiError ?? 'No se pudo contactar la API.'}</span>
-          </div>
-        )}
-      </div>
-    </>
-  );
+  return <PatientRegistry initialPatients={initial} />;
 }
