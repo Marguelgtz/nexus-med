@@ -2,11 +2,12 @@
 // Root development orchestrator: `npm run dev`
 //
 // 1. Prepares the local environment (data directory).
-// 2. Applies pending migrations (`prisma migrate deploy`).
-// 3. Runs the idempotent demo seed (no-op when records already exist).
-// 4. Starts the Hono API and waits for its health endpoint.
-// 5. Starts the Next.js frontend.
-// 6. Reports failures clearly; Ctrl+C stops both services.
+// 2. Generates the Prisma client (gitignored — required after any fresh clone).
+// 3. Applies pending migrations (`prisma migrate deploy`).
+// 4. Runs the idempotent demo seed (no-op when records already exist).
+// 5. Starts the Hono API and waits for its health endpoint.
+// 6. Starts the Next.js frontend.
+// 7. Reports failures clearly; Ctrl+C stops both services.
 //
 // Local data persists across restarts in .local/data/medical.db.
 
@@ -61,6 +62,9 @@ function shutdown(code = 0) {
 async function main() {
   console.log('[dev] Preparando entorno local…');
   mkdirSync(path.join(rootDir, '.local', 'data'), { recursive: true });
+
+  console.log('[dev] Generando cliente de Prisma…');
+  await run('npx', ['prisma', 'generate']);
 
   console.log('[dev] Aplicando migraciones…');
   await run('npx', ['prisma', 'migrate', 'deploy']);
