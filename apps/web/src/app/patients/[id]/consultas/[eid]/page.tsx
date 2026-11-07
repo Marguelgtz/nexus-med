@@ -42,7 +42,7 @@ export default async function EncounterPage({
         isArchived={patient.isArchived}
         backHref={`/patients/${patient.id}`}
       />
-      <Detail patientId={patient.id} encounter={encounter} />
+      <Detail encounter={encounter} />
     </>
   );
 }

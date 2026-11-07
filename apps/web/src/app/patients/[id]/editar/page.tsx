@@ -36,7 +36,6 @@ export default async function EditPatientPage({ params }: { params: Promise<{ id
 
       <EditPatientForm
         patientId={patient.id}
-        fullName={patient.fullName}
         initial={{
           fullName: patient.fullName,
           dateOfBirth: patient.dateOfBirth,

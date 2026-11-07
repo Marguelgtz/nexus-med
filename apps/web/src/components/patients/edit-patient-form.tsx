@@ -17,11 +17,9 @@ type FieldErrors = Record<string, string[]>;
 
 export function EditPatientForm({
   patientId,
-  fullName,
   initial,
 }: {
   patientId: string;
-  fullName: string;
   initial: {
     fullName: string;
     dateOfBirth: string | null;

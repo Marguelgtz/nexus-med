@@ -4,7 +4,7 @@
 // list states. SSR provides the initial list; the client re-fetches on
 // search/filter changes through the typed API client.
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 
@@ -53,6 +53,8 @@ export function PatientRegistry({ initialPatients }: { initialPatients: PatientS
   const [error, setError] = useState<string | null>(null);
   const [hasSearched, setHasSearched] = useState(false);
   const requestSeq = useRef(0);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const statusRef = useRef(status);
 
   // Keep the URL shareable: mirror q/status into the query string (replaced,
   // so the back button never walks through keystrokes).
@@ -89,37 +91,34 @@ export function PatientRegistry({ initialPatients }: { initialPatients: PatientS
     [],
   );
 
-  // Debounced re-fetch when the debounced query or the tab changes.
-  const [debouncedQuery, setDebouncedQuery] = useState(query);
-  useEffect(() => {
-    const timer = setTimeout(() => setDebouncedQuery(query), SEARCH_DEBOUNCE_MS);
-    return () => clearTimeout(timer);
-  }, [query]);
-
-  useEffect(() => {
-    if (!hasSearched && !debouncedQuery && status === 'active') return;
-    void fetchList(debouncedQuery, status);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [debouncedQuery, status]);
-
+  // Fetches are triggered by the user's own events (search keystrokes,
+  // tab change, clear) — never by an effect. SSR already provided the
+  // list for the initial (possibly URL-parameterized) view.
   const onSearch = (value: string) => {
     setQuery(value);
     syncUrl(value, status);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(
+      () => void fetchList(value, statusRef.current),
+      SEARCH_DEBOUNCE_MS,
+    );
   };
 
   const onTab = (s: (typeof TABS)[number]['value']) => {
+    statusRef.current = s;
     setStatus(s);
     syncUrl(query, s);
+    void fetchList(query, s);
   };
 
   const onClear = () => {
     setQuery('');
-    setDebouncedQuery('');
     syncUrl('', status);
+    void fetchList('', statusRef.current);
   };
 
   const noResults = !loading && error === null && patients.length === 0;
-  const hasSearch = debouncedQuery.trim().length > 0;
+  const hasSearch = query.trim().length > 0;
 
   return (
     <>
@@ -166,12 +165,12 @@ export function PatientRegistry({ initialPatients }: { initialPatients: PatientS
       ) : noResults ? (
         hasSearch ? (
           <div className="empty-state">
-            <div className="empty-title">Sin resultados para “{debouncedQuery.trim()}”</div>
+            <div className="empty-title">Sin resultados para “{query.trim()}”</div>
             <div className="btn-row" style={{ justifyContent: 'center' }}>
               <button type="button" className="btn btn-ghost" onClick={onClear}>
                 Limpiar búsqueda
               </button>
-              <Link href={`/patients/new?nombre=${encodeURIComponent(debouncedQuery.trim())}`} className="btn btn-primary">
+              <Link href={`/patients/new?nombre=${encodeURIComponent(query.trim())}`} className="btn btn-primary">
                 Crear un paciente con este nombre
               </Link>
             </div>

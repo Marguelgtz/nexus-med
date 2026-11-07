@@ -52,13 +52,7 @@ function toValues(e: EncounterDetail): SectionValues {
   };
 }
 
-export function EncounterDetail({
-  patientId,
-  encounter,
-}: {
-  patientId: string;
-  encounter: EncounterDetail;
-}) {
+export function EncounterDetail({ encounter }: { encounter: EncounterDetail }) {
   const router = useRouter();
   const [editing, setEditing] = useState(false);
   const [values, setValues] = useState<SectionValues>(() => toValues(encounter));

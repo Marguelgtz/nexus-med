@@ -1,6 +1,7 @@
 // Small helpers shared by API test files.
 
 import { createApp } from '../src/app';
+import type { PatientDetail } from '@nexus-med/contracts';
 
 export const app = createApp();
 
@@ -13,12 +14,12 @@ export function uniqueName(prefix = 'Paciente Prueba'): string {
 }
 
 /** Register a patient through the real API and return its detail. */
-export async function registerPatient(fullName: string): Promise<any> {
+export async function registerPatient(fullName: string): Promise<PatientDetail> {
   const res = await app.request('/api/patients', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify({ fullName }),
   });
   if (res.status !== 201) throw new Error(`registerPatient failed: ${res.status}`);
-  return res.json();
+  return (await res.json()) as PatientDetail;
 }
