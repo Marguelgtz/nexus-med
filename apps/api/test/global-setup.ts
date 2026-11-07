@@ -9,7 +9,7 @@ import { execFileSync } from 'node:child_process';
 import { mkdirSync, rmSync } from 'node:fs';
 import path from 'node:path';
 
-const repoRoot = path.resolve(import.meta.dirname, '..', '..');
+const repoRoot = path.resolve(import.meta.dirname, '..', '..', '..');
 const testDataDir = path.join(repoRoot, '.local', 'test');
 
 export default function setup(): void {

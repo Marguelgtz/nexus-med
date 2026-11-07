@@ -40,7 +40,11 @@ describe('POST /patients/:patientId/encounters', () => {
     expect(res.status).toBe(201);
     const body: any = await res.json();
     expect(body.patientId).toBe(patientId);
-    expect(body.occurredAt).toBe('2026-11-01T10:30:00.000-06:00');
+    // Timestamps are normalized to ISO 8601 (UTC); compare instants, not
+    // raw strings, so the assertion holds regardless of the API's offset.
+    expect(new Date(body.occurredAt).getTime()).toBe(
+      Date.parse('2026-11-01T10:30:00.000-06:00'),
+    );
     expect(body.reason).toBe('Consulta de prueba');
     expect(body.id).toBeTruthy();
   });
