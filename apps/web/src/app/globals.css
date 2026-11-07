@@ -709,6 +709,10 @@ a.timeline-item:hover {
   margin-bottom: var(--s-5);
 }
 
+.note-section:last-child {
+  margin-bottom: 0;
+}
+
 .note-section .section-label {
   font-size: 12px;
   font-weight: 600;
@@ -720,6 +724,25 @@ a.timeline-item:hover {
 
 .note-section .section-body {
   white-space: pre-wrap;
+}
+
+/* Consultation detail header (UI_SPEC §3.7) */
+.encounter-head {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  flex-wrap: wrap;
+}
+
+/* Timeline entries are links to the consultation detail (UI_SPEC §3.3/§3.7) */
+.timeline-item a.timeline-link {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+}
+
+.timeline-item:hover {
+  background: var(--surface-hover);
 }
 
 /* ── Responsive (UI_SPEC §5.6) ─────────────────────────────────────────── */
