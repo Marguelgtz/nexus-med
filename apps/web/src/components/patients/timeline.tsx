@@ -9,25 +9,36 @@ import type { EncounterSummary } from '@nexus-med/contracts';
 
 import { formatDateTime, wasEdited } from '../../lib/format';
 
-function TimelineEntry({ encounter }: { encounter: EncounterSummary }) {
+function TimelineEntry({
+  patientId,
+  encounter,
+}: {
+  patientId: string;
+  encounter: EncounterSummary;
+}) {
   const edited = wasEdited(encounter.occurredAt, encounter.updatedAt);
   return (
     <li className="timeline-item">
-      <div className="when">
-        {formatDateTime(encounter.occurredAt)}
-        <span className="reason" style={{ marginLeft: 12, fontWeight: 400 }}>
-          {encounter.reason ? (
-            <>
-              Motivo: {encounter.reason}
-            </>
-          ) : (
-            <em className="faint">Sin motivo</em>
-          )}
-        </span>
-      </div>
-      {edited ? (
-        <div className="edited">Actualizada {formatDateTime(encounter.updatedAt)}</div>
-      ) : null}
+      <Link
+        className="timeline-link"
+        href={`/patients/${patientId}/consultas/${encounter.id}`}
+      >
+        <div className="when">
+          {formatDateTime(encounter.occurredAt)}
+          <span className="reason" style={{ marginLeft: 12, fontWeight: 400 }}>
+            {encounter.reason ? (
+              <>
+                Motivo: {encounter.reason}
+              </>
+            ) : (
+              <em className="faint">Sin motivo</em>
+            )}
+          </span>
+        </div>
+        {edited ? (
+          <div className="edited">Actualizada {formatDateTime(encounter.updatedAt)}</div>
+        ) : null}
+      </Link>
     </li>
   );
 }
@@ -59,7 +70,7 @@ export function Timeline({
       ) : (
         <ul className="timeline">
           {encounters.map((e) => (
-            <TimelineEntry key={e.id} encounter={e} />
+            <TimelineEntry key={e.id} patientId={patientId} encounter={e} />
           ))}
         </ul>
       )}

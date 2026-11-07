@@ -134,10 +134,8 @@ export function ConsultationForm({ patientId }: { patientId: string }) {
 
     setSaving(true);
     try {
-      await createEncounter(patientId, candidate);
-      // Detail page lands with the next slice; for now the overview's
-      // timeline shows the saved consultation at the top.
-      router.push(`/patients/${patientId}`);
+      const created = await createEncounter(patientId, candidate);
+      router.push(`/patients/${patientId}/consultas/${created.id}`);
       router.refresh();
     } catch (err) {
       if (err instanceof ApiError && Object.keys(err.fieldErrors).length > 0) {
