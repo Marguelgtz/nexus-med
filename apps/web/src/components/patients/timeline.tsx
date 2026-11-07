@@ -16,7 +16,7 @@ function TimelineEntry({
   patientId: string;
   encounter: EncounterSummary;
 }) {
-  const edited = wasEdited(encounter.occurredAt, encounter.updatedAt);
+  const edited = wasEdited(encounter.createdAt, encounter.updatedAt);
   return (
     <li className="timeline-item">
       <Link

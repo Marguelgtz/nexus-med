@@ -60,7 +60,7 @@ export function EncounterDetail({ encounter }: { encounter: EncounterDetail }) {
   const [banner, setBanner] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
-  const edited = wasEdited(encounter.occurredAt, encounter.updatedAt);
+  const edited = wasEdited(encounter.createdAt, encounter.updatedAt);
 
   const startEditing = () => {
     setValues(toValues(encounter));

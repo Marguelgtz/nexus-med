@@ -49,9 +49,14 @@ export function formatAge(dateOfBirth: string | null): string | null {
   return String(age);
 }
 
-/** True when the note was edited after the consultation took place. */
-export function wasEdited(occurredAt: string, updatedAt: string): boolean {
-  const a = new Date(occurredAt).getTime();
+/**
+ * True when the note was edited after it was first created. Compares
+ * `updatedAt` against `createdAt` — never against `occurredAt`, which is
+ * when the consultation took place (a backdated consultation entered
+ * later was not "edited" merely because it was recorded late).
+ */
+export function wasEdited(createdAt: string, updatedAt: string): boolean {
+  const a = new Date(createdAt).getTime();
   const b = new Date(updatedAt).getTime();
   if (Number.isNaN(a) || Number.isNaN(b)) return false;
   return b - a > 60_000;
