@@ -1,0 +1,64 @@
+// Nexus Med — relational schema (local SQLite via Prisma ORM 7).
+// Source of truth for the local data model. See docs/DATA_MODEL.md.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../apps/api/src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// One person receiving care. The stable center of the clinical record.
+model Patient {
+  id                 String      @id @default(uuid())
+  fullName           String
+  // Date-only value stored as YYYY-MM-DD to avoid timezone shifts.
+  dateOfBirth        String?
+  phone              String?
+  email              String?
+  // Practice-specific identifier (optional).
+  externalIdentifier String?
+
+  // Medical background — current ongoing context, free text in the prototype.
+  // Blank means "not recorded", never a confirmed negative finding.
+  medicalConditions  String?
+  previousSurgeries  String?
+  allergies          String?
+  currentMedications String?
+
+  // Archiving keeps the record and its clinical history; never hard delete.
+  isArchived         Boolean     @default(false)
+  createdAt          DateTime    @default(now())
+  updatedAt          DateTime    @updatedAt
+
+  encounters         Encounter[]
+
+  @@index([fullName])
+  @@map("patients")
+}
+
+// One consultation belonging to exactly one patient.
+// Note content is attached to the encounter; it is never rewritten when the
+// patient's demographics or medical background change.
+model Encounter {
+  id                      String   @id
+  patientId               String
+  patient                 Patient  @relation(fields: [patientId], references: [id], onDelete: Restrict)
+  // When the consultation happened. Distinct from createdAt/updatedAt.
+  occurredAt              DateTime
+  reason                  String?
+  historyOfPresentIllness String?
+  relevantHistory         String?
+  physicalExamination     String?
+  assessment              String?
+  plan                    String?
+  followUp                String?
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+
+  @@index([patientId, occurredAt(sort: Desc)])
+  @@map("encounters")
+}
