@@ -56,35 +56,43 @@ type PrismaLike = {
     findUnique(args: { where: { id: string } }): Promise<{ id: string } | null>;
     create(args: { data: Record<string, unknown> }): Promise<unknown>;
   };
-  $transaction<T>(fn: () => Promise<T>): Promise<T>;
+  // Interactive transaction: the callback receives the tx client and every
+  // query MUST go through it to participate in the transaction (atomicity).
+  $transaction<T>(fn: (tx: PrismaLike) => Promise<T>): Promise<T>;
 };
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 
-async function loadFixture(): Promise<Fixture> {
-  const fixturePath = path.join(here, '..', 'docs', 'demo-dataset.json');
+const defaultFixturePath = path.join(here, '..', 'docs', 'demo-dataset.json');
+
+async function loadFixture(fixturePath: string = defaultFixturePath): Promise<Fixture> {
   const raw = await readFile(fixturePath, 'utf8');
   return JSON.parse(raw) as Fixture;
 }
 
 /**
  * Create any missing fixture records. Existing records — whether edited demo
- * records or user-created ones — are left untouched.
+ * records or user-created ones — are left untouched. All writes run through
+ * the interactive-transaction client, so a failure anywhere rolls back the
+ * whole seed instead of leaving partial data.
  */
-export async function idempotentSeed(prisma: PrismaLike): Promise<{
+export async function idempotentSeed(
+  prisma: PrismaLike,
+  options: { fixturePath?: string } = {},
+): Promise<{
   patientsCreated: number;
   encountersCreated: number;
 }> {
-  const fixture = await loadFixture();
+  const fixture = await loadFixture(options.fixturePath);
 
   let patientsCreated = 0;
   let encountersCreated = 0;
 
-  await prisma.$transaction(async () => {
+  await prisma.$transaction(async (tx) => {
     for (const p of fixture.patients) {
-      const existing = await prisma.patient.findUnique({ where: { id: p.id } });
+      const existing = await tx.patient.findUnique({ where: { id: p.id } });
       if (existing) continue;
-      await prisma.patient.create({
+      await tx.patient.create({
         data: {
           id: p.id,
           fullName: p.fullName,
@@ -105,12 +113,12 @@ export async function idempotentSeed(prisma: PrismaLike): Promise<{
     }
 
     for (const e of fixture.encounters) {
-      const existing = await prisma.encounter.findUnique({ where: { id: e.id } });
+      const existing = await tx.encounter.findUnique({ where: { id: e.id } });
       if (existing) continue;
       // occurredAt is preserved exactly from the fixture; creation timestamps
       // are deterministic (equal to the occurrence time) for seeded records.
       const occurredAt = new Date(e.occurredAt);
-      await prisma.encounter.create({
+      await tx.encounter.create({
         data: {
           id: e.id,
           patientId: e.patientId,

@@ -6,6 +6,7 @@
 
 import { execFileSync } from 'node:child_process';
 import { mkdirSync, rmSync } from 'node:fs';
+import { writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
@@ -103,5 +104,56 @@ describe('idempotent demo seed', () => {
     expect(await prisma.encounter.count()).toBe(10);
     const stillThere = await prisma.patient.findUnique({ where: { id: userPatient.id } });
     expect(stillThere?.phone).toBe('5551234567');
+  });
+});
+
+// Atomicity: a seed that fails midway must leave the database exactly as it
+// was — no partial patients or encounters from the failed transaction.
+describe('seed atomicity (rollback on failure)', () => {
+  const rollbackDbFile = path.join(repoRoot, '.local', 'test', 'seed.rollback.test.db');
+  const brokenFixturePath = path.join(repoRoot, '.local', 'test', 'rollback-fixture.json');
+
+  let rollbackPrisma: PrismaClient;
+
+  beforeAll(async () => {
+    rmSync(rollbackDbFile, { force: true });
+    // Two valid patients + one valid encounter (created first), then an
+    // encounter referencing a nonexistent patient → FK violation mid-run.
+    const brokenFixture = {
+      patients: [
+        { id: 'rb-patient-a', fullName: 'Paciente A', dateOfBirth: '1990-01-01', phone: null, email: null, externalIdentifier: null, medicalConditions: null, previousSurgeries: null, allergies: null, currentMedications: null, isArchived: false },
+        { id: 'rb-patient-b', fullName: 'Paciente B', dateOfBirth: null, phone: null, email: null, externalIdentifier: null, medicalConditions: null, previousSurgeries: null, allergies: null, currentMedications: null, isArchived: false },
+      ],
+      encounters: [
+        { id: 'rb-encounter-ok', patientId: 'rb-patient-a', reason: 'válido', historyOfPresentIllness: null, relevantHistory: null, physicalExamination: null, assessment: null, plan: null, followUp: null, occurredAt: '2026-01-02T18:00:00.000Z' },
+        { id: 'rb-encounter-ghost', patientId: 'rb-patient-ghost', reason: 'viola FK', historyOfPresentIllness: null, relevantHistory: null, physicalExamination: null, assessment: null, plan: null, followUp: null, occurredAt: '2026-01-03T18:00:00.000Z' },
+      ],
+    };
+    await writeFile(brokenFixturePath, JSON.stringify(brokenFixture));
+
+    execFileSync('npx', ['prisma', 'migrate', 'deploy'], {
+      cwd: repoRoot,
+      stdio: 'pipe',
+      env: { ...process.env, DATABASE_URL: `file:${rollbackDbFile}` },
+    });
+    const adapter = new PrismaBetterSqlite3({ url: `file:${rollbackDbFile}` });
+    rollbackPrisma = new PrismaClient({ adapter });
+  });
+
+  afterAll(async () => {
+    await rollbackPrisma.$disconnect();
+    rmSync(brokenFixturePath, { force: true });
+    rmSync(rollbackDbFile, { force: true });
+  });
+
+  it('rolls back the whole seed when one write fails', async () => {
+    await expect(
+      idempotentSeed(rollbackPrisma, { fixturePath: brokenFixturePath }),
+    ).rejects.toThrow();
+
+    // The two patients and the valid encounter were created BEFORE the
+    // failing one — none of them may survive the rollback.
+    expect(await rollbackPrisma.patient.count()).toBe(0);
+    expect(await rollbackPrisma.encounter.count()).toBe(0);
   });
 });
