@@ -19,6 +19,50 @@ import { NotFoundError } from '../../shared/http/errors';
 const ENCOUNTER_NOT_FOUND = 'Consulta no encontrada';
 const PATIENT_NOT_FOUND = 'Paciente no encontrado';
 
+// Prisma rows carry Dates; the public contract carries ISO 8601 strings.
+// The services serialize at this boundary so API responses always match
+// @nexus-med/contracts.
+interface EncounterRow {
+  id: string;
+  patientId: string;
+  occurredAt: Date;
+  reason: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+function toSummary(row: EncounterRow): EncounterSummary {
+  return {
+    id: row.id,
+    patientId: row.patientId,
+    occurredAt: row.occurredAt.toISOString(),
+    reason: row.reason,
+    createdAt: row.createdAt.toISOString(),
+    updatedAt: row.updatedAt.toISOString(),
+  };
+}
+
+function toDetail(
+  row: EncounterRow & {
+    historyOfPresentIllness: string | null;
+    relevantHistory: string | null;
+    physicalExamination: string | null;
+    assessment: string | null;
+    plan: string | null;
+    followUp: string | null;
+  },
+): EncounterDetail {
+  return {
+    ...toSummary(row),
+    historyOfPresentIllness: row.historyOfPresentIllness,
+    relevantHistory: row.relevantHistory,
+    physicalExamination: row.physicalExamination,
+    assessment: row.assessment,
+    plan: row.plan,
+    followUp: row.followUp,
+  };
+}
+
 const summarySelect = {
   id: true,
   patientId: true,
@@ -38,11 +82,12 @@ async function requirePatient(patientId: string): Promise<void> {
 
 export async function listEncounters(patientId: string): Promise<EncounterSummary[]> {
   await requirePatient(patientId);
-  return prisma.encounter.findMany({
+  const rows = await prisma.encounter.findMany({
     where: { patientId },
     orderBy: [{ occurredAt: 'desc' }, { id: 'asc' }],
     select: summarySelect,
   });
+  return rows.map(toSummary);
 }
 
 export async function createEncounter(
@@ -50,15 +95,13 @@ export async function createEncounter(
   input: CreateEncounterInput,
 ): Promise<EncounterDetail> {
   await requirePatient(patientId);
-  return prisma.encounter.create({
-    data: { ...input, patientId },
-  });
+  return toDetail(await prisma.encounter.create({ data: { ...input, patientId } }));
 }
 
 export async function getEncounter(encounterId: string): Promise<EncounterDetail> {
   const encounter = await prisma.encounter.findUnique({ where: { id: encounterId } });
   if (!encounter) throw new NotFoundError(ENCOUNTER_NOT_FOUND);
-  return encounter;
+  return toDetail(encounter);
 }
 
 export async function updateEncounter(
@@ -67,5 +110,5 @@ export async function updateEncounter(
 ): Promise<EncounterDetail> {
   const existing = await prisma.encounter.findUnique({ where: { id: encounterId } });
   if (!existing) throw new NotFoundError(ENCOUNTER_NOT_FOUND);
-  return prisma.encounter.update({ where: { id: encounterId }, data: input });
+  return toDetail(await prisma.encounter.update({ where: { id: encounterId }, data: input }));
 }
