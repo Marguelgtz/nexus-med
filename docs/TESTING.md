@@ -1,13 +1,14 @@
 # Testing and Verification
 
-## Current verification setup (O-001)
+## Current verification setup
 
-Commands that exist and were executed during the foundation:
+Commands that exist and were executed during the foundation (O-001) and final quality pass (O-004):
 
 | Command | Scope |
 |---|---|
 | `npm run test -w apps/api` | 36 integration tests (vitest) against an isolated SQLite database: `test/global-setup.ts` applies the real committed migrations to `.local/test/` before each run. |
 | `npm run typecheck` | `tsc --noEmit` across all workspaces (contracts, api, web). |
+| `npm run lint` | ESLint 9 flat config (`eslint.config.mjs`) with `eslint-config-next` 16 (flat-native): covers all workspaces; generated artifacts (`prisma/`, `.next/`, `dist/`) and local data (`.local/`) ignored. Two documented relaxations: `no-explicit-any` off in `apps/api/test/**` (tests read raw HTTP bodies; the wire contract is enforced by the API's zod schemas and the typed client) and `no-html-link-for-pages` off (App Router project, no `pages/`). |
 | `npm run build -w apps/web` | Next.js 16 production build. |
 | `npm run dev` | One-command runtime; verified end-to-end (migrate → seed → API `/health` → SSR smoke page showing "API conectada" with 7 seeded records). |
 
@@ -22,7 +23,7 @@ Test coverage at foundation close (all passing, 2026-11-07):
 - Transactions: representative multi-write operation rolls back atomically through the local adapter.
 - `demo-patient-004` remains archived across seed runs.
 
-Frontend test coverage (smoke page only; product UI tests arrive with O-003 slices) and the destructive-reset confirmation path are the remaining gaps, tracked by their objectives.
+Frontend verification at MVP close: the O-003 vertical slices were verified end-to-end in a real browser (registry SSR + search/tabs/clear + URL sync; patient overview; create/edit demographics and background; new consultation; consultation detail with in-place edit). Automated frontend tests and the destructive-reset confirmation path remain tracked gaps for post-MVP work.
 
 ## Principles
 

@@ -4,7 +4,7 @@
 **Last updated:** 2026-11-07  
 **Owner:** Project owner  
 **Primary agent:** Hermes Agent  
-**Current implementation state:** O-001 database/API foundation and O-002 UX/UI specification are complete (spec: `docs/UI_SPEC.md`, reviewed against the verified API). O-003 (product implementation in vertical slices) is the active objective.
+**Current implementation state:** O-001 through O-004 are complete. The MVP is implemented end-to-end per `docs/UI_SPEC.md` and verified: 36/36 integration tests, clean typecheck/lint/build, browser-verified vertical slices, and a verified first-run demo with persistence across restarts. See `PROJECT_HISTORY.md` (2026-11-07 entries) for the closing evidence.
 
 ---
 
@@ -26,7 +26,7 @@ Do not duplicate the entire phase task catalog here. Reference task IDs where us
 
 ### Overall status
 
-**O-001 complete; O-002 UX/UI specification complete; O-003 (product implementation) is the active objective.** The monorepo contains a verified data layer (Prisma 7 + SQLite, committed migrations, idempotent seed), a Hono API with validation, DTOs, and consistent errors (36/36 integration tests), a minimal Next.js shell with a working SSR-to-Hono smoke page, a one-command local runtime (`npm run dev`, smoke-tested end-to-end), and an implementation-ready UI specification (`docs/UI_SPEC.md`). No product UI screens have been built yet.
+**O-001–O-004 complete: the local MVP is built and verified.** The monorepo contains a verified data layer (Prisma 7 + SQLite, committed migrations, idempotent seed), a Hono API with validation, DTOs, and consistent errors (36/36 integration tests), the full product UI per `UI_SPEC.md` (registry, patient overview + medical background, consultation creation, consultation detail + timeline, demographics edit), a one-command local runtime (`npm run dev`, first-run verified: fresh DB → migrate → seed → populated registry with demo banner), and persistence verified across restarts (edits and user-created records survive; seed stays idempotent). All checks green: typecheck, ESLint (flat config), tests, production build.
 
 ### Confirmed direction
 
@@ -115,7 +115,7 @@ Planned sub-objectives:
 **Dependency:** O-001 data/API foundation.  
 **Exit condition:** The owner can review the screen structure, core interactions, and visual direction before feature UI implementation begins.
 
-### O-003 — Product implementation in complete vertical slices — **ACTIVE**
+### O-003 — Product implementation in complete vertical slices — **COMPLETE (2026-11-07)**
 
 **Outcome:** The doctor can use the patient and encounter workflows through the designed Next.js interface, backed by Hono and SQLite.
 
@@ -130,13 +130,13 @@ Planned implementation slices:
 **Dependency:** O-002 UX/UI specification.  
 **Important:** O-001 does not freeze the database schema or API. During O-003, change Prisma models, migrations, Hono endpoints, validation, and contracts whenever real implementation or UX requirements justify it. Every such change must be deliberate, tested, migrated safely, and reflected in the relevant docs. Prefer vertical slices that include the UI, API, persistence, and tests needed for a complete user outcome.
 
-### O-004 — First-run demo and local reliability
+### O-004 — First-run demo and local reliability — **COMPLETE (2026-11-07)**
 
 **Outcome:** The app opens to a populated patient registry with a clear Spanish demo warning and preserves changes across restarts.
 
 Planned sub-objectives:
 1. Ensure the exact checked-in fixture is seeded on first startup.
-2. Redirect `/` to `/patients` and display `MODO DEMOSTRACIÓN — TODOS LOS DATOS SON FICTICIOS`.
+2. Redirect `/` to `/patients` and display `MODO DEMOSTRACIÓN — DATOS FICTICIOS` (canonical copy: `UI_SPEC.md`).
 3. Verify all 7 synthetic patients (6 active, 1 archived) and 9 encounters appear in the correct contexts.
 4. Verify idempotent startup, persistence, and preservation of edits/user-created records.
 5. Run the final end-to-end and offline-runtime checks.
@@ -158,7 +158,7 @@ Do not allow future Cloudflare/D1 transaction constraints, Google authentication
 
 ## 6. Next action
 
-Start O-003 slice 1: application shell — top bar, demo banner, context strip, tokens/`globals.css`, and shared UI primitives per `UI_SPEC.md` §5 (buttons, inputs, cards, badges, banners, skeletons, inline confirm, state matrix). Build slices 2–5 (registry, overview + background, consultation, encounter detail + timeline) as complete vertical slices: UI + typed client calls + server components + tests per slice, committing each slice in logical increments.
+Post-MVP (owner decides priority): candidate work in order of value — automated frontend tests (the O-003/O-004 verification was manual browser + API-level), destructive-reset UX hardening (interactive confirmation path exists in `scripts/db-reset.mjs` but the UI never triggers it), duplicate-name detection endpoint (currently a client-level notice only, per UI_SPEC §6.2), and any owner-requested refinements to the clinical screens. No objective is active until the owner names one.
 
 ## 7. Living update rules
 
