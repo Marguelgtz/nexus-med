@@ -66,6 +66,42 @@ describe('POST /api/patients', () => {
     const body: any = await res.json();
     expect(body.error.fieldErrors.dateOfBirth).toBeDefined();
   });
+
+  it('rejects a calendar-invalid date of birth (2025-02-30)', async () => {
+    const res = await app.request('/api/patients', {
+      method: 'POST',
+      headers: json,
+      body: JSON.stringify({ fullName: name, dateOfBirth: '2025-02-30' }),
+    });
+
+    expect(res.status).toBe(400);
+    const body: any = await res.json();
+    expect(body.error.fieldErrors.dateOfBirth).toBeDefined();
+  });
+
+  it('rejects a leap day in a non-leap year (2023-02-29)', async () => {
+    const res = await app.request('/api/patients', {
+      method: 'POST',
+      headers: json,
+      body: JSON.stringify({ fullName: name, dateOfBirth: '2023-02-29' }),
+    });
+
+    expect(res.status).toBe(400);
+    const body: any = await res.json();
+    expect(body.error.fieldErrors.dateOfBirth).toBeDefined();
+  });
+
+  it('accepts a leap day in a leap year (2024-02-29)', async () => {
+    const res = await app.request('/api/patients', {
+      method: 'POST',
+      headers: json,
+      body: JSON.stringify({ fullName: name, dateOfBirth: '2024-02-29' }),
+    });
+
+    expect(res.status).toBe(201);
+    const body: any = await res.json();
+    expect(body.dateOfBirth).toBe('2024-02-29');
+  });
 });
 
 describe('GET /api/patients', () => {
