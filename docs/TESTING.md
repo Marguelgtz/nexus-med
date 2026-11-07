@@ -1,5 +1,29 @@
 # Testing and Verification
 
+## Current verification setup (O-001)
+
+Commands that exist and were executed during the foundation:
+
+| Command | Scope |
+|---|---|
+| `npm run test -w apps/api` | 36 integration tests (vitest) against an isolated SQLite database: `test/global-setup.ts` applies the real committed migrations to `.local/test/` before each run. |
+| `npm run typecheck` | `tsc --noEmit` across all workspaces (contracts, api, web). |
+| `npm run build -w apps/web` | Next.js 16 production build. |
+| `npm run dev` | One-command runtime; verified end-to-end (migrate → seed → API `/health` → SSR smoke page showing "API conectada" with 7 seeded records). |
+
+Test coverage at foundation close (all passing, 2026-11-07):
+
+- Health response.
+- Patient create/list/search (case-insensitive name and identifier)/read/update demographics/update medical background/archive (non-destructive, idempotent); default list excludes archived; `?q=` empty means no filter.
+- Encounter create (for existing patient)/read/update; patient association cannot be reassigned via update; unknown patient/encounter IDs return `404`.
+- Timeline ordering by `occurredAt` descending with deterministic tie-break.
+- Validation: missing required fields, unknown fields (per-field `fieldErrors`), bad date formats; `400` with the contract envelope.
+- Seed: exact fixture IDs/counts (7 patients, 6 active, 1 archived; 9 encounters), idempotency (second run creates 0), preserved edits and user-created records, `demo-patient-003` has no encounters.
+- Transactions: representative multi-write operation rolls back atomically through the local adapter.
+- `demo-patient-004` remains archived across seed runs.
+
+Frontend test coverage (smoke page only; product UI tests arrive with O-003 slices) and the destructive-reset confirmation path are the remaining gaps, tracked by their objectives.
+
 ## Principles
 
 Testing follows the development sequence: verify the database and API foundation first, validate UX/UI against the agreed workflows, then verify the complete implementation in vertical slices. The API/data foundation must be independently testable before the frontend feature screens exist.

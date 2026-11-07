@@ -1,10 +1,10 @@
 # Living Action Plan — Medical Platform MVP
 
 **Document type:** Active execution state (living document)  
-**Last updated:** 2026-11-06  
+**Last updated:** 2026-11-07  
 **Owner:** Project owner  
 **Primary agent:** Hermes Agent  
-**Current implementation state:** Documentation starter prepared; application code has not been implemented.
+**Current implementation state:** O-001 database/API foundation complete and verified (36/36 API tests, typecheck clean, `npm run dev` smoke-tested end-to-end). O-002 (UX/UI design) is next.
 
 ---
 
@@ -26,11 +26,11 @@ Do not duplicate the entire phase task catalog here. Reference task IDs where us
 
 ### Overall status
 
-**Documentation prepared; implementation not started.** The starter contains product, workflow, architecture, data-model, security, planning, testing, and synthetic-fixture documents. It is not yet a runnable application.
+**O-001 complete; O-002 (UX/UI design) is the active objective.** The monorepo contains a verified data layer (Prisma 7 + SQLite, committed migrations, idempotent seed), a Hono API with validation, DTOs, and consistent errors (36/36 integration tests), a minimal Next.js shell with a working SSR-to-Hono smoke page, and a one-command local runtime (`npm run dev`, smoke-tested end-to-end). No product UI work has begun.
 
 ### Confirmed direction
 
-- One npm-workspaces monorepo with `apps/web` and `apps/api`; a narrow `packages/contracts` workspace is proposed for cross-app API DTOs/schemas and will be confirmed during O-001.
+- One npm-workspaces monorepo with `apps/web` and `apps/api`; the narrow `packages/contracts` workspace is confirmed and in use for shared DTOs/schemas.
 - `apps/api`: Hono + TypeScript on local Node.js; authoritative API, validation, domain behavior, and database access.
 - Persistence: local SQLite through Prisma ORM 7.
 - `apps/web`: Next.js App Router + TypeScript using request-time SSR / Server Components for clinical reads from Hono.
@@ -46,13 +46,13 @@ See `DECISIONS.md` and `ARCHITECTURE.md` for details.
 | Area | Current state | Evidence / note |
 |---|---|---|
 | Product definition | Prepared | `PRODUCT.md`, `WORKFLOWS.md` |
-| Architecture | Defined; implementation not started | `ARCHITECTURE.md` |
-| Initial data model | Proposed; needs implementation validation | `DATA_MODEL.md` |
-| API surface | Initial routes identified; contracts/tests not implemented | `ARCHITECTURE.md` |
-| Synthetic fixture | Prepared | `demo-dataset.json`, `DEMO_DATA.md` |
-| Database and API code | Not started | No Prisma schema/migrations or Hono domain implementation |
-| UX/UI specification | Not started; intentionally follows DB/API foundation | Planned deliverable: `docs/UI_SPEC.md` |
-| Frontend product workflows | Not started | No functional UI implementation |
+| Architecture | Implemented per `ARCHITECTURE.md` | Monorepo, Hono API, Prisma 7 + SQLite, SSR shell |
+| Data model | Implemented and migrated | `prisma/schema.prisma`, committed migration |
+| API surface | Implemented and tested | 36/36 integration tests; contract in `API_CONTRACT.md` |
+| Synthetic fixture | Seeded idempotently | 7 patients (6 active), 9 encounters via `prisma/seed.ts` |
+| Database and API code | Complete | Prisma boundary, domains, validation, errors, DTOs |
+| UX/UI specification | Not started; next objective | Planned deliverable: `docs/UI_SPEC.md` (O-002) |
+| Frontend product workflows | Not started | Minimal shell + connectivity smoke page only |
 
 ## 3. Active objective
 
@@ -60,22 +60,29 @@ See `DECISIONS.md` and `ARCHITECTURE.md` for details.
 
 **Desired outcome:** A reliable, tested local data model and Hono API for the core patient and encounter workflows, backed by Prisma 7 and SQLite, with deterministic synthetic data and a reproducible local startup. The frontend may be scaffolded as a minimal shell for runtime verification, but no product UX/UI work should begin yet.
 
-**Status:** Ready to start.  
-**Current sub-objective:** A-001 — Inspect the environment and repository; establish a safe Git baseline.  
-**Branch / PR state:** Not created. Use the branching and merge policy in `AGENTS.md`.
+**Status:** Complete (2026-11-07). All sub-objectives A-001 through A-008 are done and verified.  
+**Exit evidence:**
+
+- 36/36 API integration tests pass (`npm run test -w apps/api`) against an isolated migrated SQLite database: CRUD, search, archive, associations, timeline ordering, validation field errors, seed idempotency/edit preservation/fixture counts, and transaction rollback.
+- `npm run typecheck` is clean across all workspaces; `npm run build -w apps/web` (Next.js production build) succeeds.
+- `npm run dev` verified end-to-end: prepares `.local/data`, applies migrations, seeds idempotently (7 patients / 9 encounters), starts API (`/health` ok) and Next.js; the `/patients` smoke page reports "API conectada" and the 7 seeded records.
+- Local data persists across restarts in `.local/data/medical.db`; seed re-runs create nothing.
+- Only the minimal shell exists; no product UI has been implemented.
+
+**Branch / PR state:** Work committed on `main` in small logical increments; no remote push or PR created (no remote configured yet — see O-002 handoff for when to push).
 
 #### Sequential sub-objective stack
 
-| Order | ID | Sub-objective | Deliverable | Depends on | Acceptance / verification |
-|---:|---|---|---|---|---|
-| 1 | A-001 | Inspect environment and repository | Environment report and safe Git baseline | None | Node/npm and repository/Git state inspected; existing owner changes preserved; no destructive commands |
-| 2 | A-002 | Establish workspace and runtime skeleton | npm workspaces with `apps/api` and `apps/web`, plus `packages/contracts` if confirmed; organized source layout and minimal Next.js/Hono startup | A-001 | Both apps install and start independently; no product screens or UX assumptions added |
-| 3 | A-003 | Finalize and implement the initial relational model | Prisma 7 schema for Patient, medical background, and Encounter; reviewed SQLite migrations | A-002 | Relationships, nullability, indexes, date semantics, and archive behavior are verified against `DATA_MODEL.md` |
-| 4 | A-004 | Establish database operations and seed | Prisma client boundary, migration scripts, deterministic idempotent seed | A-003 | Clean DB migrates and seeds; repeat seed neither duplicates nor overwrites edits; local transaction rollback is tested |
-| 5 | A-005 | Build the Hono API foundation | Health route, patient/encounter query and command endpoints, server validation, consistent errors, explicit DTOs | A-003, A-004 | API supports core data workflows; no Prisma access outside API; invalid relationships are rejected |
-| 6 | A-006 | Verify API and data contracts | API integration/contract tests and documented request/response behavior | A-005 | CRUD/search/archive and encounter association behaviors pass; contract and tests agree; no UI dependency |
-| 7 | A-007 | Establish one-command local runtime | Root `npm run dev` migrates/seeds, starts API and minimal web shell, shuts down cleanly | A-002–A-006 | Local services run on loopback; API health and minimal SSR-to-Hono connectivity work; no remote service needed |
-| 8 | A-008 | Review and close data/API foundation | Verified evidence and optional PR/PR stack | A-001–A-007 | Foundation exit criteria pass; docs, migrations, tests, commit history, and PR state match reality |
+| Order | ID | Sub-objective | Deliverable | Depends on | Acceptance / verification | Status |
+|---:|---|---|---|---|---|---|
+| 1 | A-001 | Inspect environment and repository | Environment report and safe Git baseline | None | Node/npm and repository/Git state inspected; existing owner changes preserved; no destructive commands | Complete — Git baseline on `main` |
+| 2 | A-002 | Establish workspace and runtime skeleton | npm workspaces with `apps/api` and `apps/web`, plus `packages/contracts` if confirmed; organized source layout and minimal Next.js/Hono startup | A-001 | Both apps install and start independently; no product screens or UX assumptions added | Complete — workspaces + contracts confirmed |
+| 3 | A-003 | Finalize and implement the initial relational model | Prisma 7 schema for Patient, medical background, and Encounter; reviewed SQLite migrations | A-002 | Relationships, nullability, indexes, date semantics, and archive behavior are verified against `DATA_MODEL.md` | Complete — initial migration committed |
+| 4 | A-004 | Establish database operations and seed | Prisma client boundary, migration scripts, deterministic idempotent seed | A-003 | Clean DB migrates and seeds; repeat seed neither duplicates nor overwrites edits; local transaction rollback is tested | Complete — seed idempotency + rollback tested |
+| 5 | A-005 | Build the Hono API foundation | Health route, patient/encounter query and command endpoints, server validation, consistent errors, explicit DTOs | A-003, A-004 | API supports core data workflows; no Prisma access outside API; invalid relationships are rejected | Complete — `GET /health` + patient/encounter domains |
+| 6 | A-006 | Verify API and data contracts | API integration/contract tests and documented request/response behavior | A-005 | CRUD/search/archive and encounter association behaviors pass; contract and tests agree; no UI dependency | Complete — 36/36 tests |
+| 7 | A-007 | Establish one-command local runtime | Root `npm run dev` migrates/seeds, starts API and minimal web shell, shuts down cleanly | A-002–A-006 | Local services run on loopback; API health and minimal SSR-to-Hono connectivity work; no remote service needed | Complete — smoke-tested end-to-end |
+| 8 | A-008 | Review and close data/API foundation | Verified evidence and optional PR/PR stack | A-001–A-007 | Foundation exit criteria pass; docs, migrations, tests, commit history, and PR state match reality | Complete — docs reconciled (this update) |
 
 **O-001 exit criteria:**
 
@@ -135,19 +142,20 @@ Planned sub-objectives:
 
 ## 5. Current blockers and technical questions
 
-No product decision currently blocks O-001.
+No product decision currently blocks O-002.
 
-Verify during implementation:
-- Prisma 7, selected SQLite adapter, generated client, migrations, and Node.js compatibility.
-- Hono route validation and API contract tooling; choose one coherent approach rather than duplicating schemas.
-- Transaction rollback behavior through the actual local adapter.
-- Root script process orchestration and clean shutdown.
+Resolved during O-001 (implementation findings now recorded in `DECISIONS.md`):
+
+- Prisma 7 works locally with `@prisma/adapter-better-sqlite3` (export is `PrismaBetterSqlite3`), committed migrations, and transaction rollback (D-019).
+- Prisma 7 forbids `url` in the schema datasource and its config loader cannot import modules; `prisma.config.ts` is self-contained and assumes the repo root as cwd.
+- Validation uses the shared `packages/contracts` zod schemas in one place (no duplicated schemas); zod 4 reports strict-mode extras as one empty-path issue with a `keys` array, fanned out per field in `parseOrThrow`.
+- The dev orchestrator (`scripts/dev.mjs`) starts API then frontend, waits on `/health`, and tears both down on either failure; Ctrl+C stops both cleanly.
 
 Do not allow future Cloudflare/D1 transaction constraints, Google authentication, or file storage to block local work.
 
 ## 6. Next action
 
-Start A-001: inspect the opened repository, Node.js/npm versions, Git status, and existing files. Preserve owner work. If Git is not initialized, establish the documented baseline. Then execute A-002 and proceed through the O-001 sequence. Do not begin product UI design or implementation before the database/API foundation exits successfully.
+Start O-002: write `docs/UI_SPEC.md` from `WORKFLOWS.md` and the verified API capabilities (registry/search, patient overview, medical background, consultation form, encounter detail/edit, timeline, archive, demo/empty/error states). The spec must match what the API actually supports; where a screen needs data the API does not yet return, note it as a contract addition to make during O-003 (per D-017). Do not implement product screens before the spec exists.
 
 ## 7. Living update rules
 

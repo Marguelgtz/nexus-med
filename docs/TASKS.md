@@ -19,6 +19,8 @@ At a phase boundary, reconcile the work packages for the next phase using actual
 
 ## 2. Phase 0 — Database and API foundation
 
+**Phase status:** Completed 2026-11-07. All acceptance criteria below met; verified evidence is in `ACTION_PLAN.md` (O-001 exit evidence) and `TESTING.md`. No scope changes were required.
+
 **Objective O-001:** Establish a reliable local data model and Hono API for the core patient and encounter workflows before product UX/UI design begins.
 
 ### Work packages

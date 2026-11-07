@@ -20,28 +20,32 @@ Use `Confirmed`, `Proposed`, `Open`, or `Superseded`. Record the date and ration
 | D-012 | Professional commits, remote PRs, and selective merging are allowed under a restricted merge policy. | Pushes and remote PR creation are allowed when useful. PRs/stacks may remain open and ready to merge; keeping them open is optional. Only an exceptionally solid foundational/base PR may be merged autonomously after all acceptance criteria and checks pass with no blockers. Feature/UI PRs remain open unless the owner explicitly authorizes their merge. |
 | D-013 | Future API runtime target is Cloudflare Workers; D1 is a future database candidate. | Validate adapter, transactions, limits, and critical workflows before deployment. |
 | D-014 | First-run experience must include synthetic demo records. | Seven patients (six active, one archived) and nine encounters; demo banner and root redirect to `/patients`; seed is idempotent and does not overwrite local edits. |
-| D-015 | Local `npm run dev` is the intended single startup command. | It must migrate, explicitly seed, and start both services; this is a requirement, not yet an implemented feature. |
+| D-015 | Local `npm run dev` is the intended single startup command. | Implemented in O-001 (`scripts/dev.mjs`): migrates, explicitly seeds, and starts both services. |
 | D-016 | Development order is database/API foundation, then UX/UI design, then product implementation. | Establish and test the data model and Hono API before feature UI design. Produce and review `docs/UI_SPEC.md` before implementing product screens. |
 | D-017 | Database and API remain revisable during UX design and product implementation. | The initial foundation is not a freeze. Change Prisma schema through migrations and update Hono contracts, validation, tests, and docs when actual workflows justify it. |
+| D-018 | `packages/contracts` is the single owner of transport contracts (confirmed from P-010). | zod 4 schemas + DTO types for patients, encounters, list query, and the error envelope; consumed by both `apps/api` and `apps/web`. No Prisma types in the package. |
+| D-019 | Prisma 7 + `@prisma/adapter-better-sqlite3` verified for the local stack. | Adapter export is `PrismaBetterSqlite3`; migrations commit reproducibly; `prisma.$transaction` rollback verified by test. Prisma 7 forbids `url` in the schema datasource and the config loader cannot import modules, so `prisma.config.ts` is self-contained (assumes repo-root cwd). |
+| D-020 | Domain services serialize Prisma rows to contract DTOs at the service boundary. | Prisma returns `Date`; the wire contract is ISO 8601. Mapping in the services keeps API responses typed against `@nexus-med/contracts` and never exposes Prisma models. |
+| D-021 | Encounter ids are server-generated (client-side `@default(uuid())`). | Clients never supply encounter ids; no SQL-level default is needed, so no migration change. Patient ids likewise (uuid default). |
 
 ## Proposed implementation details
 
 | ID | Proposal | Rationale |
 |---|---|---|
-| P-001 | Use `@hono/node-server` locally. | Run the same Hono app behind a local Node.js HTTP service. |
-| P-002 | Use `@prisma/adapter-better-sqlite3` for local SQLite. | Documented Prisma 7 local SQLite driver adapter. |
-| P-003 | Use npm workspaces with `apps/web` and `apps/api`. | Two deployable applications in one manageable repository. |
+| P-001 | Use `@hono/node-server` locally. | Run the same Hono app behind a local Node.js HTTP service. Implemented in O-001. |
+| P-002 | Use `@prisma/adapter-better-sqlite3` for local SQLite. | Documented Prisma 7 local SQLite driver adapter. Implemented in O-001 (see D-019). |
+| P-003 | Use npm workspaces with `apps/web` and `apps/api`. | Two deployable applications in one manageable repository. Implemented in O-001. |
 | P-004 | Next.js Server Components call Hono over server-to-server HTTP for initial reads. | SSR while keeping Hono as the single data/business API. |
 | P-005 | Client Components call Hono through a small typed API client. | Keep all authoritative mutations and validation in Hono. |
 | P-006 | Use no-store behavior for patient/encounter data. | Clinical data is private and mutable; avoid static/shared caching. |
-| P-007 | Root `npm run dev` migrates, seeds, and starts both applications. | Immediate usable developer experience. |
+| P-007 | Root `npm run dev` migrates, seeds, and starts both applications. | Immediate usable developer experience. Implemented in O-001 (`scripts/dev.mjs`). |
 | P-008 | Future API Worker entry point uses Hono's Fetch contract. | Preserve a path from Node.js to Cloudflare Workers. |
-| P-009 | Use stable demo IDs and create-if-missing seed logic. | Repeated startup must not duplicate or overwrite demo/user data. |
-| P-010 | Add a narrow `packages/contracts` workspace for shared API DTOs and runtime-safe schemas. | Both the Next.js client and Hono API consume the same transport contract; keep Prisma/domain implementation out of the package. Confirm during O-001 that this avoids duplication without adding unnecessary workspace overhead. |
+| P-009 | Use stable demo IDs and create-if-missing seed logic. | Repeated startup must not duplicate or overwrite demo/user data. Implemented and test-verified in O-001. |
+| P-010 | Add a narrow `packages/contracts` workspace for shared API DTOs and runtime-safe schemas. | Confirmed as D-018; implemented in O-001. |
 
 ## Open future decisions
 
-- O-001: Validate Prisma 7 with `@prisma/adapter-better-sqlite3`, generated client, migrations, and local transactions during implementation.
+- ~~O-001: Validate Prisma 7 with `@prisma/adapter-better-sqlite3`, generated client, migrations, and local transactions during implementation.~~ — Resolved in O-001; see D-019 and `TESTING.md`.
 - O-002: Validate critical multi-write workflows against D1 capabilities and Prisma's D1 adapter before a Cloudflare deployment decision.
 - O-003: Choose and test the Next.js SSR Worker adapter when deployment enters scope.
 - O-004: Decide how the frontend runtime communicates with the API Worker (for example, service bindings).

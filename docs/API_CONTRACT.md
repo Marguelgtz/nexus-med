@@ -1,6 +1,6 @@
 # API Contract — Medical Platform MVP
 
-**Status:** Initial contract proposal; validate and finalize during O-001 before UX/UI design.  
+**Status:** Finalized during O-001 (2026-11-07); implemented and test-verified in `apps/api` with the shared schemas in `packages/contracts`. Revision policy in Section 10 still applies for O-002/O-003.  
 **Owner:** Hono API (`apps/api`)  
 **Transport:** HTTP + JSON over local Node.js  
 **Audience:** Next.js frontend, API tests, future maintainers
@@ -11,7 +11,7 @@
 
 - Hono is the single authoritative API for product data and operations.
 - The frontend consumes this contract; it does not access Prisma or SQLite directly.
-- Proposed: define shared request and response DTOs in `packages/contracts`; both `apps/web` and `apps/api` can consume that package. Confirm this small workspace during O-001; regardless of package choice, maintain one authoritative contract and do not duplicate DTO definitions.
+- Shared request and response DTOs live in `packages/contracts` (confirmed D-018); both `apps/web` and `apps/api` consume that package. One authoritative contract, no duplicated DTO definitions.
 - Never expose raw Prisma models or generated database types as the transport contract.
 - Validate all untrusted input in Hono. Client-side validation may improve UX but is not authoritative.
 - Use consistent HTTP status codes and a consistent error envelope.
@@ -108,7 +108,7 @@ Updates editable encounter fields. The patient association must not be silently 
 
 ## 6. DTO conventions
 
-If P-010 is accepted, TypeScript DTOs and runtime-safe schemas live in `packages/contracts` and are finalized during O-001. Otherwise, keep them in one clearly owned API-contract module. The selected validation library must work in both Node.js and the browser. Follow these rules:
+The TypeScript DTOs and runtime-safe zod 4 schemas live in `packages/contracts` and are consumed by both applications. They follow these rules:
 
 - Use explicit DTOs separate from Prisma models.
 - Return nullable or absent values consistently; choose one convention per field and document it.
@@ -120,9 +120,9 @@ If P-010 is accepted, TypeScript DTOs and runtime-safe schemas live in `packages
 
 ## 7. Error response convention
 
-Use one consistent JSON error envelope, defined in `packages/contracts` if P-010 is accepted or otherwise in the single authoritative API-contract module, and finalized/tested during O-001.
+One consistent JSON error envelope is defined in `packages/contracts` and implemented/tested in `apps/api`.
 
-Proposed shape:
+Shape (implemented):
 
 ```json
 {

@@ -195,3 +195,21 @@ Add the next entry when O-001 reaches a meaningful verified milestone, such as t
 **Impact:** `ARCHITECTURE.md` Section 8 becomes the canonical repository map and defines naming, ownership, dependency direction, and growth rules. `AGENTS.md`, `README.md`, `API_CONTRACT.md`, and `ACTION_PLAN.md` reference the same layout. The shared contracts workspace remains an implementation proposal to validate during O-001.
 
 **References:** `ARCHITECTURE.md` Section 8, `AGENTS.md`, `API_CONTRACT.md`, `DECISIONS.md` P-010.
+
+### 2026-11-07 — O-001 database/API foundation complete and verified
+
+**Type:** Milestone
+
+**Context:** O-001 (A-001 through A-008) executed the documented foundation: npm-workspaces monorepo, Prisma 7 + SQLite data layer, Hono API with shared contracts, integration tests, minimal Next.js shell, and one-command local runtime.
+
+**Findings and outcomes:**
+
+- Prisma 7 specifics that shaped the code: `url` is forbidden in the schema datasource (it lives only in `prisma.config.ts`), the config loader cannot import TS modules (config is self-contained), the better-sqlite3 adapter export is `PrismaBetterSqlite3`, and `uuid()` defaults for String ids are client-side (no SQL migration change).
+- zod 4 reports strict-mode extra keys as a single empty-path issue with a `keys` array; the shared `parseOrThrow` fans these out into per-field `fieldErrors`.
+- Hono route handlers must `await` async services before `c.json(...)`; passing the promise through silently returns 200 with an empty body and an unhandled rejection.
+- API responses are serialized to contract DTOs in the domain services (Prisma `Date` → ISO 8601 string), keeping Prisma types out of the transport boundary.
+- Verified: 36/36 integration tests (CRUD, search, archive, associations, timeline ordering, validation, seed idempotency/edit preservation, transaction rollback), clean typecheck across workspaces, Next.js production build, and an end-to-end `npm run dev` smoke (API `/health` ok; `/patients` page reports "API conectada" with 7 seeded records).
+
+**Impact:** The repository is now a runnable local application (minimal shell only — no product UI). `docs/UI_SPEC.md` (O-002) is the next deliverable. Work was committed on `main` in small logical increments per the owner's standing rule; no remote is configured, so no push/PR yet.
+
+**References:** `DECISIONS.md` D-018–D-021; `ACTION_PLAN.md` (O-001 exit evidence); `TESTING.md`.
