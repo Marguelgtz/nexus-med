@@ -45,7 +45,8 @@ model Patient {
 // Note content is attached to the encounter; it is never rewritten when the
 // patient's demographics or medical background change.
 model Encounter {
-  id                      String   @id
+  // Server-generated id (uuid); the client never supplies encounter ids.
+  id                      String   @id @default(uuid())
   patientId               String
   patient                 Patient  @relation(fields: [patientId], references: [id], onDelete: Restrict)
   // When the consultation happened. Distinct from createdAt/updatedAt.
