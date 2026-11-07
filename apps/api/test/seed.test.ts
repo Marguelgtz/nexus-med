@@ -10,7 +10,7 @@ import path from 'node:path';
 
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
-import { PrismaBetterSQLite3 } from '@prisma/adapter-better-sqlite3';
+import { PrismaBetterSqlite3 } from '@prisma/adapter-better-sqlite3';
 
 import { PrismaClient } from '../src/generated/prisma/client';
 import { idempotentSeed } from '../../../prisma/seed';
@@ -28,7 +28,7 @@ beforeAll(() => {
     stdio: 'inherit',
     env: { ...process.env, DATABASE_URL: `file:${seedDbFile}` },
   });
-  const adapter = new PrismaBetterSQLite3({ url: `file:${seedDbFile}` });
+  const adapter = new PrismaBetterSqlite3({ url: `file:${seedDbFile}` });
   prisma = new PrismaClient({ adapter });
 });
 

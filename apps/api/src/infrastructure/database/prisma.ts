@@ -8,10 +8,10 @@
 import { mkdirSync } from 'node:fs';
 import path from 'node:path';
 
-import { PrismaBetterSQLite3 } from '@prisma/adapter-better-sqlite3';
+import { PrismaBetterSqlite3 } from '@prisma/adapter-better-sqlite3';
 
 import { PrismaClient } from '../../generated/prisma/client';
-import { resolveDbPath } from '../../../../prisma/lib/db-path';
+import { resolveDbPath } from '../../../../../prisma/lib/db-path';
 
 const dbPath = resolveDbPath();
 
@@ -20,6 +20,6 @@ const dbPath = resolveDbPath();
 // orchestrator).
 mkdirSync(path.dirname(dbPath), { recursive: true });
 
-const adapter = new PrismaBetterSQLite3({ url: `file:${dbPath}` });
+const adapter = new PrismaBetterSqlite3({ url: `file:${dbPath}` });
 
 export const prisma = new PrismaClient({ adapter });
