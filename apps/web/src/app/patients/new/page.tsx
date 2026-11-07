@@ -1,10 +1,12 @@
 // New patient page (UI_SPEC §3.2). The active-registry name list is passed
 // server-side for the non-blocking duplicate notice (UI_SPEC §1.1).
 
-import type { PatientSummary } from '@nexus-med/contracts';
+import { z } from 'zod';
+
+import { patientSummarySchema } from '@nexus-med/contracts';
 
 import { NewPatientForm } from '../../../components/patients/new-patient-form';
-import { apiGet } from '../../../lib/api/server';
+import { fetchServer } from '../../../lib/api/server';
 
 export const dynamic = 'force-dynamic';
 
@@ -17,12 +19,14 @@ export default async function NewPatientPage({
   const prefillName = params.nombre?.trim() || undefined;
 
   let existing: { id: string; fullName: string }[] = [];
-  try {
-    const rows = await apiGet<PatientSummary[]>('/api/patients?status=active');
-    existing = rows.map((p) => ({ id: p.id, fullName: p.fullName }));
-  } catch {
-    // Duplicate detection is a convenience; its absence must not block creation.
+  const res = await fetchServer(
+    '/api/patients?status=active',
+    z.array(patientSummarySchema),
+  );
+  if (res.ok) {
+    existing = res.data.map((p) => ({ id: p.id, fullName: p.fullName }));
   }
+  // Duplicate detection is a convenience; its absence must not block creation.
 
   return (
     <>

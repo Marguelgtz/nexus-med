@@ -5,14 +5,19 @@
 
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
+import { z } from 'zod';
 
-import type { EncounterSummary, PatientDetail } from '@nexus-med/contracts';
+import {
+  encounterSummarySchema,
+  patientDetailSchema,
+  type PatientDetail,
+} from '@nexus-med/contracts';
 
 import { Timeline } from '../../../components/patients/timeline';
 import { ArchiveControl } from '../../../components/patients/archive-control';
 import { PatientContext } from '../../../components/shell/patient-context';
-import { Badge } from '../../../components/primitives';
-import { apiGet } from '../../../lib/api/server';
+import { Badge, ErrorBanner } from '../../../components/primitives';
+import { fetchServer } from '../../../lib/api/server';
 import { formatDate, formatAge } from '../../../lib/format';
 
 export const dynamic = 'force-dynamic';
@@ -36,17 +41,38 @@ const BACKGROUND_ROWS: { label: string; key: keyof PatientDetail }[] = [
 export default async function PatientPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
 
-  let patient: PatientDetail;
-  let encounters: EncounterSummary[] = [];
-  try {
-    [patient, encounters] = await Promise.all([
-      apiGet<PatientDetail>(`/api/patients/${encodeURIComponent(id)}`),
-      apiGet<EncounterSummary[]>(`/api/patients/${encodeURIComponent(id)}/encounters`),
-    ]);
-  } catch {
-    notFound();
+  const [patientRes, encountersRes] = await Promise.all([
+    fetchServer(`/api/patients/${encodeURIComponent(id)}`, patientDetailSchema),
+    fetchServer(
+      `/api/patients/${encodeURIComponent(id)}/encounters`,
+      z.array(encounterSummarySchema),
+    ),
+  ]);
+
+  // A 404 means the record does not exist; anything else (API down, 5xx,
+  // contract drift) is a recoverable error and must not masquerade as a
+  // missing patient.
+  if (!patientRes.ok) {
+    if (patientRes.notFound) notFound();
+    return (
+      <>
+        <h1>Paciente</h1>
+        <ErrorBanner message={patientRes.error} retryHref={`/patients/${id}`} />
+      </>
+    );
+  }
+  if (!encountersRes.ok) {
+    if (encountersRes.notFound) notFound();
+    return (
+      <>
+        <h1>Paciente</h1>
+        <ErrorBanner message={encountersRes.error} retryHref={`/patients/${id}`} />
+      </>
+    );
   }
 
+  const patient = patientRes.data;
+  const encounters = encountersRes.data;
   const age = formatAge(patient.dateOfBirth);
 
   return (

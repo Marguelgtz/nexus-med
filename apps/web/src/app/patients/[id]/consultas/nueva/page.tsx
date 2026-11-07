@@ -3,11 +3,12 @@
 
 import { notFound } from 'next/navigation';
 
-import type { PatientDetail } from '@nexus-med/contracts';
+import { patientDetailSchema } from '@nexus-med/contracts';
 
 import { ConsultationForm } from '../../../../../components/patients/consultation-form';
 import { PatientContext } from '../../../../../components/shell/patient-context';
-import { apiGet } from '../../../../../lib/api/server';
+import { ErrorBanner } from '../../../../../components/primitives';
+import { fetchServer } from '../../../../../lib/api/server';
 
 export const dynamic = 'force-dynamic';
 
@@ -18,12 +19,20 @@ export default async function NewConsultationPage({
 }) {
   const { id } = await params;
 
-  let patient: PatientDetail;
-  try {
-    patient = await apiGet<PatientDetail>(`/api/patients/${encodeURIComponent(id)}`);
-  } catch {
-    notFound();
+  const patientRes = await fetchServer(
+    `/api/patients/${encodeURIComponent(id)}`,
+    patientDetailSchema,
+  );
+  if (!patientRes.ok) {
+    if (patientRes.notFound) notFound();
+    return (
+      <>
+        <h1>Nueva consulta</h1>
+        <ErrorBanner message={patientRes.error} retryHref={`/patients/${id}`} />
+      </>
+    );
   }
+  const patient = patientRes.data;
 
   return (
     <>

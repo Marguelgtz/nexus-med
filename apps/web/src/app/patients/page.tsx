@@ -3,11 +3,13 @@
 // afterwards. If the API is down on first load we render an explicit error
 // state instead of stale or empty data.
 
-import type { PatientSummary } from '@nexus-med/contracts';
+import { z } from 'zod';
+
+import { patientSummarySchema } from '@nexus-med/contracts';
 
 import { PatientRegistry } from '../../components/patients/registry';
 import { ErrorBanner } from '../../components/primitives';
-import { apiGet } from '../../lib/api/server';
+import { fetchServer } from '../../lib/api/server';
 
 export const dynamic = 'force-dynamic';
 
@@ -21,28 +23,27 @@ export default async function PatientsPage({
   const status =
     params.status === 'archived' || params.status === 'all' ? params.status : 'active';
 
-  let initial: PatientSummary[] | null = null;
-  let error: string | null = null;
-  try {
-    const query = new URLSearchParams();
-    if (q) query.set('q', q);
-    query.set('status', status);
-    initial = await apiGet<PatientSummary[]>(`/api/patients?${query.toString()}`);
-  } catch (err) {
-    error = err instanceof Error ? err.message : 'Error desconocido';
-  }
+  const query = new URLSearchParams();
+  if (q) query.set('q', q);
+  query.set('status', status);
 
-  if (error !== null || initial === null) {
+  const res = await fetchServer(
+    `/api/patients?${query.toString()}`,
+    z.array(patientSummarySchema),
+  );
+
+  if (!res.ok) {
+    // A registry failure is a recoverable error state, never a blank list.
     return (
       <>
         <h1>Pacientes</h1>
         <ErrorBanner
-          message={error ?? 'No se pudo cargar el listado de pacientes.'}
+          message={res.notFound ? 'No se pudo cargar el listado de pacientes.' : res.error}
           retryHref="/patients"
         />
       </>
     );
   }
 
-  return <PatientRegistry initialPatients={initial} />;
+  return <PatientRegistry initialPatients={res.data} />;
 }
