@@ -116,7 +116,7 @@ Use two applications in one repository:
 
 The frontend must never access SQLite, Prisma, or D1 directly. Do not duplicate business rules in Next.js. Patient/encounter data must not be statically generated or placed in shared caches; use explicit no-store behavior. Keep Hono as the single authoritative API. Server Actions are not required; do not add them by default.
 
-Organize API business code by product domain under `apps/api/src/domains/`, initially `patients` and `encounters`. A domain is a product/business area, not a separate process, Worker, database, or deployment. Keep frontend UI organized by feature under `apps/web/src/features/`; keep Next.js route composition under `apps/web/src/app/`.
+Organize API business code by product domain under `apps/api/src/domains/`, initially `patients` and `encounters`. A domain is a product/business area, not a separate process, Worker, database, or deployment. Keep frontend workflow UI organized under `apps/web/src/components/` (`patients/` for workflow components, `shell/` for app chrome, `primitives.tsx` for genuinely shared primitives); keep Next.js route composition under `apps/web/src/app/`.
 
 ### Technical direction
 
@@ -134,7 +134,7 @@ Do not assume every Next.js feature or Prisma driver works unchanged on Cloudfla
 
 Treat Section 8 of `docs/ARCHITECTURE.md` as the canonical repository map. Preserve its responsibility boundaries: `apps/web` for presentation/SSR, `apps/api` for Hono/domain/persistence, `packages/contracts` for shared transport contracts only, `prisma` for schema/migrations/seed, `scripts` for local lifecycle, and `docs` for project context.
 
-Keep Next.js route composition under `apps/web/src/app/` and feature-specific UI under `apps/web/src/features/`. Keep Hono modules under `apps/api/src/domains/`, with route modules and domain operations separated by responsibility. Do not create a second `app/` tree outside `src/`, generic shared packages, empty placeholder directories, or mirrored layer structures just for symmetry.
+Keep Next.js route composition under `apps/web/src/app/` and workflow-specific UI under `apps/web/src/components/` (with shared primitives in `apps/web/src/components/primitives.tsx`). Keep Hono modules under `apps/api/src/domains/`, with route modules and domain operations separated by responsibility. Do not create a second `app/` tree outside `src/`, generic shared packages, empty placeholder directories, or mirrored layer structures just for symmetry.
 
 If P-010 is accepted, use the shared contracts package for API request/response DTOs and runtime-safe schemas consumed by both applications. It must not import Prisma or contain database/domain implementation. Hono remains authoritative for server-side validation. Update the architecture map in the same change whenever a new app, workspace package, major directory, or ownership boundary is introduced or moved.
 
