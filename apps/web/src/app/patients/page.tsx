@@ -1,6 +1,6 @@
 // Foundation smoke page (O-001). Verifies frontend -> Hono API connectivity
 // and that seeded demo data is reachable through the real HTTP path.
-// The actual patient registry UI arrives with the UX/UI design phase (O-002).
+// Replaced by the patient registry (O-003 slice 2).
 
 import type { PatientSummary } from '@nexus-med/contracts';
 
@@ -14,25 +14,26 @@ export default async function PatientsPage() {
   let apiError: string | null = null;
 
   try {
-    await apiGet('/');
-    connected = true;
     const patients = await apiGet<PatientSummary[]>('/api/patients?status=all');
+    connected = true;
     patientCount = patients.length;
   } catch (error) {
     apiError = error instanceof Error ? error.message : 'Error desconocido';
   }
 
   return (
-    <main>
-      <h1>Registro de pacientes</h1>
+    <>
+      <div className="page-head">
+        <h1>Registro de pacientes</h1>
+      </div>
       <p className="muted">
-        Vista técnica de fundación — el registro completo llega con el diseño UX/UI.
+        Vista técnica de fundación — el registro completo llega con la implementación del diseño (O-003).
       </p>
 
       <div className="card">
         {connected ? (
           <>
-            <span className="badge ok">API conectada</span>
+            <span className="badge badge-edited">API conectada</span>
             <p>
               {patientCount !== null
                 ? `${patientCount} registros de pacientes disponibles (datos de demostración).`
@@ -40,17 +41,11 @@ export default async function PatientsPage() {
             </p>
           </>
         ) : (
-          <>
-            <span className="badge fail">API sin conexión</span>
-            <p>{apiError ?? 'No se pudo contactar la API.'}</p>
-          </>
+          <div className="error-banner">
+            <span>API sin conexión: {apiError ?? 'No se pudo contactar la API.'}</span>
+          </div>
         )}
       </div>
-
-      <div className="demo-note">
-        Los registros actuales son datos ficticios de demostración, no información
-        de pacientes reales.
-      </div>
-    </main>
+    </>
   );
 }
