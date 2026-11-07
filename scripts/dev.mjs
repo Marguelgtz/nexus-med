@@ -76,7 +76,7 @@ async function main() {
       env: { ...process.env, API_PORT: String(API_PORT) },
     }),
   );
-  await waitForUrl(`${API_INTERNAL_URL}/`);
+  await waitForUrl(`${API_INTERNAL_URL}/health`);
   console.log(`[dev] API lista en ${API_INTERNAL_URL}`);
 
   track(
