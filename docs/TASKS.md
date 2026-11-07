@@ -125,6 +125,8 @@ At a phase boundary, reconcile the work packages for the next phase using actual
 
 **Objective O-003:** Implement the designed patient and encounter workflows as complete vertical slices.
 
+**Phase status:** Completed 2026-11-07. All acceptance criteria below met; verified evidence is in `ACTION_PLAN.md` (O-003) and `TESTING.md`. No scope changes were required.
+
 ### Work packages
 
 **T-012 — Application shell and navigation**
@@ -162,6 +164,8 @@ At a phase boundary, reconcile the work packages for the next phase using actual
 
 **Objective O-004:** Make the local prototype immediately usable and reliably demonstrable.
 
+**Phase status:** Completed 2026-11-07. All acceptance criteria below met; verified evidence is in `ACTION_PLAN.md` (O-004) and `TESTING.md`. No scope changes were required.
+
 ### Work packages
 
 **T-017 — First-run demo presentation**
@@ -195,7 +199,7 @@ At a phase boundary, reconcile the work packages for the next phase using actual
 - Google authentication/OAuth/OIDC and authorization.
 - Docker and CI/CD.
 - Cloudflare account connection, remote D1/R2, Worker deployment, and production setup.
-- Scheduling, billing, multi-user support, AI clinical features, FHIR/HL7, and external integrations.
+- Scheduling, billing, multi-user support, AI clinical features, FHIR/HL7, and external integrations. When scheduling is picked up in a future run, document the appointment objective and contract in this section and `API_CONTRACT.md` first.
 
 ## 7. Phase-boundary maintenance
 

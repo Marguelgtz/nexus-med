@@ -2,7 +2,7 @@
 
 A local-first prototype specification for one general surgeon. The product objective is to validate patient management and clinical continuity using clearly synthetic demo records.
 
-> **Current artifact status:** O-001 foundation complete (2026-11-07). The monorepo runs locally: `npm install` then `npm run dev` migrates, seeds the demo data, and starts the Hono API (port 4000) plus a minimal Next.js shell (port 3000) with a connectivity smoke page. No product UI screens exist yet — that follows the UX/UI specification (O-002).
+> **Current artifact status:** O-001 through O-004 complete (2026-11-07). The local MVP is implemented end-to-end per `docs/UI_SPEC.md`: patient registry, registration, patient overview with medical background, consultation creation and detail with timeline, demographics edit, and a first-run demo with verified persistence. `npm install` then `npm run dev` migrates, seeds the demo data, and starts the Hono API (port 4000) plus the Next.js app (port 3000); the root route takes the doctor to `/patients`.
 
 ## Confirmed architecture
 
@@ -17,7 +17,7 @@ A local-first prototype specification for one general surgeon. The product objec
 
 ## Repository organization
 
-The top-level layout communicates ownership: `apps/web` is the Next.js presentation layer, `apps/api` owns domain behavior and persistence, `packages/contracts` is the proposed owner for shared HTTP contracts, `prisma/` owns relational schema/migrations/seed, `scripts/` owns local startup, and `docs/` preserves product and engineering context. Within the web app, `src/app/` contains routes and `src/features/` contains workflow-specific UI. Within the API, `src/domains/` contains patients and encounters. The canonical file tree, naming conventions, dependency directions, and growth rules are in `docs/ARCHITECTURE.md` Section 8.
+The top-level layout communicates ownership: `apps/web` is the Next.js presentation layer, `apps/api` owns domain behavior and persistence, `packages/contracts` is the owner of shared HTTP contracts, `prisma/` owns relational schema/migrations/seed, `scripts/` owns local startup, and `docs/` preserves product and engineering context. Within the web app, `src/app/` contains routes, `src/components/` contains workflow-specific UI (`patients/`, `shell/`) and shared primitives, and `src/lib/` holds the API transports and formatting utilities. Within the API, `src/domains/` contains patients and encounters. The canonical file tree, naming conventions, dependency directions, and growth rules are in `docs/ARCHITECTURE.md` Section 8.
 
 ## Included synthetic demo fixture
 
@@ -59,7 +59,7 @@ The first startup must be populated and useful, not an empty shell. The initial 
 | `npm run db:reset` | Destructive reset; requires an explicit `--confirm` flag. Never runs during startup. |
 | `npm run typecheck` | Type-check all workspaces. |
 | `npm run lint` | Lint the repository. |
-| `npm run test` | Run tests (currently the API integration suite). |
+| `npm run test` | Run tests (API integration suite + web unit suite). |
 | `npm run build` | Build all workspaces (currently the Next.js production build). |
 
 All commands are implemented and verified; see `docs/TESTING.md` for the verification evidence.

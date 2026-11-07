@@ -4,7 +4,7 @@
 **Last updated:** 2026-11-07  
 **Owner:** Project owner  
 **Primary agent:** Hermes Agent  
-**Current implementation state:** O-001 through O-004 are complete. The MVP is implemented end-to-end per `docs/UI_SPEC.md` and verified: 36/36 integration tests, clean typecheck/lint/build, browser-verified vertical slices, and a verified first-run demo with persistence across restarts. See `PROJECT_HISTORY.md` (2026-11-07 entries) for the closing evidence.
+**Current implementation state:** O-001 through O-004 are complete. The MVP is implemented end-to-end per `docs/UI_SPEC.md` and verified: 40/40 API integration tests + 16/16 web unit tests, clean typecheck/lint/build, browser-verified vertical slices, and a verified first-run demo with persistence across restarts. See `PROJECT_HISTORY.md` (2026-11-07 entries) for the closing evidence.
 
 ---
 
@@ -26,7 +26,7 @@ Do not duplicate the entire phase task catalog here. Reference task IDs where us
 
 ### Overall status
 
-**O-001–O-004 complete: the local MVP is built and verified.** The monorepo contains a verified data layer (Prisma 7 + SQLite, committed migrations, idempotent seed), a Hono API with validation, DTOs, and consistent errors (36/36 integration tests), the full product UI per `UI_SPEC.md` (registry, patient overview + medical background, consultation creation, consultation detail + timeline, demographics edit), a one-command local runtime (`npm run dev`, first-run verified: fresh DB → migrate → seed → populated registry with demo banner), and persistence verified across restarts (edits and user-created records survive; seed stays idempotent). All checks green: typecheck, ESLint (flat config), tests, production build.
+**O-001–O-004 complete: the local MVP is built and verified.** The monorepo contains a verified data layer (Prisma 7 + SQLite, committed migrations, idempotent seed), a Hono API with validation, DTOs, and consistent errors (40/40 integration tests), the full product UI per `UI_SPEC.md` (registry, patient overview + medical background, consultation creation, consultation detail + timeline, demographics edit), a one-command local runtime (`npm run dev`, first-run verified: fresh DB → migrate → seed → populated registry with demo banner), and persistence verified across restarts (edits and user-created records survive; seed stays idempotent). All checks green: typecheck, ESLint (flat config), tests (API + web), production build.
 
 ### Confirmed direction
 
@@ -48,11 +48,11 @@ See `DECISIONS.md` and `ARCHITECTURE.md` for details.
 | Product definition | Prepared | `PRODUCT.md`, `WORKFLOWS.md` |
 | Architecture | Implemented per `ARCHITECTURE.md` | Monorepo, Hono API, Prisma 7 + SQLite, SSR shell |
 | Data model | Implemented and migrated | `prisma/schema.prisma`, committed migration |
-| API surface | Implemented and tested | 36/36 integration tests; contract in `API_CONTRACT.md` |
+| API surface | Implemented and tested | 40/40 integration tests; contract in `API_CONTRACT.md` |
 | Synthetic fixture | Seeded idempotently | 7 patients (6 active), 9 encounters via `prisma/seed.ts` |
 | Database and API code | Complete | Prisma boundary, domains, validation, errors, DTOs |
 | UX/UI specification | Complete (O-002) | `docs/UI_SPEC.md` — screens, interactions, states, visual system, story coverage, decisions U-01–U-08 |
-| Frontend product workflows | Not started; next objective | Minimal shell + connectivity smoke page only; build per `UI_SPEC.md` (O-003) |
+| Frontend product workflows | Complete (O-003/O-004) | Full product UI per `UI_SPEC.md` (registry, forms, timeline, detail, edit); first-run demo verified with persistence across restarts |
 
 ## 3. Active objective
 
