@@ -213,3 +213,21 @@ Add the next entry when O-001 reaches a meaningful verified milestone, such as t
 **Impact:** The repository is now a runnable local application (minimal shell only — no product UI). `docs/UI_SPEC.md` (O-002) is the next deliverable. Work was committed on `main` in small logical increments per the owner's standing rule; no remote is configured, so no push/PR yet.
 
 **References:** `DECISIONS.md` D-018–D-021; `ACTION_PLAN.md` (O-001 exit evidence); `TESTING.md`.
+
+### 2026-11-07 — O-002 UX/UI specification complete
+
+**Type:** Milestone
+
+**Context:** O-002 (T-007–T-011) produced the implementation-ready `docs/UI_SPEC.md` from the O-001 verified API and the documented workflows.
+
+**Findings and outcomes:**
+
+- Capability reconciliation found no API/data gaps: the 11 verified endpoints (patients CRUD/archive/background, encounters list/create/read/update, health) cover every P0 workflow. Two client-level decisions recorded: non-blocking duplicate notice (no API duplicate endpoint) and one-way archive (no unarchive endpoint exists — confirmation copy states this).
+- Information architecture: 7 routes + 404 — `/patients`, `/patients/new`, `/patients/[id]`, `/patients/[id]/editar`, `/patients/[id]/antecedentes`, `/patients/[id]/consultas/nueva`, `/patients/[id]/consultas/[eid]`; URL-driven navigation (shareable, restart-safe); single `Pacientes` nav item; persistent patient context strip.
+- Visual system: minimal clinical light theme, CSS custom-property tokens, system font stack (no web fonts — offline requirement), no icon library, flat cards, state matrix covering loading/empty/not-found/validation/API-error/success per screen.
+- All 14 P0 stories (US-001…US-014) mapped to observable spec behavior; decisions U-01–U-08 recorded (spec §6.2), summarized as D-022.
+- Interface language fixed at Spanish (Mexico) with canonical copy in the spec.
+
+**Impact:** O-003 can start immediately on slice 1 (application shell + shared primitives) with no further design work. UI implementation must follow `UI_SPEC.md`; real API gaps discovered during implementation are revised per D-017 with tests/docs in the same change.
+
+**References:** `docs/UI_SPEC.md`; `DECISIONS.md` D-022; `ACTION_PLAN.md` (O-002 exit evidence, next action).

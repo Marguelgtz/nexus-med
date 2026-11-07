@@ -85,6 +85,8 @@ At a phase boundary, reconcile the work packages for the next phase using actual
 
 ## 3. Phase 1 — UX and UI design
 
+**Phase status:** Completed 2026-11-07. Deliverable `docs/UI_SPEC.md` produced and reviewed against the verified O-001 API and all 14 P0 stories; decisions recorded as D-022. No scope changes required.
+
 **Objective O-002:** Produce an implementation-ready UX/UI specification after the data model and API foundation are understood, but before feature UI implementation.
 
 ### Work packages

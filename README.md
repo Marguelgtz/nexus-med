@@ -71,7 +71,7 @@ All commands are implemented and verified; see `docs/TESTING.md` for the verific
 - `docs/WORKFLOWS.md` — detailed doctor journeys and edge cases.
 - `docs/ARCHITECTURE.md` — application topology, SSR/API flow, persistence, startup, and future Cloudflare boundary.
 - `docs/API_CONTRACT.md` — Hono request/response contract, finalized during the database/API foundation (O-001).
-- `docs/UI_SPEC.md` — planned UX/UI design deliverable created and reviewed after the database/API foundation, before feature UI implementation.
+- `docs/UI_SPEC.md` — UX/UI specification (O-002, 2026-11-07): screens, interactions, states, visual system; implementation-ready for O-003.
 - `docs/DATA_MODEL.md` — current prototype entities and relationships.
 - `docs/DEMO_DATA.md` — synthetic dataset and seeding rules.
 - `docs/demo-dataset.json` — exact fictional patient/encounter fixture payload.

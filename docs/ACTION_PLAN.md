@@ -4,7 +4,7 @@
 **Last updated:** 2026-11-07  
 **Owner:** Project owner  
 **Primary agent:** Hermes Agent  
-**Current implementation state:** O-001 database/API foundation complete and verified (36/36 API tests, typecheck clean, `npm run dev` smoke-tested end-to-end). O-002 (UX/UI design) is next.
+**Current implementation state:** O-001 database/API foundation and O-002 UX/UI specification are complete (spec: `docs/UI_SPEC.md`, reviewed against the verified API). O-003 (product implementation in vertical slices) is the active objective.
 
 ---
 
@@ -26,7 +26,7 @@ Do not duplicate the entire phase task catalog here. Reference task IDs where us
 
 ### Overall status
 
-**O-001 complete; O-002 (UX/UI design) is the active objective.** The monorepo contains a verified data layer (Prisma 7 + SQLite, committed migrations, idempotent seed), a Hono API with validation, DTOs, and consistent errors (36/36 integration tests), a minimal Next.js shell with a working SSR-to-Hono smoke page, and a one-command local runtime (`npm run dev`, smoke-tested end-to-end). No product UI work has begun.
+**O-001 complete; O-002 UX/UI specification complete; O-003 (product implementation) is the active objective.** The monorepo contains a verified data layer (Prisma 7 + SQLite, committed migrations, idempotent seed), a Hono API with validation, DTOs, and consistent errors (36/36 integration tests), a minimal Next.js shell with a working SSR-to-Hono smoke page, a one-command local runtime (`npm run dev`, smoke-tested end-to-end), and an implementation-ready UI specification (`docs/UI_SPEC.md`). No product UI screens have been built yet.
 
 ### Confirmed direction
 
@@ -51,8 +51,8 @@ See `DECISIONS.md` and `ARCHITECTURE.md` for details.
 | API surface | Implemented and tested | 36/36 integration tests; contract in `API_CONTRACT.md` |
 | Synthetic fixture | Seeded idempotently | 7 patients (6 active), 9 encounters via `prisma/seed.ts` |
 | Database and API code | Complete | Prisma boundary, domains, validation, errors, DTOs |
-| UX/UI specification | Not started; next objective | Planned deliverable: `docs/UI_SPEC.md` (O-002) |
-| Frontend product workflows | Not started | Minimal shell + connectivity smoke page only |
+| UX/UI specification | Complete (O-002) | `docs/UI_SPEC.md` — screens, interactions, states, visual system, story coverage, decisions U-01–U-08 |
+| Frontend product workflows | Not started; next objective | Minimal shell + connectivity smoke page only; build per `UI_SPEC.md` (O-003) |
 
 ## 3. Active objective
 
@@ -99,6 +99,9 @@ See `DECISIONS.md` and `ARCHITECTURE.md` for details.
 
 ### O-002 — UX and UI design
 
+**Status:** Complete (2026-11-07). Deliverable: `docs/UI_SPEC.md`.  
+**Exit evidence:** Spec covers all T-007–T-011 work: API capability reconciliation (no API/data gaps required; two client-level decisions recorded), information architecture and screen map (7 routes + 404), full screen specs for registry, create/edit patient, background edit, overview, consultation form, encounter detail/edit, archive flow, and not-found; state matrix and visual system (tokens, components, responsive, accessibility); all 14 P0 stories mapped to observable behavior (US-001…US-014); decisions U-01–U-08 recorded (§6.2). Owner can review screen structure, interactions, and visual direction before UI implementation.
+
 **Outcome:** A validated, implementation-ready UX/UI specification based on the working data model and API contracts, before building product screens.
 
 Planned sub-objectives:
@@ -112,7 +115,7 @@ Planned sub-objectives:
 **Dependency:** O-001 data/API foundation.  
 **Exit condition:** The owner can review the screen structure, core interactions, and visual direction before feature UI implementation begins.
 
-### O-003 — Product implementation in complete vertical slices
+### O-003 — Product implementation in complete vertical slices — **ACTIVE**
 
 **Outcome:** The doctor can use the patient and encounter workflows through the designed Next.js interface, backed by Hono and SQLite.
 
@@ -142,7 +145,7 @@ Planned sub-objectives:
 
 ## 5. Current blockers and technical questions
 
-No product decision currently blocks O-002.
+No blockers. O-002 closed with no API/data gaps; design-level decisions U-01–U-08 are recorded in `UI_SPEC.md` §6.2 (edit screens as pages, separate background page, one-way archive with explicit confirmation, success = navigation + re-render, non-blocking duplicate notice, system fonts/no icon library, `Editada` badge, `beforeunload`-only dirty protection). If O-003 implementation reveals a real API gap, revise the API per D-017 with tests and docs in the same change.
 
 Resolved during O-001 (implementation findings now recorded in `DECISIONS.md`):
 
@@ -155,7 +158,7 @@ Do not allow future Cloudflare/D1 transaction constraints, Google authentication
 
 ## 6. Next action
 
-Start O-002: write `docs/UI_SPEC.md` from `WORKFLOWS.md` and the verified API capabilities (registry/search, patient overview, medical background, consultation form, encounter detail/edit, timeline, archive, demo/empty/error states). The spec must match what the API actually supports; where a screen needs data the API does not yet return, note it as a contract addition to make during O-003 (per D-017). Do not implement product screens before the spec exists.
+Start O-003 slice 1: application shell — top bar, demo banner, context strip, tokens/`globals.css`, and shared UI primitives per `UI_SPEC.md` §5 (buttons, inputs, cards, badges, banners, skeletons, inline confirm, state matrix). Build slices 2–5 (registry, overview + background, consultation, encounter detail + timeline) as complete vertical slices: UI + typed client calls + server components + tests per slice, committing each slice in logical increments.
 
 ## 7. Living update rules
 
