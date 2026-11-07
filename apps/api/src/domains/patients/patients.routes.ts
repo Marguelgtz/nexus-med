@@ -21,9 +21,10 @@ import { cleanQuery, parseOrThrow, readJsonBody } from '../../shared/http/parse'
 
 export const patientsRoutes = new Hono();
 
-patientsRoutes.get('/patients', (c) => {
+patientsRoutes.get('/patients', async (c) => {
   const query = parseOrThrow(patientListQuerySchema, cleanQuery(c.req.query()));
-  return c.json(listPatients(query));
+  const patients = await listPatients(query);
+  return c.json(patients);
 });
 
 patientsRoutes.post('/patients', async (c) => {
@@ -32,18 +33,24 @@ patientsRoutes.post('/patients', async (c) => {
   return c.json(patient, 201);
 });
 
-patientsRoutes.get('/patients/:patientId', (c) => c.json(getPatient(c.req.param('patientId'))));
+patientsRoutes.get('/patients/:patientId', async (c) => {
+  const patient = await getPatient(c.req.param('patientId'));
+  return c.json(patient);
+});
 
 patientsRoutes.patch('/patients/:patientId', async (c) => {
   const input = parseOrThrow(updatePatientInputSchema, await readJsonBody(c));
-  return c.json(updatePatient(c.req.param('patientId'), input));
+  const patient = await updatePatient(c.req.param('patientId'), input);
+  return c.json(patient);
 });
 
 patientsRoutes.patch('/patients/:patientId/medical-background', async (c) => {
   const input = parseOrThrow(medicalBackgroundInputSchema, await readJsonBody(c));
-  return c.json(updateMedicalBackground(c.req.param('patientId'), input));
+  const patient = await updateMedicalBackground(c.req.param('patientId'), input);
+  return c.json(patient);
 });
 
-patientsRoutes.patch('/patients/:patientId/archive', (c) =>
-  c.json(archivePatient(c.req.param('patientId'))),
-);
+patientsRoutes.patch('/patients/:patientId/archive', async (c) => {
+  const patient = await archivePatient(c.req.param('patientId'));
+  return c.json(patient);
+});
