@@ -632,6 +632,78 @@ a.timeline-item:hover {
   margin: 0;
 }
 
+/* Header action row (overview, UI_SPEC §3.3) */
+.actions {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  flex-wrap: wrap;
+}
+
+.actions .btn {
+  min-height: 36px;
+  padding: 6px 12px;
+}
+
+.actions .btn-primary {
+  min-height: 40px;
+  padding: 8px 16px;
+}
+
+.actions .inline-confirm {
+  flex-basis: 100%;
+  margin-top: var(--s-2);
+}
+
+.btn-sm {
+  min-height: 32px;
+  padding: 4px 10px;
+  font-size: 13px;
+}
+
+/* Identity sub-line under the overview H1 (UI_SPEC §3.3) */
+.subline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2) var(--s-5);
+  color: var(--text-muted);
+  font-size: 14px;
+  margin-bottom: var(--s-3);
+}
+
+.subline-item .faint {
+  margin-right: 4px;
+}
+
+/* Antecedentes card rows: label 60% / value 40% on desktop */
+.bg-row {
+  display: grid;
+  grid-template-columns: minmax(120px, 60%) 40%;
+  gap: var(--s-4);
+  padding: var(--s-2) 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 14px;
+}
+
+.bg-row:last-child {
+  border-bottom: none;
+}
+
+.bg-label {
+  color: var(--text-muted);
+}
+
+.bg-value {
+  white-space: pre-wrap;
+}
+
+@media (max-width: 639px) {
+  .bg-row {
+    grid-template-columns: 1fr;
+    gap: var(--s-1);
+  }
+}
+
 /* Note sections (encounter detail / form) */
 .note-section {
   margin-bottom: var(--s-5);
