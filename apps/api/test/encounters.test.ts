@@ -25,6 +25,41 @@ async function makeEncounter(occurredAt: string, reason?: string): Promise<any> 
   return res.json();
 }
 
+describe('encounter type (D-024)', () => {
+  it('defaults to consulta when omitted', async () => {
+    const created = await makeEncounter('2026-11-01T10:30:00-06:00');
+    expect(created.type).toBe('consulta');
+  });
+
+  it('accepts an explicit type and exposes it in the timeline', async () => {
+    const res = await app.request(`/api/patients/${patientId}/encounters`, {
+      method: 'POST',
+      headers: json,
+      body: JSON.stringify({
+        occurredAt: '2026-11-01T10:30:00-06:00',
+        type: 'procedimiento',
+        reason: 'Seguimiento',
+      }),
+    });
+    expect(res.status).toBe(201);
+    const listed = (await (await app.request(`/api/patients/${patientId}/encounters`)).json()) as any[];
+    expect(listed[0].type).toBe('procedimiento');
+  });
+
+  it('rejects an invalid type', async () => {
+    const res = await app.request(`/api/patients/${patientId}/encounters`, {
+      method: 'POST',
+      headers: json,
+      body: JSON.stringify({
+        occurredAt: '2026-11-01T10:30:00-06:00',
+        type: 'cirugia',
+      }),
+    });
+    expect(res.status).toBe(400);
+    expect(((await res.json()) as any).error.fieldErrors.type).toBeDefined();
+  });
+});
+
 describe('POST /patients/:patientId/encounters', () => {
   it('creates an encounter for an existing patient', async () => {
     const res = await app.request(`/api/patients/${patientId}/encounters`, {

@@ -7,6 +7,7 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 
+import { appointmentsRoutes } from './domains/appointments/appointments.routes';
 import { encountersRoutes } from './domains/encounters/encounters.routes';
 import { patientsRoutes } from './domains/patients/patients.routes';
 import { healthRoutes } from './routes/health';
@@ -35,6 +36,7 @@ export function createApp(): Hono {
   app.route('/', healthRoutes);
   app.route('/api', patientsRoutes);
   app.route('/api', encountersRoutes);
+  app.route('/api', appointmentsRoutes);
 
   return app;
 }

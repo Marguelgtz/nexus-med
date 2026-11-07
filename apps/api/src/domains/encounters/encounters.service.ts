@@ -26,6 +26,7 @@ interface EncounterRow {
   id: string;
   patientId: string;
   occurredAt: Date;
+  type: string;
   reason: string | null;
   createdAt: Date;
   updatedAt: Date;
@@ -36,6 +37,8 @@ function toSummary(row: EncounterRow): EncounterSummary {
     id: row.id,
     patientId: row.patientId,
     occurredAt: row.occurredAt.toISOString(),
+    // Only ever written through the validated API boundary.
+    type: row.type as EncounterSummary['type'],
     reason: row.reason,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
@@ -67,6 +70,7 @@ const summarySelect = {
   id: true,
   patientId: true,
   occurredAt: true,
+  type: true,
   reason: true,
   createdAt: true,
   updatedAt: true,
