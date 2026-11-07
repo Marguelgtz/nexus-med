@@ -7,3 +7,4 @@
 export * from './common';
 export * from './patients';
 export * from './encounters';
+export * from './appointments';

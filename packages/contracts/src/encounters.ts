@@ -6,6 +6,20 @@ import { idSchema, isoDateTimeSchema } from './common';
 /** A clinical note section entered by the doctor, verbatim. */
 export const noteSectionSchema = z.string().trim().max(10000);
 
+/**
+ * Fixed list of encounter types (decision D-024): what actually happened.
+ * Mirrors the appointment type list — the PLANNED type lives on the
+ * appointment, the ACTUAL type here. `consulta` is the default; all
+ * pre-expansion records are consultations.
+ */
+export const encounterTypeSchema = z.enum([
+  'consulta',
+  'procedimiento',
+  'visita_domicilio',
+  'urgencia',
+]);
+export type EncounterType = z.infer<typeof encounterTypeSchema>;
+
 export const encounterSectionsSchema = {
   reason: noteSectionSchema.nullable().optional(),
   historyOfPresentIllness: noteSectionSchema.nullable().optional(),
@@ -20,6 +34,8 @@ export const createEncounterInputSchema = z
   .object({
     // When the consultation happened (distinct from creation time).
     occurredAt: isoDateTimeSchema,
+    // What actually happened (default `consulta`, D-024).
+    type: encounterTypeSchema.optional(),
     ...encounterSectionsSchema,
   })
   .strict();
@@ -29,6 +45,8 @@ export type CreateEncounterInput = z.infer<typeof createEncounterInputSchema>;
 export const updateEncounterInputSchema = z
   .object({
     occurredAt: isoDateTimeSchema.optional(),
+    // What actually happened (default `consulta`, D-024).
+    type: encounterTypeSchema.optional(),
     ...encounterSectionsSchema,
   })
   .strict()
@@ -43,6 +61,8 @@ export const encounterSummarySchema = z.object({
   id: idSchema,
   patientId: idSchema,
   occurredAt: isoDateTimeSchema,
+  // What actually happened (default `consulta`, D-024).
+  type: encounterTypeSchema,
   reason: z.string().nullable(),
   createdAt: isoDateTimeSchema,
   updatedAt: isoDateTimeSchema,

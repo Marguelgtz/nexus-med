@@ -36,6 +36,7 @@ model Patient {
   updatedAt          DateTime    @updatedAt
 
   encounters         Encounter[]
+  appointments       Appointment[]
 
   @@index([fullName])
   @@map("patients")
@@ -51,6 +52,11 @@ model Encounter {
   patient                 Patient  @relation(fields: [patientId], references: [id], onDelete: Restrict)
   // When the consultation happened. Distinct from createdAt/updatedAt.
   occurredAt              DateTime
+  // Fixed list (validated at the API): consulta, procedimiento,
+  // visita_domicilio, urgencia. What actually HAPPENED (D-024); default
+  // `consulta` — pre-expansion records are consultations and migrate
+  // without changing meaning.
+  type                    String   @default("consulta")
   reason                  String?
   historyOfPresentIllness String?
   relevantHistory         String?
@@ -61,6 +67,43 @@ model Encounter {
   createdAt               DateTime @default(now())
   updatedAt               DateTime @updatedAt
 
+  // Appointments completed by linking to this encounter (at most one per
+  // appointment; the link is the only relationship — the note is never
+  // copied into the appointment).
+  linkedAppointments      Appointment[]
+
   @@index([patientId, occurredAt(sort: Desc)])
   @@map("encounters")
+}
+
+// One scheduled visit belonging to exactly one patient (UI_SPEC §7.1).
+// `startAt` is an instant like `occurredAt`; the UI renders it in the
+// practice timezone. Status transitions are explicit and one-directional
+// (scheduled → completed | cancelled; cancelled → scheduled via
+// reschedule); `completed` is final.
+model Appointment {
+  id                    String   @id @default(uuid())
+  patientId             String
+  patient               Patient  @relation(fields: [patientId], references: [id], onDelete: Restrict)
+  // When the visit is (or was) planned to start.
+  startAt               DateTime
+  // Planned duration in minutes (5–480, validated at the API boundary).
+  durationMinutes       Int
+  // Fixed list (validated at the API): consulta, procedimiento,
+  // visita_domicilio, urgencia. What was PLANNED — distinct from the
+  // actual encounter type.
+  type                  String
+  // scheduled, completed, cancelled (validated at the API).
+  status                String   @default("scheduled")
+  // Set on completion; the doctor's record of how long it actually took.
+  actualDurationMinutes Int?
+  completedAt           DateTime?
+  linkedEncounterId     String?  @unique
+  linkedEncounter       Encounter? @relation(fields: [linkedEncounterId], references: [id], onDelete: SetNull)
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  @@index([startAt])
+  @@index([patientId, startAt])
+  @@map("appointments")
 }
