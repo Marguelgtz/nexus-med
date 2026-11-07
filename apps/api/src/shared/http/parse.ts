@@ -12,8 +12,15 @@ export function parseOrThrow<T>(schema: ZodType<T>, value: unknown): T {
   if (!result.success) {
     const fieldErrors: Record<string, string[]> = {};
     for (const issue of result.error.issues) {
-      const key = issue.path.join('.') || '_';
-      (fieldErrors[key] ??= []).push(issue.message);
+      // zod 4 reports strict-mode extra keys as ONE issue with an empty path
+      // and a `keys` array; fan those out to per-field entries.
+      const keys =
+        'keys' in issue && Array.isArray(issue.keys) && issue.keys.length > 0
+          ? issue.keys.map(String)
+          : [issue.path.join('.') || '_'];
+      for (const key of keys) {
+        (fieldErrors[key] ??= []).push(issue.message);
+      }
     }
     throw new ValidationError('Datos inválidos', fieldErrors);
   }
