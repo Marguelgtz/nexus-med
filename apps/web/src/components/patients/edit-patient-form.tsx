@@ -12,6 +12,7 @@ import { type UpdatePatientInput, updatePatientInputSchema } from '@nexus-med/co
 
 import { ApiError, updatePatient } from '../../lib/api/client';
 import { ErrorBanner } from '../primitives';
+import { useBeforeUnloadGuard } from '../../lib/use-before-unload-guard';
 
 type FieldErrors = Record<string, string[]>;
 
@@ -39,6 +40,15 @@ export function EditPatientForm({
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [banner, setBanner] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+
+  // Dirty while any field differs from the saved values the form loaded with.
+  const dirty =
+    values.fullName !== initial.fullName ||
+    values.dateOfBirth !== (initial.dateOfBirth ?? '') ||
+    values.phone !== (initial.phone ?? '') ||
+    values.email !== (initial.email ?? '') ||
+    values.externalIdentifier !== (initial.externalIdentifier ?? '');
+  useBeforeUnloadGuard(dirty);
 
   const set = (field: keyof typeof values) => (e: React.ChangeEvent<HTMLInputElement>) => {
     setValues((v) => ({ ...v, [field]: e.target.value }));

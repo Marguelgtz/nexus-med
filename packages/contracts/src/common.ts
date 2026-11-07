@@ -14,6 +14,7 @@ export const dateSchema = z
   .refine(
     (value) => {
       const [y, m, d] = value.split('-').map(Number);
+      if (y === undefined || m === undefined || d === undefined) return false;
       const date = new Date(Date.UTC(y, m - 1, d));
       return (
         date.getUTCFullYear() === y &&

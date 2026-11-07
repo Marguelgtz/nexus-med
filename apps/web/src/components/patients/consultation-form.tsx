@@ -15,6 +15,7 @@ import {
 
 import { ApiError, createEncounter } from '../../lib/api/client';
 import { ErrorBanner } from '../primitives';
+import { useBeforeUnloadGuard } from '../../lib/use-before-unload-guard';
 
 type FieldErrors = Record<string, string[]>;
 
@@ -72,7 +73,8 @@ function nowLocalInput(): string {
 
 export function ConsultationForm({ patientId }: { patientId: string }) {
   const router = useRouter();
-  const [occurredAt, setOccurredAt] = useState(() => nowLocalInput());
+  const [initialOccurredAt] = useState(() => nowLocalInput());
+  const [occurredAt, setOccurredAt] = useState(initialOccurredAt);
   const [values, setValues] = useState<SectionValues>({
     reason: '',
     historyOfPresentIllness: '',
@@ -85,6 +87,12 @@ export function ConsultationForm({ patientId }: { patientId: string }) {
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [banner, setBanner] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+
+  // Dirty while any section has text or the datetime moved off the default.
+  const dirty =
+    Object.values(values).some((v) => v.trim() !== '') ||
+    occurredAt !== initialOccurredAt;
+  useBeforeUnloadGuard(dirty);
 
   const setSection = (field: keyof SectionValues) => (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setValues((v) => ({ ...v, [field]: e.target.value }));

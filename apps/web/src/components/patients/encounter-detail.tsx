@@ -15,6 +15,7 @@ import type { EncounterDetail, UpdateEncounterInput } from '@nexus-med/contracts
 import { ApiError, updateEncounter } from '../../lib/api/client';
 import { Badge, ErrorBanner } from '../primitives';
 import { formatDateTime, wasEdited } from '../../lib/format';
+import { useBeforeUnloadGuard } from '../../lib/use-before-unload-guard';
 
 const SECTIONS: { key: keyof SectionValues; label: string; rows: number }[] = [
   { key: 'reason', label: 'Motivo de consulta', rows: 2 },
@@ -61,6 +62,14 @@ export function EncounterDetail({ encounter }: { encounter: EncounterDetail }) {
   const [saving, setSaving] = useState(false);
 
   const edited = wasEdited(encounter.createdAt, encounter.updatedAt);
+
+  // Dirty only while editing AND any field differs from the saved note.
+  const dirty =
+    editing &&
+    (Object.keys(values) as (keyof SectionValues)[]).some(
+      (k) => values[k] !== toValues(encounter)[k],
+    );
+  useBeforeUnloadGuard(dirty);
 
   const startEditing = () => {
     setValues(toValues(encounter));

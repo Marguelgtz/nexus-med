@@ -15,6 +15,7 @@ import {
 
 import { ApiError, createPatient } from '../../lib/api/client';
 import { ErrorBanner, InfoNotice } from '../primitives';
+import { useBeforeUnloadGuard } from '../../lib/use-before-unload-guard';
 
 type FieldErrors = Record<string, string[]>;
 
@@ -25,6 +26,14 @@ function todayIso(): string {
   return `${d.getFullYear()}-${mm}-${dd}`;
 }
 
+const EMPTY_VALUES = {
+  fullName: '',
+  dateOfBirth: '',
+  phone: '',
+  email: '',
+  externalIdentifier: '',
+};
+
 export function NewPatientForm({
   prefillName,
   existingPatients,
@@ -34,15 +43,21 @@ export function NewPatientForm({
 }) {
   const router = useRouter();
   const [values, setValues] = useState({
+    ...EMPTY_VALUES,
     fullName: prefillName ?? '',
-    dateOfBirth: '',
-    phone: '',
-    email: '',
-    externalIdentifier: '',
   });
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [banner, setBanner] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+
+  // Dirty while any field differs from the pristine (possibly prefilled) form.
+  const dirty =
+    values.fullName !== (prefillName ?? '') ||
+    values.dateOfBirth !== '' ||
+    values.phone !== '' ||
+    values.email !== '' ||
+    values.externalIdentifier !== '';
+  useBeforeUnloadGuard(dirty);
 
   const duplicate = useMemo(() => {
     const name = values.fullName.trim().toLowerCase();

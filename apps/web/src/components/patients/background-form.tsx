@@ -16,6 +16,7 @@ import {
 
 import { ApiError, updateMedicalBackground } from '../../lib/api/client';
 import { ErrorBanner } from '../primitives';
+import { useBeforeUnloadGuard } from '../../lib/use-before-unload-guard';
 
 type FieldErrors = Record<string, string[]>;
 
@@ -43,6 +44,14 @@ export function BackgroundForm({
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [banner, setBanner] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+
+  // Dirty while any field differs from the saved record the form loaded with.
+  const dirty =
+    values.medicalConditions !== (initial.medicalConditions ?? '') ||
+    values.previousSurgeries !== (initial.previousSurgeries ?? '') ||
+    values.allergies !== (initial.allergies ?? '') ||
+    values.currentMedications !== (initial.currentMedications ?? '');
+  useBeforeUnloadGuard(dirty);
 
   const set = (field: keyof typeof values) => (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setValues((v) => ({ ...v, [field]: e.target.value }));
