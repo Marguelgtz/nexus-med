@@ -1,0 +1,189 @@
+// Typed browser API client (UI_SPEC §1.6, ARCHITECTURE.md).
+//
+// Used by client components for mutations and client-side fetches.
+// Responses are parsed with the shared contract schemas, so a drifted API
+// fails loudly in the browser instead of corrupting the UI. Never imported
+// from server components (use lib/api/server.ts there).
+
+import {
+  type CreateEncounterInput,
+  type CreatePatientInput,
+  type EncounterDetail,
+  type EncounterSummary,
+  type MedicalBackgroundInput,
+  type PatientDetail,
+  type PatientSummary,
+  type UpdateEncounterInput,
+  type UpdatePatientInput,
+  createEncounterInputSchema,
+  createPatientInputSchema,
+  encounterDetailSchema,
+  encounterSummarySchema,
+  errorEnvelopeSchema,
+  medicalBackgroundInputSchema,
+  patientDetailSchema,
+  patientSummarySchema,
+  updateEncounterInputSchema,
+  updatePatientInputSchema,
+} from '@nexus-med/contracts';
+
+const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://127.0.0.1:4000/api';
+
+export type ApiErrorCode = 'VALIDATION_ERROR' | 'NOT_FOUND' | 'CONFLICT' | 'INTERNAL_ERROR';
+
+export class ApiError extends Error {
+  readonly status: number;
+  readonly code: ApiErrorCode;
+  readonly fieldErrors: Record<string, string[]>;
+
+  constructor(status: number, code: ApiErrorCode, message: string, fieldErrors: Record<string, string[]> = {}) {
+    super(message);
+    this.name = 'ApiError';
+    this.status = status;
+    this.code = code;
+    this.fieldErrors = fieldErrors;
+  }
+}
+
+class NetworkError extends Error {
+  constructor() {
+    super('No se pudo conectar con la API. Verifica que el servidor está iniciado.');
+    this.name = 'NetworkError';
+  }
+}
+
+type Parsed<T> = { success: true; data: T } | { success: false; data?: unknown };
+
+async function request<T>(
+  path: string,
+  init: RequestInit | undefined,
+  parse: (value: unknown) => Parsed<T>,
+): Promise<T> {
+  let res: Response;
+  try {
+    res = await fetch(`${API_BASE}${path}`, {
+      ...init,
+      headers: { 'Content-Type': 'application/json', ...(init?.headers ?? {}) },
+      cache: 'no-store',
+    });
+  } catch {
+    throw new NetworkError();
+  }
+
+  const body: unknown = await res.json().catch(() => null);
+
+  if (!res.ok) {
+    const envelope = errorEnvelopeSchema.safeParse(body);
+    if (envelope.success) {
+      throw new ApiError(
+        res.status,
+        envelope.data.error.code,
+        envelope.data.error.message,
+        envelope.data.error.fieldErrors ?? {},
+      );
+    }
+    const fallback =
+      body && typeof body === 'object' && 'error' in body && typeof (body as { error: unknown }).error === 'string'
+        ? (body as { error: string }).error
+        : `Error de la API (${res.status})`;
+    throw new ApiError(res.status, res.status === 404 ? 'NOT_FOUND' : 'INTERNAL_ERROR', fallback);
+  }
+
+  const parsed = parse(body);
+  if (!parsed.success) {
+    throw new ApiError(res.status, 'INTERNAL_ERROR', 'La respuesta de la API no coincide con el contrato.');
+  }
+  return parsed.data;
+}
+
+function asList<T>(item: { safeParse: (v: unknown) => Parsed<T> }): (v: unknown) => Parsed<T[]> {
+  return (value) => {
+    if (!Array.isArray(value)) return { success: false };
+    const items: T[] = [];
+    for (const entry of value) {
+      const one = item.safeParse(entry);
+      if (!one.success) return { success: false };
+      items.push(one.data);
+    }
+    return { success: true, data: items };
+  };
+}
+
+export type PatientListQuery = { q?: string; status?: 'active' | 'archived' | 'all' };
+
+export function listPatients(query?: PatientListQuery): Promise<PatientSummary[]> {
+  const params = new URLSearchParams();
+  if (query?.q) params.set('q', query.q);
+  if (query?.status) params.set('status', query.status);
+  const qs = params.toString();
+  return request(`/patients${qs ? `?${qs}` : ''}`, undefined, asList(patientSummarySchema));
+}
+
+export function getPatient(id: string): Promise<PatientDetail> {
+  return request(`/patients/${encodeURIComponent(id)}`, undefined, patientDetailSchema.safeParse.bind(patientDetailSchema));
+}
+
+export function createPatient(input: CreatePatientInput): Promise<PatientDetail> {
+  createPatientInputSchema.parse(input);
+  return request('/patients', { method: 'POST', body: JSON.stringify(input) }, patientDetailSchema.safeParse.bind(patientDetailSchema));
+}
+
+export function updatePatient(id: string, input: UpdatePatientInput): Promise<PatientDetail> {
+  updatePatientInputSchema.parse(input);
+  return request(
+    `/patients/${encodeURIComponent(id)}`,
+    { method: 'PATCH', body: JSON.stringify(input) },
+    patientDetailSchema.safeParse.bind(patientDetailSchema),
+  );
+}
+
+export function updateMedicalBackground(id: string, input: MedicalBackgroundInput): Promise<PatientDetail> {
+  medicalBackgroundInputSchema.parse(input);
+  return request(
+    `/patients/${encodeURIComponent(id)}/medical-background`,
+    { method: 'PATCH', body: JSON.stringify(input) },
+    patientDetailSchema.safeParse.bind(patientDetailSchema),
+  );
+}
+
+export function archivePatient(id: string): Promise<PatientDetail> {
+  return request(
+    `/patients/${encodeURIComponent(id)}/archive`,
+    { method: 'PATCH' },
+    patientDetailSchema.safeParse.bind(patientDetailSchema),
+  );
+}
+
+export function listEncounters(patientId: string): Promise<EncounterSummary[]> {
+  return request(
+    `/patients/${encodeURIComponent(patientId)}/encounters`,
+    undefined,
+    asList(encounterSummarySchema),
+  );
+}
+
+export function getEncounter(id: string): Promise<EncounterDetail> {
+  return request(
+    `/encounters/${encodeURIComponent(id)}`,
+    undefined,
+    encounterDetailSchema.safeParse.bind(encounterDetailSchema),
+  );
+}
+
+export function createEncounter(patientId: string, input: CreateEncounterInput): Promise<EncounterDetail> {
+  createEncounterInputSchema.parse(input);
+  return request(
+    `/patients/${encodeURIComponent(patientId)}/encounters`,
+    { method: 'POST', body: JSON.stringify(input) },
+    encounterDetailSchema.safeParse.bind(encounterDetailSchema),
+  );
+}
+
+export function updateEncounter(id: string, input: UpdateEncounterInput): Promise<EncounterDetail> {
+  updateEncounterInputSchema.parse(input);
+  return request(
+    `/encounters/${encodeURIComponent(id)}`,
+    { method: 'PATCH', body: JSON.stringify(input) },
+    encounterDetailSchema.safeParse.bind(encounterDetailSchema),
+  );
+}
