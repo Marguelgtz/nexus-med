@@ -1,6 +1,6 @@
 # UI Specification — Medical Platform MVP
 
-**Status:** O-002 design deliverable (2026-11-07); implementation-ready, reviewed against O-001 verified API capabilities and all P0 stories. Section 7 (expansion design, NX-001…NX-004) added 2026-11-07 — pending owner review before implementation.  
+**Status:** O-002 design delivered; O-005 expansion scope approved in D-023. NX-001/NX-002 are implemented; NX-003 code is present on `feat/studies-web` pending integrated verification; NX-004 remains unimplemented. Observed spec/code differences are logged in §7.0.1 without silently changing the intended design.
 **Owner:** `apps/web` (Next.js App Router)  
 **Interface language:** Spanish (Mexico) — all UI strings below are the canonical copy; technical prose stays in English.  
 **Data:** Synthetic demo records only. A persistent demo banner is part of every screen.
@@ -403,6 +403,19 @@ Design for the four expansion objectives from the owner's mission brief, in orde
 | `MedicalDocument` | `patientId`, `encounterId` (optional), `kind` (`prescription` · `report`), `title` (optional), `body` (narrative, reports), plus `PrescriptionLine[]` for prescriptions: `medication` (required), `dose`, `route`, `frequency`, `duration`, `instructions` (all free text) | `POST /api/patients/:id/documents` · `GET /api/documents/:id` · `PATCH /api/documents/:id` · `GET /api/patients/:id/documents` |
 
 No other entities. No recurrence, reminders, resources, catalogs, or integrations (mission constraints).
+
+#### 7.0.1 Implemented versus designed behavior (2026-11-08)
+
+This is an **as-built inventory**, not approval to change the requirements in the original §7.0 table.
+
+- NX-001: the current API additionally offers `POST /api/appointments/:id/link-encounter`, allowing link-after-creation for eligible appointments. Calendar day/week/month and patient appointment screens exist.
+- NX-002: encounter type is persisted and shown in form/detail/timeline/edit. Dedicated surgical workflow remains deferred, pending Q-NX-01.
+- NX-003: study requests are created only via `studies[]` on **new encounter creation**. The API has `GET /api/patients/:id/studies`, `GET /api/encounters/:id/studies`, and `PATCH /api/studies/:id`. The separate `POST /api/encounters/:id/studies` and `?status=` filter proposed in §7.0 **do not exist** in the branch. The current UI filters patient overview to `ordered` only.
+- **Unresolved:** `TASKS.md` NX-003 defines pending as `ordered` or `completed` until reviewed, but §7.3 and the current overview only show `ordered`. Do not silently resolve this acceptance-criteria difference.
+- `ordered → reviewed` is permitted directly, in addition to `ordered → completed → reviewed`. Two study fixtures and tests exist in source, but NX-003 full end-to-end acceptance has not been independently documented.
+- NX-004 remains design only: no `MedicalDocument`/`PrescriptionLine`, document API, form or print view currently exists.
+
+Refer to `API_CONTRACT.md`, `DATA_MODEL.md`, and `ACTION_PLAN.md` for the current implementation inventory and verification status.
 
 ### 7.1 NX-001 — Appointments and calendar
 
