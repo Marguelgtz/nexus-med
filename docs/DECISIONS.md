@@ -20,34 +20,49 @@ Use `Confirmed`, `Proposed`, `Open`, or `Superseded`. Record the date and ration
 | D-012 | Professional commits, remote PRs, and selective merging are allowed under a restricted merge policy. | Pushes and remote PR creation are allowed when useful. PRs/stacks may remain open and ready to merge; keeping them open is optional. Only an exceptionally solid foundational/base PR may be merged autonomously after all acceptance criteria and checks pass with no blockers. Feature/UI PRs remain open unless the owner explicitly authorizes their merge. |
 | D-013 | Future API runtime target is Cloudflare Workers; D1 is a future database candidate. | Validate adapter, transactions, limits, and critical workflows before deployment. |
 | D-014 | First-run experience must include synthetic demo records. | Seven patients (six active, one archived) and nine encounters; demo banner and root redirect to `/patients`; seed is idempotent and does not overwrite local edits. |
-| D-015 | Local `npm run dev` is the intended single startup command. | It must migrate, explicitly seed, and start both services; this is a requirement, not yet an implemented feature. |
+| D-015 | Local `npm run dev` is the intended single startup command. | Implemented in O-001 (`scripts/dev.mjs`): migrates, explicitly seeds, and starts both services. |
 | D-016 | Development order is database/API foundation, then UX/UI design, then product implementation. | Establish and test the data model and Hono API before feature UI design. Produce and review `docs/UI_SPEC.md` before implementing product screens. |
 | D-017 | Database and API remain revisable during UX design and product implementation. | The initial foundation is not a freeze. Change Prisma schema through migrations and update Hono contracts, validation, tests, and docs when actual workflows justify it. |
+| D-018 | `packages/contracts` is the single owner of transport contracts (confirmed from P-010). | zod 4 schemas + DTO types for patients, encounters, list query, and the error envelope; consumed by both `apps/api` and `apps/web`. No Prisma types in the package. |
+| D-019 | Prisma 7 + `@prisma/adapter-better-sqlite3` verified for the local stack. | Adapter export is `PrismaBetterSqlite3`; migrations commit reproducibly; `prisma.$transaction` rollback verified by test. Prisma 7 forbids `url` in the schema datasource and the config loader cannot import modules, so `prisma.config.ts` is self-contained (assumes repo-root cwd). |
+| D-020 | Domain services serialize Prisma rows to contract DTOs at the service boundary. | Prisma returns `Date`; the wire contract is ISO 8601. Mapping in the services keeps API responses typed against `@nexus-med/contracts` and never exposes Prisma models. |
+| D-021 | Encounter ids are server-generated (client-side `@default(uuid())`). | Clients never supply encounter ids; no SQL-level default is needed, so no migration change. Patient ids likewise (uuid default). |
+| D-022 | UI design decisions U-01–U-08 are authoritative and recorded in `UI_SPEC.md` §6.2. | Highlights: edit screens are pages (no modals for data entry); medical background has its own edit page; archive is one-way with explicit non-reversible confirmation copy (no unarchive endpoint exists); success feedback = navigation + server re-render (no optimistic UI, no saved-toasts); duplicate detection is a non-blocking client notice; system font stack, no icon library, light theme only (offline requirement); post-creation note edits surface as an `Editada` badge; dirty-form protection is `beforeunload`-only. No API or data model changes were required by the design. |
+| D-023 | Expansion mission NX-001…NX-004 approved: appointments+calendar, encounter types, study requests, printable prescriptions/reports — in that order. | Owner mission brief (2026-11-07); smallest useful vertical slices; no new runtime dependencies (CSS-grid calendar, `Intl`, browser print flow — no calendar/date/PDF libraries). |
+| D-024 | `type` is a separate field on both `Appointment` (planned) and `Encounter` (actual), same fixed list (`consulta`, `procedimiento`, `visita_domicilio`, `urgencia`); encounter default `consulta`. | The planned and actual visit types can legitimately differ; existing encounter records migrate to `consulta` without changing meaning. |
+| D-025 | Dedicated surgical/procedure tracking is **deferred**; the basic flow is carried by encounter `plan` free text + appointment type `Procedimiento` + encounter type `procedimiento`. | The mission says to leave out what cannot be defined confidently rather than invent clinical behavior; exact open question recorded as Q-NX-01. No OR/team/anesthesia/supplies concepts. |
+| D-026 | `Appointment` model: `patientId`, `startAt` (instant), `durationMinutes` (5–480), `type`, `status` (`scheduled`/`completed`/`cancelled`), optional `actualDurationMinutes`, optional `linkedEncounterId` (same patient, server-validated). | Covers the mission's behavior set; no recurrence, reminders, or resources; overlap is accepted server-side and made visible in the UI (U-11). |
+| D-027 | `StudyRequest` is an independent record: `patientId`, originating `encounterId` (immutable), closed `category` list + free-text `description`, `status` (`ordered`/`completed`/`reviewed`), optional `resultNote` (≤ 1,000 chars). | Studies have an independent lifecycle (ordered → completed → reviewed) that the encounter alone cannot represent; after creation only status + note change — no edit, no delete (no-permanent-delete rule). |
+| D-028 | Printable documents: one `MedicalDocument` with `kind` (`prescription`/`report`); prescriptions carry structured `PrescriptionLine[]`; printing = WYSIWYG paper card + browser `@media print` CSS; the printed page carries the demo marker; no PDF library, no invented doctor identity, no legal claims. | Mission constraint (browser print where sufficient) + DEMO_DATA rule (output must stay unmistakably fictional). |
+| D-029 | Demo appointment seeding: fixed-timestamp past appointments (completed/cancelled, linked encounters) plus ~4–6 upcoming appointments anchored to the **first seed run's date** (stored once, never moved on re-seed). | Deterministic history like the nine encounters; a live upcoming schedule is required for the calendar demo to demonstrate anything. Deliberate, documented exception to fixed-timestamp seeding (U-14). |
+| D-030 | Calendar rendering: single `/calendar` route with `vista` (`dia`/`semana`/`mes`) + `fecha` query params; CSS grid (no calendar/date library); week starts Monday; day-view window 06:00–22:00 with out-of-window appointments listed separately. | URL-driven state (existing navigation rule); minimal dependency surface; the fixed window keeps the grid honest (U-09/U-10). |
 
 ## Proposed implementation details
 
 | ID | Proposal | Rationale |
 |---|---|---|
-| P-001 | Use `@hono/node-server` locally. | Run the same Hono app behind a local Node.js HTTP service. |
-| P-002 | Use `@prisma/adapter-better-sqlite3` for local SQLite. | Documented Prisma 7 local SQLite driver adapter. |
-| P-003 | Use npm workspaces with `apps/web` and `apps/api`. | Two deployable applications in one manageable repository. |
+| P-001 | Use `@hono/node-server` locally. | Run the same Hono app behind a local Node.js HTTP service. Implemented in O-001. |
+| P-002 | Use `@prisma/adapter-better-sqlite3` for local SQLite. | Documented Prisma 7 local SQLite driver adapter. Implemented in O-001 (see D-019). |
+| P-003 | Use npm workspaces with `apps/web` and `apps/api`. | Two deployable applications in one manageable repository. Implemented in O-001. |
 | P-004 | Next.js Server Components call Hono over server-to-server HTTP for initial reads. | SSR while keeping Hono as the single data/business API. |
 | P-005 | Client Components call Hono through a small typed API client. | Keep all authoritative mutations and validation in Hono. |
 | P-006 | Use no-store behavior for patient/encounter data. | Clinical data is private and mutable; avoid static/shared caching. |
-| P-007 | Root `npm run dev` migrates, seeds, and starts both applications. | Immediate usable developer experience. |
+| P-007 | Root `npm run dev` migrates, seeds, and starts both applications. | Immediate usable developer experience. Implemented in O-001 (`scripts/dev.mjs`). |
 | P-008 | Future API Worker entry point uses Hono's Fetch contract. | Preserve a path from Node.js to Cloudflare Workers. |
-| P-009 | Use stable demo IDs and create-if-missing seed logic. | Repeated startup must not duplicate or overwrite demo/user data. |
-| P-010 | Add a narrow `packages/contracts` workspace for shared API DTOs and runtime-safe schemas. | Both the Next.js client and Hono API consume the same transport contract; keep Prisma/domain implementation out of the package. Confirm during O-001 that this avoids duplication without adding unnecessary workspace overhead. |
+| P-009 | Use stable demo IDs and create-if-missing seed logic. | Repeated startup must not duplicate or overwrite demo/user data. Implemented and test-verified in O-001. |
+| P-010 | Add a narrow `packages/contracts` workspace for shared API DTOs and runtime-safe schemas. | Confirmed as D-018; implemented in O-001. |
 
 ## Open future decisions
 
-- O-001: Validate Prisma 7 with `@prisma/adapter-better-sqlite3`, generated client, migrations, and local transactions during implementation.
+- ~~O-001: Validate Prisma 7 with `@prisma/adapter-better-sqlite3`, generated client, migrations, and local transactions during implementation.~~ — Resolved in O-001; see D-019 and `TESTING.md`.
 - O-002: Validate critical multi-write workflows against D1 capabilities and Prisma's D1 adapter before a Cloudflare deployment decision.
 - O-003: Choose and test the Next.js SSR Worker adapter when deployment enters scope.
 - O-004: Decide how the frontend runtime communicates with the API Worker (for example, service bindings).
 - O-005: Define Google OAuth/OIDC, session handling, and access policy when authentication enters scope.
 - O-006: Decide file storage and private R2 integration if document management enters scope.
 - O-007: Confirm exact required patient demographic and encounter fields with the doctor.
+- Q-NX-01 (surgical follow-through, NX-002): Does the doctor want an explicit procedure record with its own status (recommended / scheduled / performed / cancelled) and links to the eventual appointment/encounter, beyond free-text plan + appointment type? If yes, design the minimal record before building — do not invent OR/team/anesthesia concepts (D-025).
+- Q-NX-02 (study categories, NX-003): Confirm the fixed category list with the doctor (proposed: `Laboratorio`, `Imagenología`, `Rayos X`, `ECG`, `Ecografía`, `Otro` + free-text description).
 
 ## Superseded decisions
 

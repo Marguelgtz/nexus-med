@@ -195,3 +195,75 @@ Add the next entry when O-001 reaches a meaningful verified milestone, such as t
 **Impact:** `ARCHITECTURE.md` Section 8 becomes the canonical repository map and defines naming, ownership, dependency direction, and growth rules. `AGENTS.md`, `README.md`, `API_CONTRACT.md`, and `ACTION_PLAN.md` reference the same layout. The shared contracts workspace remains an implementation proposal to validate during O-001.
 
 **References:** `ARCHITECTURE.md` Section 8, `AGENTS.md`, `API_CONTRACT.md`, `DECISIONS.md` P-010.
+
+### 2026-11-07 — O-001 database/API foundation complete and verified
+
+**Type:** Milestone
+
+**Context:** O-001 (A-001 through A-008) executed the documented foundation: npm-workspaces monorepo, Prisma 7 + SQLite data layer, Hono API with shared contracts, integration tests, minimal Next.js shell, and one-command local runtime.
+
+**Findings and outcomes:**
+
+- Prisma 7 specifics that shaped the code: `url` is forbidden in the schema datasource (it lives only in `prisma.config.ts`), the config loader cannot import TS modules (config is self-contained), the better-sqlite3 adapter export is `PrismaBetterSqlite3`, and `uuid()` defaults for String ids are client-side (no SQL migration change).
+- zod 4 reports strict-mode extra keys as a single empty-path issue with a `keys` array; the shared `parseOrThrow` fans these out into per-field `fieldErrors`.
+- Hono route handlers must `await` async services before `c.json(...)`; passing the promise through silently returns 200 with an empty body and an unhandled rejection.
+- API responses are serialized to contract DTOs in the domain services (Prisma `Date` → ISO 8601 string), keeping Prisma types out of the transport boundary.
+- Verified: 36/36 integration tests (CRUD, search, archive, associations, timeline ordering, validation, seed idempotency/edit preservation, transaction rollback), clean typecheck across workspaces, Next.js production build, and an end-to-end `npm run dev` smoke (API `/health` ok; `/patients` page reports "API conectada" with 7 seeded records).
+
+**Impact:** The repository is now a runnable local application (minimal shell only — no product UI). `docs/UI_SPEC.md` (O-002) is the next deliverable. Work was committed on `main` in small logical increments per the owner's standing rule; no remote is configured, so no push/PR yet.
+
+**References:** `DECISIONS.md` D-018–D-021; `ACTION_PLAN.md` (O-001 exit evidence); `TESTING.md`.
+
+### 2026-11-07 — O-002 UX/UI specification complete
+
+**Type:** Milestone
+
+**Context:** O-002 (T-007–T-011) produced the implementation-ready `docs/UI_SPEC.md` from the O-001 verified API and the documented workflows.
+
+**Findings and outcomes:**
+
+- Capability reconciliation found no API/data gaps: the 11 verified endpoints (patients CRUD/archive/background, encounters list/create/read/update, health) cover every P0 workflow. Two client-level decisions recorded: non-blocking duplicate notice (no API duplicate endpoint) and one-way archive (no unarchive endpoint exists — confirmation copy states this).
+- Information architecture: 7 routes + 404 — `/patients`, `/patients/new`, `/patients/[id]`, `/patients/[id]/editar`, `/patients/[id]/antecedentes`, `/patients/[id]/consultas/nueva`, `/patients/[id]/consultas/[eid]`; URL-driven navigation (shareable, restart-safe); single `Pacientes` nav item; persistent patient context strip.
+- Visual system: minimal clinical light theme, CSS custom-property tokens, system font stack (no web fonts — offline requirement), no icon library, flat cards, state matrix covering loading/empty/not-found/validation/API-error/success per screen.
+- All 14 P0 stories (US-001…US-014) mapped to observable spec behavior; decisions U-01–U-08 recorded (spec §6.2), summarized as D-022.
+- Interface language fixed at Spanish (Mexico) with canonical copy in the spec.
+
+**Impact:** O-003 can start immediately on slice 1 (application shell + shared primitives) with no further design work. UI implementation must follow `UI_SPEC.md`; real API gaps discovered during implementation are revised per D-017 with tests/docs in the same change.
+
+**References:** `docs/UI_SPEC.md`; `DECISIONS.md` D-022; `ACTION_PLAN.md` (O-002 exit evidence, next action).
+
+### 2026-11-07 — O-003 product implementation complete in vertical slices
+
+**Type:** Milestone
+
+**Context:** O-003 implemented the full product UI on the verified O-001 API per `UI_SPEC.md`, built as complete vertical slices (UI + typed client calls + server components + behavior), committed in small logical increments per the owner's standing rule.
+
+**Findings and outcomes:**
+
+- Slices delivered: (1) application shell — top bar, demo banner, persistent patient context strip, CSS tokens, shared primitives (buttons, inputs, cards, badges, banners, skeletons, inline confirm, state matrix); (2) patient registry — SSR list, debounced search, active/archived tabs, shareable `?q=&status=` URLs, create and demographics edit; (3) patient overview — identity card, medical background page, chronological consultation timeline, archive with explicit confirmation (one-way, per UI_SPEC §6.2); (4) consultation creation — full 7-section form, local-timezone `occurredAt`, explicit save; (5) consultation detail — read view with in-place edit (explicit save, `Editada` badge), timeline entries link to detail.
+- Implementation followed `UI_SPEC.md` with no API gaps: all 11 verified O-001 endpoints covered every workflow, so no Prisma/migration/contract changes were required (D-017 not triggered).
+- Registry client behavior: fetches are triggered by user events (search keystroke, tab change, clear) with request-sequence guards against out-of-order responses; SSR provides the initial (possibly URL-parameterized) list, so there is no effect-driven fetch.
+- Final quality pass (O-004 scope overlap): ESLint 9 flat config added (`eslint.config.mjs`, `eslint-config-next` 16 flat-native) with two documented relaxations (`no-explicit-any` off in API test files; `no-html-link-for-pages` off for the App Router); lint surfaced and fixed 29 real issues (unused props removed, an effect-driven fetch refactored to event-driven, anonymous config export); test helper typed against the contract.
+- Verification: 36/36 integration tests, clean `tsc --noEmit` across workspaces, clean `eslint .`, clean Next.js 16 production build; all five slices exercised in a real browser (search/tabs/clear + URL sync, overview, create/edit flows, consultation detail edit + cancel).
+
+**Impact:** The doctor can use every P0 workflow through the designed interface, backed by Hono and SQLite. O-004 (first-run demo and local reliability) became the only remaining objective.
+
+**References:** `docs/UI_SPEC.md`; `ACTION_PLAN.md` (O-003 complete); `TESTING.md`.
+
+### 2026-11-07 — O-004 first-run demo and local reliability verified
+
+**Type:** Milestone
+
+**Context:** O-004 required the app to open to a populated patient registry with a clear Spanish demo warning and to preserve changes across restarts.
+
+**Findings and outcomes:**
+
+- First run verified from a wiped state: deleting `.local/data/medical.db` and running `npm run dev` produced a fresh DB with committed migrations applied and the exact checked-in fixture seeded (7 patients: 6 active, 1 archived; 9 encounters; `demo-patient-003` encounter-free) with no manual steps.
+- `/` redirects `307` to `/patients`; the SSR HTML renders `MODO DEMOSTRACIÓN — DATOS FICTICIOS` (canonical copy per `UI_SPEC.md` — the stale longer variant in `ACTION_PLAN.md` was corrected to point at the spec).
+- Restart persistence verified: a user-created patient (`Paciente Persistencia Check`) survived a full dev-server restart; after restart the active list was exactly 6 seeded + 1 user record (no duplicates, seed idempotency intact).
+- Offline runtime verified: no remote URLs in application source (only doc-comment links in generated Prisma code); the app runs entirely on 127.0.0.1 after dependency install.
+- Final gate green after all changes: typecheck, `eslint .`, 36/36 tests, production build.
+
+**Impact:** O-001–O-004 are complete; the local MVP is built, verified, and demo-ready from a clean checkout (`git clone` → `npm install` → `npm run dev`). No objective is active until the owner names the next post-MVP work (candidates recorded in `ACTION_PLAN.md` §6).
+
+**References:** `ACTION_PLAN.md` (O-004 complete, next action); `TESTING.md`; `PROJECT_HISTORY.md` (O-003 entry above).

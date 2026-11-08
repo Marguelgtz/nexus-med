@@ -21,6 +21,9 @@ coverage/
 !.env.example
 !.env.*.example
 
+# Prisma generated client (regenerated with `npm run db:generate`)
+apps/api/src/generated/
+
 # Logs and temporary files
 *.log
 npm-debug.log*

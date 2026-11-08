@@ -2,13 +2,13 @@
 
 A local-first prototype specification for one general surgeon. The product objective is to validate patient management and clinical continuity using clearly synthetic demo records.
 
-> **Current artifact status:** This starter currently contains project documentation and agent instructions only. It is not yet a runnable application: the Next.js app, Hono API, Prisma schema/migrations, seed script, package manifests, and UI have not been implemented. Hermes must build and verify those deliverables before the application can be started.
+> **Current artifact status:** O-001 through O-004 complete (2026-11-07). The local MVP is implemented end-to-end per `docs/UI_SPEC.md`: patient registry, registration, patient overview with medical background, consultation creation and detail with timeline, demographics edit, and a first-run demo with verified persistence. `npm install` then `npm run dev` migrates, seeds the demo data, and starts the Hono API (port 4000) plus the Next.js app (port 3000); the root route takes the doctor to `/patients`.
 
 ## Confirmed architecture
 
 - `apps/web`: Next.js App Router + TypeScript, using request-time SSR / Server Components for patient and encounter pages.
 - `apps/api`: independent Hono + TypeScript HTTP API, running on Node.js locally.
-- `packages/contracts` (proposed): shared, runtime-safe request/response contracts consumed by the frontend and API; contains no Prisma models or business implementation. Confirm during the database/API foundation.
+- `packages/contracts` (confirmed): shared, runtime-safe request/response contracts consumed by the frontend and API; contains no Prisma models or business implementation.
 - `prisma/`: Prisma ORM 7 schema, migrations, and synthetic seed script.
 - Local persistence: SQLite file at `.local/data/medical.db`.
 - Frontend reads initial page data from Hono over server-to-server HTTP. Browser interactions also use Hono through a small typed API client.
@@ -17,13 +17,13 @@ A local-first prototype specification for one general surgeon. The product objec
 
 ## Repository organization
 
-The top-level layout communicates ownership: `apps/web` is the Next.js presentation layer, `apps/api` owns domain behavior and persistence, `packages/contracts` is the proposed owner for shared HTTP contracts, `prisma/` owns relational schema/migrations/seed, `scripts/` owns local startup, and `docs/` preserves product and engineering context. Within the web app, `src/app/` contains routes and `src/features/` contains workflow-specific UI. Within the API, `src/domains/` contains patients and encounters. The canonical file tree, naming conventions, dependency directions, and growth rules are in `docs/ARCHITECTURE.md` Section 8.
+The top-level layout communicates ownership: `apps/web` is the Next.js presentation layer, `apps/api` owns domain behavior and persistence, `packages/contracts` is the owner of shared HTTP contracts, `prisma/` owns relational schema/migrations/seed, `scripts/` owns local startup, and `docs/` preserves product and engineering context. Within the web app, `src/app/` contains routes, `src/components/` contains workflow-specific UI (`patients/`, `shell/`) and shared primitives, and `src/lib/` holds the API transports and formatting utilities. Within the API, `src/domains/` contains patients and encounters. The canonical file tree, naming conventions, dependency directions, and growth rules are in `docs/ARCHITECTURE.md` Section 8.
 
 ## Included synthetic demo fixture
 
 `docs/demo-dataset.json` is included now; it contains **7 fictional patients (6 active and 1 archived) and 9 fictional encounters**. It also includes a patient with no encounters and multiple patients with consultation history. All note sections carry an unmistakable fictional/demo warning.
 
-This JSON fixture is checked-in demo input, not a populated SQLite database. The Prisma seed script and application code have not been implemented yet. Hermes must implement the schema, migrations, seed, API, frontend, and first-run bootstrap before the application becomes runnable. The expected result after that work is a working local app with these records already visible.
+This JSON fixture is checked-in demo input; the Prisma seed script (`prisma/seed.ts`) creates the corresponding records idempotently (create-if-missing, never overwrites edits). `npm run dev` applies it on every startup, so a first run opens on a populated registry.
 
 ## First-run experience — required final behavior
 
@@ -47,21 +47,22 @@ The first startup must be populated and useful, not an empty shell. The initial 
 - Use synthetic data only. Never enter real patient information.
 - Cloudflare Workers and D1 are future deployment candidates, not active dependencies.
 
-## Developer commands — target, not yet implemented
+## Developer commands
 
-| Command | Intended behavior |
+| Command | Behavior |
 |---|---|
 | `npm install` | Install dependencies (internet required for initial install). |
-| `npm run dev` | Migrate, idempotently seed demo records, and start Next.js + Hono. |
+| `npm run dev` | Migrate, idempotently seed demo records, and start Next.js (3000) + Hono (4000). Ctrl+C stops both. |
 | `npm run db:migrate` | Apply committed local migrations. |
 | `npm run db:migrate:dev` | Create a new development migration. |
 | `npm run db:seed` | Create missing demo records without overwriting existing records. |
-| `npm run db:reset` | Destructive reset; require interactive confirmation or an explicit `--confirm` flag. Never runs during startup. |
+| `npm run db:reset` | Destructive reset; requires an explicit `--confirm` flag. Never runs during startup. |
 | `npm run typecheck` | Type-check all workspaces. |
-| `npm run lint` | Lint all workspaces. |
-| `npm run test` | Run tests. |
+| `npm run lint` | Lint the repository. |
+| `npm run test` | Run tests (API integration suite + web unit suite). |
+| `npm run build` | Build all workspaces (currently the Next.js production build). |
 
-These are target commands, not claims that scripts currently exist. Hermes must implement them and verify exact behavior before marking them complete.
+All commands are implemented and verified; see `docs/TESTING.md` for the verification evidence.
 
 ## Documentation map
 
@@ -69,8 +70,8 @@ These are target commands, not claims that scripts currently exist. Hermes must 
 - `docs/PRODUCT.md` — product scope, user stories, and acceptance criteria.
 - `docs/WORKFLOWS.md` — detailed doctor journeys and edge cases.
 - `docs/ARCHITECTURE.md` — application topology, SSR/API flow, persistence, startup, and future Cloudflare boundary.
-- `docs/API_CONTRACT.md` — initial Hono request/response contract; validate and finalize during the database/API foundation phase.
-- `docs/UI_SPEC.md` — planned UX/UI design deliverable created and reviewed after the database/API foundation, before feature UI implementation.
+- `docs/API_CONTRACT.md` — Hono request/response contract, finalized during the database/API foundation (O-001).
+- `docs/UI_SPEC.md` — UX/UI specification (O-002, 2026-11-07): screens, interactions, states, visual system; implementation-ready for O-003.
 - `docs/DATA_MODEL.md` — current prototype entities and relationships.
 - `docs/DEMO_DATA.md` — synthetic dataset and seeding rules.
 - `docs/demo-dataset.json` — exact fictional patient/encounter fixture payload.

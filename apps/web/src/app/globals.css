@@ -1,0 +1,1163 @@
+/* Nexus Med — design tokens and component styles (UI_SPEC.md §5).
+ *
+ * Minimal clinical visual system: light theme only, system fonts (offline
+ * requirement), one accent color, flat surfaces. All colors live in
+ * custom properties; component classes reference tokens only.
+ */
+
+:root {
+  /* Surfaces */
+  --bg: #f6f7f8;
+  --surface: #ffffff;
+  --surface-hover: #eef1f4;
+  --border: #d8dee4;
+  --border-strong: #b9c2cb;
+
+  /* Text */
+  --text: #1c2430;
+  --text-muted: #5c6875;
+  --text-faint: #8b96a2;
+
+  /* Brand / action */
+  --primary: #155eab;
+  --primary-hover: #114c8c;
+  --primary-contrast: #ffffff;
+
+  /* Semantic */
+  --success: #1e7e44;
+  --warning: #9a6b00;
+  --warning-bg: #fdf3d7;
+  --danger: #c23b3b;
+  --danger-hover: #a52f2f;
+  --error-bg: #fbe9e9;
+  --info-bg: #e8f1fb;
+
+  /* Type */
+  --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+    'Helvetica Neue', Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  /* Spacing scale (px) */
+  --s-1: 4px;
+  --s-2: 8px;
+  --s-3: 12px;
+  --s-4: 16px;
+  --s-5: 24px;
+  --s-6: 32px;
+  --s-7: 48px;
+
+  /* Radii */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+
+  /* Layout */
+  --container: 1040px;
+  --topbar-h: 56px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+h1 {
+  font-size: 24px;
+  line-height: 32px;
+  font-weight: 600;
+  margin: 0 0 var(--s-3);
+}
+
+h2 {
+  font-size: 18px;
+  line-height: 26px;
+  font-weight: 500;
+  margin: 0 0 var(--s-3);
+}
+
+p {
+  margin: 0 0 var(--s-3);
+}
+
+a {
+  color: var(--primary);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+.muted {
+  color: var(--text-muted);
+}
+
+.faint {
+  color: var(--text-faint);
+}
+
+.mono {
+  font-family: var(--font-mono);
+  font-size: 13px;
+}
+
+/* ── App frame ─────────────────────────────────────────────────────────── */
+
+.topbar {
+  height: var(--topbar-h);
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  padding: 0 var(--s-4);
+}
+
+.topbar-inner {
+  max-width: var(--container);
+  margin: 0 auto;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: var(--s-5);
+}
+
+.topbar-brand {
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--text);
+  letter-spacing: 0.2px;
+}
+
+.topbar-brand:hover {
+  text-decoration: none;
+}
+
+.topbar-nav {
+  display: flex;
+  gap: var(--s-4);
+}
+
+.topbar-nav a {
+  color: var(--text-muted);
+  font-size: 14px;
+  font-weight: 500;
+  padding: 4px 2px;
+}
+
+.topbar-nav a:hover {
+  color: var(--text);
+  text-decoration: none;
+}
+
+.topbar-nav a.active {
+  color: var(--text);
+  font-weight: 600;
+  box-shadow: inset 0 -2px 0 var(--primary);
+}
+
+.demo-banner {
+  background: var(--warning-bg);
+  color: var(--warning);
+  font-size: 13px;
+  font-weight: 600;
+  text-align: center;
+  padding: 6px var(--s-3);
+  letter-spacing: 0.3px;
+}
+
+.container {
+  max-width: var(--container);
+  margin: 0 auto;
+  padding: var(--s-5) var(--s-4) var(--s-7);
+}
+
+/* Patient context strip (UI_SPEC §2) */
+.context-strip {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--s-2) var(--s-3);
+  margin-bottom: var(--s-4);
+  font-size: 14px;
+}
+
+.context-strip .back {
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.context-strip .name {
+  font-weight: 600;
+  color: var(--text);
+}
+
+/* ── Buttons (UI_SPEC §5.3) ────────────────────────────────────────────── */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  padding: 8px 16px;
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background-color 120ms ease, border-color 120ms ease;
+}
+
+.btn:hover {
+  text-decoration: none;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background: var(--primary);
+  color: var(--primary-contrast);
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: var(--primary-hover);
+}
+
+.btn-secondary {
+  background: var(--surface);
+  color: var(--text);
+  border-color: var(--border-strong);
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: var(--surface-hover);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--primary);
+}
+
+.btn-ghost:hover:not(:disabled) {
+  background: var(--surface-hover);
+}
+
+.btn-ghost-danger {
+  background: transparent;
+  color: var(--danger);
+}
+
+.btn-ghost-danger:hover:not(:disabled) {
+  background: var(--error-bg);
+}
+
+.btn-danger {
+  background: var(--danger);
+  color: #ffffff;
+}
+
+.btn-danger:hover:not(:disabled) {
+  background: var(--danger-hover);
+}
+
+.btn-row {
+  display: flex;
+  gap: var(--s-2);
+  margin-top: var(--s-4);
+}
+
+.btn-row.end {
+  justify-content: flex-end;
+}
+
+/* ── Cards, rows, timeline (UI_SPEC §5.3) ──────────────────────────────── */
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: var(--s-5);
+  margin-top: var(--s-4);
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-3);
+  margin-bottom: var(--s-3);
+}
+
+.card-header h2 {
+  margin: 0;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  min-height: 56px;
+  padding: var(--s-2) var(--s-3);
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+  text-decoration: none;
+}
+
+a.row:hover {
+  background: var(--surface-hover);
+  text-decoration: none;
+}
+
+.row .main {
+  font-weight: 600;
+}
+
+.row .cell {
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+.row-list {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  margin-top: var(--s-4);
+}
+
+.row-list .row:last-child {
+  border-bottom: none;
+}
+
+.timeline {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+}
+
+.timeline-item {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  padding: var(--s-3) var(--s-4);
+  color: var(--text);
+  display: block;
+}
+
+a.timeline-item:hover {
+  background: var(--surface-hover);
+  text-decoration: none;
+}
+
+.timeline-item .when {
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.timeline-item .reason {
+  color: var(--text-muted);
+  font-size: 14px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.timeline-item .edited {
+  color: var(--text-faint);
+  font-size: 13px;
+  margin-top: 2px;
+}
+
+/* ── Badges (UI_SPEC §5.3) ─────────────────────────────────────────────── */
+
+.badge {
+  display: inline-block;
+  border-radius: 999px;
+  padding: 1px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+}
+
+.badge-archived {
+  background: var(--warning-bg);
+  color: var(--warning);
+}
+
+.badge-edited {
+  background: var(--info-bg);
+  color: var(--primary);
+}
+
+/* ── Forms (UI_SPEC §5.3) ──────────────────────────────────────────────── */
+
+.field {
+  margin-bottom: var(--s-4);
+}
+
+.field label {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: var(--s-1);
+}
+
+.field label .required {
+  color: var(--danger);
+}
+
+.field input,
+.field textarea,
+.field select {
+  width: 100%;
+  min-height: 40px;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-size: 15px;
+}
+
+.field textarea {
+  min-height: 0;
+  resize: vertical;
+}
+
+.field input:focus,
+.field textarea:focus,
+.field select:focus {
+  outline: 2px solid var(--primary);
+  outline-offset: 1px;
+  border-color: var(--primary);
+}
+
+.field input[aria-invalid='true'],
+.field textarea[aria-invalid='true'] {
+  border-color: var(--danger);
+}
+
+.field .field-error {
+  color: var(--danger);
+  font-size: 13px;
+  margin-top: var(--s-1);
+}
+
+.field .field-hint {
+  color: var(--text-faint);
+  font-size: 13px;
+  margin-top: var(--s-1);
+}
+
+.search-input {
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 15px;
+}
+
+.search-input:focus {
+  outline: 2px solid var(--primary);
+  outline-offset: 1px;
+  border-color: var(--primary);
+}
+
+/* Segmented control (registry tabs) */
+.segmented {
+  display: inline-flex;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  background: var(--bg);
+}
+
+.segmented a,
+.segmented button {
+  appearance: none;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 500;
+  padding: 8px 14px;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.segmented a.active,
+.segmented button.active {
+  background: var(--surface);
+  color: var(--text);
+  font-weight: 600;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+}
+
+/* ── Banners and notices (UI_SPEC §5.3) ────────────────────────────────── */
+
+.error-banner {
+  background: var(--error-bg);
+  border-left: 3px solid var(--danger);
+  border-radius: var(--radius-sm);
+  padding: var(--s-3) var(--s-4);
+  margin-top: var(--s-4);
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-3);
+  flex-wrap: wrap;
+}
+
+.notice-info {
+  background: var(--info-bg);
+  border-radius: var(--radius-sm);
+  padding: var(--s-3) var(--s-4);
+  margin-top: var(--s-4);
+  font-size: 15px;
+}
+
+/* Inline confirmation panel (archive flow) */
+.inline-confirm {
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  margin-top: var(--s-4);
+  overflow: hidden;
+}
+
+.inline-confirm .confirm-head {
+  background: var(--warning-bg);
+  padding: var(--s-2) var(--s-4);
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--warning);
+}
+
+.inline-confirm .confirm-body {
+  padding: var(--s-3) var(--s-4);
+}
+
+/* ── Skeletons (UI_SPEC §5.3) ──────────────────────────────────────────── */
+
+.skeleton {
+  border-radius: var(--radius-sm);
+  background: var(--surface-hover);
+  position: relative;
+  overflow: hidden;
+  margin: var(--s-3) 0;
+}
+
+.skeleton::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.6),
+    transparent
+  );
+  animation: shimmer 1.4s infinite;
+}
+
+@keyframes shimmer {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(100%);
+  }
+}
+
+.skeleton-row {
+  height: 56px;
+}
+
+.skeleton-block {
+  height: 120px;
+}
+
+/* ── States ────────────────────────────────────────────────────────────── */
+
+.empty-state {
+  text-align: center;
+  padding: var(--s-7) var(--s-5);
+  color: var(--text-muted);
+}
+
+.empty-state .empty-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: var(--s-2);
+}
+
+/* Page heading row (title + primary action) */
+.page-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-3);
+  flex-wrap: wrap;
+  margin-bottom: var(--s-3);
+}
+
+.page-head h1 {
+  margin: 0;
+}
+
+/* Header action row (overview, UI_SPEC §3.3) */
+.actions {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  flex-wrap: wrap;
+}
+
+.actions .btn {
+  min-height: 36px;
+  padding: 6px 12px;
+}
+
+.actions .btn-primary {
+  min-height: 40px;
+  padding: 8px 16px;
+}
+
+.actions .inline-confirm {
+  flex-basis: 100%;
+  margin-top: var(--s-2);
+}
+
+.btn-sm {
+  min-height: 32px;
+  padding: 4px 10px;
+  font-size: 13px;
+}
+
+/* Identity sub-line under the overview H1 (UI_SPEC §3.3) */
+.subline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2) var(--s-5);
+  color: var(--text-muted);
+  font-size: 14px;
+  margin-bottom: var(--s-3);
+}
+
+.subline-item .faint {
+  margin-right: 4px;
+}
+
+/* Antecedentes card rows: label 60% / value 40% on desktop */
+.bg-row {
+  display: grid;
+  grid-template-columns: minmax(120px, 60%) 40%;
+  gap: var(--s-4);
+  padding: var(--s-2) 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 14px;
+}
+
+.bg-row:last-child {
+  border-bottom: none;
+}
+
+.bg-label {
+  color: var(--text-muted);
+}
+
+.bg-value {
+  white-space: pre-wrap;
+}
+
+@media (max-width: 639px) {
+  .bg-row {
+    grid-template-columns: 1fr;
+    gap: var(--s-1);
+  }
+}
+
+/* Note sections (encounter detail / form) */
+.note-section {
+  margin-bottom: var(--s-5);
+}
+
+.note-section:last-child {
+  margin-bottom: 0;
+}
+
+.note-section .section-label {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: var(--s-1);
+}
+
+.note-section .section-body {
+  white-space: pre-wrap;
+}
+
+/* Consultation detail header (UI_SPEC §3.7) */
+.encounter-head {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  flex-wrap: wrap;
+}
+
+/* Timeline entries are links to the consultation detail (UI_SPEC §3.3/§3.7) */
+.timeline-item a.timeline-link {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+}
+
+.timeline-item:hover {
+  background: var(--surface-hover);
+}
+
+/* ── Calendar & appointments (UI_SPEC §7) ──────────────────────────────── */
+
+.view-toggle {
+  display: inline-flex;
+  gap: var(--s-1);
+}
+
+.view-toggle .active-toggle {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.cal-nav {
+  display: inline-flex;
+  gap: var(--s-1);
+}
+
+/* Badges */
+.badge-row {
+  display: inline-flex;
+  gap: var(--s-2);
+  align-items: center;
+}
+
+.badge-type {
+  background: var(--surface-hover);
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+}
+
+.badge-status-scheduled {
+  background: var(--info-bg);
+  color: var(--primary);
+}
+
+.badge-status-completed {
+  background: #e4f3ea;
+  color: var(--success);
+}
+
+.badge-status-cancelled {
+  background: var(--error-bg);
+  color: var(--danger);
+}
+
+/* Appointment rows (overview card, list pages) */
+.appt-row {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  padding: var(--s-3) 0;
+  border-top: 1px solid var(--border);
+  color: inherit;
+  text-decoration: none;
+  font-size: 15px;
+}
+
+.appt-row:first-of-type {
+  border-top: none;
+}
+
+.appt-row:hover {
+  background: var(--surface-hover);
+}
+
+.appt-row-date {
+  flex: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.appt-row-range {
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+.appt-detail-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-4);
+  flex-wrap: wrap;
+  margin-bottom: var(--s-3);
+  font-variant-numeric: tabular-nums;
+}
+
+.appt-extra {
+  display: flex;
+  align-items: center;
+  gap: var(--s-4);
+  flex-wrap: wrap;
+  margin: var(--s-2) 0 var(--s-4);
+  font-size: 14px;
+}
+
+.appt-actions {
+  display: flex;
+  gap: var(--s-2);
+  margin-top: var(--s-4);
+  padding-top: var(--s-4);
+  border-top: 1px solid var(--border);
+}
+
+/* Inline action panels (complete / cancel / link) */
+.panel {
+  margin-top: var(--s-4);
+  padding: var(--s-4);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+}
+
+.panel h3 {
+  margin-bottom: var(--s-3);
+}
+
+/* Appointment form */
+.appt-form {
+  margin-top: var(--s-3);
+}
+
+.form-row {
+  display: flex;
+  gap: var(--s-4);
+  flex-wrap: wrap;
+  margin-bottom: var(--s-3);
+}
+
+.form-row label {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.form-row input,
+.form-row select {
+  min-height: 40px;
+  padding: 8px 12px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  font-size: 15px;
+  background: var(--surface);
+  color: var(--text);
+}
+
+.form-actions {
+  display: flex;
+  gap: var(--s-2);
+  margin-top: var(--s-3);
+}
+
+.notice {
+  background: var(--warning-bg);
+  color: var(--warning);
+  border-radius: var(--radius-sm);
+  padding: var(--s-2) var(--s-3);
+  font-size: 14px;
+  margin: var(--s-2) 0;
+}
+
+.error {
+  color: var(--danger);
+  background: var(--error-bg);
+  border-radius: var(--radius-sm);
+  padding: var(--s-2) var(--s-3);
+  font-size: 14px;
+  margin: var(--s-2) 0;
+}
+
+/* ── Calendar views ────────────────────────────────────────────────────── */
+
+.dimmed {
+  opacity: 0.55;
+}
+
+/* Day view: real time grid */
+.day-grid {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.day-grid-body {
+  position: relative;
+}
+
+.day-grid-hour {
+  position: relative;
+  height: 56px;
+  border-top: 1px solid var(--border);
+}
+
+.day-grid-label {
+  position: absolute;
+  top: 2px;
+  left: var(--s-2);
+  font-size: 12px;
+  color: var(--text-faint);
+  font-variant-numeric: tabular-nums;
+}
+
+.cal-block {
+  position: absolute;
+  margin-top: 1px;
+  margin-left: 2px;
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  font-size: 13px;
+  line-height: 1.35;
+  overflow: hidden;
+  color: inherit;
+  text-decoration: none;
+  box-shadow: 0 1px 2px rgba(28, 36, 48, 0.08);
+  z-index: 1;
+}
+
+.cal-block:hover {
+  z-index: 2;
+  background: var(--surface-hover);
+}
+
+/* Week view */
+.week-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: var(--s-2);
+}
+
+.cal-week-col {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: var(--s-2);
+  min-height: 120px;
+}
+
+.cal-today-col {
+  border-color: var(--primary);
+  box-shadow: inset 0 0 0 1px var(--primary);
+}
+
+.cal-col-head {
+  display: block;
+  font-weight: 600;
+  font-size: 14px;
+  text-align: center;
+  padding-bottom: var(--s-2);
+  margin-bottom: var(--s-2);
+  border-bottom: 1px solid var(--border);
+  color: inherit;
+  text-decoration: none;
+}
+
+.cal-col-items {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+}
+
+/* Month view */
+.month-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.month-head {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  border-bottom: 1px solid var(--border);
+}
+
+.month-head span {
+  padding: var(--s-2);
+  text-align: center;
+  font-size: 12px;
+}
+
+.cal-month-wrap {
+  border-top: 1px solid var(--border);
+  border-left: 1px solid var(--border);
+}
+
+.cal-month-cell {
+  min-height: 88px;
+  padding: var(--s-2);
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+}
+
+.cal-month-daynum {
+  font-size: 13px;
+  font-weight: 600;
+  color: inherit;
+  text-decoration: none;
+}
+
+.cal-month-items {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+/* Chips shared by week/month views */
+.cal-chip {
+  display: block;
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  border-left: 3px solid var(--border-strong);
+  background: var(--surface-hover);
+  font-size: 12px;
+  line-height: 1.4;
+  color: inherit;
+  text-decoration: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cal-chip:hover {
+  background: var(--border);
+}
+
+.cal-more {
+  font-size: 12px;
+  color: var(--primary);
+  padding-left: 6px;
+}
+
+/* Type accents — the calendar's only color coding besides status */
+.cal-type-consulta {
+  border-left-color: var(--primary);
+}
+
+.cal-type-procedimiento {
+  border-left-color: #6b3fa0;
+}
+
+.cal-type-visita_domicilio {
+  border-left-color: var(--warning);
+}
+
+.cal-type-urgencia {
+  border-left-color: var(--danger);
+}
+
+.cal-block.cal-type-consulta {
+  border-left: 3px solid var(--primary);
+}
+
+.cal-block.cal-type-procedimiento {
+  border-left: 3px solid #6b3fa0;
+}
+
+.cal-block.cal-type-visita_domicilio {
+  border-left: 3px solid var(--warning);
+}
+
+.cal-block.cal-type-urgencia {
+  border-left: 3px solid var(--danger);
+}
+
+.cal-cancelled {
+  opacity: 0.5;
+  text-decoration: line-through;
+}
+
+.cal-today-item {
+  font-weight: 600;
+}
+
+/* ── Responsive (UI_SPEC §5.6) ─────────────────────────────────────────── */
+
+@media (max-width: 639px) {
+  .container {
+    padding: var(--s-4) var(--s-3) var(--s-6);
+  }
+
+  .topbar {
+    padding: 0 var(--s-3);
+  }
+
+  .row {
+    flex-wrap: wrap;
+    min-height: 48px;
+  }
+
+  .btn {
+    min-height: 44px;
+  }
+
+  /* Calendar: the week grid scrolls horizontally; the day grid keeps
+     its 100% width with a smaller hour height. */
+  .week-grid {
+    display: block;
+    overflow-x: auto;
+  }
+
+  .week-grid > .cal-week-col {
+    display: inline-block;
+    width: 140px;
+    margin-right: var(--s-2);
+  }
+
+  .day-grid-hour {
+    height: 44px;
+  }
+}

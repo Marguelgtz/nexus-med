@@ -1,0 +1,109 @@
+// Nexus Med — relational schema (local SQLite via Prisma ORM 7).
+// Source of truth for the local data model. See docs/DATA_MODEL.md.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../apps/api/src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+  // Prisma 7: the connection URL is not allowed in the schema. It is defined
+  // in prisma.config.ts for the CLI and via the driver adapter at runtime.
+}
+
+// One person receiving care. The stable center of the clinical record.
+model Patient {
+  id                 String      @id @default(uuid())
+  fullName           String
+  // Date-only value stored as YYYY-MM-DD to avoid timezone shifts.
+  dateOfBirth        String?
+  phone              String?
+  email              String?
+  // Practice-specific identifier (optional).
+  externalIdentifier String?
+
+  // Medical background — current ongoing context, free text in the prototype.
+  // Blank means "not recorded", never a confirmed negative finding.
+  medicalConditions  String?
+  previousSurgeries  String?
+  allergies          String?
+  currentMedications String?
+
+  // Archiving keeps the record and its clinical history; never hard delete.
+  isArchived         Boolean     @default(false)
+  createdAt          DateTime    @default(now())
+  updatedAt          DateTime    @updatedAt
+
+  encounters         Encounter[]
+  appointments       Appointment[]
+
+  @@index([fullName])
+  @@map("patients")
+}
+
+// One consultation belonging to exactly one patient.
+// Note content is attached to the encounter; it is never rewritten when the
+// patient's demographics or medical background change.
+model Encounter {
+  // Server-generated id (uuid); the client never supplies encounter ids.
+  id                      String   @id @default(uuid())
+  patientId               String
+  patient                 Patient  @relation(fields: [patientId], references: [id], onDelete: Restrict)
+  // When the consultation happened. Distinct from createdAt/updatedAt.
+  occurredAt              DateTime
+  // Fixed list (validated at the API): consulta, procedimiento,
+  // visita_domicilio, urgencia. What actually HAPPENED (D-024); default
+  // `consulta` — pre-expansion records are consultations and migrate
+  // without changing meaning.
+  type                    String   @default("consulta")
+  reason                  String?
+  historyOfPresentIllness String?
+  relevantHistory         String?
+  physicalExamination     String?
+  assessment              String?
+  plan                    String?
+  followUp                String?
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+
+  // Appointments completed by linking to this encounter (at most one per
+  // appointment; the link is the only relationship — the note is never
+  // copied into the appointment).
+  linkedAppointments      Appointment[]
+
+  @@index([patientId, occurredAt(sort: Desc)])
+  @@map("encounters")
+}
+
+// One scheduled visit belonging to exactly one patient (UI_SPEC §7.1).
+// `startAt` is an instant like `occurredAt`; the UI renders it in the
+// practice timezone. Status transitions are explicit and one-directional
+// (scheduled → completed | cancelled; cancelled → scheduled via
+// reschedule); `completed` is final.
+model Appointment {
+  id                    String   @id @default(uuid())
+  patientId             String
+  patient               Patient  @relation(fields: [patientId], references: [id], onDelete: Restrict)
+  // When the visit is (or was) planned to start.
+  startAt               DateTime
+  // Planned duration in minutes (5–480, validated at the API boundary).
+  durationMinutes       Int
+  // Fixed list (validated at the API): consulta, procedimiento,
+  // visita_domicilio, urgencia. What was PLANNED — distinct from the
+  // actual encounter type.
+  type                  String
+  // scheduled, completed, cancelled (validated at the API).
+  status                String   @default("scheduled")
+  // Set on completion; the doctor's record of how long it actually took.
+  actualDurationMinutes Int?
+  completedAt           DateTime?
+  linkedEncounterId     String?  @unique
+  linkedEncounter       Encounter? @relation(fields: [linkedEncounterId], references: [id], onDelete: SetNull)
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  @@index([startAt])
+  @@index([patientId, startAt])
+  @@map("appointments")
+}

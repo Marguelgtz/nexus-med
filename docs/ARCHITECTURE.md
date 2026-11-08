@@ -10,7 +10,7 @@
 
 ## 1. Architectural Decisions
 
-The prototype uses two separately runnable applications in one npm-workspaces repository: `apps/web` (frontend) and `apps/api` (API). A narrow `packages/contracts` workspace is proposed for transport DTOs and runtime-safe schemas shared by both applications; validate the need and exact schema tooling during O-001.
+The prototype uses two separately runnable applications in one npm-workspaces repository: `apps/web` (frontend, `@nexus-med/web`) and `apps/api` (API, `@nexus-med/api`). A narrow `packages/contracts` workspace (`@nexus-med/contracts`) provides transport DTOs and runtime-safe schemas shared by both applications (established during O-001 with Zod 4).
 
 1. **Frontend — Next.js App Router + TypeScript.** Uses request-time server rendering for patient and encounter pages. Server Components retrieve data from the Hono API. Client Components provide browser interactivity.
 2. **API — Hono + TypeScript.** Runs as a separate Node.js HTTP service locally. It owns the HTTP contract, validation, domain/application logic, and all database access.
@@ -77,7 +77,7 @@ The frontend and API remain separate deployable applications. The exact Next.js-
 | Local runtime | Node.js for both applications | Confirmed |
 | Future API runtime | Cloudflare Workers | Future target |
 | Local database | SQLite file | Confirmed |
-| Shared API contracts | Narrow `packages/contracts` workspace for cross-app DTOs/schemas | Proposed; validate during O-001 |
+| Shared API contracts | Narrow `packages/contracts` workspace (`@nexus-med/contracts`) for cross-app DTOs/schemas | In use since O-001 (Zod 4) |
 | ORM | Prisma ORM 7 | Confirmed |
 | Local SQLite adapter | `@prisma/adapter-better-sqlite3` | Proposed implementation choice; validate during bootstrap |
 | Future database | Cloudflare D1 | Future candidate; transaction behavior must be validated |
@@ -278,7 +278,7 @@ Use JSON requests and responses. Keep endpoint naming and response envelopes con
 - Define explicit request and response DTOs. Do not expose Prisma-generated model types or raw database rows as the frontend contract.
 - Use one coherent server-side validation approach for route inputs. Client-side validation may reuse safe contract schemas for UX, but Hono remains authoritative.
 - Keep error response shape and HTTP status behavior consistent across domains.
-- If P-010 is accepted, keep shared HTTP DTOs and runtime-safe request/response schemas in the small `@medical-platform/contracts` workspace described in Section 8.5. Do not duplicate transport shapes between Next.js and Hono or expose Prisma models.
+- If P-010 is accepted, keep shared HTTP DTOs and runtime-safe request/response schemas in the small `@nexus-med/contracts` workspace described in Section 8.5. Do not duplicate transport shapes between Next.js and Hono or expose Prisma models.
 - Keep the initial API contract documented and covered by tests. Generate OpenAPI only if it fits the chosen validation tooling without disproportionate complexity.
 - The initial contract is a foundation, not a freeze. Change routes, DTOs, validation, and Prisma schema when real UX or implementation requirements justify it; ship a reviewed migration and update tests/docs with each material change.
 
@@ -294,7 +294,7 @@ API domains live under `apps/api/src/domains/`:
 - `encounters`: consultation creation, clinical note fields, retrieval, updates, patient timeline.
 - `documents`: future domain only; do not implement file operations in this prototype.
 
-The API owns authoritative domain rules under `apps/api/src/domains/`. The frontend groups workflow UI under `apps/web/src/features/`; it must not duplicate authoritative rules. If P-010 is accepted, shared request/response contracts belong to `packages/contracts/`.
+The API owns authoritative domain rules under `apps/api/src/domains/`. The frontend groups workflow UI under `apps/web/src/components/`; it must not duplicate authoritative rules. Shared request/response contracts belong to `packages/contracts/`.
 
 Do not introduce a repository, service, interface, controller, and factory for every entity. Use small modules and split files only when they improve clarity.
 
@@ -319,59 +319,52 @@ Optimize for **clear ownership, discoverability, and structured growth**. Do not
 The following is the intended structure as the application is implemented. It is a target map, not an instruction to create empty directories or placeholder files. Add a directory when it has real contents.
 
 ```text
-medical-platform/
+nexus-med/
 ├── apps/
-│   ├── web/                              # Next.js SSR frontend application
+│   ├── web/                              # Next.js SSR frontend application (@nexus-med/web)
 │   │   ├── src/
 │   │   │   ├── app/                      # App Router: routes, layouts, loading/error boundaries
 │   │   │   │   ├── layout.tsx            # Root HTML/document layout
 │   │   │   │   ├── page.tsx              # Redirect / to /patients
+│   │   │   │   ├── not-found.tsx         # 404 boundary
 │   │   │   │   ├── globals.css
-│   │   │   │   └── (workspace)/           # Route group; does not change URL paths
-│   │   │   │       └── patients/
-│   │   │   │           ├── page.tsx       # /patients
-│   │   │   │           ├── new/page.tsx  # /patients/new
-│   │   │   │           └── [patientId]/
-│   │   │   │               ├── page.tsx  # /patients/:patientId
-│   │   │   │               ├── edit/page.tsx
-│   │   │   │               └── encounters/
-│   │   │   │                   ├── new/page.tsx
-│   │   │   │                   └── [encounterId]/page.tsx
-│   │   │   ├── features/                 # Feature-specific UI and frontend orchestration
-│   │   │   │   ├── patients/
-│   │   │   │   │   ├── components/
-│   │   │   │   │   ├── forms/
-│   │   │   │   │   └── api.ts             # Patient-specific API calls, if useful
-│   │   │   │   └── encounters/
-│   │   │   │       ├── components/
-│   │   │   │       ├── forms/
-│   │   │   │       └── api.ts
-│   │   │   ├── components/                # Genuinely shared visual components
-│   │   │   │   ├── ui/                    # Generic controls/primitives
-│   │   │   │   └── layout/                # App shell and navigation
-│   │   │   └── lib/                       # Frontend-wide technical utilities
+│   │   │   │   └── patients/
+│   │   │   │       ├── page.tsx          # /patients (registry)
+│   │   │   │       ├── new/page.tsx      # /patients/new
+│   │   │   │       └── [id]/
+│   │   │   │           ├── page.tsx      # /patients/:id (overview + timeline)
+│   │   │   │           ├── editar/page.tsx
+│   │   │   │           ├── antecedentes/page.tsx
+│   │   │   │           └── consultas/
+│   │   │   │               ├── nueva/page.tsx
+│   │   │   │               └── [eid]/page.tsx
+│   │   │   ├── components/               # Workflow UI and app chrome
+│   │   │   │   ├── patients/             # Registry, forms, timeline, encounter detail
+│   │   │   │   ├── shell/                # Top bar, demo banner, patient context strip
+│   │   │   │   └── primitives.tsx        # Genuinely shared visual primitives
+│   │   │   └── lib/
 │   │   │       ├── api/
-│   │   │       │   ├── server.ts          # Server-only Hono API transport
-│   │   │       │   └── browser.ts         # Browser Hono API transport
-│   │   │       ├── config/
-│   │   │       └── formatting/
-│   │   ├── public/                        # Locally bundled static assets only
+│   │   │       │   ├── server.ts         # Server-only Hono API transport (SSR)
+│   │   │       │   └── client.ts         # Browser Hono API client (typed)
+│   │   │       ├── format.ts             # Central practice-timezone formatting
+│   │   │       └── use-before-unload-guard.ts
+│   │   ├── test/                         # Web unit tests (Vitest)
+│   │   ├── public/                       # Locally bundled static assets only
 │   │   ├── package.json
 │   │   └── tsconfig.json
 │   │
-│   └── api/                              # Standalone Hono API application
+│   └── api/                              # Standalone Hono API application (@nexus-med/api)
 │       ├── src/
 │       │   ├── app.ts                    # Compose Hono app; export Fetch-compatible app
 │       │   ├── index.ts                  # Local Node.js process entry point
 │       │   ├── domains/                  # Backend product/business domains
 │       │   │   ├── patients/
 │       │   │   │   ├── patients.routes.ts
-│       │   │   │   ├── patients.service.ts
-│       │   │   │   └── patients.test.ts
+│       │   │   │   └── patients.service.ts
 │       │   │   └── encounters/
 │       │   │       ├── encounters.routes.ts
-│       │   │       ├── encounters.service.ts
-│       │   │       └── encounters.test.ts
+│       │   │       └── encounters.service.ts
+│       │   ├── generated/prisma/         # Prisma 7 client (gitignored; `npm run db:generate`)
 │       │   ├── infrastructure/
 │       │   │   └── database/
 │       │   │       └── prisma.ts         # Prisma client/adapter initialization
@@ -379,14 +372,14 @@ medical-platform/
 │       │   │   └── health.ts             # Process-level health route
 │       │   └── shared/
 │       │       └── http/                 # Cross-domain HTTP error/response utilities
-│       ├── test/                         # API integration tests
+│       ├── test/                         # API integration tests (Vitest + global setup)
 │       ├── package.json
 │       └── tsconfig.json
 │
 ├── packages/
-│   └── contracts/                        # Shared, runtime-safe API contracts
+│   └── contracts/                        # Shared, runtime-safe API contracts (@nexus-med/contracts)
 │       ├── src/
-│       │   ├── common.ts                 # Shared error/pagination primitives, when needed
+│       │   ├── common.ts                 # Shared primitives (dates, error envelope)
 │       │   ├── patients.ts               # Patient request/response DTOs and schemas
 │       │   ├── encounters.ts             # Encounter request/response DTOs and schemas
 │       │   └── index.ts
@@ -396,14 +389,13 @@ medical-platform/
 ├── prisma/
 │   ├── schema.prisma                     # Relational schema source of truth
 │   ├── migrations/                       # Committed, reviewed SQL migrations
-│   └── seed.ts                           # Deterministic, idempotent synthetic seed
+│   ├── seed.ts                           # Deterministic, idempotent synthetic seed
+│   └── lib/
+│       └── db-path.ts                    # Resolves the local SQLite path (dev, seed, tests)
 │
 ├── scripts/
 │   ├── dev.mjs                           # Start/coordinate API and web processes
 │   └── db-reset.mjs                      # Explicitly destructive local reset helper
-│
-├── tests/
-│   └── e2e/                              # Cross-application user-journey tests
 │
 ├── docs/                                 # Product, architecture, plans, history, contracts
 │   ├── PRODUCT.md
@@ -411,24 +403,28 @@ medical-platform/
 │   ├── ARCHITECTURE.md
 │   ├── DATA_MODEL.md
 │   ├── API_CONTRACT.md
-│   ├── UI_SPEC.md                        # Added after database/API foundation
+│   ├── UI_SPEC.md
+│   ├── DEMO_DATA.md
+│   ├── demo-dataset.json
+│   ├── SECURITY.md
+│   ├── TESTING.md
+│   ├── BOOTSTRAP_PROMPT.md
 │   ├── ACTION_PLAN.md
 │   ├── TASKS.md
 │   ├── ROADMAP.md
 │   ├── DECISIONS.md
-│   ├── PROJECT_HISTORY.md
-│   └── ...
+│   └── PROJECT_HISTORY.md
 │
 ├── .local/                               # Generated local-only state; gitignored
-│   ├── data/medical.db
-│   └── pr-drafts/                        # Optional local PR-stack notes/metadata
+│   └── data/medical.db
 ├── AGENTS.md
 ├── README.md
 ├── package.json                          # npm workspaces and root commands
 ├── package-lock.json
+├── eslint.config.mjs
 ├── tsconfig.base.json                    # Shared TypeScript compiler defaults
 ├── prisma.config.ts                      # Prisma 7 CLI configuration
-├── .env.example                           # Names/documentation only; no secrets
+├── .env.example                          # Names/documentation only; no secrets
 └── .gitignore
 ```
 
@@ -440,10 +436,10 @@ Some filenames and locations may be adjusted to match the exact tooling selected
 |---|---|---|
 | `apps/web/` | User-facing Next.js application and SSR | Contains routes, feature UI, and frontend-only utilities; never database access or authoritative domain rules. |
 | `apps/api/` | Hono HTTP API and application/domain behavior | Owns validation, domain operations, and every Prisma/database call. |
-| `packages/contracts/` (proposed) | Shared API request/response contracts consumed by web and API | Keep transport DTOs and runtime-safe schemas here; never place Prisma models, database clients, UI components, or business workflows here. |
+| `packages/contracts/` (`@nexus-med/contracts`) | Shared API request/response contracts consumed by web and API | Keep transport DTOs and runtime-safe schemas here; never place Prisma models, database clients, UI components, or business workflows here. |
 | `prisma/` | Relational schema, migrations, and demo seed | One authoritative schema/migration history for the local database. |
 | `scripts/` | Local developer lifecycle commands | Keep orchestration scripts small; product behavior belongs in applications, not shell scripts. |
-| `tests/` | Tests spanning application boundaries | Keep focused unit tests close to their modules; use this directory for end-to-end journeys that cross apps. |
+| `tests/` (future) | Tests spanning application boundaries | Deferred until frontend E2E (Playwright) is adopted; keep focused unit tests close to their modules today. |
 | `docs/` | Product and engineering context | Keep documentation discoverable and update it when architecture or behavior materially changes. |
 | `.local/` | Runtime state created on the developer's machine | Always gitignored; never commit databases, uploads, secrets, or generated runtime artifacts. |
 
@@ -456,10 +452,10 @@ Keep `src/app/` primarily focused on routing and page composition. It should inc
 - `page.tsx` and `layout.tsx` define route/page structure.
 - Server Components load initial data through the server-side Hono API client.
 - Mark the server-only API transport/configuration module with the framework-supported server-only guard so it cannot be imported by Client Components.
-- Route files should remain thin; move substantial patient/encounter UI and feature-specific interaction into `src/features/`.
+- Route files should remain thin; move substantial patient/encounter UI and feature-specific interaction into `src/components/patients/`.
 - Use route groups such as `(workspace)` only when they improve layout or route organization; they do not create URL segments.
 
-Organize feature-specific frontend code by the doctor's workflows, initially `patients` and `encounters`. Keep a component, form, hook, or API wrapper inside its feature unless it is genuinely shared. Global `components/ui/` is for reusable visual primitives; it must not become a dumping ground for patient- or encounter-specific UI.
+Organize workflow frontend code under `src/components/`: `patients/` holds the patient and consultation workflow components (registry, forms, timeline, encounter detail), `shell/` holds the app frame and navigation chrome, and `primitives.tsx` holds genuinely shared visual primitives. Keep a component, form, or hook inside its workflow feature unless it is genuinely shared; the shared files must not become a dumping ground for patient-specific UI.
 
 The frontend may own presentation state and client-side convenience validation, but it must call Hono for persisted data and mutations. Do not create a second frontend domain model that can drift from the API contract.
 
@@ -482,7 +478,7 @@ Do not create a repository layer for every table automatically. A domain service
 
 ### 8.5 Shared contracts and dependency direction
 
-The frontend and API consume the same HTTP contract. A small `@medical-platform/contracts` workspace is the recommended approach to avoid duplicating request/response shapes; confirm it during O-001 when the actual DTO and validation needs are implemented.
+The frontend and API consume the same HTTP contract from the `@nexus-med/contracts` workspace (established during O-001), which avoids duplicating request/response shapes.
 
 It may contain:
 

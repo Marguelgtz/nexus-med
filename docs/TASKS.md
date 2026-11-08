@@ -19,6 +19,8 @@ At a phase boundary, reconcile the work packages for the next phase using actual
 
 ## 2. Phase 0 — Database and API foundation
 
+**Phase status:** Completed 2026-11-07. All acceptance criteria below met; verified evidence is in `ACTION_PLAN.md` (O-001 exit evidence) and `TESTING.md`. No scope changes were required.
+
 **Objective O-001:** Establish a reliable local data model and Hono API for the core patient and encounter workflows before product UX/UI design begins.
 
 ### Work packages
@@ -83,6 +85,8 @@ At a phase boundary, reconcile the work packages for the next phase using actual
 
 ## 3. Phase 1 — UX and UI design
 
+**Phase status:** Completed 2026-11-07. Deliverable `docs/UI_SPEC.md` produced and reviewed against the verified O-001 API and all 14 P0 stories; decisions recorded as D-022. No scope changes required.
+
 **Objective O-002:** Produce an implementation-ready UX/UI specification after the data model and API foundation are understood, but before feature UI implementation.
 
 ### Work packages
@@ -121,6 +125,8 @@ At a phase boundary, reconcile the work packages for the next phase using actual
 
 **Objective O-003:** Implement the designed patient and encounter workflows as complete vertical slices.
 
+**Phase status:** Completed 2026-11-07. All acceptance criteria below met; verified evidence is in `ACTION_PLAN.md` (O-003) and `TESTING.md`. No scope changes were required.
+
 ### Work packages
 
 **T-012 — Application shell and navigation**
@@ -158,6 +164,8 @@ At a phase boundary, reconcile the work packages for the next phase using actual
 
 **Objective O-004:** Make the local prototype immediately usable and reliably demonstrable.
 
+**Phase status:** Completed 2026-11-07. All acceptance criteria below met; verified evidence is in `ACTION_PLAN.md` (O-004) and `TESTING.md`. No scope changes were required.
+
 ### Work packages
 
 **T-017 — First-run demo presentation**
@@ -191,7 +199,7 @@ At a phase boundary, reconcile the work packages for the next phase using actual
 - Google authentication/OAuth/OIDC and authorization.
 - Docker and CI/CD.
 - Cloudflare account connection, remote D1/R2, Worker deployment, and production setup.
-- Scheduling, billing, multi-user support, AI clinical features, FHIR/HL7, and external integrations.
+- Scheduling, billing, multi-user support, AI clinical features, FHIR/HL7, and external integrations. When scheduling is picked up in a future run, document the appointment objective and contract in this section and `API_CONTRACT.md` first.
 
 ## 7. Phase-boundary maintenance
 
