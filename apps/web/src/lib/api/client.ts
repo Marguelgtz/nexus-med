@@ -15,9 +15,11 @@ import {
   type MedicalBackgroundInput,
   type PatientDetail,
   type PatientSummary,
+  type StudyRequest,
   type UpdateAppointmentInput,
   type UpdateEncounterInput,
   type UpdatePatientInput,
+  type UpdateStudyInput,
   appointmentSchema,
   createAppointmentInputSchema,
   createEncounterInputSchema,
@@ -28,9 +30,11 @@ import {
   medicalBackgroundInputSchema,
   patientDetailSchema,
   patientSummarySchema,
+  studyRequestSchema,
   updateAppointmentInputSchema,
   updateEncounterInputSchema,
   updatePatientInputSchema,
+  updateStudyInputSchema,
 } from '@nexus-med/contracts';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://127.0.0.1:4000/api';
@@ -255,5 +259,36 @@ export function linkEncounter(id: string, encounterId: string): Promise<Appointm
     `/appointments/${encodeURIComponent(id)}/link-encounter`,
     { method: 'POST', body: JSON.stringify({ encounterId }) },
     appointmentSchema.safeParse.bind(appointmentSchema),
+  );
+}
+
+// ── Study requests (UI_SPEC §7.3) ──────────────────────────────────────
+
+/** All studies of a patient, newest first (the overview filters the
+ * pending ones; the encounter detail uses the per-encounter list). */
+export function listPatientStudies(patientId: string): Promise<StudyRequest[]> {
+  return request(
+    `/patients/${encodeURIComponent(patientId)}/studies`,
+    undefined,
+    asList(studyRequestSchema),
+  );
+}
+
+/** The studies ordered during one encounter (the detail-section list). */
+export function listEncounterStudies(encounterId: string): Promise<StudyRequest[]> {
+  return request(
+    `/encounters/${encodeURIComponent(encounterId)}/studies`,
+    undefined,
+    asList(studyRequestSchema),
+  );
+}
+
+/** Advance a study's status, storing an optional result note with it. */
+export function updateStudyStatus(id: string, input: UpdateStudyInput): Promise<StudyRequest> {
+  updateStudyInputSchema.parse(input);
+  return request(
+    `/studies/${encodeURIComponent(id)}`,
+    { method: 'PATCH', body: JSON.stringify(input) },
+    studyRequestSchema.safeParse.bind(studyRequestSchema),
   );
 }
