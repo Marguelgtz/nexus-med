@@ -10,10 +10,13 @@ import { useRouter } from 'next/navigation';
 
 import {
   type CreateEncounterInput,
+  type EncounterType,
   createEncounterInputSchema,
+  encounterTypeSchema,
 } from '@nexus-med/contracts';
 
 import { ApiError, createEncounter } from '../../lib/api/client';
+import { ENCOUNTER_TYPE_LABELS } from '../../lib/format';
 import { ErrorBanner } from '../primitives';
 import { useBeforeUnloadGuard } from '../../lib/use-before-unload-guard';
 
@@ -75,6 +78,7 @@ export function ConsultationForm({ patientId }: { patientId: string }) {
   const router = useRouter();
   const [initialOccurredAt] = useState(() => nowLocalInput());
   const [occurredAt, setOccurredAt] = useState(initialOccurredAt);
+  const [type, setType] = useState<EncounterType>('consulta');
   const [values, setValues] = useState<SectionValues>({
     reason: '',
     historyOfPresentIllness: '',
@@ -120,6 +124,7 @@ export function ConsultationForm({ patientId }: { patientId: string }) {
 
     const candidate: CreateEncounterInput = {
       occurredAt: occurredIso,
+      type,
       reason: values.reason.trim() || null,
       historyOfPresentIllness: values.historyOfPresentIllness.trim() || null,
       relevantHistory: values.relevantHistory.trim() || null,
@@ -183,6 +188,22 @@ export function ConsultationForm({ patientId }: { patientId: string }) {
           {errorFor('occurredAt') ? (
             <div className="field-error">{errorFor('occurredAt')}</div>
           ) : null}
+        </div>
+
+        <div className="field">
+          <label htmlFor="encounterType">Tipo de consulta</label>
+          <select
+            id="encounterType"
+            name="type"
+            value={type}
+            onChange={(e) => setType(e.target.value as EncounterType)}
+          >
+            {encounterTypeSchema.options.map((t) => (
+              <option key={t} value={t}>
+                {ENCOUNTER_TYPE_LABELS[t]}
+              </option>
+            ))}
+          </select>
         </div>
 
         {SECTIONS.map((s) => (

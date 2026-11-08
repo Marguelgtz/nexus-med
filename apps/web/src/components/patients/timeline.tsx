@@ -7,7 +7,7 @@ import Link from 'next/link';
 
 import type { EncounterSummary } from '@nexus-med/contracts';
 
-import { formatDateTime, wasEdited } from '../../lib/format';
+import { ENCOUNTER_TYPE_LABELS, formatDateTime, wasEdited } from '../../lib/format';
 
 function TimelineEntry({
   patientId,
@@ -25,6 +25,9 @@ function TimelineEntry({
       >
         <div className="when">
           {formatDateTime(encounter.occurredAt)}
+          <span className="badge badge-type" style={{ marginLeft: 8 }}>
+            {ENCOUNTER_TYPE_LABELS[encounter.type]}
+          </span>
           <span className="reason" style={{ marginLeft: 12, fontWeight: 400 }}>
             {encounter.reason ? (
               <>

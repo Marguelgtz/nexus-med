@@ -141,7 +141,7 @@ Context strip (Section 2) + content in this hierarchy:
 2. **Antecedentes médicos.** Card with four labeled rows: `Afecciones`, `Cirugías previas`, `Alergias`, `Medicamentos actuales`. Each row: label (muted, 60% width on desktop) + value, or `No registrado` (italic, muted) when null/empty. A single `Editar` text-button in the card header links to the background edit page.
 3. **Historial de consultas.** Timeline card:
    - Header: `Historial` + count (`9 consultas`).
-   - One entry per encounter, newest first: line 1 = `12 de marzo de 2025, 10:30` + `Motivo: …` (reason, truncated to one line, or `Sin motivo` muted if null); line 2 (muted) = `Actualizada 14 de marzo de 2025` only when `updatedAt` differs from `createdAt` (i.e., the note was edited after its first save — a backdated consultation entered later is never mislabeled; signals continuity, never silently).
+   - One entry per encounter, newest first: line 1 = `12 de marzo de 2025, 10:30` + a neutral type badge (`Consulta`, `Procedimiento`, `Visita a domicilio`, `Urgencia` — same `badge-type` label used on citas, no color) + `Motivo: …` (reason, truncated to one line, or `Sin motivo` muted if null); line 2 (muted) = `Actualizada 14 de marzo de 2025` only when `updatedAt` differs from `createdAt` (i.e., the note was edited after its first save — a backdated consultation entered later is never mislabeled; signals continuity, never silently).
    - Each entry links to the encounter detail.
    - **Empty state:** `Este paciente aún no tiene consultas` + `Nueva consulta` button (primary).
 4. **Footer actions:** none (all actions live in the header).
@@ -188,6 +188,7 @@ Form (top to bottom), all sections optional except the date:
 | Label | Input | API field |
 |---|---|---|
 | Fecha y hora de la consulta * | `datetime-local` | `occurredAt` |
+| Tipo de consulta | `select` (default `Consulta`; options from the shared `encounterTypeSchema`, labels from the shared type-label map, D-024) | `type` |
 | Motivo de consulta | textarea (2 rows) | `reason` |
 | Enfermedad actual | textarea (4 rows) | `historyOfPresentIllness` |
 | Antecedentes relevantes | textarea (3 rows) | `relevantHistory` |
@@ -210,9 +211,9 @@ Form (top to bottom), all sections optional except the date:
 
 **Purpose:** review a historical encounter (US-010, US-009 retrieve). SSR fetches `GET /encounters/:eid`.
 
-- Header: occurrence datetime (full form, e.g. `12 de marzo de 2025, 10:30`) + `Editada` badge when `updatedAt` is after `createdAt` (shows the edit timestamp: `Editada el 14 de marzo de 2025 a las 16:05`).
+- Header: occurrence datetime (full form, e.g. `12 de marzo de 2025, 10:30`) + a neutral type badge (`badge-type`, same label as citas) + `Editada` badge when `updatedAt` is after `createdAt` (shows the edit timestamp: `Editada el 14 de marzo de 2025 a las 16:05`).
 - Sections in canonical order (3.6), each: label (muted small caps) + verbatim text; null/empty sections render `No registrado` (italic, muted) — the full note is readable, not a form.
-- Actions: `Editar consulta` (secondary) toggles **edit mode** in place (same field layout as 3.6, pre-filled; `Guardar cambios` / `Cancelar edición`). Save is explicit; success re-renders the detail (new `updatedAt` badge appears if the time differs). Editing never reassigns the patient (API-enforced) and never reorders the timeline except via `occurredAt`.
+- Actions: `Editar consulta` (secondary) toggles **edit mode** in place (type selector + same field layout as 3.6, pre-filled; `Guardar cambios` / `Cancelar edición`). Save is explicit; success re-renders the detail (new `updatedAt` badge appears if the time differs). Editing never reassigns the patient (API-enforced) and never reorders the timeline except via `occurredAt`.
 - `404` on an unknown encounter id (e.g., stale bookmark) → the standard not-found page (3.8).
 
 ### 3.8 Not found — 404

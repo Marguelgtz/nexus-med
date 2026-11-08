@@ -53,7 +53,7 @@ See `DECISIONS.md` and `ARCHITECTURE.md` for details.
 | Database and API code | Complete | Prisma boundary, domains, validation, errors, DTOs |
 | UX/UI specification | Complete (O-002) | `docs/UI_SPEC.md` — screens, interactions, states, visual system, story coverage, decisions U-01–U-08 |
 | Frontend product workflows | Complete (O-003/O-004) | Full product UI per `UI_SPEC.md` (registry, forms, timeline, detail, edit); first-run demo verified with persistence across restarts |
-| Expansion (NX-001…NX-004) | In progress on `feat/api-foundation` | Design: `docs/UI_SPEC.md` §7 + D-023–D-031; implementation queue below; NX-001 core + NX-002 API done, tails + NX-003/NX-004 pending |
+| Expansion (NX-001…NX-004) | In progress on `feat/api-foundation` | Design: `docs/UI_SPEC.md` §7 + D-023–D-031; NX-001 + NX-002 complete (verified), NX-003/NX-004 pending |
 
 ## 3. Active objective
 
@@ -61,7 +61,14 @@ See `DECISIONS.md` and `ARCHITECTURE.md` for details.
 
 **Desired outcome:** Four usable vertical slices added to the MVP, in this order: (1) patient appointments + basic calendar, (2) encounter types + the minimum surgical follow-through that can be defined confidently, (3) study requests + follow-up, (4) printable prescriptions and medical reports. No new runtime dependencies, no speculative foundations, no full-EHR scope (mission brief, D-023).
 
-**Status:** Implementation in progress (mission brief 2026-11-08 authorizes autonomous execution; design was reviewed via `UI_SPEC.md` §7 + D-023–D-030). Surgical follow-through uses the conservative default of D-031 (type field only) — no surgery lifecycle is built; Q-NX-01 stays open for doctor validation.
+**Status:** Implementation in progress (mission brief 2026-11-08 authorizes autonomous execution; design was reviewed via `UI_SPEC.md` §7 + D-023–D-031). Surgical follow-through uses the conservative default of D-031 (type field only) — no surgery lifecycle is built; Q-NX-01 stays open for doctor validation.
+
+**Slice status (2026-11-08):**
+- **NX-001: DONE** — core API/calendar/citas from 2026-11-07; tail committed `9980c89`: demo appointments seeded (4 fixed past in `demo-dataset.json`; 5 upcoming anchored to first seed run in `prisma/seed.ts`), `DEMO_DATA.md` updated. Evidence: live browser check (month/day views + patient citas render seeded appointments on correct Monterrey dates); live re-seed left the anchor instant unchanged.
+- **NX-002: DONE** — API part from 2026-11-07 (`Encounter.type` + migration `20261107222417_expansion_appointments_encounter_type` + contract); web integration (U-12) this session: type selector in the consultation form (default `consulta`), neutral `badge-type` label in the encounter detail head and timeline entries, type editable in encounter edit mode, shared `ENCOUNTER_TYPE_LABELS` alias (D-024 mirror list — no label duplication). Evidence: +1 API test (PATCH type) → 69/69 API + 27/27 web; typecheck/lint/build green; browser-verified (form create → detail badge → timeline badge → edit type → save → `URGENCIA` + `Editada` badge; legacy rows show `Consulta`). Surgical follow-through: conservative default D-031 stands (type field only; Q-NX-01 open).
+- **NX-003 / NX-004: not started.**
+
+**Next task — NX-003 (study requests):** smallest data shape per `UI_SPEC.md` §7 (D-027): `StudyRequest` (patientId + immutable encounterId, category list + free text, ordered→completed→reviewed, optional `resultNote` ≤1000, no edit/delete after creation); Hono create/list/update; repeatable study rows in the consultation form; status flow in encounter detail; `Estudios pendientes` section on the patient overview; fictional demo studies in the idempotent seed + `DEMO_DATA.md`. Follow-up scheduling reuses `Appointment`; no new scheduler/entity.
 
 **Implementation queue** (each slice delivers UI + API + schema/migration + tests + docs in the same change, per D-017):
 

@@ -274,6 +274,10 @@ export const APPOINTMENT_TYPE_LABELS: Record<string, string> = {
   urgencia: 'Urgencia',
 };
 
+/** Encounter types use the exact same fixed list as appointment types (D-024),
+ * so the labels are shared, not duplicated. */
+export const ENCOUNTER_TYPE_LABELS: Record<string, string> = APPOINTMENT_TYPE_LABELS;
+
 export const APPOINTMENT_STATUS_LABELS: Record<string, string> = {
   scheduled: 'Programada',
   completed: 'Completada',

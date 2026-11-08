@@ -58,6 +58,19 @@ describe('encounter type (D-024)', () => {
     expect(res.status).toBe(400);
     expect(((await res.json()) as any).error.fieldErrors.type).toBeDefined();
   });
+
+  it('updates the type via PATCH', async () => {
+    const created = await makeEncounter('2026-11-01T10:30:00-06:00');
+    const res = await app.request(`/api/encounters/${created.id}`, {
+      method: 'PATCH',
+      headers: json,
+      body: JSON.stringify({ type: 'urgencia' }),
+    });
+    expect(res.status).toBe(200);
+    expect(((await res.json()) as any).type).toBe('urgencia');
+    const listed = (await (await app.request(`/api/patients/${patientId}/encounters`)).json()) as any[];
+    expect(listed[0].type).toBe('urgencia');
+  });
 });
 
 describe('POST /patients/:patientId/encounters', () => {
