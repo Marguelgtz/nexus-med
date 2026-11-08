@@ -114,7 +114,7 @@ function practiceDateParts(instant: Date): { year: number; month: number; day: n
     month: '2-digit',
     day: '2-digit',
   }).format(instant);
-  const [year, month, day] = text.split('-').map(Number);
+  const [year, month, day] = text.split('-').map(Number) as [number, number, number];
   return { year, month, day };
 }
 
