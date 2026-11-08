@@ -6,6 +6,8 @@
 // from server components (use lib/api/server.ts there).
 
 import {
+  type Appointment,
+  type CreateAppointmentInput,
   type CreateEncounterInput,
   type CreatePatientInput,
   type EncounterDetail,
@@ -13,8 +15,11 @@ import {
   type MedicalBackgroundInput,
   type PatientDetail,
   type PatientSummary,
+  type UpdateAppointmentInput,
   type UpdateEncounterInput,
   type UpdatePatientInput,
+  appointmentSchema,
+  createAppointmentInputSchema,
   createEncounterInputSchema,
   createPatientInputSchema,
   encounterDetailSchema,
@@ -23,6 +28,7 @@ import {
   medicalBackgroundInputSchema,
   patientDetailSchema,
   patientSummarySchema,
+  updateAppointmentInputSchema,
   updateEncounterInputSchema,
   updatePatientInputSchema,
 } from '@nexus-med/contracts';
@@ -185,5 +191,69 @@ export function updateEncounter(id: string, input: UpdateEncounterInput): Promis
     `/encounters/${encodeURIComponent(id)}`,
     { method: 'PATCH', body: JSON.stringify(input) },
     encounterDetailSchema.safeParse.bind(encounterDetailSchema),
+  );
+}
+
+// ── Appointments (UI_SPEC §7.2) ──────────────────────────────────────────
+
+export type AppointmentRangeQuery = { from: string; to: string };
+
+/** Appointments for the calendar, [from, to) ISO range. */
+export function listAppointmentsInRange(query: AppointmentRangeQuery): Promise<Appointment[]> {
+  const params = new URLSearchParams({ from: query.from, to: query.to });
+  return request(`/appointments?${params.toString()}`, undefined, asList(appointmentSchema));
+}
+
+/** All appointments of a patient, newest first. */
+export function listPatientAppointments(patientId: string): Promise<Appointment[]> {
+  return request(
+    `/patients/${encodeURIComponent(patientId)}/appointments`,
+    undefined,
+    asList(appointmentSchema),
+  );
+}
+
+export function createAppointment(patientId: string, input: CreateAppointmentInput): Promise<Appointment> {
+  createAppointmentInputSchema.parse(input);
+  return request(
+    `/patients/${encodeURIComponent(patientId)}/appointments`,
+    { method: 'POST', body: JSON.stringify(input) },
+    appointmentSchema.safeParse.bind(appointmentSchema),
+  );
+}
+
+export function updateAppointment(id: string, input: UpdateAppointmentInput): Promise<Appointment> {
+  updateAppointmentInputSchema.parse(input);
+  return request(
+    `/appointments/${encodeURIComponent(id)}`,
+    { method: 'PATCH', body: JSON.stringify(input) },
+    appointmentSchema.safeParse.bind(appointmentSchema),
+  );
+}
+
+export function completeAppointment(
+  id: string,
+  input: { actualDurationMinutes?: number; encounterId?: string },
+): Promise<Appointment> {
+  return request(
+    `/appointments/${encodeURIComponent(id)}/complete`,
+    { method: 'PATCH', body: JSON.stringify(input) },
+    appointmentSchema.safeParse.bind(appointmentSchema),
+  );
+}
+
+export function cancelAppointment(id: string): Promise<Appointment> {
+  return request(
+    `/appointments/${encodeURIComponent(id)}/cancel`,
+    { method: 'PATCH' },
+    appointmentSchema.safeParse.bind(appointmentSchema),
+  );
+}
+
+export function linkEncounter(id: string, encounterId: string): Promise<Appointment> {
+  return request(
+    `/appointments/${encodeURIComponent(id)}/link-encounter`,
+    { method: 'PATCH', body: JSON.stringify({ encounterId }) },
+    appointmentSchema.safeParse.bind(appointmentSchema),
   );
 }
