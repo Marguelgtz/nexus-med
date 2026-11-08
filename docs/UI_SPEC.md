@@ -414,6 +414,9 @@ This is an **as-built inventory**, not approval to change the requirements in th
 - **Unresolved:** `TASKS.md` NX-003 defines pending as `ordered` or `completed` until reviewed, but §7.3 and the current overview only show `ordered`. Do not silently resolve this acceptance-criteria difference.
 - `ordered → reviewed` is permitted directly, in addition to `ordered → completed → reviewed`. Two study fixtures and tests exist in source, but NX-003 full end-to-end acceptance has not been independently documented.
 - NX-004 remains design only: no `MedicalDocument`/`PrescriptionLine`, document API, form or print view currently exists.
+- NX-001 calendar implementation differs from the detailed spec in §7.1: the day grid uses **56 px/hour** versus the specified 48; it does **not** list out-of-window appointments separately below the grid; week view currently displays **up to eight** chips per day rather than three; an invalid `fecha` falls back to today instead of rendering the specified 404. These are implementation differences, **not** an approved change in design.
+- NX-002 timeline currently renders a type badge even for `consulta`, whereas §7.2 says to show it only for non-default types. Verification or scope reconciliation is outstanding.
+- Some calendar visual details (such as exact status/overlap styling and loading states) have not been independently assessed in this source-only pass; do not infer compliance from the presence of the calendar components.
 
 Refer to `API_CONTRACT.md`, `DATA_MODEL.md`, and `ACTION_PLAN.md` for the current implementation inventory and verification status.
 
@@ -613,4 +616,4 @@ Clicking any action opens an inline panel (complete-flow pattern) with an option
 
 ---
 
-*Reviewed against: `WORKFLOWS.md` (all sections, §11 story map), `PRODUCT.md` P0 stories, `DATA_MODEL.md`, `API_CONTRACT.md` (as implemented in O-001: 40/40 API tests), `DEMO_DATA.md` (7 patients / 9 encounters), `ARCHITECTURE.md` (SSR + typed client). §7 (expansion design, NX-001…NX-004) reviewed against the owner's expansion mission brief (2026-11-07); pending owner review.*
+*Reviewed against: `WORKFLOWS.md` (all sections, §11 story map), `PRODUCT.md` P0 stories, `DATA_MODEL.md`, `API_CONTRACT.md` (as implemented in O-001: 40/40 API tests), `DEMO_DATA.md` (7 patients / 9 encounters), `ARCHITECTURE.md` (SSR + typed client). §7 (NX-001…NX-004 expansion) was authorized in D-023; Q-NX-01/Q-NX-02 and the explicit implementation discrepancies in §7.0.1 remain open. Historical O-001 test counts here refer to their original review date, not NX-003 verification.*
