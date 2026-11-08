@@ -1,8 +1,18 @@
-# Medical Practice Platform — Local MVP Starter
+# Nexus Med — Local Medical Practice Prototype
 
 A local-first prototype specification for one general surgeon. The product objective is to validate patient management and clinical continuity using clearly synthetic demo records.
 
-> **Current artifact status:** O-001 through O-004 complete (2026-11-07). The local MVP is implemented end-to-end per `docs/UI_SPEC.md`: patient registry, registration, patient overview with medical background, consultation creation and detail with timeline, demographics edit, and a first-run demo with verified persistence. `npm install` then `npm run dev` migrates, seeds the demo data, and starts the Hono API (port 4000) plus the Next.js app (port 3000); the root route takes the doctor to `/patients`.
+> **Current code snapshot (2026-11-08, `feat/studies-web`):** O-001–O-004 and NX-001/NX-002 are implemented and have prior recorded verification. NX-003 study requests have schema, API, frontend, tests and fictional fixtures on the advanced feature branch; integrated NX-003 verification remains outstanding. NX-004 printable prescriptions/reports have not been implemented. This branch sits on an open PR stack (#1–#4); `main` is not yet the product implementation baseline.
+
+## Implemented capabilities and phase status
+
+- Patient registry/search, patient data and background, archive, clinical encounters and timeline.
+- Appointment create/list/detail/update, completion/cancellation, optional encounter linking and day/week/month calendar.
+- Encounter type (`consulta`, `procedimiento`, `visita_domicilio`, `urgencia`).
+- NX-003 study-request code: optional study rows with **new** encounters; status changes and patient/encounter lists. The patient overview currently shows `ordered` requests only. No standalone study-order route exists.
+- NX-004 prescription/report models, routes, forms and print views are still missing; uploads, authentication and deployment remain excluded.
+
+See `docs/ACTION_PLAN.md` for verified vs unverified status and `docs/API_CONTRACT.md` for implemented routes.
 
 ## Confirmed architecture
 
@@ -17,11 +27,11 @@ A local-first prototype specification for one general surgeon. The product objec
 
 ## Repository organization
 
-The top-level layout communicates ownership: `apps/web` is the Next.js presentation layer, `apps/api` owns domain behavior and persistence, `packages/contracts` is the owner of shared HTTP contracts, `prisma/` owns relational schema/migrations/seed, `scripts/` owns local startup, and `docs/` preserves product and engineering context. Within the web app, `src/app/` contains routes, `src/components/` contains workflow-specific UI (`patients/`, `shell/`) and shared primitives, and `src/lib/` holds the API transports and formatting utilities. Within the API, `src/domains/` contains patients and encounters. The canonical file tree, naming conventions, dependency directions, and growth rules are in `docs/ARCHITECTURE.md` Section 8.
+The top-level layout communicates ownership: `apps/web` is the Next.js presentation layer, `apps/api` owns domain behavior and persistence, `packages/contracts` is the owner of shared HTTP contracts, `prisma/` owns relational schema/migrations/seed, `scripts/` owns local startup, and `docs/` preserves product and engineering context. Within the web app, `src/app/` contains routes, `src/components/` contains workflow-specific UI (`patients/`, `appointments/`, `shell/`) and shared primitives, and `src/lib/` holds the API transports and formatting utilities. Within the API, `src/domains/` contains patients, encounters, appointments, and studies. The canonical file tree, naming conventions, dependency directions, and growth rules are in `docs/ARCHITECTURE.md` Section 8.
 
 ## Included synthetic demo fixture
 
-`docs/demo-dataset.json` is included now; it contains **7 fictional patients (6 active and 1 archived) and 9 fictional encounters**. It also includes a patient with no encounters and multiple patients with consultation history. All note sections carry an unmistakable fictional/demo warning.
+`docs/demo-dataset.json` contains **7 fictional patients (6 active and 1 archived), 9 encounters, 4 fixed past appointments, and 2 study requests**. The seed also creates **5 upcoming first-seed-anchored appointments**. The newest study fixtures are present in source but were not re-verified during this documentation PR. It also includes a patient with no encounters and multiple patients with consultation history. All note sections carry an unmistakable fictional/demo warning.
 
 This JSON fixture is checked-in demo input; the Prisma seed script (`prisma/seed.ts`) creates the corresponding records idempotently (create-if-missing, never overwrites edits). `npm run dev` applies it on every startup, so a first run opens on a populated registry.
 
@@ -36,13 +46,13 @@ After dependencies are installed, the intended experience is:
 5. The patient registry already contains synthetic demo patients and consultation history.
 6. A persistent, unmistakable **DEMO / DATOS FICTICIOS** indicator makes clear that all records are fictional.
 
-The first startup must be populated and useful, not an empty shell. The initial active registry shows six demo patients; the seventh fixture patient is archived and retrievable through the archived view. The dataset also includes nine encounters, three patients with multiple encounters, and one patient with no encounters. Repeated starts must not duplicate records, reset the database, or overwrite edits. See `docs/DEMO_DATA.md`.
+The first startup must be populated and useful, not an empty shell. The initial active registry shows six demo patients; the seventh fixture patient is archived and retrievable through the archived view. The dataset also includes nine encounters, three patients with multiple encounters, one patient with no encounters, nine appointments in total, and two encounter-linked study requests. Repeated starts must not duplicate records, reset the database, or overwrite edits. See `docs/DEMO_DATA.md`.
 
 ## Local-only boundaries
 
 - Node.js runs both apps. No Cloudflare account, remote resource, Worker runtime, Wrangler, or network connection is used at application runtime.
 - SQLite is a local file; no separate database server is started.
-- File storage/uploads and Google authentication are pending and excluded from this prototype.
+- File storage/uploads and Google authentication remain pending and excluded; browser-printable prescription/report records are separately planned for NX-004.
 - Docker and CI/CD are deferred.
 - Use synthetic data only. Never enter real patient information.
 - Cloudflare Workers and D1 are future deployment candidates, not active dependencies.

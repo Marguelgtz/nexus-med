@@ -1,4 +1,4 @@
-# MVP Roadmap
+# Nexus Med Roadmap — Local MVP and O-005 Expansion
 
 The roadmap defines strategic outcomes and their order. It is not a live progress tracker or a detailed task board.
 
@@ -36,12 +36,25 @@ The agreed development order is **database/API foundation → UX/UI design → p
 
 **Exit condition:** `npm install` followed by `npm run dev` (with dependencies installed) starts both apps, migrates/seeds safely, and passes end-to-end workflows without Cloudflare, remote services, or manual database setup.
 
+## O-005 — Product expansion (active)
+
+**Approved outcome (D-023):** Four staged vertical slices extending the local patient/encounter MVP:
+
+1. **NX-001:** patient appointments, status transitions, and basic day/week/month calendar.
+2. **NX-002:** encounter types consistent with appointment types (planned versus actual); no dedicated surgical-procedure lifecycle approved.
+3. **NX-003:** study requests and follow-up linked to encounters, with status and optional doctor-authored result note.
+4. **NX-004:** doctor-authored printable prescriptions and reports, rendered using browser print rather than stored files.
+
+**Observed GitHub implementation on `feat/studies-web` (2026-11-08):** NX-001 and NX-002 are implemented with prior recorded verification. NX-003 implementation exists across schema/API/contracts/web/fixtures/tests, but integrated acceptance verification is outstanding. NX-004 remains unimplemented. The code is held in open stacked PRs, not yet merged into `main`. Current task state and scope discrepancies are in `ACTION_PLAN.md`.
+
+**Exit condition:** All four slices implemented and integrated-tested with documented seed/persistence behavior; accepted contract, workflow, and UX docs reconciled to their verified final state; no deferred cloud/auth/upload work added.
+
 ## Deferred — not part of the prototype
 
-- File storage, document management, and R2.
+- File storage, uploads, document file management, and R2 (distinct from approved NX-004 printable records).
 - Google authentication/OAuth/OIDC and authorization.
 - Docker, CI/CD, Cloudflare connectivity, remote D1/R2, and deployment.
-- Scheduling, billing, multi-user support, AI clinical features, FHIR/HL7, and external integrations.
+- Appointment recurrence/reminders, billing, multi-user support, AI clinical features, FHIR/HL7, and external integrations. Basic scheduling is already implemented in NX-001.
 
 ## Future Cloudflare evaluation
 
@@ -54,4 +67,4 @@ Only after the local MVP works:
 5. Define private access, secrets, backup/restore, and operational controls.
 6. Revisit file storage only if approved product scope requires it.
 
-No remote Cloudflare resources are part of O-001 through O-004.
+No remote Cloudflare resources are part of O-001 through O-005.

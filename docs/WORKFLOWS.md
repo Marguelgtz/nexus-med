@@ -1,18 +1,18 @@
 # Product Workflows — Medical Platform MVP
 
-**Status:** MVP workflows  
+**Status:** Original MVP workflows plus current O-005 implementation inventory (2026-11-08; NX-003 integrated verification pending)  
 **Primary user:** One general surgeon  
 **Interface:** Spanish (Mexico)  
 **Data:** Synthetic demo records only
 
-`PRODUCT.md` defines scope and user-story acceptance criteria. This document describes how those stories should flow through the application. Together, the workflow sections cover patient create/search/update/archive, patient context, medical-background editing, encounter creation/review, save/error behavior, and the first-run demo experience. Documents, file uploads, Google authentication, and scheduling are excluded from the current prototype.
+`PRODUCT.md` defines scope and user-story acceptance criteria. This document describes how those stories should flow through the application. Together, the workflow sections cover patient create/search/update/archive, patient context, medical-background editing, encounter creation/review, save/error behavior, and the first-run demo experience. The original MVP excluded scheduling; O-005 subsequently approved appointments, encounter types, study requests, and printable documents. Appointments and encounter types are implemented, study-request code exists, printable documents are not implemented. File uploads/storage and Google authentication remain excluded.
 
 ## 1. Application entry and navigation
 
 - Opening `/` redirects to `/patients`.
 - The patient registry is the default working screen.
 - On first run, six active seeded patients are visible; the one archived fixture is accessible through the archived view/filter.
-- Keep navigation small: Patients, plus contextual patient/encounter actions.
+- Implemented primary navigation: **Pacientes** and **Calendario**, with contextual patient/encounter/appointment actions.
 - Show a persistent **MODO DEMOSTRACIÓN — DATOS FICTICIOS** banner while demo mode is enabled.
 - Keep the active patient's name and internal identifier visible on patient-specific screens.
 
@@ -50,8 +50,9 @@ The overview is the central clinical workspace for one patient.
 Information hierarchy:
 1. Patient identity and basic demographics.
 2. Medical background: conditions, previous surgeries, allergies, current medications.
-3. Chronological encounter timeline.
-4. Primary actions: edit patient, edit medical background, create consultation.
+3. Upcoming appointments and an optional ordered-studies panel (when such studies exist).
+4. Chronological encounter timeline.
+5. Actions to edit patient/background, create consultation, or schedule an appointment.
 
 Expected behavior:
 - The patient is always clearly identified.
@@ -94,9 +95,9 @@ Rules:
 3. The form is created in the selected patient context.
 4. Patient identity remains visible.
 5. Encounter date/time defaults sensibly and is editable.
-6. Doctor records reason, history of present illness, relevant background, physical examination, assessment, plan, and follow-up as applicable.
+6. Doctor selects an encounter type (default `consulta`), records the clinical sections, and may add zero or more `Estudios solicitados` rows (category + description).
 7. Doctor selects **Guardar consulta**.
-8. Hono validates the input and persists the encounter.
+8. Hono validates the input and persists the encounter and initial studies in one transaction.
 9. Next.js refreshes the relevant patient view and displays the saved encounter in the timeline.
 
 Rules:
@@ -112,7 +113,7 @@ Rules:
 
 1. Doctor opens the patient overview.
 2. Doctor selects an encounter from the timeline.
-3. Application displays the complete note and encounter date/time.
+3. Application displays the complete note, encounter date/time, type, and any attached studies and their status actions.
 4. Doctor returns to the patient overview.
 
 Expected behavior:
@@ -169,7 +170,29 @@ On later starts, existing database contents and user edits must be preserved. No
 All data in this scenario is fictional. Document upload and authentication are not part of the flow.
 
 
-## 11. User story coverage
+## 11. Current appointment workflow (NX-001)
+
+1. Open **Calendario**, selecting day/week/month and date.
+2. From a patient overview choose **Nueva cita**, enter practice-local date/time, duration (5–480 minutes), and type.
+3. Save to create a scheduled appointment; open its detail to edit/reschedule, complete (optionally recording actual duration and linking an existing encounter), or cancel.
+4. Completed/cancelled visits remain visible in the patient and calendar history. A same-patient encounter can be linked when eligible.
+
+Overlaps are allowed but visibly signaled, not resolved automatically. Appointments and encounters have independent planned/actual type fields. The calendar uses `America/Monterrey`.
+
+## 12. Current study-request workflow (NX-003 code present)
+
+1. From **Nueva consulta**, add zero or more study rows with category and description.
+2. Saving a **new** encounter creates those study requests atomically, initially `ordered`.
+3. From encounter detail mark a study `completed` or `reviewed` and optionally write a doctor-authored result note; `ordered → reviewed` directly is allowed.
+4. Patient overview currently lists only `ordered` studies; all statuses remain visible on encounter detail.
+
+**Current limitations:** No standalone study creation from patient overview, by phone, before a visit or from an existing encounter. No upload, laboratory integration or automated interpretation. `TASKS.md` describes `completed` as pending until reviewed, while `UI_SPEC.md` and actual UI show only `ordered`: this conflict is unresolved. The paths exist but integrated NX-003 acceptance is not yet verified.
+
+## 13. Planned documents (NX-004, not yet implemented)
+
+The approved workflow in `UI_SPEC.md` §7.4 includes doctor-authored prescription/report forms, patient/encounter association, persistence and browser printing with the demo marker. There are no NX-004 models, routes or UI pages on `feat/studies-web`. It must not be presented as a current capability.
+
+## 14. Original MVP user story coverage
 
 This map keeps product requirements and interaction flows aligned:
 
