@@ -37,6 +37,7 @@ model Patient {
 
   encounters         Encounter[]
   appointments       Appointment[]
+  studyRequests      StudyRequest[]
 
   @@index([fullName])
   @@map("patients")
@@ -71,6 +72,8 @@ model Encounter {
   // appointment; the link is the only relationship — the note is never
   // copied into the appointment).
   linkedAppointments      Appointment[]
+  // Study requests ordered during this consultation (UI_SPEC §7.3).
+  studyRequests           StudyRequest[]
 
   @@index([patientId, occurredAt(sort: Desc)])
   @@map("encounters")
@@ -106,4 +109,34 @@ model Appointment {
   @@index([startAt])
   @@index([patientId, startAt])
   @@map("appointments")
+}
+
+// One specific study ordered during a consultation (UI_SPEC §7.3, U-15).
+// `category` + `description` are immutable after creation — the
+// originating encounter is the record of what was ordered. Only the status
+// and an optional result note change (ordered → completed → reviewed).
+// No edit, no delete (no permanent-delete rule).
+model StudyRequest {
+  id          String    @id @default(uuid())
+  patientId   String
+  patient     Patient   @relation(fields: [patientId], references: [id], onDelete: Restrict)
+  // The consultation during which the study was ordered (immutable).
+  encounterId String
+  encounter   Encounter @relation(fields: [encounterId], references: [id], onDelete: Restrict)
+  // Fixed list (validated at the API): laboratorio, imagenologia, rayos_x,
+  // ecg, ecografia, otro.
+  category    String
+  // The specific study, in the doctor's words (e.g. "Biometría hemática").
+  description String
+  // ordered, completed, reviewed (validated at the API); reviewed is final.
+  status      String    @default("ordered")
+  // The doctor's observation about the result — verbatim, never an
+  // interpretation (≤ 1,000 chars, validated at the API).
+  resultNote  String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([patientId, status])
+  @@index([encounterId])
+  @@map("study_requests")
 }
