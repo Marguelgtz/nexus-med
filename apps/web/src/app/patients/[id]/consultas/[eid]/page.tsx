@@ -4,8 +4,13 @@
 // the standard not-found page (§3.8).
 
 import { notFound } from 'next/navigation';
+import { z } from 'zod';
 
-import { encounterDetailSchema, patientDetailSchema } from '@nexus-med/contracts';
+import {
+  encounterDetailSchema,
+  patientDetailSchema,
+  studyRequestSchema,
+} from '@nexus-med/contracts';
 
 import { EncounterDetail as Detail } from '../../../../../components/patients/encounter-detail';
 import { PatientContext } from '../../../../../components/shell/patient-context';
@@ -21,9 +26,13 @@ export default async function EncounterPage({
 }) {
   const { id, eid } = await params;
 
-  const [patientRes, encounterRes] = await Promise.all([
+  const [patientRes, encounterRes, studiesRes] = await Promise.all([
     fetchServer(`/api/patients/${encodeURIComponent(id)}`, patientDetailSchema),
     fetchServer(`/api/encounters/${encodeURIComponent(eid)}`, encounterDetailSchema),
+    fetchServer(
+      `/api/encounters/${encodeURIComponent(eid)}/studies`,
+      z.array(studyRequestSchema),
+    ),
   ]);
 
   if (!patientRes.ok) {
@@ -44,6 +53,15 @@ export default async function EncounterPage({
       </>
     );
   }
+  if (!studiesRes.ok) {
+    if (studiesRes.notFound) notFound();
+    return (
+      <>
+        <h1>Consulta</h1>
+        <ErrorBanner message={studiesRes.error} retryHref={`/patients/${id}`} />
+      </>
+    );
+  }
 
   const patient = patientRes.data;
   const encounter = encounterRes.data;
@@ -59,7 +77,7 @@ export default async function EncounterPage({
         isArchived={patient.isArchived}
         backHref={`/patients/${patient.id}`}
       />
-      <Detail encounter={encounter} />
+      <Detail encounter={encounter} studies={studiesRes.data} />
     </>
   );
 }
