@@ -1,8 +1,18 @@
-# Medical Practice Platform — Local MVP Starter
+# Nexus Med — Local Medical Practice Prototype
 
 A local-first prototype specification for one general surgeon. The product objective is to validate patient management and clinical continuity using clearly synthetic demo records.
 
-> **Current artifact status:** O-001 through O-004 complete (2026-11-07). The local MVP is implemented end-to-end per `docs/UI_SPEC.md`: patient registry, registration, patient overview with medical background, consultation creation and detail with timeline, demographics edit, and a first-run demo with verified persistence. `npm install` then `npm run dev` migrates, seeds the demo data, and starts the Hono API (port 4000) plus the Next.js app (port 3000); the root route takes the doctor to `/patients`.
+> **Current code snapshot (2026-11-08, `feat/studies-web`):** O-001–O-004 and NX-001/NX-002 are implemented and have prior recorded verification. NX-003 study requests have schema, API, frontend, tests and fictional fixtures on the advanced feature branch; integrated NX-003 verification remains outstanding. NX-004 printable prescriptions/reports have not been implemented. This branch sits on an open PR stack (#1–#4); `main` is not yet the product implementation baseline.
+
+## Implemented capabilities and phase status
+
+- Patient registry/search, patient data and background, archive, clinical encounters and timeline.
+- Appointment create/list/detail/update, completion/cancellation, optional encounter linking and day/week/month calendar.
+- Encounter type (`consulta`, `procedimiento`, `visita_domicilio`, `urgencia`).
+- NX-003 study-request code: optional study rows with **new** encounters; status changes and patient/encounter lists. The patient overview currently shows `ordered` requests only. No standalone study-order route exists.
+- NX-004 prescription/report models, routes, forms and print views are still missing; uploads, authentication and deployment remain excluded.
+
+See `docs/ACTION_PLAN.md` for verified vs unverified status and `docs/API_CONTRACT.md` for implemented routes.
 
 ## Confirmed architecture
 
@@ -42,7 +52,7 @@ The first startup must be populated and useful, not an empty shell. The initial 
 
 - Node.js runs both apps. No Cloudflare account, remote resource, Worker runtime, Wrangler, or network connection is used at application runtime.
 - SQLite is a local file; no separate database server is started.
-- File storage/uploads and Google authentication are pending and excluded from this prototype.
+- File storage/uploads and Google authentication remain pending and excluded; browser-printable prescription/report records are separately planned for NX-004.
 - Docker and CI/CD are deferred.
 - Use synthetic data only. Never enter real patient information.
 - Cloudflare Workers and D1 are future deployment candidates, not active dependencies.
