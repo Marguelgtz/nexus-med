@@ -249,5 +249,24 @@
       "completedAt": "2026-10-25T10:15:00-06:00",
       "linkedEncounterId": "demo-encounter-007a"
     }
+  ],
+  "studies": [
+    {
+      "id": "demo-study-001",
+      "patientId": "demo-patient-002",
+      "encounterId": "demo-encounter-002b",
+      "category": "laboratorio",
+      "description": "Biometría hemática",
+      "status": "ordered"
+    },
+    {
+      "id": "demo-study-002",
+      "patientId": "demo-patient-002",
+      "encounterId": "demo-encounter-002b",
+      "category": "imagenologia",
+      "description": "Radiografía de tórax AP",
+      "status": "reviewed",
+      "resultNote": "Cine cardiotorácico conservado; sin infiltrados."
+    }
   ]
 }

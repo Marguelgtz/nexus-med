@@ -57,10 +57,21 @@ interface FixtureAppointment {
   linkedEncounterId?: string | null;
 }
 
+interface FixtureStudyRequest {
+  id: string;
+  patientId: string;
+  encounterId: string;
+  category: string;
+  description: string;
+  status: string;
+  resultNote?: string | null;
+}
+
 interface Fixture {
   patients: FixturePatient[];
   encounters: FixtureEncounter[];
   appointments?: FixtureAppointment[];
+  studies?: FixtureStudyRequest[];
 }
 
 type PrismaLike = {
@@ -73,6 +84,10 @@ type PrismaLike = {
     create(args: { data: Record<string, unknown> }): Promise<unknown>;
   };
   appointment: {
+    findUnique(args: { where: { id: string } }): Promise<{ id: string } | null>;
+    create(args: { data: Record<string, unknown> }): Promise<unknown>;
+  };
+  studyRequest: {
     findUnique(args: { where: { id: string } }): Promise<{ id: string } | null>;
     create(args: { data: Record<string, unknown> }): Promise<unknown>;
   };
@@ -164,12 +179,14 @@ export async function idempotentSeed(
   patientsCreated: number;
   encountersCreated: number;
   appointmentsCreated: number;
+  studiesCreated: number;
 }> {
   const fixture = await loadFixture(options.fixturePath);
 
   let patientsCreated = 0;
   let encountersCreated = 0;
   let appointmentsCreated = 0;
+  let studiesCreated = 0;
 
   await prisma.$transaction(async (tx) => {
     for (const p of fixture.patients) {
@@ -243,6 +260,26 @@ export async function idempotentSeed(
       appointmentsCreated += 1;
     }
 
+    // Study requests: fixture timestamps, like the encounters.
+    for (const s of fixture.studies ?? []) {
+      const existing = await tx.studyRequest.findUnique({ where: { id: s.id } });
+      if (existing) continue;
+      await tx.studyRequest.create({
+        data: {
+          id: s.id,
+          patientId: s.patientId,
+          encounterId: s.encounterId,
+          category: s.category,
+          description: s.description,
+          status: s.status,
+          resultNote: s.resultNote ?? null,
+          createdAt: SEEDED_AT,
+          updatedAt: SEEDED_AT,
+        },
+      });
+      studiesCreated += 1;
+    }
+
     // Upcoming appointments: anchored to THIS (first) seed run, stored once.
     const anchor = new Date();
     for (const spec of upcomingDemoAppointments) {
@@ -265,7 +302,7 @@ export async function idempotentSeed(
     }
   });
 
-  return { patientsCreated, encountersCreated, appointmentsCreated };
+  return { patientsCreated, encountersCreated, appointmentsCreated, studiesCreated };
 }
 
 async function main(): Promise<void> {
@@ -273,7 +310,7 @@ async function main(): Promise<void> {
   const { prisma } = await import('../apps/api/src/infrastructure/database/prisma.js');
   const result = await idempotentSeed(prisma);
   console.log(
-    `[seed] done — patients created: ${result.patientsCreated}, encounters created: ${result.encountersCreated}, appointments created: ${result.appointmentsCreated}`
+    `[seed] done — patients created: ${result.patientsCreated}, encounters created: ${result.encountersCreated}, appointments created: ${result.appointmentsCreated}, studies created: ${result.studiesCreated}`
   );
   await prisma.$disconnect();
 }
