@@ -27,11 +27,11 @@ See `docs/ACTION_PLAN.md` for verified vs unverified status and `docs/API_CONTRA
 
 ## Repository organization
 
-The top-level layout communicates ownership: `apps/web` is the Next.js presentation layer, `apps/api` owns domain behavior and persistence, `packages/contracts` is the owner of shared HTTP contracts, `prisma/` owns relational schema/migrations/seed, `scripts/` owns local startup, and `docs/` preserves product and engineering context. Within the web app, `src/app/` contains routes, `src/components/` contains workflow-specific UI (`patients/`, `shell/`) and shared primitives, and `src/lib/` holds the API transports and formatting utilities. Within the API, `src/domains/` contains patients and encounters. The canonical file tree, naming conventions, dependency directions, and growth rules are in `docs/ARCHITECTURE.md` Section 8.
+The top-level layout communicates ownership: `apps/web` is the Next.js presentation layer, `apps/api` owns domain behavior and persistence, `packages/contracts` is the owner of shared HTTP contracts, `prisma/` owns relational schema/migrations/seed, `scripts/` owns local startup, and `docs/` preserves product and engineering context. Within the web app, `src/app/` contains routes, `src/components/` contains workflow-specific UI (`patients/`, `appointments/`, `shell/`) and shared primitives, and `src/lib/` holds the API transports and formatting utilities. Within the API, `src/domains/` contains patients, encounters, appointments, and studies. The canonical file tree, naming conventions, dependency directions, and growth rules are in `docs/ARCHITECTURE.md` Section 8.
 
 ## Included synthetic demo fixture
 
-`docs/demo-dataset.json` is included now; it contains **7 fictional patients (6 active and 1 archived) and 9 fictional encounters**. It also includes a patient with no encounters and multiple patients with consultation history. All note sections carry an unmistakable fictional/demo warning.
+`docs/demo-dataset.json` contains **7 fictional patients (6 active and 1 archived), 9 encounters, 4 fixed past appointments, and 2 study requests**. The seed also creates **5 upcoming first-seed-anchored appointments**. The newest study fixtures are present in source but were not re-verified during this documentation PR. It also includes a patient with no encounters and multiple patients with consultation history. All note sections carry an unmistakable fictional/demo warning.
 
 This JSON fixture is checked-in demo input; the Prisma seed script (`prisma/seed.ts`) creates the corresponding records idempotently (create-if-missing, never overwrites edits). `npm run dev` applies it on every startup, so a first run opens on a populated registry.
 
@@ -46,7 +46,7 @@ After dependencies are installed, the intended experience is:
 5. The patient registry already contains synthetic demo patients and consultation history.
 6. A persistent, unmistakable **DEMO / DATOS FICTICIOS** indicator makes clear that all records are fictional.
 
-The first startup must be populated and useful, not an empty shell. The initial active registry shows six demo patients; the seventh fixture patient is archived and retrievable through the archived view. The dataset also includes nine encounters, three patients with multiple encounters, and one patient with no encounters. Repeated starts must not duplicate records, reset the database, or overwrite edits. See `docs/DEMO_DATA.md`.
+The first startup must be populated and useful, not an empty shell. The initial active registry shows six demo patients; the seventh fixture patient is archived and retrievable through the archived view. The dataset also includes nine encounters, three patients with multiple encounters, one patient with no encounters, nine appointments in total, and two encounter-linked study requests. Repeated starts must not duplicate records, reset the database, or overwrite edits. See `docs/DEMO_DATA.md`.
 
 ## Local-only boundaries
 
