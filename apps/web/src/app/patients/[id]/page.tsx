@@ -8,17 +8,28 @@ import Link from 'next/link';
 import { z } from 'zod';
 
 import {
+  appointmentSchema,
   encounterSummarySchema,
   patientDetailSchema,
   type PatientDetail,
 } from '@nexus-med/contracts';
 
+import {
+  AppointmentStatusBadge,
+  AppointmentTypeBadge,
+} from '../../../components/appointments/badges';
 import { Timeline } from '../../../components/patients/timeline';
 import { ArchiveControl } from '../../../components/patients/archive-control';
 import { PatientContext } from '../../../components/shell/patient-context';
 import { Badge, ErrorBanner } from '../../../components/primitives';
 import { fetchServer } from '../../../lib/api/server';
-import { formatDate, formatAge } from '../../../lib/format';
+import {
+  formatDate,
+  formatAge,
+  formatDateTime,
+  localDateOfInstant,
+  practiceToday,
+} from '../../../lib/format';
 
 export const dynamic = 'force-dynamic';
 
@@ -41,11 +52,15 @@ const BACKGROUND_ROWS: { label: string; key: keyof PatientDetail }[] = [
 export default async function PatientPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
 
-  const [patientRes, encountersRes] = await Promise.all([
+  const [patientRes, encountersRes, apptsRes] = await Promise.all([
     fetchServer(`/api/patients/${encodeURIComponent(id)}`, patientDetailSchema),
     fetchServer(
       `/api/patients/${encodeURIComponent(id)}/encounters`,
       z.array(encounterSummarySchema),
+    ),
+    fetchServer(
+      `/api/patients/${encodeURIComponent(id)}/appointments`,
+      z.array(appointmentSchema),
     ),
   ]);
 
@@ -70,10 +85,25 @@ export default async function PatientPage({ params }: { params: Promise<{ id: st
       </>
     );
   }
+  if (!apptsRes.ok) {
+    if (apptsRes.notFound) notFound();
+    return (
+      <>
+        <h1>Paciente</h1>
+        <ErrorBanner message={apptsRes.error} retryHref={`/patients/${id}`} />
+      </>
+    );
+  }
 
   const patient = patientRes.data;
   const encounters = encountersRes.data;
+  const appointments = apptsRes.data;
   const age = formatAge(patient.dateOfBirth);
+  const today = practiceToday();
+  const nextAppointments = appointments
+    .filter((a) => a.status === 'scheduled' && localDateOfInstant(a.startAt) >= today)
+    .reverse()
+    .slice(0, 3);
 
   return (
     <>
@@ -137,6 +167,33 @@ export default async function PatientPage({ params }: { params: Promise<{ id: st
             </div>
           );
         })}
+      </div>
+
+      <div className="card">
+        <div className="card-header">
+          <h2>Próximas citas</h2>
+          <Link href={`/patients/${patient.id}/citas`} className="btn btn-ghost btn-sm">
+            Ver todas
+          </Link>
+        </div>
+        {nextAppointments.length === 0 ? (
+          <p className="faint">Sin citas programadas.</p>
+        ) : (
+          nextAppointments.map((appt) => (
+            <Link key={appt.id} href={`/patients/${patient.id}/citas/${appt.id}`} className="appt-row">
+              <span className="appt-row-date">{formatDateTime(appt.startAt)}</span>
+              <AppointmentTypeBadge type={appt.type} />
+              <AppointmentStatusBadge status={appt.status} />
+            </Link>
+          ))
+        )}
+        {!patient.isArchived ? (
+          <div className="form-actions">
+            <Link href={`/patients/${patient.id}/citas/nueva`} className="btn btn-primary btn-sm">
+              Nueva cita
+            </Link>
+          </div>
+        ) : null}
       </div>
 
       <Timeline patientId={patient.id} encounters={encounters} />
