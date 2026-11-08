@@ -745,6 +745,385 @@ a.timeline-item:hover {
   background: var(--surface-hover);
 }
 
+/* ── Calendar & appointments (UI_SPEC §7) ──────────────────────────────── */
+
+.view-toggle {
+  display: inline-flex;
+  gap: var(--s-1);
+}
+
+.view-toggle .active-toggle {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.cal-nav {
+  display: inline-flex;
+  gap: var(--s-1);
+}
+
+/* Badges */
+.badge-row {
+  display: inline-flex;
+  gap: var(--s-2);
+  align-items: center;
+}
+
+.badge-type {
+  background: var(--surface-hover);
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+}
+
+.badge-status-scheduled {
+  background: var(--info-bg);
+  color: var(--primary);
+}
+
+.badge-status-completed {
+  background: #e4f3ea;
+  color: var(--success);
+}
+
+.badge-status-cancelled {
+  background: var(--error-bg);
+  color: var(--danger);
+}
+
+/* Appointment rows (overview card, list pages) */
+.appt-row {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  padding: var(--s-3) 0;
+  border-top: 1px solid var(--border);
+  color: inherit;
+  text-decoration: none;
+  font-size: 15px;
+}
+
+.appt-row:first-of-type {
+  border-top: none;
+}
+
+.appt-row:hover {
+  background: var(--surface-hover);
+}
+
+.appt-row-date {
+  flex: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.appt-row-range {
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+.appt-detail-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-4);
+  flex-wrap: wrap;
+  margin-bottom: var(--s-3);
+  font-variant-numeric: tabular-nums;
+}
+
+.appt-extra {
+  display: flex;
+  align-items: center;
+  gap: var(--s-4);
+  flex-wrap: wrap;
+  margin: var(--s-2) 0 var(--s-4);
+  font-size: 14px;
+}
+
+.appt-actions {
+  display: flex;
+  gap: var(--s-2);
+  margin-top: var(--s-4);
+  padding-top: var(--s-4);
+  border-top: 1px solid var(--border);
+}
+
+/* Inline action panels (complete / cancel / link) */
+.panel {
+  margin-top: var(--s-4);
+  padding: var(--s-4);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+}
+
+.panel h3 {
+  margin-bottom: var(--s-3);
+}
+
+/* Appointment form */
+.appt-form {
+  margin-top: var(--s-3);
+}
+
+.form-row {
+  display: flex;
+  gap: var(--s-4);
+  flex-wrap: wrap;
+  margin-bottom: var(--s-3);
+}
+
+.form-row label {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.form-row input,
+.form-row select {
+  min-height: 40px;
+  padding: 8px 12px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  font-size: 15px;
+  background: var(--surface);
+  color: var(--text);
+}
+
+.form-actions {
+  display: flex;
+  gap: var(--s-2);
+  margin-top: var(--s-3);
+}
+
+.notice {
+  background: var(--warning-bg);
+  color: var(--warning);
+  border-radius: var(--radius-sm);
+  padding: var(--s-2) var(--s-3);
+  font-size: 14px;
+  margin: var(--s-2) 0;
+}
+
+.error {
+  color: var(--danger);
+  background: var(--error-bg);
+  border-radius: var(--radius-sm);
+  padding: var(--s-2) var(--s-3);
+  font-size: 14px;
+  margin: var(--s-2) 0;
+}
+
+/* ── Calendar views ────────────────────────────────────────────────────── */
+
+.dimmed {
+  opacity: 0.55;
+}
+
+/* Day view: real time grid */
+.day-grid {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.day-grid-body {
+  position: relative;
+}
+
+.day-grid-hour {
+  position: relative;
+  height: 56px;
+  border-top: 1px solid var(--border);
+}
+
+.day-grid-label {
+  position: absolute;
+  top: 2px;
+  left: var(--s-2);
+  font-size: 12px;
+  color: var(--text-faint);
+  font-variant-numeric: tabular-nums;
+}
+
+.cal-block {
+  position: absolute;
+  margin-top: 1px;
+  margin-left: 2px;
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  font-size: 13px;
+  line-height: 1.35;
+  overflow: hidden;
+  color: inherit;
+  text-decoration: none;
+  box-shadow: 0 1px 2px rgba(28, 36, 48, 0.08);
+  z-index: 1;
+}
+
+.cal-block:hover {
+  z-index: 2;
+  background: var(--surface-hover);
+}
+
+/* Week view */
+.week-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: var(--s-2);
+}
+
+.cal-week-col {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: var(--s-2);
+  min-height: 120px;
+}
+
+.cal-today-col {
+  border-color: var(--primary);
+  box-shadow: inset 0 0 0 1px var(--primary);
+}
+
+.cal-col-head {
+  display: block;
+  font-weight: 600;
+  font-size: 14px;
+  text-align: center;
+  padding-bottom: var(--s-2);
+  margin-bottom: var(--s-2);
+  border-bottom: 1px solid var(--border);
+  color: inherit;
+  text-decoration: none;
+}
+
+.cal-col-items {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+}
+
+/* Month view */
+.month-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.month-head {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  border-bottom: 1px solid var(--border);
+}
+
+.month-head span {
+  padding: var(--s-2);
+  text-align: center;
+  font-size: 12px;
+}
+
+.cal-month-wrap {
+  border-top: 1px solid var(--border);
+  border-left: 1px solid var(--border);
+}
+
+.cal-month-cell {
+  min-height: 88px;
+  padding: var(--s-2);
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+}
+
+.cal-month-daynum {
+  font-size: 13px;
+  font-weight: 600;
+  color: inherit;
+  text-decoration: none;
+}
+
+.cal-month-items {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+/* Chips shared by week/month views */
+.cal-chip {
+  display: block;
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  border-left: 3px solid var(--border-strong);
+  background: var(--surface-hover);
+  font-size: 12px;
+  line-height: 1.4;
+  color: inherit;
+  text-decoration: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cal-chip:hover {
+  background: var(--border);
+}
+
+.cal-more {
+  font-size: 12px;
+  color: var(--primary);
+  padding-left: 6px;
+}
+
+/* Type accents — the calendar's only color coding besides status */
+.cal-type-consulta {
+  border-left-color: var(--primary);
+}
+
+.cal-type-procedimiento {
+  border-left-color: #6b3fa0;
+}
+
+.cal-type-visita_domicilio {
+  border-left-color: var(--warning);
+}
+
+.cal-type-urgencia {
+  border-left-color: var(--danger);
+}
+
+.cal-block.cal-type-consulta {
+  border-left: 3px solid var(--primary);
+}
+
+.cal-block.cal-type-procedimiento {
+  border-left: 3px solid #6b3fa0;
+}
+
+.cal-block.cal-type-visita_domicilio {
+  border-left: 3px solid var(--warning);
+}
+
+.cal-block.cal-type-urgencia {
+  border-left: 3px solid var(--danger);
+}
+
+.cal-cancelled {
+  opacity: 0.5;
+  text-decoration: line-through;
+}
+
+.cal-today-item {
+  font-weight: 600;
+}
+
 /* ── Responsive (UI_SPEC §5.6) ─────────────────────────────────────────── */
 
 @media (max-width: 639px) {
@@ -763,5 +1142,22 @@ a.timeline-item:hover {
 
   .btn {
     min-height: 44px;
+  }
+
+  /* Calendar: the week grid scrolls horizontally; the day grid keeps
+     its 100% width with a smaller hour height. */
+  .week-grid {
+    display: block;
+    overflow-x: auto;
+  }
+
+  .week-grid > .cal-week-col {
+    display: inline-block;
+    width: 140px;
+    margin-right: var(--s-2);
+  }
+
+  .day-grid-hour {
+    height: 44px;
   }
 }

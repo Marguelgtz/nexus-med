@@ -10,6 +10,7 @@ import { usePathname } from 'next/navigation';
 export function TopBar() {
   const pathname = usePathname();
   const patientsActive = pathname === '/patients' || pathname.startsWith('/patients/');
+  const calendarActive = pathname === '/calendar' || pathname.startsWith('/calendar');
 
   return (
     <header className="topbar">
@@ -20,6 +21,9 @@ export function TopBar() {
         <nav className="topbar-nav" aria-label="Navegación principal">
           <Link href="/patients" className={patientsActive ? 'active' : undefined}>
             Pacientes
+          </Link>
+          <Link href="/calendar" className={calendarActive ? 'active' : undefined}>
+            Calendario
           </Link>
         </nav>
       </div>
