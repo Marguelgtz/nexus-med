@@ -28,7 +28,7 @@ This is not a hospital management system or a full enterprise EHR. Optimize for 
 2. **Medical background:** relevant ongoing context associated with the patient, such as conditions, previous surgeries, allergies, and current medications.
 3. **Encounter:** one consultation or clinical interaction associated with exactly one patient. Clinical note sections belong to the encounter in the initial model.
 
-Documents, authentication, and scheduling are not part of the current prototype.
+This section describes the **original P0 MVP**. O-005 subsequently approved appointments, encounter types, study requests, and printable doctor-authored prescriptions/reports. NX-001/NX-002 and NX-003 code exist on `feat/studies-web` (NX-003 acceptance still pending); NX-004 is not implemented. Authentication and file storage remain excluded.
 
 ## 4. MVP capabilities
 
@@ -71,19 +71,21 @@ Documents, authentication, and scheduling are not part of the current prototype.
 - Open the patient registry by default with demo records visible.
 - Show a persistent demo-mode banner.
 
-### Explicitly excluded from this prototype
+### Original MVP exclusions and updated O-005 boundary
 
-- File storage, document uploads/downloads, and document association.
+These exclusions were drafted before the accepted O-005 expansion. They remain historical P0 scope notes; `TASKS.md` §6 and `DECISIONS.md` D-023 govern the approved expansion. Do not interpret earlier exclusions as negating implemented functionality.
+
+- File storage, document uploads/downloads, and stored-file association.
 - Google authentication/OAuth/OIDC, sessions, and user management.
 - Multiple doctors, staff roles, or multi-clinic tenancy.
-- Appointment scheduling and reminders.
+- Appointment reminders and recurrence. Basic scheduling is now in-scope and implemented under NX-001.
 - Billing, payments, insurance, accounting, or inventory.
-- Prescriptions, pharmacy integrations, AI diagnosis, treatment recommendations, or clinical decision support.
+- Pharmacy integrations, AI diagnosis, treatment recommendations, or clinical decision support. Doctor-authored browser-printable prescriptions/reports are approved as NX-004, but not yet implemented.
 - FHIR/HL7 or external hospital integrations.
 - DICOM viewing, OCR, automated document interpretation, or analytics.
 - Docker, CI/CD, remote Cloudflare resources, and production deployment.
 
-These exclusions must not be implemented as speculative scaffolding. File storage and Google authentication are **pending future decisions**, not abandoned product ideas.
+These remaining exclusions must not be implemented as speculative scaffolding. File storage and Google authentication are **pending future decisions**, not abandoned ideas. For implemented workflows see `WORKFLOWS.md`; for missing NX-004 work see `TASKS.md` / `UI_SPEC.md`.
 
 ## 5. Consultation note structure
 

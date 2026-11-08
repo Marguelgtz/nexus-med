@@ -27,9 +27,19 @@ export function AppointmentStatusBadge({ status }: { status: string }) {
   );
 }
 
+// Study statuses use their own classes: `Completada` shares the appointment
+// style, `Ordenada` is the info badge, `Revisada` is success-outlined.
+const STUDY_STATUS_CLASS: Record<string, string> = {
+  ordered: 'badge-status-ordered',
+  completed: 'badge-status-completed',
+  reviewed: 'badge-status-reviewed',
+};
+
 export function StudyStatusBadge({ status }: { status: string }) {
   return (
-    <span className={`badge ${STATUS_CLASS[status] ?? ''}`}>{STUDY_STATUS_LABELS[status] ?? status}</span>
+    <span className={`badge ${STUDY_STATUS_CLASS[status] ?? ''}`}>
+      {STUDY_STATUS_LABELS[status] ?? status}
+    </span>
   );
 }
 

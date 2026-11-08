@@ -40,22 +40,50 @@ afterAll(async () => {
 describe('idempotent demo seed', () => {
   it('creates exactly the fixture records on the first run', async () => {
     const result = await idempotentSeed(prisma);
-    expect(result).toEqual({ patientsCreated: 7, encountersCreated: 9, appointmentsCreated: 9 });
+    expect(result).toEqual({
+      patientsCreated: 7,
+      encountersCreated: 9,
+      appointmentsCreated: 9,
+      studiesCreated: 2,
+    });
 
     const patients = await prisma.patient.count();
     const encounters = await prisma.encounter.count();
     const appointments = await prisma.appointment.count();
+    const studies = await prisma.studyRequest.count();
     expect(patients).toBe(7);
     expect(encounters).toBe(9);
     expect(appointments).toBe(9);
+    expect(studies).toBe(2);
   });
 
   it('creates nothing on a second run', async () => {
     const result = await idempotentSeed(prisma);
-    expect(result).toEqual({ patientsCreated: 0, encountersCreated: 0, appointmentsCreated: 0 });
+    expect(result).toEqual({
+      patientsCreated: 0,
+      encountersCreated: 0,
+      appointmentsCreated: 0,
+      studiesCreated: 0,
+    });
     expect(await prisma.patient.count()).toBe(7);
     expect(await prisma.encounter.count()).toBe(9);
     expect(await prisma.appointment.count()).toBe(9);
+    expect(await prisma.studyRequest.count()).toBe(2);
+  });
+
+  it('seeds the demo study requests with exact states and the result note', async () => {
+    const ordered = await prisma.studyRequest.findUnique({ where: { id: 'demo-study-001' } });
+    expect(ordered).not.toBeNull();
+    expect(ordered!.patientId).toBe('demo-patient-002');
+    expect(ordered!.encounterId).toBe('demo-encounter-002b');
+    expect(ordered!.status).toBe('ordered');
+    expect(ordered!.resultNote).toBeNull();
+    // Deterministic seeded timestamp (see SEEDED_AT).
+    expect(ordered!.createdAt.toISOString()).toBe('2026-01-01T18:00:00.000Z');
+
+    const reviewed = await prisma.studyRequest.findUnique({ where: { id: 'demo-study-002' } });
+    expect(reviewed?.status).toBe('reviewed');
+    expect(reviewed?.resultNote).toBe('Cine cardiotorácico conservado; sin infiltrados.');
   });
 
   it('preserves fixture timestamps exactly', async () => {
@@ -140,7 +168,12 @@ describe('idempotent demo seed', () => {
     });
 
     const result = await idempotentSeed(prisma);
-    expect(result).toEqual({ patientsCreated: 0, encountersCreated: 0, appointmentsCreated: 0 });
+    expect(result).toEqual({
+      patientsCreated: 0,
+      encountersCreated: 0,
+      appointmentsCreated: 0,
+      studiesCreated: 0,
+    });
 
     expect(await prisma.patient.count()).toBe(8);
     expect(await prisma.encounter.count()).toBe(10);

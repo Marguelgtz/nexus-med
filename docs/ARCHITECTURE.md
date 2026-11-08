@@ -1,12 +1,21 @@
 # Architecture — Medical Platform MVP
 
-**Status:** Confirmed local architecture; future Cloudflare integration remains open  
+**Status:** Confirmed local architecture; NX-001/NX-002 implemented and NX-003 code present on `feat/studies-web` as of 2026-11-08. Cloudflare remains future-only.  
 **Version:** 0.4  
 **Product:** Single-doctor medical practice platform  
 **Immediate target:** Fully local, offline-capable prototype using synthetic data  
 **Future deployment direction:** Separate Next.js frontend and Hono API deployment surfaces on Cloudflare, with D1 evaluated as the future relational database
 
 ---
+
+## Current Phase 4 code map (2026-11-08)
+
+This implementation inventory complements the original architectural target tree below. The topology is unchanged: local Next.js + Hono, one Prisma/SQLite database, no Cloudflare runtime.
+
+- API domains: `apps/api/src/domains/appointments/` and `studies/`; `encounters/` also performs atomic study creation.
+- Web: `apps/web/src/app/calendar/`, `apps/web/src/app/patients/[id]/citas/`, `apps/web/src/components/appointments/`, and study controls under `components/patients/` plus patient overview.
+- Shared contracts: `packages/contracts/src/appointments.ts`, `studies.ts`, `encounters.ts`.
+- Prisma schema models: `Patient`, `Encounter`, `Appointment`, `StudyRequest`; migration for studies exists. NX-004's `MedicalDocument` and `PrescriptionLine` are not yet implemented.
 
 ## 1. Architectural Decisions
 
@@ -79,7 +88,7 @@ The frontend and API remain separate deployable applications. The exact Next.js-
 | Local database | SQLite file | Confirmed |
 | Shared API contracts | Narrow `packages/contracts` workspace (`@nexus-med/contracts`) for cross-app DTOs/schemas | In use since O-001 (Zod 4) |
 | ORM | Prisma ORM 7 | Confirmed |
-| Local SQLite adapter | `@prisma/adapter-better-sqlite3` | Proposed implementation choice; validate during bootstrap |
+| Local SQLite adapter | `@prisma/adapter-better-sqlite3` | Implemented and previously verified with local transaction rollback (D-019) |
 | Future database | Cloudflare D1 | Future candidate; transaction behavior must be validated |
 | Future Prisma adapter | `@prisma/adapter-d1` | Future candidate; not used locally |
 | File storage | No file storage in prototype | Pending / excluded |
@@ -254,9 +263,9 @@ When Cloudflare work is approved:
 - Access Prisma and the database.
 - Return consistent JSON and HTTP status codes.
 
-### Initial API surface
+### Original O-001 API surface
 
-Do not implement deferred document routes.
+The table below reflects the initial foundation, **not** all current routes. NX-001 appointments and NX-003 study endpoints are present as documented in `API_CONTRACT.md` §11. NX-004 document routes remain absent; file storage is still excluded.
 
 | Method | Route | Purpose |
 |---|---|---|
@@ -291,8 +300,10 @@ A **domain** is a product/business area. It is not a separate server, process, d
 API domains live under `apps/api/src/domains/`:
 
 - `patients`: patient registration, search, profile, demographic updates, medical background, archive status.
-- `encounters`: consultation creation, clinical note fields, retrieval, updates, patient timeline.
-- `documents`: future domain only; do not implement file operations in this prototype.
+- `encounters`: clinical encounter creation, type, notes, timeline, and atomic creation of initial study requests.
+- `appointments`: scheduling, range/patient lists, state changes and encounter links (NX-001).
+- `studies`: patient/encounter lists and status/result-note changes (NX-003).
+- `documents`: approved NX-004 structured printable records **not yet implemented**; no file-storage domain.
 
 The API owns authoritative domain rules under `apps/api/src/domains/`. The frontend groups workflow UI under `apps/web/src/components/`; it must not duplicate authoritative rules. Shared request/response contracts belong to `packages/contracts/`.
 

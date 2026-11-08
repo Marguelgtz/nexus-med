@@ -11,12 +11,14 @@ import { useRouter } from 'next/navigation';
 import {
   type CreateEncounterInput,
   type EncounterType,
+  type StudyCategory,
   createEncounterInputSchema,
   encounterTypeSchema,
+  studyCategorySchema,
 } from '@nexus-med/contracts';
 
 import { ApiError, createEncounter } from '../../lib/api/client';
-import { ENCOUNTER_TYPE_LABELS } from '../../lib/format';
+import { ENCOUNTER_TYPE_LABELS, STUDY_CATEGORY_LABELS } from '../../lib/format';
 import { ErrorBanner } from '../primitives';
 import { useBeforeUnloadGuard } from '../../lib/use-before-unload-guard';
 
@@ -44,6 +46,9 @@ type SectionValues = {
   plan: string;
   followUp: string;
 };
+
+/** One study row in the form (UI_SPEC §7.3, U-15). Zero rows = no studies. */
+type StudyRowInput = { category: StudyCategory; description: string };
 
 function pad(n: number): string {
   return String(n).padStart(2, '0');
@@ -91,11 +96,14 @@ export function ConsultationForm({ patientId }: { patientId: string }) {
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [banner, setBanner] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [studies, setStudies] = useState<StudyRowInput[]>([]);
 
-  // Dirty while any section has text or the datetime moved off the default.
+  // Dirty while any section has text, the datetime moved off the default,
+  // or a study row was added.
   const dirty =
     Object.values(values).some((v) => v.trim() !== '') ||
-    occurredAt !== initialOccurredAt;
+    occurredAt !== initialOccurredAt ||
+    studies.length > 0;
   useBeforeUnloadGuard(dirty);
 
   const setSection = (field: keyof SectionValues) => (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -122,6 +130,19 @@ export function ConsultationForm({ patientId }: { patientId: string }) {
       return;
     }
 
+    // Client check on kept study rows (server repeats it with per-row
+    // fieldErrors, e.g. `studies.0.description`).
+    const rowErrors: FieldErrors = {};
+    studies.forEach((row, i) => {
+      if (row.description.trim() === '') {
+        rowErrors[`studies.${i}.description`] = ['Indica el estudio'];
+      }
+    });
+    if (Object.keys(rowErrors).length > 0) {
+      setFieldErrors(rowErrors);
+      return;
+    }
+
     const candidate: CreateEncounterInput = {
       occurredAt: occurredIso,
       type,
@@ -132,6 +153,14 @@ export function ConsultationForm({ patientId }: { patientId: string }) {
       assessment: values.assessment.trim() || null,
       plan: values.plan.trim() || null,
       followUp: values.followUp.trim() || null,
+      ...(studies.length > 0
+        ? {
+            studies: studies.map((s) => ({
+              category: s.category,
+              description: s.description.trim(),
+            })),
+          }
+        : {}),
     };
 
     const parsed = createEncounterInputSchema.safeParse(candidate);
@@ -226,6 +255,75 @@ export function ConsultationForm({ patientId }: { patientId: string }) {
             {errorFor(s.key) ? <div className="field-error">{errorFor(s.key)}</div> : null}
           </div>
         ))}
+
+        <div className="field">
+          <div className="section-label">Estudios solicitados</div>
+          {studies.length > 0 ? (
+            <div className="study-form-rows">
+              {studies.map((row, i) => (
+                <div className="study-form-row" key={i}>
+                  <select
+                    aria-label={`Categoría del estudio ${i + 1}`}
+                    value={row.category}
+                    onChange={(e) =>
+                      setStudies((rows) =>
+                        rows.map((r, j) =>
+                          j === i ? { ...r, category: e.target.value as StudyCategory } : r,
+                        ),
+                      )
+                    }
+                  >
+                    {studyCategorySchema.options.map((c) => (
+                      <option key={c} value={c}>
+                        {STUDY_CATEGORY_LABELS[c]}
+                      </option>
+                    ))}
+                  </select>
+                  <input
+                    type="text"
+                    aria-label={`Descripción del estudio ${i + 1}`}
+                    placeholder="Ej. Biometría hemática"
+                    maxLength={200}
+                    value={row.description}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setStudies((rows) => rows.map((r, j) => (j === i ? { ...r, description: value } : r)));
+                      setFieldErrors((fe) => {
+                        const key = `studies.${i}.description`;
+                        if (!fe[key]) return fe;
+                        const next = { ...fe };
+                        delete next[key];
+                        return next;
+                      });
+                    }}
+                    aria-invalid={errorFor(`studies.${i}.description`) ? 'true' : undefined}
+                  />
+                  {studies.length > 1 ? (
+                    <button
+                      type="button"
+                      className="btn btn-ghost btn-sm"
+                      onClick={() => setStudies((rows) => rows.filter((_, j) => j !== i))}
+                    >
+                      Quitar
+                    </button>
+                  ) : null}
+                </div>
+              ))}
+              {studies.map((_, i) =>
+                errorFor(`studies.${i}.description`) ? (
+                  <div className="field-error" key={`err-${i}`}>{errorFor(`studies.${i}.description`)}</div>
+                ) : null,
+              )}
+            </div>
+          ) : null}
+          <button
+            type="button"
+            className="btn btn-ghost btn-sm"
+            onClick={() => setStudies((rows) => [...rows, { category: 'laboratorio', description: '' }])}
+          >
+            Agregar estudio
+          </button>
+        </div>
       </div>
 
       {banner ? <ErrorBanner message={banner} /> : null}

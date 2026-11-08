@@ -20,7 +20,7 @@ The prototype must support:
 4. Chronological clinical continuity.
 5. First-run experience with synthetic demo records.
 
-File/document management and authentication are future capabilities and excluded from the current prototype.
+File upload/storage and authentication remain future capabilities excluded from the local prototype. **D-023 explicitly approved O-005**: basic appointments/calendar, encounter classification, study requests and doctor-authored browser-printable prescriptions/reports. These approved additions are separate from file/document storage. Refer to `docs/TASKS.md` §6 and `docs/ACTION_PLAN.md` for their implementation state.
 
 The immediate objective is a reliable local application that can be opened and explored immediately after startup. Do not build a complete hospital management system, enterprise EHR, or production SaaS platform.
 
@@ -81,7 +81,7 @@ Do not silently convert a `Proposed` or `Open` decision into a confirmed require
 - Synthetic/demo data only. Never request, create, or commit real patient data or credentials.
 - The first-run database must contain the exact synthetic records in `docs/demo-dataset.json`, following `docs/DEMO_DATA.md`.
 - The app must open to a populated patient registry and display a persistent demo-mode warning.
-- Do not add file storage, document uploads, Google authentication, scheduling, billing, prescriptions, AI diagnosis, FHIR/HL7, or other excluded modules without explicit approval.
+- Do not add file storage, document uploads, Google authentication, billing, AI diagnosis, FHIR/HL7, or other excluded modules without explicit approval. **Exception already approved by D-023:** basic appointment scheduling, encounter types, study requests, and doctor-authored browser-printable prescriptions/reports (NX-001…NX-004). This approval does not extend to reminders, external integrations, medication catalogs, legally valid prescriptions, or file storage.
 - The application documents information entered by the doctor; it must not invent clinical findings or generate unsupported diagnoses/treatment recommendations.
 
 ## 5. Engineering philosophy
