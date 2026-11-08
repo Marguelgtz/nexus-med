@@ -16,6 +16,7 @@ Seed at least:
 
 - **7 patients** with clearly synthetic names such as `DEMO — Paciente 001`, `DEMO — Paciente 002`, etc.
 - **9 encounters** distributed across at least four patients.
+- **9 appointments**: 4 fixed past appointments (3 completed — two linked to demo encounters, one `procedimiento` — and 1 cancelled) plus 5 upcoming appointments anchored to the first seed run (see Section 3).
 - At least **2 patients with multiple encounters** so the timeline can be evaluated.
 - At least **1 patient with no encounters** to demonstrate the timeline empty state.
 - At least **1 archived patient** to demonstrate active/archive behavior.
@@ -37,7 +38,22 @@ The exact checked-in fixture payload is `docs/demo-dataset.json`; use it as the 
 | `DEMO — Paciente 006` | 1 | Demonstrates a simple patient record |
 | `DEMO — Paciente 007` | 1 | Demonstrates another active patient record |
 
-On a clean database, this fixture produces exactly seven demo patients (six active and one archived) and nine demo encounters. All seven fixture patient IDs and nine fixture encounter IDs must be inserted. Keep all note text visibly marked as fictional. The agent may add more fixtures when useful, but must preserve these UI states.
+On a clean database, this fixture produces exactly seven demo patients (six active and one archived), nine demo encounters, and nine demo appointments. All seven fixture patient IDs, nine fixture encounter IDs, and the four fixture appointment IDs must be inserted. Keep all note text visibly marked as fictional. The agent may add more fixtures when useful, but must preserve these UI states.
+
+### Appointment fixtures (NX-001)
+
+**Fixed past appointments** (in `docs/demo-dataset.json`, deterministic like the encounters):
+
+| Seed appointment | Patient | startAt (America/Monterrey) | State / purpose |
+|---|---|---|---|
+| `demo-appt-past-001` | `DEMO — Paciente 001` | 2026-09-04 12:00 | Completed, linked to `demo-encounter-001a` (actual 35 min) |
+| `demo-appt-past-002` | `DEMO — Paciente 002` | 2026-10-08 10:00 | Completed, linked to `demo-encounter-002b` (actual 40 min) |
+| `demo-appt-past-003` | `DEMO — Paciente 005` | 2026-10-16 11:00 | Cancelled (demonstrates the cancelled state) |
+| `demo-appt-past-004` | `DEMO — Paciente 007` | 2026-10-25 09:00 | Completed `procedimiento`, linked to `demo-encounter-007a` (actual 75 min) |
+
+**Upcoming appointments** (computed in `prisma/seed.ts`, deliberately NOT in the fixture file): five `scheduled` appointments for demo patients at practice-timezone wall times — anchor +1 d 09:00 (consulta), +3 d 10:30 (procedimiento), +6 d 12:00 (consulta), +10 d 16:00 (visita_domicilio), +14 d 11:00 (urgencia).
+
+**Anchor behavior (D-029/U-14):** `anchor` is the date of the **first seed run** that created the upcoming appointments (practice timezone, `America/Monterrey`). The seed computes each instant once and stores it under a stable ID; because seeding is create-if-missing, later runs — including days or weeks later — never recompute, move, or duplicate the anchor. A calendar demo whose dates all predate "today" would demonstrate nothing, so this is the one documented exception to fixed-timestamp seeding.
 
 ## 4. Synthetic content rules
 
@@ -106,10 +122,12 @@ After the developer creates or edits local patients/encounters:
 
 Tests must verify:
 
-- A clean database receives the required demo records.
+- A clean database receives the required demo records (patients, encounters, appointments).
 - Running the seed twice yields the same record counts.
 - Existing edited demo records are not overwritten.
 - Existing user-created records are not deleted or modified.
 - A patient with no encounters remains available to exercise the empty state.
 - The archived demo patient remains archived after a repeated seed.
+- Past appointments keep their exact fixture timestamps, states, and encounter links.
+- Upcoming appointments are in the future, sit on the expected practice-timezone wall times, and do not move on re-seed (first-seed anchor).
 - Startup does not require Cloudflare or internet connectivity after dependencies have been installed.

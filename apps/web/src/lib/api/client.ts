@@ -237,7 +237,7 @@ export function completeAppointment(
 ): Promise<Appointment> {
   return request(
     `/appointments/${encodeURIComponent(id)}/complete`,
-    { method: 'PATCH', body: JSON.stringify(input) },
+    { method: 'POST', body: JSON.stringify(input) },
     appointmentSchema.safeParse.bind(appointmentSchema),
   );
 }
@@ -245,7 +245,7 @@ export function completeAppointment(
 export function cancelAppointment(id: string): Promise<Appointment> {
   return request(
     `/appointments/${encodeURIComponent(id)}/cancel`,
-    { method: 'PATCH' },
+    { method: 'POST' },
     appointmentSchema.safeParse.bind(appointmentSchema),
   );
 }
@@ -253,7 +253,7 @@ export function cancelAppointment(id: string): Promise<Appointment> {
 export function linkEncounter(id: string, encounterId: string): Promise<Appointment> {
   return request(
     `/appointments/${encodeURIComponent(id)}/link-encounter`,
-    { method: 'PATCH', body: JSON.stringify({ encounterId }) },
+    { method: 'POST', body: JSON.stringify({ encounterId }) },
     appointmentSchema.safeParse.bind(appointmentSchema),
   );
 }

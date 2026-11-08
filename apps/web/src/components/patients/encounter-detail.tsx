@@ -10,11 +10,16 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
-import type { EncounterDetail, UpdateEncounterInput } from '@nexus-med/contracts';
+import {
+  type EncounterDetail,
+  type EncounterType,
+  type UpdateEncounterInput,
+  encounterTypeSchema,
+} from '@nexus-med/contracts';
 
 import { ApiError, updateEncounter } from '../../lib/api/client';
 import { Badge, ErrorBanner } from '../primitives';
-import { formatDateTime, wasEdited } from '../../lib/format';
+import { ENCOUNTER_TYPE_LABELS, formatDateTime, wasEdited } from '../../lib/format';
 import { useBeforeUnloadGuard } from '../../lib/use-before-unload-guard';
 
 const SECTIONS: { key: keyof SectionValues; label: string; rows: number }[] = [
@@ -57,6 +62,7 @@ export function EncounterDetail({ encounter }: { encounter: EncounterDetail }) {
   const router = useRouter();
   const [editing, setEditing] = useState(false);
   const [values, setValues] = useState<SectionValues>(() => toValues(encounter));
+  const [type, setType] = useState<EncounterType>(encounter.type);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [banner, setBanner] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -66,13 +72,15 @@ export function EncounterDetail({ encounter }: { encounter: EncounterDetail }) {
   // Dirty only while editing AND any field differs from the saved note.
   const dirty =
     editing &&
-    (Object.keys(values) as (keyof SectionValues)[]).some(
-      (k) => values[k] !== toValues(encounter)[k],
-    );
+    (type !== encounter.type ||
+      (Object.keys(values) as (keyof SectionValues)[]).some(
+        (k) => values[k] !== toValues(encounter)[k],
+      ));
   useBeforeUnloadGuard(dirty);
 
   const startEditing = () => {
     setValues(toValues(encounter));
+    setType(encounter.type);
     setFieldErrors({});
     setBanner(null);
     setEditing(true);
@@ -90,6 +98,7 @@ export function EncounterDetail({ encounter }: { encounter: EncounterDetail }) {
 
   const onSave = async () => {
     const candidate: UpdateEncounterInput = {
+      type,
       reason: values.reason.trim() || null,
       historyOfPresentIllness: values.historyOfPresentIllness.trim() || null,
       relevantHistory: values.relevantHistory.trim() || null,
@@ -130,6 +139,21 @@ export function EncounterDetail({ encounter }: { encounter: EncounterDetail }) {
         }}
       >
         <div className="card">
+          <div className="field">
+            <label htmlFor="edit-type">Tipo de consulta</label>
+            <select
+              id="edit-type"
+              name="type"
+              value={type}
+              onChange={(e) => setType(e.target.value as EncounterType)}
+            >
+              {encounterTypeSchema.options.map((t) => (
+                <option key={t} value={t}>
+                  {ENCOUNTER_TYPE_LABELS[t]}
+                </option>
+              ))}
+            </select>
+          </div>
           {SECTIONS.map((s) => (
             <div className="field" key={s.key}>
               <label htmlFor={`edit-${s.key}`}>{s.label}</label>
@@ -168,6 +192,7 @@ export function EncounterDetail({ encounter }: { encounter: EncounterDetail }) {
     <>
       <div className="encounter-head">
         <h1>{formatDateTime(encounter.occurredAt)}</h1>
+        <span className="badge badge-type">{ENCOUNTER_TYPE_LABELS[encounter.type]}</span>
         {edited ? (
           <Badge tone="edited">Editada el {formatDateTime(encounter.updatedAt)}</Badge>
         ) : null}

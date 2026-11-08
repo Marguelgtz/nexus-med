@@ -1,6 +1,6 @@
 {
   "description": "Entirely fictional development fixture. Every note is synthetic UI/test content and must never be used for actual care.",
-  "dateStrategy": "occurredAt values are fixed ISO-8601 timestamps with an explicit -06:00 offset for America/Monterrey. Seed scripts must preserve the exact timestamps and never recalculate them on later runs.",
+  "dateStrategy": "occurredAt and past-appointment startAt values are fixed ISO-8601 timestamps with an explicit -06:00 offset for America/Monterrey. Seed scripts must preserve the exact timestamps and never recalculate them on later runs. Upcoming appointments are the documented exception: they are anchored to the first seed run's date in the seed script (D-029/U-14) and stored once, never moved on re-seed.",
   "patients": [
     {
       "id": "demo-patient-001",
@@ -202,6 +202,52 @@
       "plan": "NOTA FICTICIA DE DEMOSTRACIÓN — NO USAR PARA ATENCIÓN REAL. Plan de ejemplo sin indicaciones médicas reales.",
       "followUp": "NOTA FICTICIA DE DEMOSTRACIÓN — NO USAR PARA ATENCIÓN REAL. Texto ficticio de seguimiento.",
       "occurredAt": "2026-10-25T12:00:00-06:00"
+    }
+  ],
+  "appointments": [
+    {
+      "id": "demo-appt-past-001",
+      "patientId": "demo-patient-001",
+      "startAt": "2026-09-04T12:00:00-06:00",
+      "durationMinutes": 30,
+      "type": "consulta",
+      "status": "completed",
+      "actualDurationMinutes": 35,
+      "completedAt": "2026-09-04T12:35:00-06:00",
+      "linkedEncounterId": "demo-encounter-001a"
+    },
+    {
+      "id": "demo-appt-past-002",
+      "patientId": "demo-patient-002",
+      "startAt": "2026-10-08T10:00:00-06:00",
+      "durationMinutes": 30,
+      "type": "consulta",
+      "status": "completed",
+      "actualDurationMinutes": 40,
+      "completedAt": "2026-10-08T10:40:00-06:00",
+      "linkedEncounterId": "demo-encounter-002b"
+    },
+    {
+      "id": "demo-appt-past-003",
+      "patientId": "demo-patient-005",
+      "startAt": "2026-10-16T11:00:00-06:00",
+      "durationMinutes": 30,
+      "type": "consulta",
+      "status": "cancelled",
+      "actualDurationMinutes": null,
+      "completedAt": null,
+      "linkedEncounterId": null
+    },
+    {
+      "id": "demo-appt-past-004",
+      "patientId": "demo-patient-007",
+      "startAt": "2026-10-25T09:00:00-06:00",
+      "durationMinutes": 60,
+      "type": "procedimiento",
+      "status": "completed",
+      "actualDurationMinutes": 75,
+      "completedAt": "2026-10-25T10:15:00-06:00",
+      "linkedEncounterId": "demo-encounter-007a"
     }
   ]
 }

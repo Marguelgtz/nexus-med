@@ -193,15 +193,65 @@ At a phase boundary, reconcile the work packages for the next phase using actual
 - The application works offline after dependency installation.
 - The final core workflows pass end-to-end verification.
 
-## 6. Deferred scope — not part of this prototype
+## 6. Phase 4 — Product expansion (appointments, classification, studies, printable documents)
+
+**Objective O-005:** Extend the working local product with four ordered vertical slices — appointments + basic calendar (NX-001), encounter types (NX-002), study-request follow-up (NX-003), printable prescriptions/reports (NX-004) — each verified end-to-end before the next (D-023). Owner mission brief 2026-11-07/08.
+
+**Phase status:** In progress since 2026-11-07 on `feat/api-foundation`. Per-slice live state: `ACTION_PLAN.md`.
+
+### Work packages
+
+**NX-001 — Appointments and basic calendar**
+- `Appointment` model (D-026): patient, `startAt` instant, duration 5–480 min, planned type, status `scheduled`/`completed`/`cancelled` (one-directional; reschedule = cancelled → scheduled), optional `actualDurationMinutes`, optional 1:1 `linkedEncounterId` (same patient, server-validated).
+- Hono: create, list (range filter), get, update (reschedule), complete (actual duration + optional encounter link), cancel; shared validation/DTOs in `packages/contracts`.
+- Web: `/calendar` with `dia`/`semana`/`mes` views (CSS grid, no calendar library, Monday start, 06:00–22:00 day window, D-030), appointment detail page, new-appointment page; patient context preserved across views.
+- Demo: fixed-timestamp past appointments (completed/cancelled, some linked to encounters) plus upcoming appointments anchored to the first seed run (stored once, never moved on re-seed, D-029); idempotent seeding; `DEMO_DATA.md` updated.
+
+Acceptance: appointments create/list/get/reschedule/complete/cancel; render in all three views on correct America/Monterrey dates; overlap warnings; patient navigation; first-run demo includes representative past + upcoming appointments; repeat seed duplicates nothing, moves nothing, overwrites nothing; existing patient/encounter workflows intact.
+
+**NX-002 — Encounter types and minimal clinical classification**
+- `Encounter.type` and `Appointment.type` share the fixed list `consulta`/`procedimiento`/`visita_domicilio`/`urgencia`; pre-expansion encounters migrate to `consulta` (D-024).
+- Web (U-12): type selector in the consultation form; type displayed in encounter detail and patient timeline without making the timeline noisy.
+- Surgical follow-through: conservative default — the type field is sufficient; no surgery/procedure lifecycle or status machine. Recorded in `DECISIONS.md` as a proposal, not an owner-approved clinical workflow (Q-NX-01 stays open for doctor validation; D-025).
+
+Acceptance: the doctor can classify an encounter as consultation, procedure, home visit, or emergency; the type persists and is visible in detail and timeline; legacy records remain valid; no surgery-specific fields are required for ordinary consultations.
+
+**NX-003 — Study requests and follow-up**
+- `StudyRequest` (D-027): `patientId` + immutable originating `encounterId` (both associations enforced server-side), closed category list + free-text description, status `ordered` → `completed` → `reviewed`, optional `resultNote` (≤ 1,000 chars); after creation only status + note change — no edit, no delete.
+- Hono: create (one or more per consultation), list by encounter/patient, update status/note; shared validation/DTOs. No study catalog or integration abstraction.
+- Web: repeatable study rows in the consultation form (short hardcoded common categories + free-text option); encounter detail moves a study through ordered → completed → reviewed with an optional doctor note; patient overview shows a small “Estudios pendientes” section (studies not yet reviewed, linked to the originating encounter). No dashboard.
+- Follow-up scheduling reuses the existing `Appointment` model; the free-text `followUp` field keeps clinical instructions. No new scheduler, lab/imaging integration, file uploads, reminders, or result interpretation.
+
+Acceptance: one or more study requests can be entered from an encounter; patient and encounter associations are verified; status and notes persist; ordered/completed studies appear in “Estudios pendientes” until reviewed, then leave the section but remain accessible in encounter detail; encounters without studies behave as before; repeat seed is idempotent.
+
+**NX-004 — Prescriptions and medical reports**
+- `MedicalDocument` (`kind` = `prescription`/`report`) + `PrescriptionLine` (medication, dose, route, frequency, duration, instructions — every value doctor-entered) (D-028); linked to a patient and optionally to an encounter; no stored files, PDFs, or uploads.
+- Hono: create, retrieve, and update supported document content; shared validation/DTOs.
+- Web: prescription form with repeatable lines; report form with a doctor-written narrative plus existing patient/encounter details only; patient overview “Recetas e informes” section so documents can be reopened; dedicated print view using ordinary HTML + `@media print` (standard page, sensible page breaks, navigation/buttons/app controls excluded, demo marker on the paper). Browser print dialog for print/save-as-PDF.
+- Content rules: the doctor authors all clinical content — no medication catalog, dose calculation, interaction checks, or clinical conclusions; no signature, legal-validity, or official-prescription claims; no invented doctor identity or clinic details.
+
+Acceptance: doctor-authored content persists and reopens from patient context; patient/encounter links are correct; prescription lines are repeatable; print output is legible and excludes app controls; print styling adds no dependency; seeded records are fictional and idempotent.
+
+### Phase 4 acceptance criteria
+
+- All four slices implemented and integrated-verified: clean local migration + startup with the documented commands; the synthetic seed contains the intended patient/encounter baseline plus appointments, studies, and medical documents; a repeated seed neither duplicates records nor overwrites local edits.
+- Core workflows intact: patient registration/search/overview/background editing, consultation create/detail/edit, chronological timeline.
+- Appointments create/list/detail/edit/reschedule/complete/cancel and render correctly in day/week/month views; encounter types save and render in form, detail, and timeline.
+- Study requests save, change status, stay linked to their encounter/patient, and appear/disappear in “Estudios pendiente” correctly.
+- Prescriptions and reports save, reopen from patient context, and print cleanly.
+- Dates/times use America/Monterrey; first-seed anchoring behaves correctly.
+- All existing available tests plus relevant new tests pass; typecheck, lint, and production build pass; no new runtime dependencies and no excluded capability introduced.
+- Documentation reconciled (`TASKS.md`, `ACTION_PLAN.md`, `DATA_MODEL.md`, `API_CONTRACT.md`, `UI_SPEC.md`, `WORKFLOWS.md`, `DEMO_DATA.md`, `TESTING.md`, `DECISIONS.md`); no product-feature PR merged without explicit owner approval.
+
+## 7. Deferred scope — not part of this prototype
 
 - File storage, document uploads/downloads, document management, and R2.
 - Google authentication/OAuth/OIDC and authorization.
 - Docker and CI/CD.
 - Cloudflare account connection, remote D1/R2, Worker deployment, and production setup.
-- Scheduling, billing, multi-user support, AI clinical features, FHIR/HL7, and external integrations. When scheduling is picked up in a future run, document the appointment objective and contract in this section and `API_CONTRACT.md` first.
+- Billing, multi-user support, AI clinical features, FHIR/HL7, and external integrations. (Basic appointment scheduling is now in scope via Phase 4 / NX-001; surgical-procedure tracking and the study category list remain open questions Q-NX-01/Q-NX-02 pending doctor validation.)
 
-## 7. Phase-boundary maintenance
+## 8. Phase-boundary maintenance
 
 At the start of each phase, review its objective and acceptance criteria against actual findings. Revise this file only when scope, dependencies, sequence, or acceptance criteria need to change. Expand the active objective in `ACTION_PLAN.md` into the live sequential sub-objective stack.
 

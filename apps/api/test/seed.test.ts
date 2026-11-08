@@ -40,25 +40,67 @@ afterAll(async () => {
 describe('idempotent demo seed', () => {
   it('creates exactly the fixture records on the first run', async () => {
     const result = await idempotentSeed(prisma);
-    expect(result).toEqual({ patientsCreated: 7, encountersCreated: 9 });
+    expect(result).toEqual({ patientsCreated: 7, encountersCreated: 9, appointmentsCreated: 9 });
 
     const patients = await prisma.patient.count();
     const encounters = await prisma.encounter.count();
+    const appointments = await prisma.appointment.count();
     expect(patients).toBe(7);
     expect(encounters).toBe(9);
+    expect(appointments).toBe(9);
   });
 
   it('creates nothing on a second run', async () => {
     const result = await idempotentSeed(prisma);
-    expect(result).toEqual({ patientsCreated: 0, encountersCreated: 0 });
+    expect(result).toEqual({ patientsCreated: 0, encountersCreated: 0, appointmentsCreated: 0 });
     expect(await prisma.patient.count()).toBe(7);
     expect(await prisma.encounter.count()).toBe(9);
+    expect(await prisma.appointment.count()).toBe(9);
   });
 
   it('preserves fixture timestamps exactly', async () => {
     const encounter = await prisma.encounter.findUnique({ where: { id: 'demo-encounter-001a' } });
     expect(encounter?.occurredAt.toISOString()).toBe('2026-09-04T18:00:00.000Z');
     expect(encounter?.createdAt.toISOString()).toBe('2026-09-04T18:00:00.000Z');
+  });
+
+  it('seeds past appointments with exact timestamps, states, and encounter links', async () => {
+    const done = await prisma.appointment.findUnique({ where: { id: 'demo-appt-past-001' } });
+    expect(done?.startAt.toISOString()).toBe('2026-09-04T18:00:00.000Z');
+    expect(done?.status).toBe('completed');
+    expect(done?.actualDurationMinutes).toBe(35);
+    expect(done?.completedAt?.toISOString()).toBe('2026-09-04T18:35:00.000Z');
+    expect(done?.linkedEncounterId).toBe('demo-encounter-001a');
+
+    const cancelled = await prisma.appointment.findUnique({ where: { id: 'demo-appt-past-003' } });
+    expect(cancelled?.status).toBe('cancelled');
+    expect(cancelled?.linkedEncounterId ?? null).toBe(null);
+  });
+
+  it('anchors upcoming appointments to the first seed run and never moves them', async () => {
+    const first = await prisma.appointment.findUnique({ where: { id: 'demo-appt-up-001' } });
+    expect(first).not.toBeNull();
+    // Upcoming: strictly after the seed moment (minus a small clock tolerance).
+    expect(first!.startAt.getTime()).toBeGreaterThan(Date.now() - 60_000);
+
+    // The wall clock in America/Monterrey must be 09:00 on a future practice date.
+    const wall = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'America/Monterrey',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      hourCycle: 'h23',
+    }).format(first!.startAt);
+    expect(wall.endsWith('09:00')).toBe(true);
+
+    // Re-seed: the anchor instant must not move.
+    await idempotentSeed(prisma);
+    const again = await prisma.appointment.findUnique({ where: { id: 'demo-appt-up-001' } });
+    expect(again?.startAt.toISOString()).toBe(first!.startAt.toISOString());
+    const last = await prisma.appointment.findUnique({ where: { id: 'demo-appt-up-005' } });
+    expect(last?.status).toBe('scheduled');
   });
 
   it('seeds the expected demo composition', async () => {
@@ -98,10 +140,11 @@ describe('idempotent demo seed', () => {
     });
 
     const result = await idempotentSeed(prisma);
-    expect(result).toEqual({ patientsCreated: 0, encountersCreated: 0 });
+    expect(result).toEqual({ patientsCreated: 0, encountersCreated: 0, appointmentsCreated: 0 });
 
     expect(await prisma.patient.count()).toBe(8);
     expect(await prisma.encounter.count()).toBe(10);
+    expect(await prisma.appointment.count()).toBe(9);
     const stillThere = await prisma.patient.findUnique({ where: { id: userPatient.id } });
     expect(stillThere?.phone).toBe('5551234567');
   });
