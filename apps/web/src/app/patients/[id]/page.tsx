@@ -11,6 +11,7 @@ import {
   appointmentSchema,
   encounterSummarySchema,
   patientDetailSchema,
+  studyRequestSchema,
   type PatientDetail,
 } from '@nexus-med/contracts';
 
@@ -24,6 +25,7 @@ import { PatientContext } from '../../../components/shell/patient-context';
 import { Badge, ErrorBanner } from '../../../components/primitives';
 import { fetchServer } from '../../../lib/api/server';
 import {
+  STUDY_CATEGORY_LABELS,
   formatDate,
   formatAge,
   formatDateTime,
@@ -52,7 +54,7 @@ const BACKGROUND_ROWS: { label: string; key: keyof PatientDetail }[] = [
 export default async function PatientPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
 
-  const [patientRes, encountersRes, apptsRes] = await Promise.all([
+  const [patientRes, encountersRes, apptsRes, studiesRes] = await Promise.all([
     fetchServer(`/api/patients/${encodeURIComponent(id)}`, patientDetailSchema),
     fetchServer(
       `/api/patients/${encodeURIComponent(id)}/encounters`,
@@ -61,6 +63,10 @@ export default async function PatientPage({ params }: { params: Promise<{ id: st
     fetchServer(
       `/api/patients/${encodeURIComponent(id)}/appointments`,
       z.array(appointmentSchema),
+    ),
+    fetchServer(
+      `/api/patients/${encodeURIComponent(id)}/studies`,
+      z.array(studyRequestSchema),
     ),
   ]);
 
@@ -94,6 +100,15 @@ export default async function PatientPage({ params }: { params: Promise<{ id: st
       </>
     );
   }
+  if (!studiesRes.ok) {
+    if (studiesRes.notFound) notFound();
+    return (
+      <>
+        <h1>Paciente</h1>
+        <ErrorBanner message={studiesRes.error} retryHref={`/patients/${id}`} />
+      </>
+    );
+  }
 
   const patient = patientRes.data;
   const encounters = encountersRes.data;
@@ -104,6 +119,8 @@ export default async function PatientPage({ params }: { params: Promise<{ id: st
     .filter((a) => a.status === 'scheduled' && localDateOfInstant(a.startAt) >= today)
     .reverse()
     .slice(0, 3);
+  // U-17: the card appears only while something is pending.
+  const pendingStudies = studiesRes.data.filter((s) => s.status === 'ordered');
 
   return (
     <>
@@ -195,6 +212,28 @@ export default async function PatientPage({ params }: { params: Promise<{ id: st
           </div>
         ) : null}
       </div>
+
+      {pendingStudies.length > 0 ? (
+        <div className="card">
+          <div className="card-header">
+            <h2>Estudios pendientes</h2>
+            <span className="badge badge-type">{pendingStudies.length}</span>
+          </div>
+          {pendingStudies.map((study) => (
+            <div className="appt-row" key={study.id}>
+              <span className="study-row-label">
+                {STUDY_CATEGORY_LABELS[study.category] ?? study.category} · {study.description}
+              </span>
+              <span className="appt-row-range">
+                Solicitada en {formatDateTime(study.encounter.occurredAt)} —{' '}
+                <Link href={`/patients/${patient.id}/consultas/${study.encounter.id}`}>
+                  {study.encounter.reason ?? 'Ver consulta'}
+                </Link>
+              </span>
+            </div>
+          ))}
+        </div>
+      ) : null}
 
       <Timeline patientId={patient.id} encounters={encounters} />
     </>
