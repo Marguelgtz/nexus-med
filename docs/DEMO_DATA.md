@@ -17,12 +17,13 @@ Seed at least:
 - **7 patients** with clearly synthetic names such as `DEMO — Paciente 001`, `DEMO — Paciente 002`, etc.
 - **9 encounters** distributed across at least four patients.
 - **9 appointments**: 4 fixed past appointments (3 completed — two linked to demo encounters, one `procedimiento` — and 1 cancelled) plus 5 upcoming appointments anchored to the first seed run (see Section 3).
+- **2 study requests** attached to `demo-encounter-002b` / `demo-patient-002`: one `ordered`, one `reviewed` with a fictional result note.
 - At least **2 patients with multiple encounters** so the timeline can be evaluated.
 - At least **1 patient with no encounters** to demonstrate the timeline empty state.
 - At least **1 archived patient** to demonstrate active/archive behavior.
 - A mix of populated and unrecorded optional medical-background fields.
 
-No documents or files are seeded because document management is excluded.
+No printable prescription/report records are seeded yet: NX-004 is not implemented. File storage and uploads remain separately excluded.
 
 ## 3. Suggested deterministic fixture composition
 
@@ -38,7 +39,7 @@ The exact checked-in fixture payload is `docs/demo-dataset.json`; use it as the 
 | `DEMO — Paciente 006` | 1 | Demonstrates a simple patient record |
 | `DEMO — Paciente 007` | 1 | Demonstrates another active patient record |
 
-On a clean database, this fixture produces exactly seven demo patients (six active and one archived), nine demo encounters, and nine demo appointments. All seven fixture patient IDs, nine fixture encounter IDs, and the four fixture appointment IDs must be inserted. Keep all note text visibly marked as fictional. The agent may add more fixtures when useful, but must preserve these UI states.
+On a clean database, this fixture produces exactly seven demo patients (six active and one archived), nine demo encounters, nine demo appointments, and two demo study requests. All seven fixture patient IDs, nine fixture encounter IDs, and the four fixture appointment IDs must be inserted. Keep all note text visibly marked as fictional. The agent may add more fixtures when useful, but must preserve these UI states.
 
 ### Appointment fixtures (NX-001)
 
@@ -54,6 +55,17 @@ On a clean database, this fixture produces exactly seven demo patients (six acti
 **Upcoming appointments** (computed in `prisma/seed.ts`, deliberately NOT in the fixture file): five `scheduled` appointments for demo patients at practice-timezone wall times — anchor +1 d 09:00 (consulta), +3 d 10:30 (procedimiento), +6 d 12:00 (consulta), +10 d 16:00 (visita_domicilio), +14 d 11:00 (urgencia).
 
 **Anchor behavior (D-029/U-14):** `anchor` is the date of the **first seed run** that created the upcoming appointments (practice timezone, `America/Monterrey`). The seed computes each instant once and stores it under a stable ID; because seeding is create-if-missing, later runs — including days or weeks later — never recompute, move, or duplicate the anchor. A calendar demo whose dates all predate "today" would demonstrate nothing, so this is the one documented exception to fixed-timestamp seeding.
+
+### Study-request fixtures (NX-003 implementation)
+
+`docs/demo-dataset.json` contains two fixed studies; `prisma/seed.ts` uses create-if-missing behavior for them.
+
+| ID | Patient / encounter | Study | Status |
+|---|---|---|---|
+| `demo-study-001` | `demo-patient-002` / `demo-encounter-002b` | `laboratorio`: Biometría hemática | `ordered` |
+| `demo-study-002` | `demo-patient-002` / `demo-encounter-002b` | `imagenologia`: Radiografía de tórax AP | `reviewed` (fictional result note) |
+
+The study seed exists in code but was not independently executed during this documentation review. Its associations and preservation on repeat seed still require NX-003 verification.
 
 ## 4. Synthetic content rules
 
@@ -122,7 +134,7 @@ After the developer creates or edits local patients/encounters:
 
 Tests must verify:
 
-- A clean database receives the required demo records (patients, encounters, appointments).
+- A clean database receives required demo records (patients, encounters, appointments, studies).
 - Running the seed twice yields the same record counts.
 - Existing edited demo records are not overwritten.
 - Existing user-created records are not deleted or modified.
@@ -130,4 +142,5 @@ Tests must verify:
 - The archived demo patient remains archived after a repeated seed.
 - Past appointments keep their exact fixture timestamps, states, and encounter links.
 - Upcoming appointments are in the future, sit on the expected practice-timezone wall times, and do not move on re-seed (first-seed anchor).
+- Study fixture IDs, patient/encounter associations and preservation after repeat seed are verified during NX-003 closure.
 - Startup does not require Cloudflare or internet connectivity after dependencies have been installed.
