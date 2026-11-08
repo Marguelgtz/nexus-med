@@ -35,6 +35,8 @@ The 19 cases in `apps/api/test/studies.test.ts` cover study creation with new en
 
 **These cases are present, not declared passing here.** NX-003 still needs clean migrations, tests, typecheck, lint, build, seed idempotency and browser verification. Its documented acceptance criteria are inconsistent about whether `completed` studies appear as pending. No NX-004 implementation/tests exist on `feat/studies-web`.
 
+The source-only review additionally identified calendar acceptance differences: 56 px/hour rather than 48, eight week items per day rather than three, no separate out-of-window listing, and invalid `fecha` fallback instead of 404. The timeline currently labels default `consulta` entries even though the design omits default-type badges. These items need verification and disposition during the O-005 integrated acceptance pass.
+
 This documentation-only update did not run tests or the application. No new passing counts are asserted.
 
 ## Principles
