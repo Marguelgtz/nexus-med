@@ -1,10 +1,10 @@
 # Living Action Plan — Medical Platform MVP
 
 **Document type:** Active execution state (living document)  
-**Last updated:** 2026-11-07  
+**Last updated:** 2026-11-08  
 **Owner:** Project owner  
 **Primary agent:** Hermes Agent  
-**Current implementation state:** O-001 through O-004 are complete. The MVP is implemented end-to-end per `docs/UI_SPEC.md` and verified: 40/40 API integration tests + 16/16 web unit tests, clean typecheck/lint/build, browser-verified vertical slices, and a verified first-run demo with persistence across restarts. See `PROJECT_HISTORY.md` (2026-11-07 entries) for the closing evidence. **Active:** product expansion design (NX-001…NX-004) recorded in `docs/UI_SPEC.md` §7 (2026-11-07) — pending owner review before implementation begins.
+**Current implementation state:** O-001–O-004 complete (MVP built and verified). **Active: O-005 product expansion implementation** on `feat/api-foundation` per the owner mission brief (2026-11-08) — autonomous execution through NX-001…NX-004 + integrated verification. Current board: NX-001 core API + calendar + citas pages implemented (demo seeding + demo verification remain); NX-002 API (`Encounter.type`, migration, contract) implemented (web integration remains); NX-003 and NX-004 not started; expansion phase defined in `TASKS.md` §6.
 
 ---
 
@@ -53,7 +53,7 @@ See `DECISIONS.md` and `ARCHITECTURE.md` for details.
 | Database and API code | Complete | Prisma boundary, domains, validation, errors, DTOs |
 | UX/UI specification | Complete (O-002) | `docs/UI_SPEC.md` — screens, interactions, states, visual system, story coverage, decisions U-01–U-08 |
 | Frontend product workflows | Complete (O-003/O-004) | Full product UI per `UI_SPEC.md` (registry, forms, timeline, detail, edit); first-run demo verified with persistence across restarts |
-| Expansion UX/UI design (NX-001…NX-004) | Recorded — pending owner review | `docs/UI_SPEC.md` §7: appointments + calendar, encounter types, study requests, printable prescriptions/reports; decisions D-023–D-030 + open questions Q-NX-01/Q-NX-02 in `DECISIONS.md` |
+| Expansion (NX-001…NX-004) | In progress on `feat/api-foundation` | Design: `docs/UI_SPEC.md` §7 + D-023–D-031; implementation queue below; NX-001 core + NX-002 API done, tails + NX-003/NX-004 pending |
 
 ## 3. Active objective
 
@@ -61,16 +61,16 @@ See `DECISIONS.md` and `ARCHITECTURE.md` for details.
 
 **Desired outcome:** Four usable vertical slices added to the MVP, in this order: (1) patient appointments + basic calendar, (2) encounter types + the minimum surgical follow-through that can be defined confidently, (3) study requests + follow-up, (4) printable prescriptions and medical reports. No new runtime dependencies, no speculative foundations, no full-EHR scope (mission brief, D-023).
 
-**Status:** Design recorded (2026-11-07) — `UI_SPEC.md` §7 (object model, endpoints, screens, states, components, demo data, decisions U-09–U-17) and `DECISIONS.md` (D-023–D-030; open questions Q-NX-01 surgical follow-through, Q-NX-02 study category list). **Pending owner review of §7 before implementation starts.**
+**Status:** Implementation in progress (mission brief 2026-11-08 authorizes autonomous execution; design was reviewed via `UI_SPEC.md` §7 + D-023–D-030). Surgical follow-through uses the conservative default of D-031 (type field only) — no surgery lifecycle is built; Q-NX-01 stays open for doctor validation.
 
 **Implementation queue** (each slice delivers UI + API + schema/migration + tests + docs in the same change, per D-017):
 
 1. **NX-001** — `Appointment` model + endpoints; `/calendar` (day/week/month, CSS grid); patient appointment list/detail (edit, complete with actual duration + optional encounter link, cancel, reschedule); overview `Citas` card; demo appointments (fixed past + first-seed-anchored upcoming, D-029); `DEMO_DATA.md` update.
-2. **NX-002** — `Encounter.type` field + migration (existing records → `consulta`); form/detail/timeline integration (U-12); surgical follow-through **only** if Q-NX-01 is answered yes.
+2. **NX-002** — `Encounter.type` field + migration (existing records → `consulta`); form/detail/timeline integration (U-12); surgical follow-through per conservative default D-031 (type field only; no surgery lifecycle — Q-NX-01 remains open for doctor validation).
 3. **NX-003** — `StudyRequest` model + endpoints; studies section in the consultation form (repeatable rows); encounter-detail studies section with the ordered→completed→reviewed status flow; overview `Estudios pendientes` card; demo studies.
 4. **NX-004** — `MedicalDocument` + `PrescriptionLine`; new prescription/report forms; detail + print (WYSIWYG paper card, `@media print`, printed demo marker); overview `Recetas e informes` card; demo documents.
 
-**Dependency:** O-001–O-004 foundation (complete). **Exit condition per slice:** mission acceptance criteria met; docs reconciled in the same change; demo flow verified end-to-end. `TASKS.md` gains the expansion phase at the start of implementation.
+**Dependency:** O-001–O-004 foundation (complete). **Exit condition per slice:** mission acceptance criteria met; docs reconciled in the same change; demo flow verified end-to-end. Expansion phase is defined in `TASKS.md` §6 (2026-11-08).
 
 ### O-001 — Establish a solid database and API foundation
 
