@@ -2,6 +2,7 @@
 
 import { z } from 'zod';
 import { idSchema, isoDateTimeSchema } from './common';
+import { studyInputSchema } from './studies';
 
 /** A clinical note section entered by the doctor, verbatim. */
 export const noteSectionSchema = z.string().trim().max(10000);
@@ -36,6 +37,9 @@ export const createEncounterInputSchema = z
     occurredAt: isoDateTimeSchema,
     // What actually happened (default `consulta`, D-024).
     type: encounterTypeSchema.optional(),
+    // Studies ordered during this consultation (UI_SPEC §7.3); created with
+    // the encounter in the same save. Absent/empty = no studies.
+    studies: z.array(studyInputSchema).optional(),
     ...encounterSectionsSchema,
   })
   .strict();
