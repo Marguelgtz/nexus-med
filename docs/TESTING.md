@@ -2,18 +2,18 @@
 
 ## Current verification setup
 
-Commands that exist and were executed during the foundation (O-001) and final quality pass (O-004):
+Commands with previous execution recorded during the O-001–O-004 baseline and NX-001/NX-002 work. The cited 69 API / 27 web passing counts predate the NX-003 branch and are **not** fresh verification:
 
 | Command | Scope |
 |---|---|
-| `npm run test -w apps/api` | 69 integration tests (vitest) against an isolated SQLite database: `test/global-setup.ts` applies the real committed migrations to `.local/test/` before each run. |
+| `npm run test -w apps/api` | 69 previously passing integration tests (before NX-003). The newer `apps/api/test/studies.test.ts` contains 19 defined additional cases that have not been re-run in this audit. Vitest uses an isolated SQLite database: `test/global-setup.ts` applies the real committed migrations to `.local/test/` before each run. |
 | `npm run test -w apps/web` | 27 presentation-layer unit tests (vitest, node): es-MX date formatting in the central practice timezone (`America/Monterrey`), completed-year age (birthday edge, future DOB), `wasEdited` semantics, and calendar date math (practice-timezone day/week/month buckets, appointment overlap detection). No app boot or database needed. |
 | `npm run typecheck` | `tsc --noEmit` across all workspaces (contracts, api, web). |
 | `npm run lint` | ESLint 9 flat config (`eslint.config.mjs`) with `eslint-config-next` 16 (flat-native): covers all workspaces; generated artifacts (`prisma/`, `.next/`, `dist/`) and local data (`.local/`) ignored. Two documented relaxations: `no-explicit-any` off in `apps/api/test/**` (tests read raw HTTP bodies; the wire contract is enforced by the API's zod schemas and the typed client) and `no-html-link-for-pages` off (App Router project, no `pages/`). |
 | `npm run build -w apps/web` | Next.js 16 production build. |
 | `npm run dev` | One-command runtime; verified end-to-end (migrate → seed → API `/health` → SSR smoke page showing "API conectada" with 7 seeded records). |
 
-Test coverage at expansion start (all passing, 2026-11-08; 69 API + 27 web):
+Test coverage before NX-003 (previously recorded passing, 2026-11-08; 69 API + 27 web):
 
 - Health response.
 - Patient create/list/search (case-insensitive name and identifier)/read/update demographics/update medical background/archive (non-destructive, idempotent); default list excludes archived; `?q=` empty means no filter.
@@ -28,6 +28,14 @@ Test coverage at expansion start (all passing, 2026-11-08; 69 API + 27 web):
 - `demo-patient-004` remains archived across seed runs.
 
 Frontend verification at expansion start: the O-003 vertical slices were verified end-to-end in a real browser (registry SSR + search/tabs/clear + URL sync; patient overview; create/edit demographics and background; new consultation; consultation detail with in-place edit), and the NX-001 calendar + citas pages plus the NX-002 type selector (form/detail/timeline, including the edit path) were browser-verified on 2026-11-08. Presentation-layer behavior now also has a unit-test floor (`npm run test -w apps/web`, 27 tests). Automated frontend tests and the destructive-reset confirmation path remain tracked gaps for post-MVP work.
+
+## NX-003 implemented test inventory and outstanding verification
+
+The 19 cases in `apps/api/test/studies.test.ts` cover study creation with new encounter, omitted-study behavior, invalid row/category/extra field, list-by-patient/encounter, missing IDs, progressions `ordered → completed`, `ordered → reviewed`, `completed → reviewed`, rejected repeated/backward transitions, required status, note maximum, and persistence. The web has repeatable study rows, encounter-detail status controls, and a patient overview `ordered` filter. Two studies exist in the fixture.
+
+**These cases are present, not declared passing here.** NX-003 still needs clean migrations, tests, typecheck, lint, build, seed idempotency and browser verification. Its documented acceptance criteria are inconsistent about whether `completed` studies appear as pending. No NX-004 implementation/tests exist on `feat/studies-web`.
+
+This documentation-only update did not run tests or the application. No new passing counts are asserted.
 
 ## Principles
 
