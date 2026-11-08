@@ -12,12 +12,14 @@ export function parseOrThrow<T>(schema: ZodType<T>, value: unknown): T {
   if (!result.success) {
     const fieldErrors: Record<string, string[]> = {};
     for (const issue of result.error.issues) {
-      // zod 4 reports strict-mode extra keys as ONE issue with an empty path
-      // and a `keys` array; fan those out to per-field entries.
+      // zod 4 reports strict-mode extra keys as ONE issue (path pointing at
+      // the object that owns them, possibly inside an array) with a `keys`
+      // array; fan those out to per-field entries, keeping the path prefix.
+      const prefix = issue.path.join('.');
       const keys =
         'keys' in issue && Array.isArray(issue.keys) && issue.keys.length > 0
-          ? issue.keys.map(String)
-          : [issue.path.join('.') || '_'];
+          ? issue.keys.map((k) => (prefix ? `${prefix}.${String(k)}` : String(k)))
+          : [prefix || '_'];
       for (const key of keys) {
         (fieldErrors[key] ??= []).push(issue.message);
       }
