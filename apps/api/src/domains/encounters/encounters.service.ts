@@ -99,7 +99,27 @@ export async function createEncounter(
   input: CreateEncounterInput,
 ): Promise<EncounterDetail> {
   await requirePatient(patientId);
-  return toDetail(await prisma.encounter.create({ data: { ...input, patientId } }));
+  const { studies, ...note } = input;
+  if (!studies || studies.length === 0) {
+    return toDetail(await prisma.encounter.create({ data: { ...note, patientId } }));
+  }
+  // The encounter and its studies commit atomically: a failure after the
+  // encounter row leaves no orphan and no half-saved consultation.
+  const created = await prisma.$transaction(async (tx) => {
+    const encounter = await tx.encounter.create({ data: { ...note, patientId } });
+    for (const study of studies) {
+      await tx.studyRequest.create({
+        data: {
+          encounterId: encounter.id,
+          patientId,
+          category: study.category,
+          description: study.description,
+        },
+      });
+    }
+    return encounter;
+  });
+  return toDetail(created);
 }
 
 export async function getEncounter(encounterId: string): Promise<EncounterDetail> {
