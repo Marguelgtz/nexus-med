@@ -261,7 +261,7 @@ During a phase, track all progress in `ACTION_PLAN.md`, not here. At phase compl
 
 **Objective O-006:** Implement the owner-authorized design in `UX_REDESIGN.md` as a complete local clinical workflow. This phase extends O-005 without changing its unrelated scope or treating unresolved clinical semantics as settled. Owner mission brief 2026-11-09.
 
-**Phase status:** Active on `feat/o006-clinical-workflows`, stacked on the latest O-006 documentation branch `docs/o006-clinical-workflow-ux` (PR #6, open and unmerged). Clinical decisions Q-O006-01…08 remain tracked; conservative implementation assumptions are recorded in `DECISIONS.md`.
+**Phase status:** Implementation complete and integrated-verified 2026-11-09 on `feat/o006-clinical-workflows`; PR #7 is open against `docs/o006-clinical-workflow-ux` and stacked on PR #6. Both PRs remain unmerged for owner review. Clinical decisions Q-O006-01…08 remain tracked; conservative implementation assumptions are recorded in `DECISIONS.md`.
 
 ### Work packages
 
@@ -301,4 +301,4 @@ Acceptance: unscheduled care remains available; opening a visit never mutates it
 
 Acceptance: web/API types, tests, lint and build pass; fresh migrations and seed preserve the exact fixtures; repeated startup preserves edits; browser verification covers the primary journeys and responsive/keyboard behavior; no excluded capability or feature merge is introduced.
 
-**Phase exit:** All five work packages are integrated and verified, documentation matches code, the implementation PR stack is open and merge-ready, and unresolved physician questions are clearly recorded without unsupported clinical assumptions.
+**Phase exit:** Met. All five work packages are integrated and verified; documentation matches code; PR #7 is open and mergeable against PR #6's documentation branch; unresolved physician questions remain explicit without unsupported clinical assumptions. Owner review is pending; neither PR is merged.

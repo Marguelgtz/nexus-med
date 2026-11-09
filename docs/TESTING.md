@@ -2,7 +2,7 @@
 
 ## Current verification setup
 
-Latest O-006 API-slice verification (2026-11-09): API 112/112, API/contracts typecheck, and the optional-study-encounter migration pass. A seeded temporary SQLite database preserved both existing study rows, including their patient/encounter links, statuses, result notes, IDs, and timestamps through the table rebuild; foreign keys and indexes remain valid. The last complete O-005 verification (2026-11-08) recorded web 32/32, workspace typecheck, ESLint, production build, clean startup/seed, repeat-start preservation, and browser flows; those integrated checks will be rerun after O-006 UI work.
+Latest integrated O-006 verification (2026-11-09): API 112/112; web 32/32; workspace TypeScript typecheck; ESLint; production build; fresh and repeated local startup; and headless Chrome checks of the primary O-006 journeys. A seeded temporary SQLite database preserved both existing study rows, including patient/encounter associations, statuses, result notes, IDs, and timestamps through the table rebuild; foreign-key and index checks passed. The regular local database then applied the new migration and seed created no records; `/health` and `/patients` returned 200. PR #7 is open on `feat/o006-clinical-workflows`, stacked on PR #6.
 
 | Command | Scope |
 |---|---|
@@ -11,7 +11,7 @@ Latest O-006 API-slice verification (2026-11-09): API 112/112, API/contracts typ
 | `npm run typecheck` | `tsc --noEmit` across all workspaces (contracts, api, web). |
 | `npm run lint` | ESLint 9 flat config (`eslint.config.mjs`) with `eslint-config-next` 16 (flat-native): exit 0; emits a warning because the App Router repo has no `pages/` directory. Generated artifacts and `.local/` are ignored. |
 | `npm run build -w apps/web` | Next.js 16 production build. |
-| `npm run dev` | One-command runtime; verified end-to-end (migrate → seed → API `/health` → SSR smoke page showing "API conectada" with 7 seeded records). |
+| `npm run dev` | One-command runtime; O-006 verified on an isolated database through migration, exact synthetic seed, repeat startup with zero changes, API `/health`, SSR `/patients`, and browser journeys. |
 
 Verified API coverage (112 passing tests):
 
@@ -29,11 +29,11 @@ Verified API coverage (112 passing tests):
 - Transactions: representative multi-write operation rolls back atomically through the local adapter.
 - `demo-patient-004` remains archived across seed runs.
 
-Browser verification covered O-003 and all O-005 slices: calendar and appointment create/edit/cancel/reprogram/complete/link; encounter type creation/edit/detail/timeline; study creation/status transitions/failure recovery/pending-card visibility; and prescription/report create/edit/reopen, repeatable prescription lines, same-patient encounter selection, validation recovery, overview links, 404 copy, and browser printing. Printed prescription/report PDFs were inspected for page content, fictional-data marker, and absence of app controls/screen-only copy. Automated frontend coverage remains limited to presentation/helper unit tests; broad component automation and the destructive-reset confirmation path remain post-MVP gaps.
+Browser verification covered O-003 and all O-005 slices: calendar and appointment create/edit/cancel/reprogram/complete/link; encounter type creation/edit/detail/timeline; study creation/status transitions/failure recovery/pending-card visibility; and prescription/report create/edit/reopen, repeatable prescription lines, same-patient encounter selection, validation recovery, overview links, 404 copy, and browser printing. Printed prescription/report PDFs were inspected for page content, fictional-data marker, and absence of app controls/screen-only copy. O-006 headless Chrome checks covered standalone patient study creation/review with a doctor-authored note, consultation save with staged study, adding a study to a saved encounter, contextual prescription/report save and return with the encounter preselected, follow-up return, scheduled appointment entry and explicit completion/link, cancellation of unsaved navigation, and a 390px mobile consultation layout. The mobile context disclosure toggled closed with Space and reopened with Enter. Automated frontend coverage remains limited to presentation/helper unit tests; broad component automation and the destructive-reset confirmation path remain post-MVP gaps.
 
 ## NX-003 verified behavior
 
-The 29 cases in `apps/api/test/studies.test.ts` cover nested, encounter-linked, and standalone study creation; optional same-patient association; cross-patient rejection; input validation; patient/encounter listing; repeatable status filters; missing IDs; forward transitions; rejected repeated/backward transitions; result-note limits; and persistence. O-005 browser evidence covers study entry with a consultation, failed-save preservation, `ordered → completed → reviewed`, pending-card visibility, and removal after review. O-006 browser checks for patient-level creation and consultation context are still pending. The exact two studies in `docs/demo-dataset.json` are unchanged.
+The 29 cases in `apps/api/test/studies.test.ts` cover nested, encounter-linked, and standalone study creation; optional same-patient association; cross-patient rejection; input validation; patient/encounter listing; repeatable status filters; missing IDs; forward transitions; rejected repeated/backward transitions; result-note limits; and persistence. O-005 browser evidence covers study entry with a consultation, failed-save preservation, `ordered → completed → reviewed`, pending-card visibility, and removal after review. O-006 browser checks also passed for patient-level creation/review, staged and saved-encounter study entry, and patient context. The exact two studies in `docs/demo-dataset.json` remain unchanged.
 
 ## NX-004 verified behavior
 

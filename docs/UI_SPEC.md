@@ -1,6 +1,6 @@
 # UI Specification — Medical Platform MVP
 
-**Status:** O-002/O-005 baseline plus owner-authorized O-006 implementation contract (§8); O-006 slices are being implemented and verified on `feat/o006-clinical-workflows`.
+**Status:** O-002/O-005 baseline plus owner-authorized O-006 implementation contract (§8); O-006 is implemented and integrated-verified on `feat/o006-clinical-workflows` (PR #7 open for owner review).
 **Owner:** `apps/web` (Next.js App Router)  
 **Interface language:** Spanish (Mexico) — all UI strings below are the canonical copy; technical prose stays in English.  
 **Data:** Synthetic demo records only. A persistent demo banner is part of every screen.

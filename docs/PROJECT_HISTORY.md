@@ -332,3 +332,22 @@ Add the next entry when O-001 reaches a meaningful verified milestone, such as t
 **Impact:** Independent study requests have a persisted, validated API foundation. Status semantics, clinical order time/source, and cancellation/correction behavior remain open and are not inferred.
 
 **References:** `API_CONTRACT.md` §11, `DATA_MODEL.md` §1/§3, `UI_SPEC.md` §8, `WORKFLOWS.md` §15, `DECISIONS.md` D-034…D-039, `TESTING.md`, `ACTION_PLAN.md` §3.
+
+### 2026-11-09 — O-006 clinical workflows integrated and verified
+
+**Type:** Implementation milestone
+
+**Context:** The complete owner-authorized O-006 mission was implemented on `feat/o006-clinical-workflows`, based on PR #6's latest docs head `b63e806`.
+
+**Findings and outcomes:**
+
+- Added responsive consultation create/edit/detail workspaces with patient safety context, on-demand historical notes, pending studies, explicit save, and in-app unsaved-change protection. The patient workspace now prioritizes safety context, next appointment and study review, recent encounters, and historical records.
+- Added patient-level standalone study creation, optional immutable same-patient encounter links, review controls and doctor-authored notes; requests can also be staged atomically in a new encounter or added to a saved encounter. Existing study states and transitions were retained without interpreting `completed`.
+- Added appointment-to-consultation entry and explicit completion/linking, contextual prescription/report prefill and return, and follow-up appointment return navigation.
+- Final gate passed: API 112/112; web 32/32; workspace typecheck; ESLint (exit 0 with the existing App Router `pages/` warning); Next production build; isolated migration/seed/repeat startup; primary headless Chrome workflows and 390px responsive layout. Existing study rows/associations survived the migration. Default local `/health` and `/patients` returned 200 after migration; the seed created no records.
+- Commits: API `48304a4`, canonical O-006 contract `e3a3cc1`, integrated UI `e27cbf8`. PR #7 is open against `docs/o006-clinical-workflow-ux` and stacked on PR #6. Both remain unmerged pending owner review.
+- No new dependencies, AI, uploads, staff workflows, event timestamps, or speculative study-status semantics were added. Q-O006-01…08 remain current physician-validation questions.
+
+**Impact:** O-006 implementation and integrated verification are complete; no further implementation work is required before owner review.
+
+**References:** PR #6, PR #7, `TASKS.md` §7, `ACTION_PLAN.md` §3, `TESTING.md`, `WORKFLOWS.md` §15, `DECISIONS.md` D-033…D-039 and Q-O006-01…08.

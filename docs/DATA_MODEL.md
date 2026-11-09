@@ -1,6 +1,6 @@
 # Data Model — Nexus Med Local Prototype
 
-**Status:** O-005 baseline plus the owner-authorized O-006 patient-study association migration on `feat/o006-clinical-workflows`; migration and focused API tests verified 2026-11-09.
+**Status:** O-005 baseline plus the owner-authorized O-006 patient-study association migration; migration and API behavior are integrated-verified on `feat/o006-clinical-workflows` (PR #7 open for owner review, 2026-11-09).
 **Persistence:** Prisma 7 + local SQLite, database access exclusively through Hono.
 
 ## 1. Implemented entities

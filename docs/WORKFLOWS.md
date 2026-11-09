@@ -1,13 +1,13 @@
 # Product Workflows — Medical Platform MVP
 
-**Status:** Original MVP workflows plus verified NX-001…NX-004 behavior; owner-authorized O-006 flows are being implemented (2026-11-09).
+**Status:** Original MVP workflows plus verified NX-001…NX-004 and owner-authorized O-006 behavior (2026-11-09); implementation PR #7 is open for owner review.
 **Primary user:** One general surgeon  
 **Interface:** Spanish (Mexico)  
 **Data:** Synthetic demo records only
 
 `PRODUCT.md` defines scope and user-story acceptance criteria. This document describes how those stories should flow through the application. Together, the workflow sections cover patient create/search/update/archive, patient context, medical-background editing, encounter creation/review, save/error behavior, and the first-run demo experience. O-005 approved appointments, encounter types, study requests, and printable documents; all four slices are implemented and verified. File uploads/storage and Google authentication remain excluded.
 
-**Documentation boundary:** O-006 implementation is owner-authorized by D-033 and is in progress. Until each vertical slice is implemented and verified, the sections below remain the as-built O-005 behavior; update them with the corresponding completed slice rather than claiming planned behavior early.
+**Documentation boundary:** Sections 1–14 record the existing MVP/O-005 workflows. Section 15 records the implemented O-006 behavior and supersedes earlier details where stated. Q-O006 clinical questions remain open; the conservative implementation does not settle them.
 
 ## 1. Application entry and navigation
 
@@ -221,7 +221,7 @@ Every product story must have observable acceptance criteria. If implementation 
 
 ## 15. Owner-authorized O-006 clinical workflow
 
-**Status:** Authorized; implementation in progress. The patient-scoped study API and optional encounter migration are complete in the current feature branch. The UI workflows below are requirements, not verified behavior until each screen and its checks are complete.
+**Status:** Implemented and verified on `feat/o006-clinical-workflows`; PR #7 is open for owner review. Q-O006-01…08 remain open where physician validation is required.
 
 ### 15.1 Prepare and document a consultation
 

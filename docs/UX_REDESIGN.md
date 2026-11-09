@@ -1,6 +1,6 @@
 # O-006 — Clinical workflow and UX design
 
-**Status: OWNER-AUTHORIZED FOR IMPLEMENTATION (2026-11-09); implementation in progress.** The owner mission authorizes the workflows in this document, with conservative handling for unresolved clinical questions Q-O006-01…08. It supersedes the proposal-only boundary recorded when PR #6 was prepared. No application behavior is implemented until its slice is verified.
+**Status: OWNER-AUTHORIZED AND IMPLEMENTED (2026-11-09).** The owner mission authorized the workflows in this document, with conservative handling for unresolved clinical questions Q-O006-01…08. The implementation is integrated and verified on `feat/o006-clinical-workflows`; PR #7 is open for owner review. This document retains design rationale and options; as-built behavior is recorded in `UI_SPEC.md` §8 and `WORKFLOWS.md` §15.
 
 **Baseline:** O-005 at `feat/nx-expansion-complete` commit `1309b51`; current findings are in `UX_AUDIT.md`.
 

@@ -1,6 +1,6 @@
 # Product Definition — Medical Platform MVP
 
-**Status:** MVP/O-005 scope confirmed; owner-authorized O-006 implementation in progress. Clinical semantics remain open where noted.
+**Status:** MVP/O-005 scope confirmed; owner-authorized O-006 implementation complete and pending owner review. Clinical semantics remain open where noted.
 **Version:** 1.0  
 **Primary user:** One general surgeon  
 **Interface language:** Spanish (Mexico)  
