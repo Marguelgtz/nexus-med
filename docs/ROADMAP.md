@@ -36,7 +36,7 @@ The agreed development order is **database/API foundation → UX/UI design → p
 
 **Exit condition:** `npm install` followed by `npm run dev` (with dependencies installed) starts both apps, migrates/seeds safely, and passes end-to-end workflows without Cloudflare, remote services, or manual database setup.
 
-## O-005 — Product expansion (active)
+## O-005 — Product expansion (complete)
 
 **Approved outcome (D-023):** Four staged vertical slices extending the local patient/encounter MVP:
 
@@ -45,7 +45,7 @@ The agreed development order is **database/API foundation → UX/UI design → p
 3. **NX-003:** study requests and follow-up linked to encounters, with status and optional doctor-authored result note.
 4. **NX-004:** doctor-authored printable prescriptions and reports, rendered using browser print rather than stored files.
 
-**Observed GitHub implementation on `feat/studies-web` (2026-11-08):** NX-001 and NX-002 are implemented with prior recorded verification. NX-003 implementation exists across schema/API/contracts/web/fixtures/tests, but integrated acceptance verification is outstanding. NX-004 remains unimplemented. The code is held in open stacked PRs, not yet merged into `main`. Current task state and scope discrepancies are in `ACTION_PLAN.md`.
+**Starting snapshot on `feat/studies-web` (2026-11-08):** At O-005 execution start, NX-001 and NX-002 had prior recorded verification; NX-003 implementation existed across schema/API/contracts/web/fixtures/tests but integrated acceptance was outstanding; NX-004 remained unimplemented. This dated baseline is historical. Final completion evidence is in `ACTION_PLAN.md` and `PROJECT_HISTORY.md`.
 
 **Exit condition:** All four slices implemented and integrated-tested with documented seed/persistence behavior; accepted contract, workflow, and UX docs reconciled to their verified final state; no deferred cloud/auth/upload work added.
 

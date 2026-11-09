@@ -2,7 +2,7 @@
 
 **Document type:** Chronological project archive  
 **Maintenance style:** Append-only, milestone-oriented  
-**Last updated:** 2026-11-06
+**Last updated:** 2026-11-08
 
 ## 1. Purpose
 
@@ -267,3 +267,23 @@ Add the next entry when O-001 reaches a meaningful verified milestone, such as t
 **Impact:** O-001–O-004 are complete; the local MVP is built, verified, and demo-ready from a clean checkout (`git clone` → `npm install` → `npm run dev`). No objective is active until the owner names the next post-MVP work (candidates recorded in `ACTION_PLAN.md` §6).
 
 **References:** `ACTION_PLAN.md` (O-004 complete, next action); `TESTING.md`; `PROJECT_HISTORY.md` (O-003 entry above).
+
+### 2026-11-08 — O-005 product expansion complete and verified
+
+**Type:** Milestone
+
+**Context:** The O-005 execution mission completed the four approved expansion slices on `feat/nx-expansion-complete`, starting from merged documentation baseline `f176de0` (PR #5). Work was committed in small, reviewable steps matching the repository's existing history.
+
+**Findings and outcomes:**
+
+- NX-001 appointments/calendar and NX-002 encounter types were reconciled against their acceptance criteria and browser-verified; NX-003 study requests were verified with `ordered` and `completed` remaining pending until review, per D-032.
+- NX-004 added relational prescription/report records, shared validation contracts, Hono routes, idempotent synthetic fixtures, patient overview integration, create/edit/detail screens, and browser print with the fictional-data marker. No upload, PDF library, generated clinical content, provider identity, or legal-validity claim was added.
+- Verification passed: API 107/107 and web 32/32 tests, workspace typecheck, lint (exit 0 with the existing missing-`pages` warning), and Next.js production build. Four migrations applied to clean temporary SQLite databases. A clean integrated startup seeded 7 patients, 9 encounters, 9 appointments, 2 studies, and 2 documents; a repeat startup created zero records and preserved edits. Browser checks covered all four slices, document validation/error recovery, association rules, persistence, and print output.
+- O-005 commits on this branch: `16a0f1f`, `147efd6`, `7aca5ca`, `1bd6390`, `870ecff`, `66869cc`, `e2d6590`.
+- PRs #1–#4 remain open in the existing stack; PR #5 remains merged. No new PR was opened, no remote push was made, and no feature work was merged.
+
+**Follow-ups:** Q-NX-01 remains explicitly deferred under D-025. Q-NX-02 remains a doctor-validation follow-up for the provisional fixed study-category list; the current closed list satisfies the documented O-005 acceptance, and no additional categories were invented. Authentication, file storage, and deployment remain outside the local MVP scope.
+
+**Impact:** O-005 is complete. The local MVP plus its four approved product expansions are implemented and integrated. No next implementation objective has been selected.
+
+**References:** `ACTION_PLAN.md` (O-005 verification and branch state); `ROADMAP.md`; `TASKS.md` §6; `DECISIONS.md` D-023, D-025, D-027, D-032; `TESTING.md`.
