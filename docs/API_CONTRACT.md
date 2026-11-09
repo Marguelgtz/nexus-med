@@ -1,6 +1,6 @@
 # API Contract — Medical Platform MVP
 
-**Status:** O-001 contract plus verified NX-001…NX-004 addenda (§11) on `feat/nx-expansion-complete` (2026-11-08).
+**Status:** O-001 contract, verified NX-001…NX-004 addenda, and O-006 patient-study API changes; see §11 and the O-006 contract addendum below.
 **Owner:** Hono API (`apps/api`)  
 **Transport:** HTTP + JSON over local Node.js  
 **Audience:** Next.js frontend, API tests, future maintainers
@@ -189,7 +189,7 @@ The contract is a strong starting boundary, not an untouchable specification. Du
 
 Do not change the contract merely for stylistic preference or speculative future integrations.
 
-## 11. Implemented expansion endpoints (2026-11-08)
+## 11. Implemented expansion endpoints (O-005 baseline, 2026-11-08)
 
 This section supersedes the original foundation-only endpoint inventory above where it differs. Sources: `apps/api/src/domains/{appointments,studies,encounters}/`, `packages/contracts/src/{appointments,studies,encounters}.ts`, `prisma/schema.prisma`. Full API tests and browser workflows are recorded in `TESTING.md` and `ACTION_PLAN.md`.
 
@@ -213,18 +213,21 @@ This section supersedes the original foundation-only endpoint inventory above wh
 | Method | Route | Current behavior |
 |---|---|---|
 | POST | `/api/patients/:patientId/encounters` | Creates new encounter and optional `studies[]` together |
+| POST | `/api/patients/:patientId/studies` | Creates patient-level study requests; optional `encounterId` must belong to the same patient |
 | POST | `/api/encounters/:encounterId/studies` | Adds one or more study requests to an existing encounter; patient association is derived from the encounter |
 | GET | `/api/patients/:patientId/studies?status=` | Lists patient studies, newest first; optional repeatable status filter |
 | GET | `/api/encounters/:encounterId/studies` | Studies from one encounter |
 | PATCH | `/api/studies/:studyId` | Change status and optional result note |
 
-`POST /api/encounters/:encounterId/studies` accepts `{ "studies": [{ "category": "laboratorio", "description": "Biometría hemática" }] }` and returns the created `StudyRequest[]` with status `ordered` and `201`. At least one row is required. The API loads the encounter, derives its `patientId`, and creates all rows in one transaction; callers cannot supply a patient association. Unknown encounters return `404`.
+`POST /api/encounters/:encounterId/studies` continues to accept `{ "studies": [{ "category": "laboratorio", "description": "Biometría hemática" }] }` and returns the created `StudyRequest[]` with status `ordered` and `201`. At least one row is required. The API loads the encounter, derives its `patientId`, and creates all rows in one transaction; callers cannot supply a patient association. Unknown encounters return `404`.
+
+`POST /api/patients/:patientId/studies` accepts `{ "encounterId": "<optional-id>", "studies": [{ "category": "laboratorio", "description": "Biometría hemática" }] }`. Omit `encounterId` for a patient-level request. The patient ID is derived from the route. If an encounter ID is present, Hono verifies that it exists and belongs to the same patient before creating all rows atomically. Unknown patients or encounters return `404`; a cross-patient encounter returns `400` with an `encounterId` field error. The response is `201` with `StudyRequest[]`; each request has `encounter: null` when standalone.
 
 The patient-list `status` query parameter may be repeated; values are ORed. For example, `?status=ordered&status=completed` returns studies still pending doctor review. Omitting the filter returns all statuses. Invalid or empty values and unknown query keys return `400`.
 
-Study categories: `laboratorio`, `imagenologia`, `rayos_x`, `ecg`, `ecografia`, `otro`; doctor confirmation is still open (Q-NX-02). `description` is 2–200 characters; `resultNote` nullable and up to 1,000 characters. Legal transitions: `ordered → completed`, `ordered → reviewed`, `completed → reviewed`; `reviewed` is final. Repeated or backward transitions return `409`. The category, description and originating encounter cannot be edited and studies cannot be deleted.
+Study categories: `laboratorio`, `imagenologia`, `rayos_x`, `ecg`, `ecografia`, `otro`; doctor confirmation is still open (Q-NX-02). `description` is 2–200 characters; `resultNote` nullable and up to 1,000 characters. Legal transitions: `ordered → completed`, `ordered → reviewed`, `completed → reviewed`; `reviewed` is final. Repeated or backward transitions return `409`. The category, description, and optional encounter association are immutable after creation; studies cannot be deleted.
 
-Study responses include `patientId`, nested `encounter: {id, occurredAt, reason}`, category, description, status, nullable result note, ID and timestamps. Per `TASKS.md`, `ordered` and `completed` remain pending until `reviewed`; the patient overview uses the repeatable status filter and shows the current status badge.
+Study responses include `patientId`, nullable nested `encounter: {id, occurredAt, reason}`, category, description, status, nullable result note, ID and timestamps. `createdAt` is the record-entry time and does not assert when a standalone request was clinically ordered. Per `TASKS.md`, `ordered` and `completed` remain pending until `reviewed`; the patient overview uses the repeatable status filter and shows the current status badge. Historical `completed` values are not reinterpreted; the API does not separately record performance or result arrival.
 
 ### NX-004: Printable documents
 

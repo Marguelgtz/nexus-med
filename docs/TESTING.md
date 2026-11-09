@@ -2,25 +2,25 @@
 
 ## Current verification setup
 
-Latest verification on `feat/nx-expansion-complete` (2026-11-08): API 107/107, web 32/32, workspace typecheck, ESLint, and Next.js production build pass. ESLint emits the existing App Router warning that no `pages/` directory exists. A clean temporary SQLite database completed all migrations and explicit seed (7 patients, 9 encounters, 9 appointments, 2 studies, 2 documents); repeat startup created no duplicates and preserved a user-edited report.
+Latest O-006 API-slice verification (2026-11-09): API 112/112, API/contracts typecheck, and the optional-study-encounter migration pass. A seeded temporary SQLite database preserved both existing study rows, including their patient/encounter links, statuses, result notes, IDs, and timestamps through the table rebuild; foreign keys and indexes remain valid. The last complete O-005 verification (2026-11-08) recorded web 32/32, workspace typecheck, ESLint, production build, clean startup/seed, repeat-start preservation, and browser flows; those integrated checks will be rerun after O-006 UI work.
 
 | Command | Scope |
 |---|---|
-| `npm run test -w apps/api` | 107 integration tests, including patients, encounters, appointments, study creation/filtering/status transitions, document create/list/get/update, association validation, line replacement, seed idempotency/edit preservation and transaction behavior. Vitest applies the real committed migrations to isolated SQLite databases under `.local/test/`. |
+| `npm run test -w apps/api` | 112 integration tests, including standalone and linked study requests, same-patient validation, study creation/filtering/status transitions, patients, encounters, appointments, documents, seed preservation and transaction behavior. Vitest applies the real committed migrations to isolated SQLite databases under `.local/test/`. |
 | `npm run test -w apps/web` | 32 presentation-layer tests (vitest, node): es-MX date formatting, age, `wasEdited`, default encounter-type badge visibility, calendar date math, appointment overlap handling, and calendar layout helpers. No app boot or database needed. |
 | `npm run typecheck` | `tsc --noEmit` across all workspaces (contracts, api, web). |
 | `npm run lint` | ESLint 9 flat config (`eslint.config.mjs`) with `eslint-config-next` 16 (flat-native): exit 0; emits a warning because the App Router repo has no `pages/` directory. Generated artifacts and `.local/` are ignored. |
 | `npm run build -w apps/web` | Next.js 16 production build. |
 | `npm run dev` | One-command runtime; verified end-to-end (migrate → seed → API `/health` → SSR smoke page showing "API conectada" with 7 seeded records). |
 
-Verified API coverage (107 passing tests):
+Verified API coverage (112 passing tests):
 
 - Health response.
 - Patient create/list/search (case-insensitive name and identifier)/read/update demographics/update medical background/archive (non-destructive, idempotent); default list excludes archived; `?q=` empty means no filter.
 - Encounter create (for existing patient)/read/update; patient association cannot be reassigned via update; unknown patient/encounter IDs return `404`.
 - Encounter type (D-024): omitted type defaults to `consulta`; explicit type persists and is exposed in the timeline; invalid type rejected with a field error; type can be changed via `PATCH`.
 - Appointments (NX-001): create/list (range filter)/get/update-reschedule/complete (actual duration + optional same-patient encounter link)/cancel; one-directional status transitions enforced; overlap detection in list responses; unknown patient/appointment IDs return `404`; duration 5–480 min validation.
-- Study requests (NX-003): nested atomic creation during encounter creation; atomic creation on an existing encounter with patient association derived by the API; list by patient/encounter and repeated `status` filters; invalid/empty inputs and unknown IDs; `ordered → completed/reviewed` and `completed → reviewed`, result-note limits, repeated/backward transition conflicts, and persistence.
+- Study requests (NX-003/O-006): nested atomic creation during encounter creation; atomic addition through the existing encounter endpoint; patient-level creation with no encounter or an optional same-patient encounter; cross-patient association rejection; patient and encounter listing with nullable encounter DTOs; repeated `status` filters; invalid/empty inputs and unknown IDs; unchanged `ordered → completed/reviewed` and `completed → reviewed` transitions, result-note limits, repeated/backward transition conflicts, and persistence.
 - Printable documents (NX-004): prescription/report creation, patient and same-patient encounter association, detail/list retrieval, input limits, immutable patient/kind, atomic prescription-line replacement, persistence, and kind-specific UI not-found behavior.
 - Timeline ordering by `occurredAt` descending with deterministic tie-break.
 - Validation: missing required fields, unknown fields (per-field `fieldErrors`), bad date formats; `400` with the contract envelope.
@@ -33,7 +33,7 @@ Browser verification covered O-003 and all O-005 slices: calendar and appointmen
 
 ## NX-003 verified behavior
 
-The 24 cases in `apps/api/test/studies.test.ts` cover nested and standalone study creation, patient association, input validation, patient/encounter listing, repeatable status filters, missing IDs, forward transitions, rejected repeated/backward transitions, result-note limits, and persistence. The browser verified a new study entered with a consultation, a failed overlong note save preserving the panel and existing state, `ordered → completed → reviewed`, display of completed studies in the overview, and removal after review. The exact two studies in `docs/demo-dataset.json` are unchanged.
+The 29 cases in `apps/api/test/studies.test.ts` cover nested, encounter-linked, and standalone study creation; optional same-patient association; cross-patient rejection; input validation; patient/encounter listing; repeatable status filters; missing IDs; forward transitions; rejected repeated/backward transitions; result-note limits; and persistence. O-005 browser evidence covers study entry with a consultation, failed-save preservation, `ordered → completed → reviewed`, pending-card visibility, and removal after review. O-006 browser checks for patient-level creation and consultation context are still pending. The exact two studies in `docs/demo-dataset.json` are unchanged.
 
 ## NX-004 verified behavior
 

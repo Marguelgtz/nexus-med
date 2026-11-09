@@ -48,7 +48,7 @@ See `DECISIONS.md` and `ARCHITECTURE.md` for details.
 | Product definition | Prepared | `PRODUCT.md`, `WORKFLOWS.md` |
 | Architecture | Implemented per `ARCHITECTURE.md` | Monorepo, Hono API, Prisma 7 + SQLite, SSR shell |
 | Data model | Implemented and migrated | `prisma/schema.prisma`, committed migration |
-| API surface | Patient/encounter/appointment/study/document routes present | Full API suite passes 107/107; document create/list/get/update and association validation are covered |
+| API surface | Patient/encounter/appointment/study/document routes present | O-006 patient-scoped study create supports standalone and validated same-patient encounter requests; full API suite passes 112/112 |
 | Synthetic fixture | Patient, encounter, appointment, study, prescription and report fixtures present | 7 patients, 9 encounters, 9 appointments, 2 studies, 2 documents (one linked prescription with 2 lines, one unlinked report) |
 | Database and API code | Core and NX-001…NX-004 implemented | Prisma domain modules, migrations, validation, shared DTOs, integration coverage, and seed idempotency pass |
 | UX/UI specification | Complete (O-002) | `docs/UI_SPEC.md` — screens, interactions, states, visual system, story coverage, decisions U-01–U-08 |
@@ -64,7 +64,7 @@ See `DECISIONS.md` and `ARCHITECTURE.md` for details.
 
 **Ordered sub-objectives:**
 
-1. **In progress — data/API foundation:** make encounter association optional for patient studies; add patient-scoped creation/listing with same-patient validation; retain the existing encounter endpoint and statuses; migrate existing data without changing it; add API integration coverage.
+1. **Complete — data/API foundation:** made encounter association optional; added patient-scoped creation with same-patient validation; retained the existing encounter endpoint/statuses; migration preserves existing study rows; API coverage passes.
 2. **Next — canonical UX contract:** reconcile `UI_SPEC.md`, `WORKFLOWS.md`, `API_CONTRACT.md`, and `DATA_MODEL.md` with the authorized O-006 behavior and explicit conservative assumptions before product screens.
 3. **Consultation workspace:** deliver request-time patient/encounter context, recent-encounter access, a two-column responsive note workspace, staged studies, contextual actions, save feedback, and in-app unsaved-change protection.
 4. **Study and patient workflows:** enable patient-level and encounter-linked study ordering/review, a focused patient workspace with current safety context and actionable work, and progressive access to historical encounters.
@@ -74,6 +74,8 @@ See `DECISIONS.md` and `ARCHITECTURE.md` for details.
 **Dependencies and assumptions:** Start from O-005 at `1309b513` through the latest O-006 docs head `b63e806`. Use existing SSR reads where practical. Q-O006-02/03 remain clinically unresolved: retain `ordered`/`completed`/`reviewed`, preserve old rows, and do not label `completed` as performed or result-received. Do not introduce event timestamps or new status semantics without physician validation. Use `createdAt` only as entry time for standalone requests; do not claim it is the clinical order time.
 
 **Deliverables:** Safe migration, Hono routes/services, shared DTOs/schemas, API integration tests, complete responsive workflow screens, updated normative product/API/UI/data docs, updated demo/test evidence, reviewable commits, and an open PR based on PR #6.
+
+**Latest verification (2026-11-09):** API 112/112; API and contracts typecheck pass; Prisma 7 generated the client and created the migration; a seeded temporary SQLite database retained both study rows and all fields across the table rebuild, with foreign-key check and indexes intact. No O-006 web UI has been implemented yet.
 
 **Acceptance:** All twelve criteria in the owner O-006 mission are met, including persisted patient and optional same-patient encounter study associations; explicit appointment linking/completion; preserved unsaved notes and patient context; no invented clinical facts; legacy study status values unchanged; accessible responsive behavior; O-005 regression coverage; verified clean startup/re-seeding; and an implementation PR left unmerged.
 

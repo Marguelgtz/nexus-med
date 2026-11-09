@@ -1,6 +1,6 @@
 # Data Model — Nexus Med Local Prototype
 
-**Status:** Current Prisma schema/migrations on `feat/nx-expansion-complete`; runtime and integration tests verified 2026-11-08.
+**Status:** O-005 baseline plus the owner-authorized O-006 patient-study association migration on `feat/o006-clinical-workflows`; migration and focused API tests verified 2026-11-09.
 **Persistence:** Prisma 7 + local SQLite, database access exclusively through Hono.
 
 ## 1. Implemented entities
@@ -25,14 +25,15 @@
 - Nullable `actualDurationMinutes`, `completedAt`, and unique `linkedEncounterId` FK (`onDelete: SetNull`). API checks same-patient encounter links.
 - `createdAt`/`updatedAt`.
 
-### StudyRequest (NX-003)
-- `id` generated UUID; required `patientId` and `encounterId` FKs (delete restricted).
-- `encounterId` is the immutable originating encounter. Studies can be created atomically with a new encounter or appended to an existing encounter through the API; in both cases the API derives `patientId` from the encounter.
+### StudyRequest (NX-003 / O-006)
+- `id` generated UUID; required `patientId` FK and optional `encounterId` FK (delete restricted).
+- A request may be standalone. When linked, its encounter is immutable and must belong to the same patient; Hono validates the association. Existing encounter-linked records remain linked.
+- Requests can be created in a new encounter transaction, added to an existing encounter, or created from a patient with no encounter.
 - `category`: `laboratorio`, `imagenologia`, `rayos_x`, `ecg`, `ecografia`, `otro`; category confirmation is open (Q-NX-02).
 - `description`: 2–200-character doctor-authored text.
 - `status`: `ordered` default; `completed`, `reviewed`; `ordered → completed/reviewed`, `completed → reviewed`, reviewed final.
 - Nullable `resultNote` ≤1,000 characters; `createdAt`/`updatedAt`.
-- Only status/result note can be updated; no edit/delete route for the originating data.
+- Only status/result note can be updated; no edit/delete/reassociation route for the originating data. The patient relation is always required.
 - `ordered` and `completed` are pending until `reviewed` and appear in the patient overview.
 
 ## 2. Relations
@@ -40,7 +41,7 @@
 ```text
 Patient 1 --- N Encounter
 Patient 1 --- N Appointment --- 0..1 Encounter (linkedEncounterId, unique)
-Patient 1 --- N StudyRequest --- 1 Encounter (immutable origin)
+Patient 1 --- N StudyRequest --- 0..1 Encounter (immutable when present)
 ```
 
 All three child entities belong to a patient. The API validates same-patient appointment links. Patient archival keeps all history; permanent deletion is not implemented.
@@ -57,6 +58,7 @@ Date of birth uses date-only semantics. `occurredAt`, `startAt`, `createdAt`, an
 - `20261107222417_expansion_appointments_encounter_type`: Appointment + encounter type.
 - `20261108180347_study_requests`: StudyRequest.
 - `20261108195000_medical_documents`: MedicalDocument + PrescriptionLine.
+- `20261109050649_o006_optional_study_encounter`: makes `StudyRequest.encounterId` nullable while preserving all existing rows and indexes.
 
 The SQLite database lives in `.local/data/medical.db`; the development orchestrator generates Prisma client, deploys migrations and seeds.
 
@@ -70,4 +72,4 @@ The SQLite database lives in `.local/data/medical.db`; the development orchestra
 
 This is separate from excluded file uploads and R2 storage. User/account/session, clinic/organization, and billing models remain excluded. The browser forms, detail/edit workflow, patient overview, and CSS print presentation are implemented and browser-verified.
 
-Open questions: procedure lifecycle (Q-NX-01); study-category validation (Q-NX-02); **patient-level study ordering without any encounter** not implemented (current API can add to an *existing* encounter); future Cloudflare D1 transaction guarantees and SSR adapter selection remain deployment decisions. See `UX_AUDIT.md` and `UX_REDESIGN.md` for non-approved workflow proposals.
+Open questions: procedure lifecycle (Q-NX-01); study-category validation (Q-NX-02); minimum source/reason and the difference between clinical order time and record-entry time for standalone studies (Q-O006-01); meaning of `completed`, result arrival, and review timestamps (Q-O006-02/03); future Cloudflare D1 transaction guarantees and SSR adapter selection remain deployment decisions. Standalone requests use `createdAt` as entry time only; no clinical order time is inferred.
