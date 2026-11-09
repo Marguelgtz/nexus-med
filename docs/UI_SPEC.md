@@ -1,6 +1,6 @@
 # UI Specification — Medical Platform MVP
 
-**Status:** O-002 design delivered; O-005 expansion scope approved in D-023. NX-001…NX-004 are implemented and browser-verified; NX-003 pending-study behavior is reconciled to `TASKS.md`.
+**Status:** O-002/O-005 baseline plus owner-authorized O-006 implementation contract (§8); O-006 slices are being implemented and verified on `feat/o006-clinical-workflows`.
 **Owner:** `apps/web` (Next.js App Router)  
 **Interface language:** Spanish (Mexico) — all UI strings below are the canonical copy; technical prose stays in English.  
 **Data:** Synthetic demo records only. A persistent demo banner is part of every screen.
@@ -72,7 +72,7 @@ Navigation rules:
 - Patient-specific screens carry a persistent context strip under the top bar: `← Pacientes` (back link) + patient full name + external identifier (if any) + `Archivado` badge when archived.
 - Encounter screens nest under the patient; back from an encounter returns to the patient overview, not the registry.
 - URL patterns are the single source of navigation state (shareable, bookmarkable, restorable after restart — US-013).
-- No modals for data entry. The only inline confirmations are archiving (destructive-feeling, one-way) and leaving a form with unsaved changes (native `beforeunload` only; in-app navigation to a form that is dirty is allowed to proceed — acceptable prototype tradeoff, recorded in Section 6).
+- No modals for data entry. The only inline confirmations are archiving (destructive-feeling, one-way) and leaving a form with unsaved changes. O-006 §8 supersedes U-08: dirty consultation notes and staged studies require both unload and in-app navigation protection.
 
 ---
 
@@ -375,9 +375,9 @@ All 14 stories are covered by observable behavior in this spec. No story require
 | U-05 | Duplicate detection is a non-blocking client notice | No API support; never blocks, never merges (US-001 constraint) |
 | U-06 | System font stack, no icon library, no dark mode | Offline requirement; minimal prototype scope; clinical legibility |
 | U-07 | `Editada` badge surfaces post-creation edits without silent content replacement | US-010: edits are explicit and timestamped |
-| U-08 | Dirty-form protection = native `beforeunload` only; in-app navigation may drop unsaved form values | Prototype tradeoff; the cost of a full dirty-state manager outweighs the benefit at this scale. Recorded so O-003 implements exactly this, not more |
+| U-08 | **Superseded by O-006.** O-005 dirty-form protection used native `beforeunload` only. O-006 consultation work also confirms before in-app link/history navigation that would discard the note or staged studies. | The owner mission prioritizes preserving unsaved clinical text during interruption. No draft is persisted. |
 
-### 6.3 Open items (do not block O-003)
+### 6.3 Open items (historical O-003)
 
 - Tab counts in the registry (3.1) are optional; implement only if a single fetch makes them free.
 - Character counters appear only near the limit — confirm during implementation that this stays calm and unobtrusive.
@@ -399,18 +399,18 @@ Design for the four expansion objectives from the owner's mission brief, in orde
 |---|---|---|
 | `Appointment` | `patientId`, `startAt` (instant), `durationMinutes` (5–480), `type` (`consulta` · `procedimiento` · `visita_domicilio` · `urgencia`), `status` (`scheduled` · `completed` · `cancelled`), `actualDurationMinutes` (optional, set on completion), `linkedEncounterId` (optional, set on completion; same patient, server-validated) | `GET /api/appointments?from=&to=` · `GET /api/patients/:id/appointments` · `POST /api/patients/:id/appointments` · `GET /api/appointments/:id` · `PATCH /api/appointments/:id` · `POST /api/appointments/:id/complete` · `POST /api/appointments/:id/cancel` |
 | `Encounter.type` | new field, fixed list above, default `consulta`; existing records migrate to `consulta` (their meaning is unchanged — they are consultations) | `POST/PATCH /encounters` gain `type`; timeline summaries include it |
-| `StudyRequest` | `patientId`, `encounterId` (originating encounter, immutable), `category` (closed list: `laboratorio` · `imagenologia` · `rayos_x` · `ecg` · `ecografia` · `otro`), `description` (free text, e.g. `Biometría hemática`), `status` (`ordered` · `completed` · `reviewed`), `resultNote` (≤ 1,000 chars, optional) | `POST /api/encounters/:id/studies` (also in the encounter create payload as `studies[]`) · `PATCH /api/studies/:id` (status + `resultNote` only) · included in encounter detail; `GET /api/patients/:id/studies?status=` for the overview pending list |
+| `StudyRequest` | `patientId`, optional immutable same-patient `encounterId`, `category` (closed list: `laboratorio` · `imagenologia` · `rayos_x` · `ecg` · `ecografia` · `otro`), `description` (doctor-authored), existing `status` (`ordered` · `completed` · `reviewed`), optional doctor-authored `resultNote` | New encounter payload `studies[]` · `POST /api/patients/:id/studies` · `POST /api/encounters/:id/studies` · `PATCH /api/studies/:id` · patient and encounter list endpoints |
 | `MedicalDocument` | `patientId`, `encounterId` (optional), `kind` (`prescription` · `report`), `title` (optional), `body` (narrative, reports), plus `PrescriptionLine[]` for prescriptions: `medication` (required), `dose`, `route`, `frequency`, `duration`, `instructions` (all free text) | `POST /api/patients/:id/documents` · `GET /api/documents/:id` · `PATCH /api/documents/:id` · `GET /api/patients/:id/documents` |
 
 No other entities. No recurrence, reminders, resources, catalogs, or integrations (mission constraints).
 
-#### 7.0.1 Implemented versus designed behavior (2026-11-08)
+#### 7.0.1 O-005 baseline behavior (2026-11-08)
 
 This is an **as-built inventory**, not approval to change the requirements in the original §7.0 table.
 
 - NX-001: the API also offers `POST /api/appointments/:id/link-encounter` for eligible appointments. Day/week/month views, patient appointment screens, date validation, outside-hours display, and weekly overflow behavior meet the detailed acceptance criteria.
 - NX-002: encounter type is persisted and editable, appears in the detail header, and appears in the timeline only for non-default types. Dedicated surgical workflow remains deferred under Q-NX-01.
-- NX-003: new-encounter creation continues to create studies atomically with the encounter; `POST /api/encounters/:id/studies` adds rows to an existing encounter with patient association derived by the API. Patient study listing accepts repeatable `status` values; `ordered` and `completed` remain pending until reviewed, matching `TASKS.md`.
+- NX-003: new-encounter creation creates studies atomically; `POST /api/encounters/:id/studies` adds rows to an existing encounter. At the O-005 baseline, patient study listing accepted repeatable `status` values and `ordered`/`completed` remained pending until reviewed, matching `TASKS.md`.
 - `ordered → reviewed` is permitted directly, in addition to `ordered → completed → reviewed`. The two exact study fixtures remain unchanged and the seed remains idempotent.
 - NX-004 models, migration, contracts, API, synthetic document fixtures, patient overview, prescription/report forms, edit views, and browser print are implemented and verified against §7.4.
 
@@ -613,3 +613,42 @@ Clicking any action opens an inline panel (complete-flow pattern) with an option
 ---
 
 *Reviewed against: `WORKFLOWS.md` (all sections, §11 story map), `PRODUCT.md` P0 stories, `DATA_MODEL.md`, `API_CONTRACT.md` (as implemented in O-001: 40/40 API tests), `DEMO_DATA.md` (7 patients / 9 encounters), `ARCHITECTURE.md` (SSR + typed client). §7 (NX-001…NX-004 expansion) was authorized in D-023; Q-NX-01/Q-NX-02 and the explicit implementation discrepancies in §7.0.1 remain open. Historical O-001 test counts here refer to their original review date, not NX-003 verification.*
+
+## 8. O-006 integrated clinical workflow (owner-authorized)
+
+This section is normative for O-006 and supersedes conflicting O-005 layout/interaction details in §§2–7. It preserves the existing O-005 API and data behavior except for the documented patient-level study request and optional encounter association. It does not resolve clinical questions Q-O006-01…08.
+
+### 8.1 Patient workspace — `/patients/[id]`
+
+Keep the current patient route and server-render fresh patient, appointment, encounter, study, and document data. Organize the page in this order:
+
+1. Patient identity, archive state, and direct actions: `Nueva consulta`, `Nueva cita`, `Solicitar estudio`, `Nueva receta`, `Nuevo informe`, demographics/background edit, and existing archive action.
+2. Safety context: show `Alergias` and `Medicamentos actuales` first and at full value; unknown fields say `No registrado`. Show conditions and prior surgery in a compact disclosure. Do not make an empty allergy field look like a negative finding.
+3. `Pendiente de atención`, only when it has entries: next scheduled appointment and studies still pending doctor review (`ordered` and `completed`, per D-032). Each entry opens its existing patient/encounter context. Do not infer a task priority or add a cross-patient queue.
+4. Recent encounters and compact links to the full chronological history, appointments, studies, prescriptions, and reports. Older detail remains available without dominating the first view.
+
+The patient studies section lists both linked and standalone requests, their doctor-entered association (or `Sin consulta asociada`), current stored status, record-entry timestamp, and result note if present. A standalone request's `createdAt` is its record-entry time only. O-005 statuses retain their labels and transitions; show this explanation beside study review controls: `El estado Completada no registra por separado si el estudio se realizó o cuándo llegó el resultado.` Do not infer a performance or result-arrival event.
+
+### 8.2 Consultation workspace — new and saved encounter
+
+On desktop, use a two-column workspace: the seven existing clinical note fields and explicit save action are the primary column; a read-only clinical context pane shows patient identity, allergies, current medications, other background, recent encounter summaries, and pending studies. Open a prior full encounter only on demand, in a secondary panel or stable disclosure; do not fetch every full note eagerly. At narrow widths, place the context in an accessible disclosure above the note. No note field order or clinical meaning changes.
+
+The header always names the patient and shows either `Sin cita` or the selected appointment date/type. The appointment entry point is `Atender paciente` on an eligible scheduled appointment. Opening it carries `appointmentId` into the consultation route and must not change appointment state. Saving an encounter also must not complete or link an appointment. After the encounter exists, expose an explicit `Completar cita y enlazar esta consulta` action, with actual duration review; if the doctor declines, leave the appointment as it is. Existing appointment completion/link flows remain available from appointment detail.
+
+Keep manual save only. Show a visible unsaved state while note fields or staged studies differ from their initial values. If a link, browser history action, or unload would discard them, confirm: `Hay cambios sin guardar. Si sales, perderás la consulta y los estudios agregados.` Cancel keeps the workspace and focus; confirm leaves. A failed save keeps all entered text and staged orders and shows an error. No autosave or persisted draft is introduced.
+
+### 8.3 Study request and review
+
+- New consultation: studies stay staged with a clear `Sin guardar` label and are created atomically with the encounter.
+- Saved encounter: allow adding studies through the existing encounter endpoint and remain in the encounter.
+- Patient workspace: allow a standalone patient-level request, optionally linked to an existing encounter of that patient. The patient comes from the route; an optional association is validated by Hono and cannot be reassigned later.
+- Keep categories, free-text description, statuses, transition rules, result-note field, and historical values unchanged. Display doctor-entered result notes verbatim. The UI may record the existing transitions only; it must not claim that `completed` means performed or that a result arrived. No new clinical event dates, source fields, appointment/procedure associations, corrections, or delete behavior.
+- Failed create/update retains the panel's values and current known status; successful save refreshes from the API.
+
+### 8.4 Contextual documents and follow-up
+
+From a saved encounter, offer `Nueva receta`, `Nuevo informe`, and `Programar seguimiento` while preserving the patient and encounter context. Existing document routes receive the current encounter ID and preselect it. A successful document save returns to the encounter; the existing doctor-authored form and browser-print flow stay intact. An unsaved new encounter cannot create a linked document: explain that the note must be saved first and keep all note values in place. Follow-up creates an ordinary patient appointment using the existing appointment endpoint and returns to the encounter after successful save; it does not silently link or complete an appointment.
+
+### 8.5 Responsive, accessible, and regression behavior
+
+Retain the O-005 typography, color tokens, Spanish (Mexico), system font stack, demo banner, and no-runtime-external-assets rule. At desktop, the note remains visually dominant; at narrow widths, context becomes an accessible disclosure and action buttons wrap. All actions remain keyboard operable with visible focus, labels, and text status cues. Preserve the O-005 registry, calendar, appointment, document, print, note-edit, and status-transition flows. These requirements are not considered verified until the O-006 browser and regression checks pass.

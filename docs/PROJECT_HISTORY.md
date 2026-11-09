@@ -315,3 +315,20 @@ Add the next entry when O-001 reaches a meaningful verified milestone, such as t
 **Execution boundary:** Implement optional encounter links for patient-owned study requests, consultation context, appointment handoff, contextual documents/follow-up, and the focused patient workspace. Keep the single-surgeon local prototype, synthetic records, explicit save, and O-005 regression behavior. Q-O006 clinical semantics remain open; preserve existing `completed` values and do not infer performed/result-received meaning or event times.
 
 **References:** O-006 mission brief (2026-11-09); `DECISIONS.md` D-033 and Q-O006-01…08; `TASKS.md` §7; `ACTION_PLAN.md` §3; PR #6.
+
+### 2026-11-09 — O-006 study API foundation and canonical workflow contract
+
+**Type:** Implementation milestone
+
+**Context:** The implementation branch starts from PR #6's latest documentation head. The owner mission explicitly requires patient-owned study requests with an optional same-patient encounter and migration preservation.
+
+**Findings and outcomes:**
+
+- Added nullable `StudyRequest.encounterId` and a SQLite table-rebuild migration; a temporary seeded database retained both existing study rows and every field, passed `foreign_key_check`, and retained both indexes.
+- Added `POST /api/patients/:patientId/studies` with route-derived patient ownership, optional same-patient encounter validation, shared strict contract schema, and atomic multi-row creation. Existing encounter-scoped creation and study statuses remain unchanged.
+- API integration suite passes 112/112; API and contracts typechecks pass. Commit `48304a4` (`feat(studies): support patient-level requests`) is pushed to `feat/o006-clinical-workflows`.
+- Added O-006 acceptance and workflow requirements to the product, workflow, decision, and canonical UI documents. No O-006 web UI has been implemented at this milestone.
+
+**Impact:** Independent study requests have a persisted, validated API foundation. Status semantics, clinical order time/source, and cancellation/correction behavior remain open and are not inferred.
+
+**References:** `API_CONTRACT.md` §11, `DATA_MODEL.md` §1/§3, `UI_SPEC.md` §8, `WORKFLOWS.md` §15, `DECISIONS.md` D-034…D-039, `TESTING.md`, `ACTION_PLAN.md` §3.
