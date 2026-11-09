@@ -185,7 +185,7 @@ Planned sub-objectives:
 
 ## 5. Current blockers and technical questions
 
-No owner input is currently blocking. Pending-study semantics are reconciled to `TASKS.md` acceptance (`ordered` and `completed` until `reviewed`), and the study create/filter routes are accepted from UI_SPEC §7.0. A fresh empty SQLite path initially caused Prisma 7 to emit an empty “Schema engine error”; append-opening the database file before migration fixes startup while preserving an existing database. This is covered by the clean-start/API test setup and was verified on the fresh local run. Remaining work is the ordered implementation and end-to-end acceptance in the active objective.
+No owner input is currently blocking. Pending-study semantics are reconciled to `TASKS.md` acceptance (`ordered` and `completed` until `reviewed`), and the study create/filter routes are accepted from UI_SPEC §7.0. A fresh empty SQLite path initially caused Prisma 7 to emit an empty “Schema engine error”; append-opening the database file before migration fixes startup while preserving an existing database. This is covered by the clean-start/API test setup and was verified on the fresh local run. The prior O-005 implementation and end-to-end acceptance have been recorded as completed. Proposed O-006 design decisions remain for owner/doctor validation; this does not reopen O-005.
 
 Resolved during O-001 (implementation findings now recorded in `DECISIONS.md`):
 
@@ -198,7 +198,7 @@ Do not allow future Cloudflare/D1 transaction constraints, Google authentication
 
 ## 6. Next action
 
-No O-005 implementation work remains. Leave feature work unmerged; await the owner's next objective.
+O-005 implementation is complete on `feat/nx-expansion-complete`. Proposed O-006 discovery documentation is being prepared on `docs/o006-clinical-workflow-ux` (based on `1309b513`): review `UX_AUDIT.md` and `UX_REDESIGN.md`, validate clinical workflows and study status meanings with the owner/doctor, then approve or reject an implementation phase explicitly. No O-006 application implementation is authorized by these proposals. Feature PRs #1–#4 remain unmerged.
 
 ## 7. Living update rules
 

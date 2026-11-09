@@ -39,6 +39,16 @@ Use `Confirmed`, `Proposed`, `Open`, or `Superseded`. Record the date and ration
 | D-031 | **Conservative scope decision (proposal, not owner-approved):** for this mission the `Encounter.type`/`Appointment.type` fields are sufficient for surgical follow-through — no separate surgery/procedure record, no recommended/scheduled/performed/cancelled state machine, no OR/team/anesthesia concepts are built. | Owner mission brief (2026-11-08) sets this as the default to unblock NX-002 and later slices; the concrete question remains Q-NX-01 and is revisited only after the doctor validates a real need. Replaces no clinical workflow; it defines what is deliberately NOT built now (see D-025). |
 | D-032 | Patient overview treats `ordered` and `completed` study requests as pending until they are `reviewed`; each row shows its current status. | Explicit NX-003 phase acceptance in `TASKS.md` resolves the narrower “ordered only” wording in the original UI spec. The study lifecycle and doctor review remain visible without interpreting results. |
 
+## Proposed O-006 UX decisions (not confirmed)
+
+- **P-UX-01:** Evaluate a consultation workspace combining the editable note with immediately accessible patient history and clinical context.
+- **P-UX-02:** Evaluate patient-owned study requests that can be initiated without an encounter, while retaining existing encounter links and auditability. The current endpoint only appends to existing encounters.
+- **P-UX-03:** Validate the meaning of `completed` against `performed` and `result available` before changing any study status or schema.
+- **P-UX-04:** Evaluate explicit appointment-to-consultation handoff and contextual prescription/report actions; do not silently complete appointments.
+- **P-UX-05:** Evaluate draft/partial-save semantics based on physician interruption patterns before implementing autosave.
+
+These are **design proposals only**. Owner/doctor review is required before updating confirmed decisions, the canonical UX spec, API/data contracts, or implementation tasks. See `UX_AUDIT.md` / `UX_REDESIGN.md`.
+
 ## Proposed implementation details
 
 | ID | Proposal | Rationale |

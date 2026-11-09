@@ -2,15 +2,15 @@
 
 A local-first prototype specification for one general surgeon. The product objective is to validate patient management and clinical continuity using clearly synthetic demo records.
 
-> **Current code snapshot (2026-11-08, `feat/studies-web`):** O-001–O-004 and NX-001/NX-002 are implemented and have prior recorded verification. NX-003 study requests have schema, API, frontend, tests and fictional fixtures on the advanced feature branch; integrated NX-003 verification remains outstanding. NX-004 printable prescriptions/reports have not been implemented. This branch sits on an open PR stack (#1–#4); `main` is not yet the product implementation baseline.
+> **Current implementation (2026-11-08):** O-001–O-005 are documented as implemented and integrated-verified on `feat/nx-expansion-complete` (`1309b513`): the most recent baseline has appointments/calendar, encounter types, study requests, and browser-printable prescriptions/reports. O-005 records 107 API + 32 web passing tests, clean migration/seed and browser checks in `docs/TESTING.md`; these were not rerun during this documentation-only work. `main` is still documentation-only and the earlier feature PR stack is open. A proposed O-006 UX review is tracked separately in `docs/UX_AUDIT.md` / `docs/UX_REDESIGN.md`.
 
 ## Implemented capabilities and phase status
 
 - Patient registry/search, patient data and background, archive, clinical encounters and timeline.
 - Appointment create/list/detail/update, completion/cancellation, optional encounter linking and day/week/month calendar.
 - Encounter type (`consulta`, `procedimiento`, `visita_domicilio`, `urgencia`).
-- NX-003 study-request code: optional study rows with **new** encounters; status changes and patient/encounter lists. The patient overview currently shows `ordered` requests only. No standalone study-order route exists.
-- NX-004 prescription/report models, routes, forms and print views are still missing; uploads, authentication and deployment remain excluded.
+- NX-003 study requests: new-encounter rows **and** appending to an existing encounter; patient/encounter lists, `ordered`/`completed` pending filtering, forward status changes and result notes. Standalone patient-level ordering without any encounter is **not implemented**.
+- NX-004 structured doctor-authored prescriptions and reports: models, API, patient-level forms, detail/edit, synthetic fixtures and browser printing are implemented. File uploads/storage, authentication and deployment remain excluded.
 
 See `docs/ACTION_PLAN.md` for verified vs unverified status and `docs/API_CONTRACT.md` for implemented routes.
 
@@ -92,6 +92,8 @@ All commands are implemented and verified; see `docs/TESTING.md` for the verific
 - `docs/ACTION_PLAN.md` — living execution state, continuously updated with active objective, progress, blockers, verification, local branch/PR stack, and next action.
 - `docs/PROJECT_HISTORY.md` — chronological archive of significant milestones, findings, lessons, and material scope changes.
 - `docs/TESTING.md` — verification requirements.
+- `docs/UX_AUDIT.md` — current UX/workflow issues grounded in source code (O-006 discovery).
+- `docs/UX_REDESIGN.md` — **proposed, not approved** clinical workflow and UX redesign.
 - `docs/BOOTSTRAP_PROMPT.md` — implementation prompt for Hermes.
 
 ## Development order
