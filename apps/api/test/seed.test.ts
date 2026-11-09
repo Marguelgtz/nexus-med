@@ -5,7 +5,7 @@
 // - exact preservation of fixture timestamps
 
 import { execFileSync } from 'node:child_process';
-import { mkdirSync, rmSync } from 'node:fs';
+import { closeSync, mkdirSync, openSync, rmSync } from 'node:fs';
 import { writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
@@ -24,6 +24,7 @@ let prisma: PrismaClient;
 beforeAll(() => {
   rmSync(seedDbFile, { force: true });
   mkdirSync(path.dirname(seedDbFile), { recursive: true });
+  closeSync(openSync(seedDbFile, 'a'));
   execFileSync('npx', ['prisma', 'migrate', 'deploy'], {
     cwd: repoRoot,
     stdio: 'inherit',
@@ -193,6 +194,7 @@ describe('seed atomicity (rollback on failure)', () => {
 
   beforeAll(async () => {
     rmSync(rollbackDbFile, { force: true });
+    closeSync(openSync(rollbackDbFile, 'a'));
     // Two valid patients + one valid encounter (created first), then an
     // encounter referencing a nonexistent patient → FK violation mid-run.
     const brokenFixture = {

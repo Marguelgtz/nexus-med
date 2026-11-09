@@ -6,7 +6,7 @@
 // run the test files, so the API's Prisma boundary reads this test database.
 
 import { execFileSync } from 'node:child_process';
-import { mkdirSync, rmSync } from 'node:fs';
+import { closeSync, mkdirSync, openSync, rmSync } from 'node:fs';
 import path from 'node:path';
 
 const repoRoot = path.resolve(import.meta.dirname, '..', '..', '..');
@@ -17,6 +17,7 @@ export default function setup(): void {
   mkdirSync(testDataDir, { recursive: true });
 
   const testDbFile = path.join(testDataDir, 'api.test.db');
+  closeSync(openSync(testDbFile, 'a'));
   process.env.DATABASE_URL = `file:${testDbFile}`;
 
   execFileSync('npx', ['prisma', 'migrate', 'deploy'], {

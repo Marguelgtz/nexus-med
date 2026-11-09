@@ -12,7 +12,7 @@
 // Local data persists across restarts in .local/data/medical.db.
 
 import { spawn } from 'node:child_process';
-import { mkdirSync } from 'node:fs';
+import { closeSync, mkdirSync, openSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -61,7 +61,14 @@ function shutdown(code = 0) {
 
 async function main() {
   console.log('[dev] Preparando entorno local…');
-  mkdirSync(path.join(rootDir, '.local', 'data'), { recursive: true });
+  const databasePath = process.env.DATABASE_URL?.startsWith('file:')
+    ? path.resolve(rootDir, process.env.DATABASE_URL.slice('file:'.length))
+    : path.join(rootDir, '.local', 'data', 'medical.db');
+  mkdirSync(path.dirname(databasePath), { recursive: true });
+  // Prisma 7's SQLite migrate engine can fail with an empty generic error
+  // while creating a missing file. Append-open creates it without truncating
+  // an existing local database; migrate deploy still owns all schema writes.
+  closeSync(openSync(databasePath, 'a'));
 
   console.log('[dev] Generando cliente de Prisma…');
   await run('npx', ['prisma', 'generate']);
