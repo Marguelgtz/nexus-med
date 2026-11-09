@@ -1,6 +1,6 @@
 # Architecture — Medical Platform MVP
 
-**Status:** Confirmed local architecture; NX-001…NX-003 verified and NX-004 database/API foundation implemented on `feat/nx-expansion-complete` as of 2026-11-08. Cloudflare remains future-only.
+**Status:** Confirmed local architecture; NX-001…NX-004 implemented and browser-verified on `feat/nx-expansion-complete` as of 2026-11-08. Cloudflare remains future-only.
 **Version:** 0.4  
 **Product:** Single-doctor medical practice platform  
 **Immediate target:** Fully local, offline-capable prototype using synthetic data  
@@ -13,7 +13,7 @@
 This implementation inventory complements the original architectural target tree below. The topology is unchanged: local Next.js + Hono, one Prisma/SQLite database, no Cloudflare runtime.
 
 - API domains: `apps/api/src/domains/appointments/`, `studies/`, and `documents/`; `encounters/` also performs atomic study creation.
-- Web: `apps/web/src/app/calendar/`, `apps/web/src/app/patients/[id]/citas/`, `apps/web/src/components/appointments/`, and study controls under `components/patients/` plus patient overview.
+- Web: `apps/web/src/app/calendar/`, patient appointment/document routes under `apps/web/src/app/patients/[id]/`, workflow components in `apps/web/src/components/appointments/` and `components/documents/`, and study controls under `components/patients/` plus patient overview.
 - Shared contracts: `packages/contracts/src/appointments.ts`, `studies.ts`, `documents.ts`, `encounters.ts`.
 - Prisma schema models: `Patient`, `Encounter`, `Appointment`, `StudyRequest`, `MedicalDocument`, and `PrescriptionLine`; documents migration exists.
 
@@ -339,6 +339,7 @@ nexus-med/
 │   │   │   │   ├── page.tsx              # Redirect / to /patients
 │   │   │   │   ├── not-found.tsx         # 404 boundary
 │   │   │   │   ├── globals.css
+│   │   │   │   ├── calendar/page.tsx     # /calendar
 │   │   │   │   └── patients/
 │   │   │   │       ├── page.tsx          # /patients (registry)
 │   │   │   │       ├── new/page.tsx      # /patients/new
@@ -346,11 +347,23 @@ nexus-med/
 │   │   │   │           ├── page.tsx      # /patients/:id (overview + timeline)
 │   │   │   │           ├── editar/page.tsx
 │   │   │   │           ├── antecedentes/page.tsx
-│   │   │   │           └── consultas/
+│   │   │   │           ├── citas/
+│   │   │   │           │   ├── page.tsx
+│   │   │   │           │   ├── nueva/page.tsx
+│   │   │   │           │   └── [cid]/page.tsx
+│   │   │   │           ├── consultas/
+│   │   │   │           │   ├── nueva/page.tsx
+│   │   │   │           │   └── [eid]/page.tsx
+│   │   │   │           ├── recetas/
+│   │   │   │           │   ├── nueva/page.tsx
+│   │   │   │           │   └── [did]/page.tsx
+│   │   │   │           └── informes/
 │   │   │   │               ├── nueva/page.tsx
-│   │   │   │               └── [eid]/page.tsx
+│   │   │   │               └── [did]/page.tsx
 │   │   │   ├── components/               # Workflow UI and app chrome
 │   │   │   │   ├── patients/             # Registry, forms, timeline, encounter detail
+│   │   │   │   ├── appointments/          # Appointment/calendar workflow UI
+│   │   │   │   ├── documents/             # Prescription/report forms and print detail
 │   │   │   │   ├── shell/                # Top bar, demo banner, patient context strip
 │   │   │   │   └── primitives.tsx        # Genuinely shared visual primitives
 │   │   │   └── lib/
@@ -372,9 +385,12 @@ nexus-med/
 │       │   │   ├── patients/
 │       │   │   │   ├── patients.routes.ts
 │       │   │   │   └── patients.service.ts
-│       │   │   └── encounters/
-│       │   │       ├── encounters.routes.ts
-│       │   │       └── encounters.service.ts
+│       │   │   ├── encounters/
+│       │   │   │   ├── encounters.routes.ts
+│       │   │   │   └── encounters.service.ts
+│       │   │   ├── appointments/          # Appointment and calendar domain
+│       │   │   ├── studies/               # Study-request domain
+│       │   │   └── documents/             # Prescription/report domain
 │       │   ├── generated/prisma/         # Prisma 7 client (gitignored; `npm run db:generate`)
 │       │   ├── infrastructure/
 │       │   │   └── database/
@@ -393,6 +409,9 @@ nexus-med/
 │       │   ├── common.ts                 # Shared primitives (dates, error envelope)
 │       │   ├── patients.ts               # Patient request/response DTOs and schemas
 │       │   ├── encounters.ts             # Encounter request/response DTOs and schemas
+│       │   ├── appointments.ts            # Appointment DTOs and schemas
+│       │   ├── studies.ts                 # Study-request DTOs and schemas
+│       │   ├── documents.ts               # Medical-document DTOs and schemas
 │       │   └── index.ts
 │       ├── package.json
 │       └── tsconfig.json
@@ -463,10 +482,10 @@ Keep `src/app/` primarily focused on routing and page composition. It should inc
 - `page.tsx` and `layout.tsx` define route/page structure.
 - Server Components load initial data through the server-side Hono API client.
 - Mark the server-only API transport/configuration module with the framework-supported server-only guard so it cannot be imported by Client Components.
-- Route files should remain thin; move substantial patient/encounter UI and feature-specific interaction into `src/components/patients/`.
+- Route files should remain thin; move substantial workflow UI into `src/components/patients/`, `appointments/`, or `documents/` according to product ownership.
 - Use route groups such as `(workspace)` only when they improve layout or route organization; they do not create URL segments.
 
-Organize workflow frontend code under `src/components/`: `patients/` holds the patient and consultation workflow components (registry, forms, timeline, encounter detail), `shell/` holds the app frame and navigation chrome, and `primitives.tsx` holds genuinely shared visual primitives. Keep a component, form, or hook inside its workflow feature unless it is genuinely shared; the shared files must not become a dumping ground for patient-specific UI.
+Organize workflow frontend code under `src/components/`: `patients/` holds patient and consultation workflow components, `appointments/` holds appointment/calendar workflows, `documents/` holds prescription/report forms and print detail, `shell/` holds the app frame and navigation chrome, and `primitives.tsx` holds genuinely shared visual primitives. Keep a component, form, or hook inside its workflow feature unless it is genuinely shared; the shared files must not become a dumping ground for patient-specific UI.
 
 The frontend may own presentation state and client-side convenience validation, but it must call Hono for persisted data and mutations. Do not create a second frontend domain model that can drift from the API contract.
 

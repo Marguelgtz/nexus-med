@@ -1,11 +1,11 @@
 # Product Workflows — Medical Platform MVP
 
-**Status:** Original MVP workflows plus verified NX-001…NX-003 behavior and NX-004 document API/seed foundation (2026-11-08); the NX-004 web workflow remains in progress.
+**Status:** Original MVP workflows plus verified NX-001…NX-004 behavior (2026-11-08).
 **Primary user:** One general surgeon  
 **Interface:** Spanish (Mexico)  
 **Data:** Synthetic demo records only
 
-`PRODUCT.md` defines scope and user-story acceptance criteria. This document describes how those stories should flow through the application. Together, the workflow sections cover patient create/search/update/archive, patient context, medical-background editing, encounter creation/review, save/error behavior, and the first-run demo experience. O-005 approved appointments, encounter types, study requests, and printable documents; the first three slices are implemented and verified. Printable documents remain unimplemented. File uploads/storage and Google authentication remain excluded.
+`PRODUCT.md` defines scope and user-story acceptance criteria. This document describes how those stories should flow through the application. Together, the workflow sections cover patient create/search/update/archive, patient context, medical-background editing, encounter creation/review, save/error behavior, and the first-run demo experience. O-005 approved appointments, encounter types, study requests, and printable documents; all four slices are implemented and verified. File uploads/storage and Google authentication remain excluded.
 
 ## 1. Application entry and navigation
 
@@ -190,9 +190,9 @@ Overlaps are allowed but visibly signaled, not resolved automatically. Appointme
 
 **Limitations:** No upload, laboratory integration, or automated interpretation. The doctor records and reviews study status and any result note.
 
-## 13. Planned documents (NX-004, not yet implemented)
+## 13. Printable documents (NX-004)
 
-The approved workflow in `UI_SPEC.md` §7.4 includes doctor-authored prescription/report forms, patient/encounter association, persistence and browser printing with the demo marker. The document models, routes, and synthetic seed fixtures are implemented on `feat/nx-expansion-complete`; forms and UI pages are still in progress and should not be presented as available until verified.
+The doctor can create a prescription with repeatable free-text medication lines or a report with a free-text narrative from the patient overview. Each document belongs to one patient and may link to one of that patient's encounters. The detail view supports editing and presents the same paper card sent to the browser print dialog. Print output contains the persistent fictional-data marker and no invented provider or legal information. Document content persists through reloads; failed validation preserves form values. The screen explains that printing is local and is not a certified electronic prescription. Uploads and stored PDFs are excluded.
 
 ## 14. Original MVP user story coverage
 

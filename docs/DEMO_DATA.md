@@ -145,7 +145,7 @@ After the developer creates or edits local patients/encounters:
 
 Tests must verify:
 
-- A clean database receives required demo records (patients, encounters, appointments, studies).
+- A clean database receives required demo records (patients, encounters, appointments, studies, prescriptions/reports and prescription lines).
 - Running the seed twice yields the same record counts.
 - Existing edited demo records are not overwritten.
 - Existing user-created records are not deleted or modified.
@@ -153,6 +153,6 @@ Tests must verify:
 - The archived demo patient remains archived after a repeated seed.
 - Past appointments keep their exact fixture timestamps, states, and encounter links.
 - Upcoming appointments are in the future, sit on the expected practice-timezone wall times, and do not move on re-seed (first-seed anchor).
-- Study fixture IDs, patient/encounter associations and preservation after repeat seed are verified during NX-003 closure.
+- Study fixture IDs, patient/encounter associations and preservation after repeat seed are covered by seed tests.
 - Prescription/report fixture IDs, optional encounter association, line ordering, exact fictional content, idempotency, and edit preservation are covered by seed tests.
 - Startup does not require Cloudflare or internet connectivity after dependencies have been installed.

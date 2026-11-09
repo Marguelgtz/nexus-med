@@ -11,9 +11,11 @@ import {
   type CreateEncounterInput,
   type CreateEncounterStudiesInput,
   type CreatePatientInput,
+  type CreateMedicalDocumentInput,
   type EncounterDetail,
   type EncounterSummary,
   type MedicalBackgroundInput,
+  type MedicalDocument,
   type PatientDetail,
   type PatientSummary,
   type StudyRequest,
@@ -21,8 +23,10 @@ import {
   type UpdateAppointmentInput,
   type UpdateEncounterInput,
   type UpdatePatientInput,
+  type UpdateMedicalDocumentInput,
   type UpdateStudyInput,
   appointmentSchema,
+  createMedicalDocumentInputSchema,
   createAppointmentInputSchema,
   createEncounterInputSchema,
   createEncounterStudiesInputSchema,
@@ -31,12 +35,14 @@ import {
   encounterSummarySchema,
   errorEnvelopeSchema,
   medicalBackgroundInputSchema,
+  medicalDocumentSchema,
   patientDetailSchema,
   patientSummarySchema,
   studyRequestSchema,
   updateAppointmentInputSchema,
   updateEncounterInputSchema,
   updatePatientInputSchema,
+  updateMedicalDocumentInputSchema,
   updateStudyInputSchema,
 } from '@nexus-med/contracts';
 
@@ -198,6 +204,48 @@ export function updateEncounter(id: string, input: UpdateEncounterInput): Promis
     `/encounters/${encodeURIComponent(id)}`,
     { method: 'PATCH', body: JSON.stringify(input) },
     encounterDetailSchema.safeParse.bind(encounterDetailSchema),
+  );
+}
+
+// ── Printable documents (UI_SPEC §7.4) ───────────────────────────────────
+
+export function listPatientDocuments(patientId: string): Promise<MedicalDocument[]> {
+  return request(
+    `/patients/${encodeURIComponent(patientId)}/documents`,
+    undefined,
+    asList(medicalDocumentSchema),
+  );
+}
+
+export function getMedicalDocument(documentId: string): Promise<MedicalDocument> {
+  return request(
+    `/documents/${encodeURIComponent(documentId)}`,
+    undefined,
+    medicalDocumentSchema.safeParse.bind(medicalDocumentSchema),
+  );
+}
+
+export function createMedicalDocument(
+  patientId: string,
+  input: CreateMedicalDocumentInput,
+): Promise<MedicalDocument> {
+  createMedicalDocumentInputSchema.parse(input);
+  return request(
+    `/patients/${encodeURIComponent(patientId)}/documents`,
+    { method: 'POST', body: JSON.stringify(input) },
+    medicalDocumentSchema.safeParse.bind(medicalDocumentSchema),
+  );
+}
+
+export function updateMedicalDocument(
+  documentId: string,
+  input: UpdateMedicalDocumentInput,
+): Promise<MedicalDocument> {
+  updateMedicalDocumentInputSchema.parse(input);
+  return request(
+    `/documents/${encodeURIComponent(documentId)}`,
+    { method: 'PATCH', body: JSON.stringify(input) },
+    medicalDocumentSchema.safeParse.bind(medicalDocumentSchema),
   );
 }
 

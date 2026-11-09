@@ -10,9 +10,11 @@ import { z } from 'zod';
 import {
   appointmentSchema,
   encounterSummarySchema,
+  medicalDocumentSchema,
   patientDetailSchema,
   PENDING_STUDY_STATUSES,
   studyRequestSchema,
+  type MedicalDocument,
   type PatientDetail,
 } from '@nexus-med/contracts';
 
@@ -53,12 +55,20 @@ const BACKGROUND_ROWS: { label: string; key: keyof PatientDetail }[] = [
   { label: 'Medicamentos actuales', key: 'currentMedications' },
 ];
 
+function documentPreview(document: MedicalDocument): string {
+  const content = document.title || (document.kind === 'prescription'
+    ? document.lines[0]?.medication || document.body
+    : document.body);
+  const firstLine = content?.split('\n')[0]?.trim() || (document.kind === 'prescription' ? 'Receta' : 'Informe médico');
+  return firstLine.length > 110 ? `${firstLine.slice(0, 107)}…` : firstLine;
+}
+
 export default async function PatientPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const pendingStudyQuery = new URLSearchParams();
   PENDING_STUDY_STATUSES.forEach((status) => pendingStudyQuery.append('status', status));
 
-  const [patientRes, encountersRes, apptsRes, studiesRes] = await Promise.all([
+  const [patientRes, encountersRes, apptsRes, studiesRes, documentsRes] = await Promise.all([
     fetchServer(`/api/patients/${encodeURIComponent(id)}`, patientDetailSchema),
     fetchServer(
       `/api/patients/${encodeURIComponent(id)}/encounters`,
@@ -72,6 +82,7 @@ export default async function PatientPage({ params }: { params: Promise<{ id: st
       `/api/patients/${encodeURIComponent(id)}/studies?${pendingStudyQuery.toString()}`,
       z.array(studyRequestSchema),
     ),
+    fetchServer(`/api/patients/${encodeURIComponent(id)}/documents`, z.array(medicalDocumentSchema)),
   ]);
 
   // A 404 means the record does not exist; anything else (API down, 5xx,
@@ -113,6 +124,15 @@ export default async function PatientPage({ params }: { params: Promise<{ id: st
       </>
     );
   }
+  if (!documentsRes.ok) {
+    if (documentsRes.notFound) notFound();
+    return (
+      <>
+        <h1>Paciente</h1>
+        <ErrorBanner message={documentsRes.error} retryHref={`/patients/${id}`} />
+      </>
+    );
+  }
 
   const patient = patientRes.data;
   const encounters = encountersRes.data;
@@ -125,6 +145,7 @@ export default async function PatientPage({ params }: { params: Promise<{ id: st
     .slice(0, 3);
   // The server filter includes ordered and completed studies until review.
   const pendingStudies = studiesRes.data;
+  const documents = documentsRes.data;
 
   return (
     <>
@@ -215,6 +236,32 @@ export default async function PatientPage({ params }: { params: Promise<{ id: st
             </Link>
           </div>
         ) : null}
+      </div>
+
+      <div className="card">
+        <div className="card-header">
+          <h2>Recetas e informes</h2>
+          <span className="badge badge-type">{documents.length}</span>
+          <div className="actions">
+            <Link href={`/patients/${patient.id}/recetas/nueva`} className="btn btn-secondary btn-sm">Nueva receta</Link>
+            <Link href={`/patients/${patient.id}/informes/nueva`} className="btn btn-ghost btn-sm">Nuevo informe</Link>
+          </div>
+        </div>
+        {documents.length === 0 ? (
+          <p className="faint">Sin recetas ni informes</p>
+        ) : (
+          documents.map((document) => (
+            <Link
+              key={document.id}
+              className="document-row"
+              href={`/patients/${patient.id}/${document.kind === 'prescription' ? 'recetas' : 'informes'}/${document.id}`}
+            >
+              <span className="badge badge-document-kind">{document.kind === 'prescription' ? 'Receta' : 'Informe'}</span>
+              <span className="document-row-title">{documentPreview(document)}</span>
+              <time dateTime={document.createdAt}>{formatDateTime(document.createdAt)}</time>
+            </Link>
+          ))
+        )}
       </div>
 
       {pendingStudies.length > 0 ? (

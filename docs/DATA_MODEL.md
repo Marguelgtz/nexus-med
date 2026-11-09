@@ -68,6 +68,6 @@ The SQLite database lives in `.local/data/medical.db`; the development orchestra
 
 `MedicalDocument` belongs to one patient and may link to one of that patient's encounters. Its `kind` is validated as `prescription` or `report`; `title` is optional; `body` stores a report narrative or prescription general instructions. Prescription lines are ordered by `position` and store doctor-entered medication and optional free-text fields. Patient and encounter deletes are restricted; prescription lines cascade only if a document is removed at the database layer. The API exposes no delete endpoint. The API verifies that the linked encounter belongs to the same patient.
 
-This is separate from excluded file uploads and R2 storage. User/account/session, clinic/organization, and billing models remain excluded. The browser form and print workflow are still being implemented.
+This is separate from excluded file uploads and R2 storage. User/account/session, clinic/organization, and billing models remain excluded. The browser forms, detail/edit workflow, patient overview, and CSS print presentation are implemented and browser-verified.
 
 Open questions: procedure lifecycle (Q-NX-01); study-category validation (Q-NX-02); independent study-order workflow not implemented; future Cloudflare D1 transaction guarantees and SSR adapter selection remain deployment decisions.

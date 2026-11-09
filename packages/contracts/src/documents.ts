@@ -8,7 +8,7 @@ export const medicalDocumentKindSchema = z.enum(['prescription', 'report']);
 export type MedicalDocumentKind = z.infer<typeof medicalDocumentKindSchema>;
 
 export const prescriptionLineInputSchema = z.object({
-  medication: z.string().trim().min(1).max(200),
+  medication: z.string().trim().min(1, 'Indica el medicamento.').max(200, 'El medicamento admite hasta 200 caracteres.'),
   dose: z.string().trim().max(100).nullable().optional(),
   route: z.string().trim().max(80).nullable().optional(),
   frequency: z.string().trim().max(120).nullable().optional(),
@@ -33,7 +33,7 @@ export const createReportInputSchema = z.object({
   kind: z.literal('report'),
   encounterId: optionalEncounterId,
   title: optionalTitle,
-  body: z.string().trim().min(1).max(20000),
+  body: z.string().trim().min(1, 'Escribe el texto del informe.').max(20000, 'El informe admite hasta 20,000 caracteres.'),
 }).strict();
 export type CreateReportInput = z.infer<typeof createReportInputSchema>;
 

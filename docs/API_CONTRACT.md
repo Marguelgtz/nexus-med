@@ -1,6 +1,6 @@
 # API Contract — Medical Platform MVP
 
-**Status:** O-001 contract plus NX-001…NX-004 document API addenda (§11) on `feat/nx-expansion-complete` (2026-11-08); NX-004 web workflow remains in progress.
+**Status:** O-001 contract plus verified NX-001…NX-004 addenda (§11) on `feat/nx-expansion-complete` (2026-11-08).
 **Owner:** Hono API (`apps/api`)  
 **Transport:** HTTP + JSON over local Node.js  
 **Audience:** Next.js frontend, API tests, future maintainers
@@ -235,4 +235,4 @@ Study responses include `patientId`, nested `encounter: {id, occurredAt, reason}
 | GET | `/api/documents/:documentId` | Retrieve a document with patient and optional encounter context |
 | PATCH | `/api/documents/:documentId` | Replace editable document fields and prescription lines |
 
-Create/update bodies are discriminated by `kind`. A prescription contains optional `title`, optional `encounterId`, optional general `body`, and 1–50 `lines`; each line requires `medication`, with optional free-text dose, route, frequency, duration, and instructions. A report contains optional title and encounter plus required narrative `body`. An encounter link must belong to the same patient. The API derives the patient from the route for creation; updates cannot change the patient or document kind. Prescription-line replacement and document updates run atomically. There is no delete endpoint or file/PDF storage. Shared request/response schemas are in `packages/contracts/src/documents.ts`; print views remain in progress.
+Create/update bodies are discriminated by `kind`. A prescription contains optional `title`, optional `encounterId`, optional general `body`, and 1–50 `lines`; each line requires `medication`, with optional free-text dose, route, frequency, duration, and instructions. A report contains optional title and encounter plus required narrative `body`. An encounter link must belong to the same patient. The API derives the patient from the route for creation; updates cannot change the patient or document kind. Prescription-line replacement and document updates run atomically. There is no delete endpoint or file/PDF storage. Shared request/response schemas are in `packages/contracts/src/documents.ts`; browser print views are implemented with ordinary HTML and CSS.
