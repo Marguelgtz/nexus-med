@@ -77,7 +77,7 @@ See `DECISIONS.md` and `ARCHITECTURE.md` for details.
 
 **Acceptance:** All ten workflows are covered; scheduled and unscheduled consultations are distinguished; relevant history stays available during documentation; a standalone study request does not require a fictitious encounter; performed/result-available/reviewed meanings are not conflated without validation; save, error and interruption states are explicit; migration/API impact and implementation order are concrete; O-005 remains the authoritative as-built specification; no application code is changed.
 
-**Branch/PR:** `docs/o006-clinical-workflow-ux`, based on `feat/nx-expansion-complete`; current base commit `0f3bcb7`. Existing remote branch has no associated PR. Target the documentation PR at `feat/nx-expansion-complete`; do not merge.
+**Branch/PR:** PR #6 is open at `https://github.com/Marguelgtz/nexus-med/pull/6`. Base: `feat/nx-expansion-complete`; head: `docs/o006-clinical-workflow-ux`. The PR is documentation-only and must remain unmerged pending owner review.
 
 ## 4. Most recent completed objective — O-005
 
