@@ -80,6 +80,7 @@ function EncounterContextActions({
   editing: boolean;
 }) {
   const router = useRouter();
+  const [savedDocumentMessage, setSavedDocumentMessage] = useState<string | null>(null);
   const returnTo = `/patients/${patient.id}/consultas/${encounter.id}`;
   const followUpQuery = new URLSearchParams({ returnTo }).toString();
 
@@ -90,14 +91,15 @@ function EncounterContextActions({
         {appointment ? <EncounterAppointmentHandoff appointment={appointment} encounter={encounter} /> : null}
         <section className="card consultation-actions-card" aria-labelledby="encounter-actions-title">
           <h2 id="encounter-actions-title">Acciones de esta consulta</h2>
+          {savedDocumentMessage ? <p className="notice" role="status">{savedDocumentMessage}</p> : null}
           {editing ? (
             <p className="field-hint">Guarda o cancela la edición de la consulta antes de crear un documento.</p>
           ) : (
             <>
-              <button type="button" className="btn btn-secondary" disabled={documentKind !== null} onClick={() => onDocumentKindChange('prescription')}>
+              <button type="button" className="btn btn-secondary" disabled={documentKind !== null} onClick={() => { setSavedDocumentMessage(null); onDocumentKindChange('prescription'); }}>
                 Nueva receta
               </button>
-              <button type="button" className="btn btn-secondary" disabled={documentKind !== null} onClick={() => onDocumentKindChange('report')}>
+              <button type="button" className="btn btn-secondary" disabled={documentKind !== null} onClick={() => { setSavedDocumentMessage(null); onDocumentKindChange('report'); }}>
                 Nuevo informe
               </button>
               {documentKind === null ? (
@@ -123,6 +125,7 @@ function EncounterContextActions({
             encounters={encounters}
             initialEncounterId={encounter.id}
             onSaved={() => {
+              setSavedDocumentMessage(documentKind === 'prescription' ? 'Receta guardada.' : 'Informe guardado.');
               onDocumentKindChange(null);
               router.refresh();
             }}

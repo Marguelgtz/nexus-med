@@ -8,6 +8,16 @@
 
 ---
 
+## O-006 follow-up review — 2026-11-09
+
+**Review branch:** `feat/o006-clinical-workflows`, PR #7 (base `docs/o006-clinical-workflow-ux`). A follow-up commit addresses three code-review gaps: (1) reset the study-review saving flag after a successful status update, (2) protect unsaved patient/encounter study requests from Cancel and in-app navigation, and (3) embed the existing doctor-authored prescription/report form beneath the saved encounter without a route change. The inline document editor retains explicit save, validated encounter association, cancel confirmation, and success feedback.
+
+**Focused regression coverage:** `apps/web/test/study-draft.test.ts` checks untouched form, typed/whitespace values, category, encounter association, and additional blank rows. This review made **no API, schema, migration, or clinical status changes**.
+
+**Verification boundary:** The GitHub connector was used for a static source review and commit; no local repository checkout, dependency install, compiler, browser, or test runner was available to execute post-change checks. The previously recorded O-006 112 API / 32 web passes predate these follow-up commits. Before merge, run `npm run test -w apps/web`, `npm run test -w apps/api`, `npm run typecheck`, `npm run lint`, `npm run build -w apps/web` and browser scenarios listed in `TESTING.md`. Treat this follow-up as **implemented, awaiting post-change runtime verification**, not newly test-verified.
+
+---
+
 ## 1. Purpose and operating model
 
 This is the active execution plan. Update it continuously as work progresses: current objective, ordered sub-objectives, actual progress, dependencies, blockers, verification evidence, branch/PR state, and the next action.

@@ -1,5 +1,18 @@
 # Testing and Verification
 
+## O-006 follow-up acceptance checks (post-review commits, not yet rerun)
+
+The following are required before merging PR #7. They were added after the original 112/112 API and 32/32 web test report; do not treat those earlier results as verification of this follow-up.
+
+1. Run `npm run test -w apps/web` and verify `study-draft.test.ts` passes (blank, typed, whitespace, category, encounter association, added row).
+2. Run `npm run test -w apps/api`, `npm run typecheck`, `npm run lint`, and `npm run build -w apps/web`. Check for regressions.
+3. Patient-level and saved-encounter study forms: start typing, choose Cancel and reject the confirmation; verify all input persists. Confirm closing intentionally discards. Verify the form cannot be silently closed from its header while dirty.
+4. In a saved encounter, mark a study `Completada`, then `Revisada` **without leaving the page**. Verify neither saving flag sticks; requests persist and reviewed work disappears from pending lists.
+5. From a saved encounter, create a prescription and a report in the **embedded** form. Verify patient and encounter association, saved-success message, cancellation with unsaved text, repeated prescription lines, and that the encounter remains visible. Check mobile viewport at 390px.
+6. Regression-check the existing standalone prescription/report routes, browser print output, in-place encounter editing, follow-up return navigation, and study creation/review flows. Do not use real patient data.
+
+**Status:** Source changes are committed to PR #7. No post-change test or browser execution was possible through the available GitHub connection; the above is the remaining verification gate.
+
 ## Current verification setup
 
 Latest integrated O-006 verification (2026-11-09): API 112/112; web 32/32; workspace TypeScript typecheck; ESLint; production build; fresh and repeated local startup; and headless Chrome checks of the primary O-006 journeys. A seeded temporary SQLite database preserved both existing study rows, including patient/encounter associations, statuses, result notes, IDs, and timestamps through the table rebuild; foreign-key and index checks passed. The regular local database then applied the new migration and seed created no records; `/health` and `/patients` returned 200. PR #7 is open on `feat/o006-clinical-workflows`, stacked on PR #6.
