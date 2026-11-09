@@ -351,3 +351,11 @@ Add the next entry when O-001 reaches a meaningful verified milestone, such as t
 **Impact:** O-006 implementation and integrated verification are complete; no further implementation work is required before owner review.
 
 **References:** PR #6, PR #7, `TASKS.md` §7, `ACTION_PLAN.md` §3, `TESTING.md`, `WORKFLOWS.md` §15, `DECISIONS.md` D-033…D-039 and Q-O006-01…08.
+
+## 2026-11-09 — O-007 visual investigation and code-first handoff
+
+**Scope:** Research only against O-006 `30eafd1`, including follow-up fixes discovered on the remote after the local checkout proved two commits behind. The owner set the sequence: current investigation → separate code-first UI v0 → later Figma exploration → implementation of approved Figma designs.
+
+**Verified findings:** Isolated exact-fixture Chromium inspection at desktop/tablet/mobile and 768px identified displaced/clipped month geometry, overflowing timeline reasons, malformed study-entry rows, unequal week sizing and deficient contrast pairs. `UI_AUDIT.md` separates verified defects, inconsistencies, usability hypotheses and aesthetic preferences; `UI_RESEARCH.md` compares primary public references without selecting a visual direction. Evidence includes 87 inventoried screenshots. The isolated database retains the original 7/9/9/2/2 fixture counts; busy/error examples were simulated without writes.
+
+**Boundary:** O-006 clinical workflows, unknown-versus-negative data, explicit saves, study associations/status semantics, appointment handoff and embedded documents remain the baseline. No application source, dependencies, contracts, schema, accepted UI specification or decision register was changed. No Figma connection, design system, mockups, wireframes or UI v0 implementation was produced. Research is published for review separately from the O-006 implementation; no merge is authorized by this mission.

@@ -66,6 +66,22 @@ See `DECISIONS.md` and `ARCHITECTURE.md` for details.
 | Expansion (NX-001…NX-004) | Complete on `feat/nx-expansion-complete` | All four vertical slices browser-verified; complete automated quality gate is green; implementation committed through `e2d6590` |
 | O-006 implementation | Complete; owner review pending | PR #7 is open against PR #6's latest documentation head; API/web tests, workspace checks, isolated startup, and Chrome journey checks pass; Q-O006-01…08 remain open where clinical meaning needs validation |
 
+## 3a. Current objective — O-007 UI research and visual investigation
+
+**Outcome:** Evidence-backed presentation audit and reference research against the latest O-006, before code-first UI v0, later Figma exploration, and eventual implementation of approved Figma designs. This mission authorizes research only.
+
+**Scope/exclusions:** Rendered layouts, responsiveness, consistency, accessibility, styling architecture, public interface references and preserved workflow strengths. No application/CSS/API/contracts/schema/dependency changes, design system, wireframes, mockups, Figma access, or UI v0 implementation.
+
+**Completed sequence:** (1) Reviewed source/docs and checked remote freshness; local `99b0d7c` lacked follow-ups `9811192` and `30eafd1`, so fast-forwarded this research branch. (2) Launched an isolated exact-fixture runtime at `30eafd1`; inspected desktop/tablet/mobile, intermediate widths, interactive states and references. (3) Captured and visually inspected 87 images; documented classified/prioritized findings, constraints, strengths and readiness assessment in `UI_AUDIT.md`, with primary-source comparisons in `UI_RESEARCH.md`.
+
+**Dependencies/verification:** Separate detached runtime/worktree and SQLite DB; all five migrations applied, seed counts 7/9/9/2/2. Browser requests were forwarded to the isolated API to accommodate fixed default-port CORS. Required viewports 1440×900, 1024×768 and 390×844, plus 768px and exploratory body-text scaling. Saving/error captures use controlled delayed HTTP 500 without persistence. Screenshot inventory/file matching, local links, PNG readability, documentation scope and `git diff --check` are checked before publication. No application test suite/build rerun is warranted for documentation/images only; prior O-006 gates remain historical evidence.
+
+**Findings:** P0 month geometry/clipping, overflowing timeline reasons, malformed study-entry grid. P1 includes week sizing, low-contrast secondary/banner text, inconsistent controls and mobile/context density. Preferences about dated aesthetics remain P2. Preserve O-006 clinical workflows and open clinical questions. Assessment is a research handoff, not an approved design or implementation plan.
+
+**Branch/commits:** `docs/ui-v0-readiness-research`, directly based on `feat/o006-clinical-workflows` at `30eafd1`. Evidence committed as `7c3d61a`; audit/research and handoff follow separately. Documentation-only PR targets `feat/o006-clinical-workflows`; publication pending. No merge authorized or performed.
+
+**Next action:** Publish the research PR after documentation verification, then stop. UI v0 remains the next separate mission; Figma is later and was not connected.
+
 ## 3. Most recent objective — O-006 full clinical workflow and UX implementation — COMPLETE
 
 **Outcome:** Delivered the owner-authorized O-006 experience end to end through Next.js, Hono, shared contracts, Prisma/SQLite, tests, synthetic data, and synchronized documentation. PR #6 is the design/documentation parent; PR #7 contains the implementation. Both remain open and unmerged for owner review.
@@ -233,7 +249,7 @@ Do not allow future Cloudflare/D1 transaction constraints, Google authentication
 
 ## 7. Next action
 
-Review PR #7 for the O-006 implementation and resolve owner/physician feedback. Keep PRs #6 and #7 unmerged until review is complete; preserve the open clinical questions in `DECISIONS.md`.
+Review the O-007 research handoff in `UI_AUDIT.md` / `UI_RESEARCH.md` and its documentation-only PR. Decide the scope of the separate code-first UI v0 mission before implementation; preserve clinical workflows and keep Figma exploration for after a working v0. PR #7's O-006 review remains independent; PRs #6/#7 and the research PR are not merged by this mission.
 
 ## 8. Living update rules
 
