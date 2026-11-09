@@ -70,8 +70,8 @@ See `DECISIONS.md` and `ARCHITECTURE.md` for details.
 | O-001–O-004 patient and encounter workflows | Implemented; prior verification recorded | Preserve these flows and rerun regression checks with the expansion integrated. |
 | NX-001 appointment schema/API/forms/seed | Implemented and browser-verified | Created, edited, cancelled, reprogrammed, completed with 35-minute actual duration, linked to a same-patient consultation, and visible in patient history. API regression now maps duplicate consultation links to a 409 conflict and preserves the appointment on failed completion. |
 | NX-001 calendar layout and date handling | Implemented and browser-verified | Day grid is 48 px/hour with 16 rows; out-of-window starts appear below; week view shows three chips plus overflow; invalid `fecha` returns route-level 404; month grid links to the appointment. |
-| NX-002 encounter type persistence/edit/detail | Implemented; API suite passes | Browser verification still needs creating and editing a non-default type and checking detail/timeline presentation. |
-| NX-002 timeline default badge | Corrected and browser-verified | Timeline omits `Consulta`; focused presentation test covers all four type values. |
+| NX-002 encounter type persistence/edit/detail | Implemented and browser-verified | Created a `procedimiento` encounter, edited it through `urgencia` to `visita_domicilio`, and confirmed the saved type in detail and the patient timeline. The edit now exits edit mode after saving. |
+| NX-002 timeline default badge | Implemented and browser-verified | Timeline shows non-default types and omits `Consulta`; detail retains its type badge. The new-form `beforeunload` guard now treats a changed type as dirty. |
 | NX-002 surgical/procedure lifecycle | Explicitly deferred | Do not add a dedicated lifecycle without separate approval (D-025/Q-NX-01 and this mission). |
 | NX-003 schema/migration/contracts/encounter-form/detail/fixtures | Implemented; API suite and clean first-run verified | Browser verification and endpoint additions remain. API suite now includes and passes study transition/association/seed cases. |
 | NX-003 pending overview status | Conflicting acceptance | `TASKS.md` says `ordered` and `completed` remain pending until `reviewed`; UI spec/code currently show only `ordered`. Adopt the task acceptance and update UI behavior/spec/API documentation. |
@@ -92,7 +92,7 @@ See `DECISIONS.md` and `ARCHITECTURE.md` for details.
 
 **Dependency:** O-001–O-004 foundation (complete). **Exit condition per slice:** mission acceptance criteria met; docs reconciled in the same change; demo flow verified end-to-end. Expansion phase is defined in `TASKS.md` §6 (2026-11-08).
 
-**Verification completed so far (2026-11-08):** The latest appointment API suite passes 25/25, including duplicate-encounter conflict/rollback cases; workspace typecheck passes. Browser checks verified appointment creation, edit, cancel, reprogram, completion with actual duration and same-patient encounter link, patient history, and November month-grid links. Calendar checks verified 48 px/hour with 16 rows, the 06:00–22:00 boundary and separate outside-hours list, three weekly chips with overflow, invalid-date 404, root 307 redirect, and omission of default `Consulta` timeline badges. A fresh temporary SQLite database completed `npm run dev` migration + explicit seed (7 patients, 9 encounters, 9 appointments, 2 studies). The previous full API/web/lint/build checks predate the latest edge-case fix and will be rerun for the integrated exit suite. NX-002 non-default type editing/detail, NX-003 mutations/status filters, and NX-004 remain.
+**Verification completed so far (2026-11-08):** Full API integration tests pass 91/91, web tests pass 32/32, workspace typecheck and Next.js production build pass; ESLint exits 0 with its existing missing-`pages` directory warning. Browser checks verified appointment create/edit/cancel/reprogram/complete, same-patient consultation linking, patient history, all calendar views, layout/date boundaries, and invalid-date 404. Encounter browser checks verified the four selector values, new non-default type, repeated type edits, detail/timeline badges, default timeline badge omission, and unsaved-change protection when only type changes. A fresh temporary SQLite database completed migration + explicit seed (7 patients, 9 encounters, 9 appointments, 2 studies); repeated startup created zero additional records. NX-001 is committed as `16a0f1f` (safe startup) and `147efd6` (appointments/calendar); NX-002 implementation is verified and ready for its own commit. NX-003 mutations/status filters and NX-004 remain.
 
 ### O-001 — Establish a solid database and API foundation
 
@@ -196,11 +196,10 @@ Do not allow future Cloudflare/D1 transaction constraints, Google authentication
 
 ## 6. Next action
 
-1. Run full API/web test suites for the completed NX-001 changes; commit the verified calendar/runtime and appointment fixes.
-2. Verify NX-002 type creation/edit/detail and commit that slice separately.
-3. Complete NX-003 endpoint, pending-status, migration, seed, and browser behavior.
-4. Implement and verify NX-004 from schema/API through patient overview and print.
-5. Run the integrated O-005 exit suite, reconcile docs, push/open a dependent feature PR if useful, and leave it unmerged without owner authorization.
+1. Commit the verified NX-002 form, edit, detail, and timeline changes separately.
+2. Complete NX-003 endpoint, pending-status, migration, seed, and browser behavior.
+3. Implement and verify NX-004 from schema/API through patient overview and print.
+4. Run the integrated O-005 exit suite, reconcile docs/history, push/open a dependent feature PR if useful, and leave it unmerged without owner authorization.
 
 This documentation-only PR performs no application changes or test executions.
 

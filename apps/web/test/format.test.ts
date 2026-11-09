@@ -14,6 +14,7 @@ import {
   monthGrid,
   practiceToday,
   sameMonth,
+  shouldShowEncounterTypeBadge,
   startOfWeek,
   wasEdited,
   weekDays,
@@ -112,6 +113,15 @@ describe('PRACTICE_TIMEZONE', () => {
   it('is a valid IANA zone (single source of truth)', () => {
     expect(() => new Intl.DateTimeFormat('es-MX', { timeZone: PRACTICE_TIMEZONE })).not.toThrow();
     expect(PRACTICE_TIMEZONE).toBe('America/Monterrey');
+  });
+});
+
+describe('encounter type timeline badge (UI_SPEC §7.2)', () => {
+  it('keeps the default consulta type implicit and labels other encounter types', () => {
+    expect(shouldShowEncounterTypeBadge('consulta')).toBe(false);
+    expect(shouldShowEncounterTypeBadge('procedimiento')).toBe(true);
+    expect(shouldShowEncounterTypeBadge('visita_domicilio')).toBe(true);
+    expect(shouldShowEncounterTypeBadge('urgencia')).toBe(true);
   });
 });
 

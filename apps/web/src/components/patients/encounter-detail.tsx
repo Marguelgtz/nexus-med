@@ -136,6 +136,8 @@ export function EncounterDetail({
       await updateEncounter(encounter.id, candidate);
       // SSR re-render shows the updated note and, when the time differs,
       // the `Editada` badge.
+      setEditing(false);
+      setSaving(false);
       router.refresh();
     } catch (err) {
       if (err instanceof ApiError && Object.keys(err.fieldErrors).length > 0) {
@@ -190,7 +192,7 @@ export function EncounterDetail({
       >
         <div className="card">
           <div className="field">
-            <label htmlFor="edit-type">Tipo de consulta</label>
+            <label htmlFor="edit-type">Tipo de atención</label>
             <select
               id="edit-type"
               name="type"

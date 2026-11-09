@@ -278,6 +278,11 @@ export const APPOINTMENT_TYPE_LABELS: Record<string, string> = {
  * so the labels are shared, not duplicated. */
 export const ENCOUNTER_TYPE_LABELS: Record<string, string> = APPOINTMENT_TYPE_LABELS;
 
+/** Default consultations stay visually quiet in the patient timeline (U-12). */
+export function shouldShowEncounterTypeBadge(type: string): boolean {
+  return type !== 'consulta';
+}
+
 export const APPOINTMENT_STATUS_LABELS: Record<string, string> = {
   scheduled: 'Programada',
   completed: 'Completada',

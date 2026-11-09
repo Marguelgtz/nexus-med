@@ -103,6 +103,7 @@ export function ConsultationForm({ patientId }: { patientId: string }) {
   const dirty =
     Object.values(values).some((v) => v.trim() !== '') ||
     occurredAt !== initialOccurredAt ||
+    type !== 'consulta' ||
     studies.length > 0;
   useBeforeUnloadGuard(dirty);
 
@@ -220,7 +221,7 @@ export function ConsultationForm({ patientId }: { patientId: string }) {
         </div>
 
         <div className="field">
-          <label htmlFor="encounterType">Tipo de consulta</label>
+          <label htmlFor="encounterType">Tipo de atención</label>
           <select
             id="encounterType"
             name="type"
