@@ -1,7 +1,7 @@
 # O-006 — Proposed clinical workflow and UX redesign
 
 **Status: PROPOSED FOR OWNER/DOCTOR REVIEW — NOT APPROVED OR IMPLEMENTED.**  
-**Based on:** \`docs/UX_AUDIT.md\` and \`feat/nx-expansion-complete\` at \`1309b513\`.  
+**Based on:** `docs/UX_AUDIT.md` and `feat/nx-expansion-complete` at `1309b513`.  
 **Scope:** One doctor; optional administrative handoffs conceptually; local/offline synthetic-data prototype. This is a UX/workflow proposal, not a request to build authentication, roles, AI, external integrations, or deployment.
 
 ## 1. Design goals
@@ -51,7 +51,7 @@ From consultation actions, open doctor-authored prescription/report or follow-up
 
 ## 4. Proposed consultation workspace
 
-\`\`\`text
+```text
 [Paciente / nombre / edad / contexto]     [Estado de la nota]
 [Consulta · motivo · fecha]               [Guardar / Continuar]
 
@@ -64,7 +64,7 @@ From consultation actions, open doctor-authored prescription/report or follow-up
 ├────────────────────────────┴───────────────────────────┤
 │ Acciones: Estudio · Receta · Informe · Cita futura     │
 └────────────────────────────────────────────────────────┘
-\`\`\`
+```
 
 This is a **low-fidelity conceptual layout**, not a pixel specification. On narrow screens, collapse context into an accessible section rather than burying it behind unrelated routes. Prefer modest progressive disclosure, good keyboard flow and meaningful focus order.
 
@@ -72,19 +72,19 @@ This is a **low-fidelity conceptual layout**, not a pixel specification. On narr
 
 ## 5. Proposed study-domain direction
 
-**Current:** \`StudyRequest.patientId\` plus required immutable \`encounterId\`; \`ordered → completed → reviewed\`. The API supports appending studies to an existing encounter; the patient overview shows \`ordered\`/\`completed\` as pending.
+**Current:** `StudyRequest.patientId` plus required immutable `encounterId`; `ordered → completed → reviewed`. The API supports appending studies to an existing encounter; the patient overview shows `ordered`/`completed` as pending.
 
 **Candidate:** Patient is always required; originating encounter becomes optional, with optional linkage to an appointment (and procedure only if such an object is separately approved). Study requests should keep traceable creation and physician review information.
 
-**Potential migration:** preserve all existing \`patientId\` and \`encounterId\` values; only relax constraints after a confirmed association model and API contract. Explicitly test historical queries, pending lists and the patient summary.
+**Potential migration:** preserve all existing `patientId` and `encounterId` values; only relax constraints after a confirmed association model and API contract. Explicitly test historical queries, pending lists and the patient summary.
 
 **Status vocabulary to validate:**
-- \`Solicitado\` — clinician has ordered an examination.
-- \`Realizado\` (optional) — examination happened but results may not yet be accessible.
-- \`Resultado disponible\` — report is available to the doctor.
-- \`Revisado\` — physician has examined the available result.
+- `Solicitado` — clinician has ordered an examination.
+- `Realizado` (optional) — examination happened but results may not yet be accessible.
+- `Resultado disponible` — report is available to the doctor.
+- `Revisado` — physician has examined the available result.
 
-These are candidate **clinical events, not approved schema enums**. In particular, the existing \`completed\` state must not be remapped without deciding what it previously meant. The doctor may receive a result directly; avoid forced multi-click transitions. Define how missing/cancelled/incorrect orders are handled before introducing any new terminal state.
+These are candidate **clinical events, not approved schema enums**. In particular, the existing `completed` state must not be remapped without deciding what it previously meant. The doctor may receive a result directly; avoid forced multi-click transitions. Define how missing/cancelled/incorrect orders are handled before introducing any new terminal state.
 
 ## 6. Design acceptance scenarios (proposals)
 
@@ -111,10 +111,10 @@ Each implementation slice should carry explicit acceptance criteria and preserve
 
 ## 8. Document governance
 
-- \`docs/UX_AUDIT.md\`: observations and evidence.
+- `docs/UX_AUDIT.md`: observations and evidence.
 - This file: **non-authoritative design proposal** until approved.
-- \`docs/DECISIONS.md\`: proposals remain proposed; approval must be explicit.
-- \`docs/PRODUCT.md\`, \`WORKFLOWS.md\`, \`UI_SPEC.md\`, \`DATA_MODEL.md\`, \`API_CONTRACT.md\`, \`TASKS.md\`: keep O-005 behavior authoritative; revise normative specs only after O-006 scope decisions.
-- \`docs/ACTION_PLAN.md\`: can track review work, but should never mark proposed features as implemented.
+- `docs/DECISIONS.md`: proposals remain proposed; approval must be explicit.
+- `docs/PRODUCT.md`, `WORKFLOWS.md`, `UI_SPEC.md`, `DATA_MODEL.md`, `API_CONTRACT.md`, `TASKS.md`: keep O-005 behavior authoritative; revise normative specs only after O-006 scope decisions.
+- `docs/ACTION_PLAN.md`: can track review work, but should never mark proposed features as implemented.
 
 **No application code should be changed solely on the authority of this document.**
