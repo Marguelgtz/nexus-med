@@ -39,6 +39,16 @@ Use `Confirmed`, `Proposed`, `Open`, or `Superseded`. Record the date and ration
 | D-031 | **Conservative scope decision (proposal, not owner-approved):** for this mission the `Encounter.type`/`Appointment.type` fields are sufficient for surgical follow-through — no separate surgery/procedure record, no recommended/scheduled/performed/cancelled state machine, no OR/team/anesthesia concepts are built. | Owner mission brief (2026-11-08) sets this as the default to unblock NX-002 and later slices; the concrete question remains Q-NX-01 and is revisited only after the doctor validates a real need. Replaces no clinical workflow; it defines what is deliberately NOT built now (see D-025). |
 | D-032 | Patient overview treats `ordered` and `completed` study requests as pending until they are `reviewed`; each row shows its current status. | Explicit NX-003 phase acceptance in `TASKS.md` resolves the narrower “ordered only” wording in the original UI spec. The study lifecycle and doctor review remain visible without interpreting results. |
 
+## Proposed O-006 UX decisions (not confirmed)
+
+- **P-UX-01:** Evaluate a consultation workspace combining the editable note with immediately accessible patient history and clinical context.
+- **P-UX-02:** Evaluate patient-owned study requests that can be initiated without an encounter, while retaining existing encounter links and auditability. The current endpoint only appends to existing encounters.
+- **P-UX-03:** Validate the meaning of `completed` against `performed` and `result available` before changing any study status or schema.
+- **P-UX-04:** Evaluate explicit appointment-to-consultation handoff and contextual prescription/report actions; do not silently complete appointments.
+- **P-UX-05:** Evaluate draft/partial-save semantics based on physician interruption patterns before implementing autosave.
+
+These are **design proposals only**. Owner/doctor review is required before updating confirmed decisions, the canonical UX spec, API/data contracts, or implementation tasks. See `UX_AUDIT.md` / `UX_REDESIGN.md`.
+
 ## Proposed implementation details
 
 | ID | Proposal | Rationale |
@@ -65,6 +75,16 @@ Use `Confirmed`, `Proposed`, `Open`, or `Superseded`. Record the date and ration
 - O-007: Confirm exact required patient demographic and encounter fields with the doctor.
 - Q-NX-01 (surgical follow-through, NX-002): Does the doctor want an explicit procedure record with its own status (recommended / scheduled / performed / cancelled) and links to the eventual appointment/encounter, beyond free-text plan + appointment type? If yes, design the minimal record before building — do not invent OR/team/anesthesia concepts (D-025).
 - Q-NX-02 (study categories, NX-003): Confirm the fixed category list with the doctor (proposed: `Laboratorio`, `Imagenología`, `Rayos X`, `ECG`, `Ecografía`, `Otro` + free-text description).
+- Q-O006-01: Should a study be orderable for a patient without an encounter? If so, what minimum reason/source and order-time information must be recorded, and can a later encounter link be added?
+- Q-O006-02: What does the existing study state `completed` mean in clinical practice: performed, result available, or both? Is direct `ordered → reviewed` valid?
+- Q-O006-03: How are results received and documented in this local prototype without uploads/integrations? When may a doctor-authored result note be edited, and is a separate review timestamp required?
+- Q-O006-04: How should an erroneous or cancelled study request be represented under the current no-delete rule?
+- Q-O006-05: Should appointment completion and encounter linkage happen together, separately, or during encounter save? Can an attended appointment be completed without an encounter note?
+- Q-O006-06: Are persisted encounter drafts needed? If so, what does a draft mean, who can see it, and how is it distinguished from an ordinary saved/edited encounter? Autosave is not assumed.
+- Q-O006-07: Should a study link to a scheduled appointment, and can its encounter association be added or changed later?
+- Q-O006-08: Which preparation tasks are clinically useful before a procedure, and which tasks could a secretary prepare versus doctor-only? No staff role or procedure lifecycle is authorized by this question.
+
+The Q-O006 items are open questions for design review. The recommendations in `UX_REDESIGN.md` and proposals P-UX-01…P-UX-05 above do not change accepted decisions or authorize application work.
 
 ## Superseded decisions
 

@@ -49,6 +49,10 @@ The agreed development order is **database/API foundation → UX/UI design → p
 
 **Exit condition:** All four slices implemented and integrated-tested with documented seed/persistence behavior; accepted contract, workflow, and UX docs reconciled to their verified final state; no deferred cloud/auth/upload work added.
 
+## Potential O-006 — Clinical workflow / UX review (proposal, not approved implementation scope)
+
+**Next proposed design activity:** evaluate consultation workspace, patient context, independent study ordering, study-status meanings, appointment-to-consultation handoff, and contextual prescriptions/follow-up. Findings and candidate flows are in `UX_AUDIT.md` and `UX_REDESIGN.md`. Preserve O-005 accepted behavior until owner/doctor validation; no implementation objective or API/data-model change is approved by these drafts.
+
 ## Deferred — not part of the prototype
 
 - File storage, uploads, document file management, and R2 (distinct from approved NX-004 printable records).

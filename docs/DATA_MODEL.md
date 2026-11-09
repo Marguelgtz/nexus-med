@@ -62,7 +62,7 @@ The SQLite database lives in `.local/data/medical.db`; the development orchestra
 
 ## 5. Current synthetic dataset
 
-`docs/demo-dataset.json` and `prisma/seed.ts` define seven patients (six active), nine encounters, four fixed historic appointments, five upcoming first-seed-anchored appointments, and two study requests. Seeding is create-if-missing and preserves user edits. The study seed requires independent verification before NX-003 is declared complete. See `DEMO_DATA.md` and `TESTING.md`.
+`docs/demo-dataset.json` and `prisma/seed.ts` define seven patients (six active), nine encounters, four fixed historic appointments, five upcoming first-seed-anchored appointments, two study requests, and two medical documents. Clean migration/seed, repeat startup, idempotency and preservation of edited document content were reported verified at the O-005 exit. See `DEMO_DATA.md` and `TESTING.md` for evidence.
 
 ## 6. Medical documents
 
@@ -70,4 +70,4 @@ The SQLite database lives in `.local/data/medical.db`; the development orchestra
 
 This is separate from excluded file uploads and R2 storage. User/account/session, clinic/organization, and billing models remain excluded. The browser forms, detail/edit workflow, patient overview, and CSS print presentation are implemented and browser-verified.
 
-Open questions: procedure lifecycle (Q-NX-01); study-category validation (Q-NX-02); independent study-order workflow not implemented; future Cloudflare D1 transaction guarantees and SSR adapter selection remain deployment decisions.
+Open questions: procedure lifecycle (Q-NX-01); study-category validation (Q-NX-02); **patient-level study ordering without any encounter** not implemented (current API can add to an *existing* encounter); future Cloudflare D1 transaction guarantees and SSR adapter selection remain deployment decisions. See `UX_AUDIT.md` and `UX_REDESIGN.md` for non-approved workflow proposals.

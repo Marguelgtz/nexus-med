@@ -197,7 +197,7 @@ At a phase boundary, reconcile the work packages for the next phase using actual
 
 **Objective O-005:** Extend the working local product with four ordered vertical slices — appointments + basic calendar (NX-001), encounter types (NX-002), study-request follow-up (NX-003), printable prescriptions/reports (NX-004) — each verified end-to-end before the next (D-023). Owner mission brief 2026-11-07/08.
 
-**Phase status:** In progress since 2026-11-07 in a stacked PR sequence beginning at `feat/api-foundation` and extending through `feat/studies-web` (2026-11-08). This document remains the stable scope/acceptance definition; see `ACTION_PLAN.md` for current verified, unverified and still-missing work.
+**Phase status:** Completed and integrated-verified 2026-11-08 on `feat/nx-expansion-complete` (as documented in `ACTION_PLAN.md` / `TESTING.md`); the prior feature PR stack remains unmerged. This section retains its accepted phase-level requirements and acceptance criteria. Proposed post-O-005 UX work is not an approved new implementation phase.
 
 ### Work packages
 
