@@ -47,7 +47,7 @@ All three child entities belong to a patient. The API validates same-patient app
 
 ## 3. Database indexes and constraints
 
-Current schema indexes: `Patient(fullName)`; `Encounter(patientId, occurredAt DESC)`; `Appointment(startAt)`, `Appointment(patientId, startAt)`; `StudyRequest(patientId, status)`, `StudyRequest(encounterId)`. The model does not impose uniqueness on patient names, phone or email.
+Current schema indexes: `Patient(fullName)`; `Encounter(patientId, occurredAt DESC)`; `Appointment(startAt)`, `Appointment(patientId, startAt)`; `StudyRequest(patientId, status)`, `StudyRequest(encounterId)`; `MedicalDocument(patientId, createdAt DESC)`, `MedicalDocument(encounterId)`, `PrescriptionLine(documentId, position)`. The model does not impose uniqueness on patient names, phone or email.
 
 Date of birth uses date-only semantics. `occurredAt`, `startAt`, `createdAt`, and `updatedAt` are instants rendered using the practice timezone `America/Monterrey`.
 
@@ -56,6 +56,7 @@ Date of birth uses date-only semantics. `occurredAt`, `startAt`, `createdAt`, an
 - `20261107004038_init`: Patient + Encounter.
 - `20261107222417_expansion_appointments_encounter_type`: Appointment + encounter type.
 - `20261108180347_study_requests`: StudyRequest.
+- `20261108195000_medical_documents`: MedicalDocument + PrescriptionLine.
 
 The SQLite database lives in `.local/data/medical.db`; the development orchestrator generates Prisma client, deploys migrations and seeds.
 
@@ -63,8 +64,10 @@ The SQLite database lives in `.local/data/medical.db`; the development orchestra
 
 `docs/demo-dataset.json` and `prisma/seed.ts` define seven patients (six active), nine encounters, four fixed historic appointments, five upcoming first-seed-anchored appointments, and two study requests. Seeding is create-if-missing and preserves user edits. The study seed requires independent verification before NX-003 is declared complete. See `DEMO_DATA.md` and `TESTING.md`.
 
-## 6. Deferred or missing models
+## 6. Medical documents
 
-`MedicalDocument` and `PrescriptionLine` (NX-004 browser-printable reports and prescriptions) are approved but absent from the current code. This is distinct from excluded file uploads and R2 storage. User/account/session, clinic/organization, and billing models remain excluded.
+`MedicalDocument` belongs to one patient and may link to one of that patient's encounters. Its `kind` is validated as `prescription` or `report`; `title` is optional; `body` stores a report narrative or prescription general instructions. Prescription lines are ordered by `position` and store doctor-entered medication and optional free-text fields. Patient and encounter deletes are restricted; prescription lines cascade only if a document is removed at the database layer. The API exposes no delete endpoint. The API verifies that the linked encounter belongs to the same patient.
+
+This is separate from excluded file uploads and R2 storage. User/account/session, clinic/organization, and billing models remain excluded. The browser form and print workflow are still being implemented.
 
 Open questions: procedure lifecycle (Q-NX-01); study-category validation (Q-NX-02); independent study-order workflow not implemented; future Cloudflare D1 transaction guarantees and SSR adapter selection remain deployment decisions.

@@ -1,6 +1,6 @@
 # Architecture — Medical Platform MVP
 
-**Status:** Confirmed local architecture; NX-001…NX-003 implemented on `feat/nx-expansion-complete` as of 2026-11-08. Cloudflare remains future-only.
+**Status:** Confirmed local architecture; NX-001…NX-003 verified and NX-004 database/API foundation implemented on `feat/nx-expansion-complete` as of 2026-11-08. Cloudflare remains future-only.
 **Version:** 0.4  
 **Product:** Single-doctor medical practice platform  
 **Immediate target:** Fully local, offline-capable prototype using synthetic data  
@@ -12,10 +12,10 @@
 
 This implementation inventory complements the original architectural target tree below. The topology is unchanged: local Next.js + Hono, one Prisma/SQLite database, no Cloudflare runtime.
 
-- API domains: `apps/api/src/domains/appointments/` and `studies/`; `encounters/` also performs atomic study creation.
+- API domains: `apps/api/src/domains/appointments/`, `studies/`, and `documents/`; `encounters/` also performs atomic study creation.
 - Web: `apps/web/src/app/calendar/`, `apps/web/src/app/patients/[id]/citas/`, `apps/web/src/components/appointments/`, and study controls under `components/patients/` plus patient overview.
-- Shared contracts: `packages/contracts/src/appointments.ts`, `studies.ts`, `encounters.ts`.
-- Prisma schema models: `Patient`, `Encounter`, `Appointment`, `StudyRequest`; migration for studies exists. NX-004's `MedicalDocument` and `PrescriptionLine` are not yet implemented.
+- Shared contracts: `packages/contracts/src/appointments.ts`, `studies.ts`, `documents.ts`, `encounters.ts`.
+- Prisma schema models: `Patient`, `Encounter`, `Appointment`, `StudyRequest`, `MedicalDocument`, and `PrescriptionLine`; documents migration exists.
 
 ## 1. Architectural Decisions
 
@@ -265,7 +265,7 @@ When Cloudflare work is approved:
 
 ### Original O-001 API surface
 
-The table below reflects the initial foundation, **not** all current routes. NX-001 appointments and NX-003 study endpoints are present as documented in `API_CONTRACT.md` §11. NX-004 document routes remain absent; file storage is still excluded.
+The table below reflects the initial foundation, **not** all current routes. NX-001 appointments, NX-003 study endpoints, and NX-004 structured-document endpoints are present as documented in `API_CONTRACT.md` §11. File storage remains excluded.
 
 | Method | Route | Purpose |
 |---|---|---|
@@ -303,7 +303,7 @@ API domains live under `apps/api/src/domains/`:
 - `encounters`: clinical encounter creation, type, notes, timeline, and atomic creation of initial study requests.
 - `appointments`: scheduling, range/patient lists, state changes and encounter links (NX-001).
 - `studies`: patient/encounter lists and status/result-note changes (NX-003).
-- `documents`: approved NX-004 structured printable records **not yet implemented**; no file-storage domain.
+- `documents`: NX-004 structured prescription/report records and Hono operations; no file-storage domain.
 
 The API owns authoritative domain rules under `apps/api/src/domains/`. The frontend groups workflow UI under `apps/web/src/components/`; it must not duplicate authoritative rules. Shared request/response contracts belong to `packages/contracts/`.
 

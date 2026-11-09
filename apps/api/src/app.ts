@@ -9,6 +9,7 @@ import { cors } from 'hono/cors';
 
 import { appointmentsRoutes } from './domains/appointments/appointments.routes';
 import { encountersRoutes } from './domains/encounters/encounters.routes';
+import { documentsRoutes } from './domains/documents/documents.routes';
 import { patientsRoutes } from './domains/patients/patients.routes';
 import { studiesRoutes } from './domains/studies/studies.routes';
 import { healthRoutes } from './routes/health';
@@ -39,6 +40,7 @@ export function createApp(): Hono {
   app.route('/api', encountersRoutes);
   app.route('/api', appointmentsRoutes);
   app.route('/api', studiesRoutes);
+  app.route('/api', documentsRoutes);
 
   return app;
 }

@@ -1,6 +1,6 @@
 # API Contract — Medical Platform MVP
 
-**Status:** O-001 contract plus verified NX-001…NX-003 addendum (§11) on `feat/nx-expansion-complete` (2026-11-08); NX-004 remains unimplemented.
+**Status:** O-001 contract plus NX-001…NX-004 document API addenda (§11) on `feat/nx-expansion-complete` (2026-11-08); NX-004 web workflow remains in progress.
 **Owner:** Hono API (`apps/api`)  
 **Transport:** HTTP + JSON over local Node.js  
 **Audience:** Next.js frontend, API tests, future maintainers
@@ -17,7 +17,7 @@
 - Use consistent HTTP status codes and a consistent error envelope.
 - Use ISO-8601 strings for timestamps and `YYYY-MM-DD` for date-only values.
 - Keep IDs opaque to the frontend.
-- Do not add NX-004 document, authentication, billing, or other deferred endpoints. Appointments (NX-001) and study requests (NX-003) are now implemented.
+- Authentication, billing, uploads, and other deferred endpoints remain excluded. Appointments, study requests, and structured medical-document endpoints are implemented.
 - The contract is versioned with the application and tests. A URL `/v1` prefix is not necessary for this single internal prototype unless a concrete compatibility need appears.
 - This is a starting contract, not an immutable freeze. Revise it when real workflow requirements justify a change; update API tests and this document together.
 
@@ -228,4 +228,11 @@ Study responses include `patientId`, nested `encounter: {id, occurredAt, reason}
 
 ### NX-004: Printable documents
 
-`MedicalDocument`, `PrescriptionLine`, document endpoints and frontend print views are **absent**. They are approved but pending work in `TASKS.md` §6 / `UI_SPEC.md` §7.4, distinct from excluded upload/storage features.
+| Method | Route | Purpose |
+|---|---|---|
+| POST | `/api/patients/:patientId/documents` | Create a prescription or report for the patient |
+| GET | `/api/patients/:patientId/documents` | List the patient's documents, newest first |
+| GET | `/api/documents/:documentId` | Retrieve a document with patient and optional encounter context |
+| PATCH | `/api/documents/:documentId` | Replace editable document fields and prescription lines |
+
+Create/update bodies are discriminated by `kind`. A prescription contains optional `title`, optional `encounterId`, optional general `body`, and 1–50 `lines`; each line requires `medication`, with optional free-text dose, route, frequency, duration, and instructions. A report contains optional title and encounter plus required narrative `body`. An encounter link must belong to the same patient. The API derives the patient from the route for creation; updates cannot change the patient or document kind. Prescription-line replacement and document updates run atomically. There is no delete endpoint or file/PDF storage. Shared request/response schemas are in `packages/contracts/src/documents.ts`; print views remain in progress.

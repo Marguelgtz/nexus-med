@@ -14,7 +14,7 @@ datasource db {
 
 // One person receiving care. The stable center of the clinical record.
 model Patient {
-  id                 String      @id @default(uuid())
+  id                 String  @id @default(uuid())
   fullName           String
   // Date-only value stored as YYYY-MM-DD to avoid timezone shifts.
   dateOfBirth        String?
@@ -31,13 +31,14 @@ model Patient {
   currentMedications String?
 
   // Archiving keeps the record and its clinical history; never hard delete.
-  isArchived         Boolean     @default(false)
-  createdAt          DateTime    @default(now())
-  updatedAt          DateTime    @updatedAt
+  isArchived Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
-  encounters         Encounter[]
-  appointments       Appointment[]
-  studyRequests      StudyRequest[]
+  encounters       Encounter[]
+  appointments     Appointment[]
+  studyRequests    StudyRequest[]
+  medicalDocuments MedicalDocument[]
 
   @@index([fullName])
   @@map("patients")
@@ -71,9 +72,10 @@ model Encounter {
   // Appointments completed by linking to this encounter (at most one per
   // appointment; the link is the only relationship — the note is never
   // copied into the appointment).
-  linkedAppointments      Appointment[]
+  linkedAppointments Appointment[]
   // Study requests ordered during this consultation (UI_SPEC §7.3).
-  studyRequests           StudyRequest[]
+  studyRequests      StudyRequest[]
+  medicalDocuments   MedicalDocument[]
 
   @@index([patientId, occurredAt(sort: Desc)])
   @@map("encounters")
@@ -85,9 +87,9 @@ model Encounter {
 // (scheduled → completed | cancelled; cancelled → scheduled via
 // reschedule); `completed` is final.
 model Appointment {
-  id                    String   @id @default(uuid())
+  id                    String     @id @default(uuid())
   patientId             String
-  patient               Patient  @relation(fields: [patientId], references: [id], onDelete: Restrict)
+  patient               Patient    @relation(fields: [patientId], references: [id], onDelete: Restrict)
   // When the visit is (or was) planned to start.
   startAt               DateTime
   // Planned duration in minutes (5–480, validated at the API boundary).
@@ -97,14 +99,14 @@ model Appointment {
   // actual encounter type.
   type                  String
   // scheduled, completed, cancelled (validated at the API).
-  status                String   @default("scheduled")
+  status                String     @default("scheduled")
   // Set on completion; the doctor's record of how long it actually took.
   actualDurationMinutes Int?
   completedAt           DateTime?
-  linkedEncounterId     String?  @unique
+  linkedEncounterId     String?    @unique
   linkedEncounter       Encounter? @relation(fields: [linkedEncounterId], references: [id], onDelete: SetNull)
-  createdAt             DateTime @default(now())
-  updatedAt             DateTime @updatedAt
+  createdAt             DateTime   @default(now())
+  updatedAt             DateTime   @updatedAt
 
   @@index([startAt])
   @@index([patientId, startAt])
@@ -139,4 +141,40 @@ model StudyRequest {
   @@index([patientId, status])
   @@index([encounterId])
   @@map("study_requests")
+}
+
+// Doctor-authored structured documents; body is report narrative or general
+// prescription instructions. Files and generated clinical content are out of scope.
+model MedicalDocument {
+  id          String             @id @default(uuid())
+  patientId   String
+  patient     Patient            @relation(fields: [patientId], references: [id], onDelete: Restrict)
+  encounterId String?
+  encounter   Encounter?         @relation(fields: [encounterId], references: [id], onDelete: Restrict)
+  kind        String
+  title       String?
+  body        String?
+  lines       PrescriptionLine[]
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+
+  @@index([patientId, createdAt(sort: Desc)])
+  @@index([encounterId])
+  @@map("medical_documents")
+}
+
+model PrescriptionLine {
+  id           String          @id @default(uuid())
+  documentId   String
+  document     MedicalDocument @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  position     Int
+  medication   String
+  dose         String?
+  route        String?
+  frequency    String?
+  duration     String?
+  instructions String?
+
+  @@index([documentId, position])
+  @@map("prescription_lines")
 }
