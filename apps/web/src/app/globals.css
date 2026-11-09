@@ -718,6 +718,13 @@ a.timeline-item:hover {
   min-width: 0;
 }
 
+.consultation-related-form {
+  grid-column: 1 / -1;
+  min-width: 0;
+  width: 100%;
+  scroll-margin-top: var(--s-4);
+}
+
 .consultation-context-column {
   position: sticky;
   top: var(--s-4);

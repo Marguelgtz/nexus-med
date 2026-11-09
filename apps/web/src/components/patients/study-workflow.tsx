@@ -22,6 +22,8 @@ import {
 import { formatDateTime, STUDY_CATEGORY_LABELS } from '../../lib/format';
 import { StudyStatusBadge } from '../appointments/badges';
 import { ErrorBanner } from '../primitives';
+import { useBeforeUnloadGuard } from '../../lib/use-before-unload-guard';
+import { hasUnsavedStudyRequest } from '../../lib/study-draft';
 
 type StudyDraft = StudyInput;
 
@@ -42,6 +44,13 @@ function StudyCreatePanel({
   const [error, setError] = useState<string | null>(null);
   const [fieldError, setFieldError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const dirty = hasUnsavedStudyRequest(rows, selectedEncounterId, encounterId);
+  useBeforeUnloadGuard(dirty && !saving);
+
+  function cancel() {
+    if (dirty && !window.confirm('Hay una solicitud de estudios sin guardar. ¿Descartar los cambios?')) return;
+    onClose();
+  }
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -153,7 +162,7 @@ function StudyCreatePanel({
         <button type="submit" className="btn btn-primary" disabled={saving}>
           {saving ? 'Guardando…' : 'Guardar solicitud'}
         </button>
-        <button type="button" className="btn btn-ghost" onClick={onClose} disabled={saving}>
+        <button type="button" className="btn btn-ghost" onClick={cancel} disabled={saving}>
           Cancelar
         </button>
       </div>
@@ -183,6 +192,7 @@ function StudyReviewActions({ study }: { study: StudyRequest }) {
         ...(note.trim() ? { resultNote: note.trim() } : {}),
       });
       setTarget(null);
+      setSaving(false);
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'No se pudo actualizar el estudio.');
@@ -274,9 +284,13 @@ export function PatientStudyWorkflow({
     <section className="card" id="patient-studies" aria-labelledby="patient-studies-title">
       <div className="card-header">
         <h2 id="patient-studies-title">Estudios del paciente</h2>
-        <button type="button" className="btn btn-primary btn-sm" onClick={() => setShowCreate((show) => !show)}>
-          {showCreate ? 'Cerrar solicitud' : 'Solicitar estudio'}
-        </button>
+        {showCreate ? (
+          <span className="field-hint">Solicitud en curso. Usa Cancelar para cerrar.</span>
+        ) : (
+          <button type="button" className="btn btn-primary btn-sm" onClick={() => setShowCreate(true)}>
+            Solicitar estudio
+          </button>
+        )}
       </div>
       <p className="study-status-caveat">
         La app conserva el estado Completada de O-005. No registra por separado si el estudio se realizó o cuándo llegó el resultado.
@@ -313,9 +327,13 @@ export function EncounterStudyWorkflow({
     <section className="card" aria-labelledby="encounter-studies-title">
       <div className="card-header">
         <h2 id="encounter-studies-title">Estudios de esta consulta</h2>
-        <button type="button" className="btn btn-secondary btn-sm" onClick={() => setShowCreate((show) => !show)}>
-          {showCreate ? 'Cerrar' : 'Agregar estudio'}
-        </button>
+        {showCreate ? (
+          <span className="field-hint">Solicitud en curso. Usa Cancelar para cerrar.</span>
+        ) : (
+          <button type="button" className="btn btn-secondary btn-sm" onClick={() => setShowCreate(true)}>
+            Agregar estudio
+          </button>
+        )}
       </div>
       <p className="study-status-caveat">
         La app conserva el estado Completada de O-005. No registra por separado si el estudio se realizó o cuándo llegó el resultado.

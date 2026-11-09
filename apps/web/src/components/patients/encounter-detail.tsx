@@ -16,6 +16,7 @@ import {
   type EncounterDetail,
   type EncounterSummary,
   type EncounterType,
+  type MedicalDocumentKind,
   type PatientDetail,
   type StudyRequest,
   type UpdateEncounterInput,
@@ -33,6 +34,7 @@ import { useBeforeUnloadGuard } from '../../lib/use-before-unload-guard';
 import { ClinicalContext } from './clinical-context';
 import { EncounterStudyWorkflow } from './study-workflow';
 import { EncounterAppointmentHandoff } from '../appointments/encounter-handoff';
+import { MedicalDocumentForm } from '../documents/document-form';
 
 const SECTIONS: { key: keyof SectionValues; label: string; rows: number }[] = [
   { key: 'reason', label: 'Motivo de consulta', rows: 2 },
@@ -64,34 +66,71 @@ function EncounterContextActions({
   encounters,
   patientStudies,
   appointment,
+  documentKind,
+  onDocumentKindChange,
+  editing,
 }: {
   patient: PatientDetail;
   encounter: EncounterDetail;
   encounters: EncounterSummary[];
   patientStudies: StudyRequest[];
   appointment: Appointment | null;
+  documentKind: MedicalDocumentKind | null;
+  onDocumentKindChange: (kind: MedicalDocumentKind | null) => void;
+  editing: boolean;
 }) {
+  const router = useRouter();
   const returnTo = `/patients/${patient.id}/consultas/${encounter.id}`;
-  const documentQuery = new URLSearchParams({ encounterId: encounter.id, returnTo }).toString();
   const followUpQuery = new URLSearchParams({ returnTo }).toString();
 
   return (
-    <aside className="consultation-context-column">
-      <ClinicalContext patient={patient} encounters={encounters} studies={patientStudies} />
-      {appointment ? <EncounterAppointmentHandoff appointment={appointment} encounter={encounter} /> : null}
-      <section className="card consultation-actions-card" aria-labelledby="encounter-actions-title">
-        <h2 id="encounter-actions-title">Acciones de esta consulta</h2>
-        <Link className="btn btn-secondary" href={`/patients/${patient.id}/recetas/nueva?${documentQuery}`}>
-          Nueva receta
-        </Link>
-        <Link className="btn btn-secondary" href={`/patients/${patient.id}/informes/nueva?${documentQuery}`}>
-          Nuevo informe
-        </Link>
-        <Link className="btn btn-ghost" href={`/patients/${patient.id}/citas/nueva?${followUpQuery}`}>
-          Programar seguimiento
-        </Link>
-      </section>
-    </aside>
+    <>
+      <aside className="consultation-context-column">
+        <ClinicalContext patient={patient} encounters={encounters} studies={patientStudies} />
+        {appointment ? <EncounterAppointmentHandoff appointment={appointment} encounter={encounter} /> : null}
+        <section className="card consultation-actions-card" aria-labelledby="encounter-actions-title">
+          <h2 id="encounter-actions-title">Acciones de esta consulta</h2>
+          {editing ? (
+            <p className="field-hint">Guarda o cancela la edición de la consulta antes de crear un documento.</p>
+          ) : (
+            <>
+              <button type="button" className="btn btn-secondary" disabled={documentKind !== null} onClick={() => onDocumentKindChange('prescription')}>
+                Nueva receta
+              </button>
+              <button type="button" className="btn btn-secondary" disabled={documentKind !== null} onClick={() => onDocumentKindChange('report')}>
+                Nuevo informe
+              </button>
+              {documentKind === null ? (
+                <Link className="btn btn-ghost" href={`/patients/${patient.id}/citas/nueva?${followUpQuery}`}>
+                  Programar seguimiento
+                </Link>
+              ) : null}
+            </>
+          )}
+        </section>
+      </aside>
+      {!editing && documentKind ? (
+        <section className="consultation-related-form" aria-labelledby="related-document-title">
+          <div className="page-head">
+            <h2 id="related-document-title">
+              {documentKind === 'prescription' ? 'Nueva receta' : 'Nuevo informe'} — {patient.fullName}
+            </h2>
+          </div>
+          <MedicalDocumentForm
+            key={documentKind}
+            patientId={patient.id}
+            kind={documentKind}
+            encounters={encounters}
+            initialEncounterId={encounter.id}
+            onSaved={() => {
+              onDocumentKindChange(null);
+              router.refresh();
+            }}
+            onCancel={() => onDocumentKindChange(null)}
+          />
+        </section>
+      ) : null}
+    </>
   );
 }
 
@@ -129,6 +168,7 @@ export function EncounterDetail({
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [banner, setBanner] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [documentKind, setDocumentKind] = useState<MedicalDocumentKind | null>(null);
   const list = studies ?? [];
 
   const edited = wasEdited(encounter.createdAt, encounter.updatedAt);
@@ -271,6 +311,9 @@ export function EncounterDetail({
           encounters={encounters}
           patientStudies={patientStudies}
           appointment={appointment}
+          documentKind={documentKind}
+          onDocumentKindChange={setDocumentKind}
+          editing={true}
         />
       </div>
     );
@@ -310,7 +353,7 @@ export function EncounterDetail({
       {banner ? <ErrorBanner message={banner} /> : null}
 
       <div className="btn-row">
-        <button type="button" className="btn btn-secondary" onClick={startEditing}>
+        <button type="button" className="btn btn-secondary" disabled={documentKind !== null} onClick={startEditing}>
           Editar consulta
         </button>
       </div>
@@ -321,6 +364,9 @@ export function EncounterDetail({
         encounters={encounters}
         patientStudies={patientStudies}
         appointment={appointment}
+        documentKind={documentKind}
+        onDocumentKindChange={setDocumentKind}
+        editing={false}
       />
     </div>
   );

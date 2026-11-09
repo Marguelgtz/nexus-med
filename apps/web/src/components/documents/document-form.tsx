@@ -294,7 +294,16 @@ export function MedicalDocumentForm({
             {saving ? 'Guardando…' : initial ? 'Guardar cambios' : kind === 'prescription' ? 'Guardar receta' : 'Guardar informe'}
           </button>
           {onCancel ? (
-            <button type="button" className="btn btn-ghost" onClick={onCancel}>Cancelar edición</button>
+            <button
+              type="button"
+              className="btn btn-ghost"
+              disabled={saving}
+              onClick={() => {
+                if (!dirty || window.confirm('Hay un documento sin guardar. ¿Descartar los cambios?')) onCancel();
+              }}
+            >
+              Cancelar
+            </button>
           ) : (
             <Link href={returnTo ?? `/patients/${patientId}`} className="btn btn-ghost">Cancelar</Link>
           )}
