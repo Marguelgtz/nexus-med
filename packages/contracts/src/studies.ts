@@ -28,6 +28,18 @@ export type StudyCategory = z.infer<typeof studyCategorySchema>;
 export const studyStatusSchema = z.enum(['ordered', 'completed', 'reviewed']);
 export type StudyStatus = z.infer<typeof studyStatusSchema>;
 
+/** Studies remain pending until a doctor reviews them. */
+export const PENDING_STUDY_STATUSES = ['ordered', 'completed'] as const satisfies readonly StudyStatus[];
+
+/**
+ * Optional repeatable filter for a patient's studies. Multiple statuses are
+ * ORed, so `?status=ordered&status=completed` returns all unreviewed work.
+ */
+export const listPatientStudiesQuerySchema = z
+  .object({ status: z.array(studyStatusSchema).min(1).optional() })
+  .strict();
+export type ListPatientStudiesQuery = z.infer<typeof listPatientStudiesQuerySchema>;
+
 /** The specific study, in the doctor's words (≤ 200 chars). */
 export const studyDescriptionSchema = z.string().trim().min(2).max(200);
 
@@ -67,6 +79,13 @@ export const studyInputSchema = z
   })
   .strict();
 export type StudyInput = z.infer<typeof studyInputSchema>;
+
+/** Add one or more studies to an existing encounter. Patient association is
+ * derived from that encounter by the API; callers cannot choose it. */
+export const createEncounterStudiesInputSchema = z
+  .object({ studies: z.array(studyInputSchema).min(1) })
+  .strict();
+export type CreateEncounterStudiesInput = z.infer<typeof createEncounterStudiesInputSchema>;
 
 /**
  * Advance a study's status (the only mutation). `status` is required —

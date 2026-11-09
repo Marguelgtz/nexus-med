@@ -1,11 +1,11 @@
 # Product Workflows — Medical Platform MVP
 
-**Status:** Original MVP workflows plus current O-005 implementation inventory (2026-11-08; NX-003 integrated verification pending)  
+**Status:** Original MVP workflows plus verified NX-001…NX-003 behavior (2026-11-08); NX-004 remains approved but unimplemented.
 **Primary user:** One general surgeon  
 **Interface:** Spanish (Mexico)  
 **Data:** Synthetic demo records only
 
-`PRODUCT.md` defines scope and user-story acceptance criteria. This document describes how those stories should flow through the application. Together, the workflow sections cover patient create/search/update/archive, patient context, medical-background editing, encounter creation/review, save/error behavior, and the first-run demo experience. The original MVP excluded scheduling; O-005 subsequently approved appointments, encounter types, study requests, and printable documents. Appointments and encounter types are implemented, study-request code exists, printable documents are not implemented. File uploads/storage and Google authentication remain excluded.
+`PRODUCT.md` defines scope and user-story acceptance criteria. This document describes how those stories should flow through the application. Together, the workflow sections cover patient create/search/update/archive, patient context, medical-background editing, encounter creation/review, save/error behavior, and the first-run demo experience. O-005 approved appointments, encounter types, study requests, and printable documents; the first three slices are implemented and verified. Printable documents remain unimplemented. File uploads/storage and Google authentication remain excluded.
 
 ## 1. Application entry and navigation
 
@@ -179,14 +179,16 @@ All data in this scenario is fictional. Document upload and authentication are n
 
 Overlaps are allowed but visibly signaled, not resolved automatically. Appointments and encounters have independent planned/actual type fields. The calendar uses `America/Monterrey`.
 
-## 12. Current study-request workflow (NX-003 code present)
+## 12. Study-request workflow (NX-003)
 
 1. From **Nueva consulta**, add zero or more study rows with category and description.
 2. Saving a **new** encounter creates those study requests atomically, initially `ordered`.
 3. From encounter detail mark a study `completed` or `reviewed` and optionally write a doctor-authored result note; `ordered → reviewed` directly is allowed.
-4. Patient overview currently lists only `ordered` studies; all statuses remain visible on encounter detail.
+4. Patient overview lists both `ordered` and `completed` studies until they reach `reviewed`; each row shows its current status and links to the originating encounter. Reviewed studies leave the overview card but remain on encounter detail.
 
-**Current limitations:** No standalone study creation from patient overview, by phone, before a visit or from an existing encounter. No upload, laboratory integration or automated interpretation. `TASKS.md` describes `completed` as pending until reviewed, while `UI_SPEC.md` and actual UI show only `ordered`: this conflict is unresolved. The paths exist but integrated NX-003 acceptance is not yet verified.
+**Creation behavior:** The consultation form creates studies atomically with a new encounter. The API also supports adding one or more studies to an existing encounter, while preserving the patient and encounter association. There is no study-creation action on the patient overview.
+
+**Limitations:** No upload, laboratory integration, or automated interpretation. The doctor records and reviews study status and any result note.
 
 ## 13. Planned documents (NX-004, not yet implemented)
 

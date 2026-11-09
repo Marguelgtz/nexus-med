@@ -4,7 +4,7 @@
 **Last updated:** 2026-11-08  
 **Owner:** Project owner  
 **Primary agent:** Hermes Agent  
-**Current implementation state (reconstructed 2026-11-08):** The merged documentation baseline is `f176de0` on `feat/studies-web` (PR #5). O-001–O-004 are historically implemented and verified; full regression verification is still required for this mission. NX-001 and NX-002 are implemented, but the calendar and default encounter-type badge have documented spec gaps. NX-003 code is present but its integrated verification, pending-status semantics, and endpoint gaps remain open. NX-004 is absent. PRs #1–#4 remain open in the stack `main` → `feat/api-foundation` → `feat/phase4-foundation` → `feat/studies-api` → `feat/studies-web`; PR #5 is merged. This mission continues on `feat/nx-expansion-complete`, based on the merged `feat/studies-web` tip.
+**Current implementation state (updated 2026-11-08):** The merged documentation baseline is `f176de0` on `feat/studies-web` (PR #5). O-001–O-004 remain implemented; NX-001, NX-002, and NX-003 are implemented and verified on `feat/nx-expansion-complete`; NX-004 is absent. Commits on this branch: `16a0f1f`, `147efd6`, `7aca5ca`; the NX-003 slice is verified and ready to commit. PRs #1–#4 remain open in the stack `main` → `feat/api-foundation` → `feat/phase4-foundation` → `feat/studies-api` → `feat/studies-web`; PR #5 is merged.
 
 ---
 
@@ -48,12 +48,12 @@ See `DECISIONS.md` and `ARCHITECTURE.md` for details.
 | Product definition | Prepared | `PRODUCT.md`, `WORKFLOWS.md` |
 | Architecture | Implemented per `ARCHITECTURE.md` | Monorepo, Hono API, Prisma 7 + SQLite, SSR shell |
 | Data model | Implemented and migrated | `prisma/schema.prisma`, committed migration |
-| API surface | Patient/encounter/appointment/study routes present; no document routes | Study tests and current integrated suite have not yet been run from this baseline |
+| API surface | Patient/encounter/appointment/study routes present; no document routes | Full API suite passes 96/96; NX-003 includes standalone study creation and repeatable status filters |
 | Synthetic fixture | Patient, encounter, appointment and study fixtures present; no document fixtures | 7 patients, 9 encounters, 9 appointments, 2 study requests; document records absent |
-| Database and API code | Core and NX-001…NX-003 implemented; NX-004 missing | Prisma boundary, domain modules, validation, errors, DTOs |
+| Database and API code | Core and NX-001…NX-003 implemented; NX-004 missing | Prisma boundary, domain modules, validation, errors, DTOs; tests and migration suite pass |
 | UX/UI specification | Complete (O-002) | `docs/UI_SPEC.md` — screens, interactions, states, visual system, story coverage, decisions U-01–U-08 |
 | Frontend product workflows | Complete (O-003/O-004) | Full product UI per `UI_SPEC.md` (registry, forms, timeline, detail, edit); first-run demo verified with persistence across restarts |
-| Expansion (NX-001…NX-004) | Active on `feat/nx-expansion-complete` | NX-001/2 acceptance gaps; NX-003 unverified and contract gaps; NX-004 missing |
+| Expansion (NX-001…NX-004) | Active on `feat/nx-expansion-complete` | NX-001…NX-003 verified and committed or ready to commit; NX-004 missing |
 
 ## 3. Active objective
 
@@ -61,7 +61,7 @@ See `DECISIONS.md` and `ARCHITECTURE.md` for details.
 
 **Desired outcome:** All four approved vertical slices work together: (1) patient appointments + basic calendar, (2) encounter types, (3) study requests + follow-up, and (4) printable prescriptions and medical reports. No new runtime dependencies, no speculative foundations, no full-EHR scope (D-023). A dedicated surgical/procedure lifecycle is excluded unless separately approved; this mission does not add one.
 
-**Status:** Active. The implementation base is the documentation-merged `feat/studies-web` commit `f176de0`; changes are being made on `feat/nx-expansion-complete`. Existing features and tests are evidence to inspect, not proof that every acceptance criterion passes.
+**Status:** Active on `feat/nx-expansion-complete`, based on merged documentation commit `f176de0`. NX-001 commits: `16a0f1f`, `147efd6`. NX-002 commit: `7aca5ca`. NX-003 API/browser behavior, full suite, and documentation reconciliation are complete; its commit is next.
 
 **Reconstructed task board (2026-11-08):**
 
@@ -73,15 +73,15 @@ See `DECISIONS.md` and `ARCHITECTURE.md` for details.
 | NX-002 encounter type persistence/edit/detail | Implemented and browser-verified | Created a `procedimiento` encounter, edited it through `urgencia` to `visita_domicilio`, and confirmed the saved type in detail and the patient timeline. The edit now exits edit mode after saving. |
 | NX-002 timeline default badge | Implemented and browser-verified | Timeline shows non-default types and omits `Consulta`; detail retains its type badge. The new-form `beforeunload` guard now treats a changed type as dirty. |
 | NX-002 surgical/procedure lifecycle | Explicitly deferred | Do not add a dedicated lifecycle without separate approval (D-025/Q-NX-01 and this mission). |
-| NX-003 schema/migration/contracts/encounter-form/detail/fixtures | Implemented; API suite and clean first-run verified | Browser verification and endpoint additions remain. API suite now includes and passes study transition/association/seed cases. |
-| NX-003 pending overview status | Conflicting acceptance | `TASKS.md` says `ordered` and `completed` remain pending until `reviewed`; UI spec/code currently show only `ordered`. Adopt the task acceptance and update UI behavior/spec/API documentation. |
-| NX-003 endpoint coverage | Partially implemented | Current code lacks the specified `POST /api/encounters/:id/studies` and patient-list `?status=` filter. Implement both with shared contracts, relationship validation, tests, and docs; retain atomic nested creation during new-encounter save. |
+| NX-003 schema/migration/contracts/encounter-form/detail/fixtures | Implemented; focused API and browser flows verified | Exact fixtures and migrations remain unchanged. Existing nested encounter creation, detail transitions, and seed behavior are preserved; full regression suite remains. |
+| NX-003 pending overview status | Reconciled and browser-verified | D-032 follows the explicit `TASKS.md` acceptance: ordered and completed remain pending until reviewed. The server filters both statuses and the card shows each status badge; reviewed studies leave the card. |
+| NX-003 endpoint coverage | Implemented; focused API tests pass | Added shared contracts, `POST /api/encounters/:id/studies` (atomic, derives patient association), and repeatable `?status=` filtering; tests cover validation, association, status filters, and missing records. |
 | NX-004 documents | Missing | Build schema/migration, Hono domain + contracts, CRUD/create-update/list tests, patient-overview entry points, forms, detail pages, browser-print layout/CSS, demo fixtures, seed tests, and docs per `TASKS.md`/`UI_SPEC.md`. |
 | Integrated first run and existing MVP regression | Clean first run and quality checks verified; restart persistence pending | Fresh temporary DB migrated and seeded 7 patients, 9 encounters, 9 appointments, and 2 studies; root redirect and demo-mode startup confirmed. Repeat seed, preserve edits, restart persistence, and complete all workflow/browser scenarios. |
 
-**Decision reconciliation:** `TASKS.md` acceptance is more specific than the UI spec on the pending card and is consistent with the lifecycle (`reviewed` is terminal). Therefore `ordered` and `completed` remain in “Estudios pendientes” until reviewed; the UI spec will show a status badge for each. The separate study-create route and patient status filter are explicitly listed in UI_SPEC §7.0, fit the immutable-study model, and are needed to satisfy its endpoint contract; implement them while keeping the consultation form's atomic nested creation. The open study-category confirmation remains recorded as Q-NX-02 and does not block the approved fixed list. D-025/Q-NX-01 remains deferred.
+**Decision reconciliation:** D-032 records the explicit `TASKS.md` acceptance over the narrower UI-spec wording: `ordered` and `completed` remain in “Estudios pendientes” until reviewed, and the card shows the current status. The separate study-create route and patient status filter are listed in UI_SPEC §7.0; the API derives the patient from the immutable encounter association and keeps nested encounter creation atomic. The open study-category confirmation remains recorded as Q-NX-02 and does not block the approved fixed list. D-025/Q-NX-01 remains deferred.
 
-**Ordered execution stack:** (1) close NX-001 calendar gaps and verify appointment integrity; (2) close NX-002 type presentation gap and verify persistence/editing; (3) finish NX-003 API/filter/UI reconciliation, verify persistence, state transitions, seed and browser behavior; (4) implement NX-004 database/API and tests; (5) implement documents UI and print; (6) integrated clean-start, restart, regression, quality-gate, docs, and PR review. Each slice is committed only after its relevant checks pass.
+**Ordered execution stack:** (1) finish NX-003 full quality checks and documentation; (2) implement NX-004 database/API and tests; (3) implement documents UI and print; (4) integrated clean-start, restart, regression, quality-gate, docs/history, and PR review. Each slice is committed only after its relevant checks pass.
 
 **Implementation queue (original plan; see slice status above for actual progress)** — each slice delivers UI + API + schema/migration + tests + docs in the same change, per D-017:
 
@@ -92,7 +92,7 @@ See `DECISIONS.md` and `ARCHITECTURE.md` for details.
 
 **Dependency:** O-001–O-004 foundation (complete). **Exit condition per slice:** mission acceptance criteria met; docs reconciled in the same change; demo flow verified end-to-end. Expansion phase is defined in `TASKS.md` §6 (2026-11-08).
 
-**Verification completed so far (2026-11-08):** Full API integration tests pass 91/91, web tests pass 32/32, workspace typecheck and Next.js production build pass; ESLint exits 0 with its existing missing-`pages` directory warning. Browser checks verified appointment create/edit/cancel/reprogram/complete, same-patient consultation linking, patient history, all calendar views, layout/date boundaries, and invalid-date 404. Encounter browser checks verified the four selector values, new non-default type, repeated type edits, detail/timeline badges, default timeline badge omission, and unsaved-change protection when only type changes. A fresh temporary SQLite database completed migration + explicit seed (7 patients, 9 encounters, 9 appointments, 2 studies); repeated startup created zero additional records. NX-001 is committed as `16a0f1f` (safe startup) and `147efd6` (appointments/calendar); NX-002 implementation is verified and ready for its own commit. NX-003 mutations/status filters and NX-004 remain.
+**Verification completed so far (2026-11-08):** Full API integration tests pass 96/96, web tests pass 32/32, workspace typecheck and Next.js production build pass; ESLint exits 0 with its existing missing-`pages` directory warning. Browser checks verified appointment create/edit/cancel/reprogram/complete, same-patient consultation linking, patient history, all calendar views, layout/date boundaries, and invalid-date 404. Encounter browser checks verified the four selector values, non-default type creation/repeated edits, detail/timeline badges, default timeline badge omission, and unsaved-change protection when only type changes. Study browser checks verified creation with a new consultation; a failed overlong note save preserved the panel and ordered state; completed remained in the overview with its status badge; reviewed left the overview but stayed on encounter detail. API tests verify standalone existing-encounter creation, patient association, repeated status filters, and invalid inputs. A temporary SQLite database migrated and seeded 7 patients, 9 encounters, 9 appointments, and 2 studies; repeated startup created zero additional records. NX-001 commits: `16a0f1f`, `147efd6`; NX-002 commit: `7aca5ca`. NX-003 is verified and ready for its own commit; NX-004 remains.
 
 ### O-001 — Establish a solid database and API foundation
 
@@ -196,10 +196,9 @@ Do not allow future Cloudflare/D1 transaction constraints, Google authentication
 
 ## 6. Next action
 
-1. Commit the verified NX-002 form, edit, detail, and timeline changes separately.
-2. Complete NX-003 endpoint, pending-status, migration, seed, and browser behavior.
-3. Implement and verify NX-004 from schema/API through patient overview and print.
-4. Run the integrated O-005 exit suite, reconcile docs/history, push/open a dependent feature PR if useful, and leave it unmerged without owner authorization.
+1. Review the NX-003 contract/docs diff and commit the verified study endpoint/filter/status slice.
+2. Implement and verify NX-004 from schema/API through patient overview and print.
+3. Run the integrated O-005 exit suite, reconcile docs/history, push/open a dependent feature PR if useful, and leave it unmerged without owner authorization.
 
 This documentation-only PR performs no application changes or test executions.
 

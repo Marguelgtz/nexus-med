@@ -12,7 +12,9 @@
 //   `reviewed` is final. A backward or repeated transition is a 409.
 
 import type {
+  StudyInput,
   StudyRequest,
+  StudyStatus,
   UpdateStudyInput,
 } from '@nexus-med/contracts';
 
@@ -66,15 +68,52 @@ async function findStudy(id: string): Promise<StudyRow> {
   return row;
 }
 
-/** All studies of one patient, newest first (the overview card filters the
- *  pending ones client-side; the encounter detail fetches per encounter). */
-export async function listPatientStudies(patientId: string): Promise<StudyRequest[]> {
+/** All studies of one patient, newest first; optional status values are ORed. */
+export async function listPatientStudies(
+  patientId: string,
+  statuses?: StudyStatus[],
+): Promise<StudyRequest[]> {
   const patient = await prisma.patient.findUnique({ where: { id: patientId }, select: { id: true } });
   if (!patient) throw new NotFoundError(PATIENT_NOT_FOUND);
   const rows = await prisma.studyRequest.findMany({
-    where: { patientId },
+    where: {
+      patientId,
+      ...(statuses ? { status: { in: statuses } } : {}),
+    },
     orderBy: [{ createdAt: 'desc' }, { id: 'asc' }],
     include: rowInclude,
+  });
+  return rows.map(toStudyRequest);
+}
+
+/** Add studies to an existing encounter. The patient is derived from the
+ *  encounter, and all rows commit or roll back together. */
+export async function createEncounterStudies(
+  encounterId: string,
+  studies: StudyInput[],
+): Promise<StudyRequest[]> {
+  const encounter = await prisma.encounter.findUnique({
+    where: { id: encounterId },
+    select: { id: true, patientId: true },
+  });
+  if (!encounter) throw new NotFoundError(ENCOUNTER_NOT_FOUND);
+
+  const rows = await prisma.$transaction(async (tx) => {
+    const created: StudyRow[] = [];
+    for (const study of studies) {
+      created.push(
+        await tx.studyRequest.create({
+          data: {
+            patientId: encounter.patientId,
+            encounterId: encounter.id,
+            category: study.category,
+            description: study.description,
+          },
+          include: rowInclude,
+        }),
+      );
+    }
+    return created;
   });
   return rows.map(toStudyRequest);
 }

@@ -1,18 +1,20 @@
 // Study request routes (mounted under /api by app.ts, UI_SPEC §7.3).
 //
-// GET    /patients/:patientId/studies
+// POST   /encounters/:encounterId/studies  add studies to an existing encounter
+// GET    /patients/:patientId/studies?status= (repeatable filter)
 // GET    /encounters/:encounterId/studies
 // PATCH  /studies/:studyId              advance status (+ optional note)
-//
-// There is deliberately no create route: studies are created with their
-// originating encounter (POST /patients/:patientId/encounters with a
-// `studies` array) and never edited or deleted afterwards (U-15).
 
 import { Hono } from 'hono';
 
-import { updateStudyInputSchema } from '@nexus-med/contracts';
+import {
+  createEncounterStudiesInputSchema,
+  listPatientStudiesQuerySchema,
+  updateStudyInputSchema,
+} from '@nexus-med/contracts';
 
 import {
+  createEncounterStudies,
   listEncounterStudies,
   listPatientStudies,
   updateStudyStatus,
@@ -22,8 +24,22 @@ import { parseOrThrow, readJsonBody } from '../../shared/http/parse';
 export const studiesRoutes = new Hono();
 
 studiesRoutes.get('/patients/:patientId/studies', async (c) => {
-  const studies = await listPatientStudies(c.req.param('patientId'));
+  const statusValues = c.req.queries('status');
+  const otherQuery = Object.fromEntries(
+    Object.entries(c.req.query()).filter(([key]) => key !== 'status'),
+  );
+  const query = parseOrThrow(listPatientStudiesQuerySchema, {
+    ...otherQuery,
+    ...(statusValues?.length ? { status: statusValues } : {}),
+  });
+  const studies = await listPatientStudies(c.req.param('patientId'), query.status);
   return c.json(studies);
+});
+
+studiesRoutes.post('/encounters/:encounterId/studies', async (c) => {
+  const input = parseOrThrow(createEncounterStudiesInputSchema, await readJsonBody(c));
+  const studies = await createEncounterStudies(c.req.param('encounterId'), input.studies);
+  return c.json(studies, 201);
 });
 
 studiesRoutes.get('/encounters/:encounterId/studies', async (c) => {

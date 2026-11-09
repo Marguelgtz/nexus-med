@@ -1,6 +1,6 @@
 # Architecture — Medical Platform MVP
 
-**Status:** Confirmed local architecture; NX-001/NX-002 implemented and NX-003 code present on `feat/studies-web` as of 2026-11-08. Cloudflare remains future-only.  
+**Status:** Confirmed local architecture; NX-001…NX-003 implemented on `feat/nx-expansion-complete` as of 2026-11-08. Cloudflare remains future-only.
 **Version:** 0.4  
 **Product:** Single-doctor medical practice platform  
 **Immediate target:** Fully local, offline-capable prototype using synthetic data  

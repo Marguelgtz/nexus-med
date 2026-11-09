@@ -1,6 +1,6 @@
 # Data Model — Nexus Med Local Prototype
 
-**Status:** As implemented in `prisma/schema.prisma` on `feat/studies-web` (inspected 2026-11-08), not a claim of new runtime verification.  
+**Status:** Current Prisma schema/migrations on `feat/nx-expansion-complete`; runtime and integration tests verified 2026-11-08.
 **Persistence:** Prisma 7 + local SQLite, database access exclusively through Hono.
 
 ## 1. Implemented entities
@@ -27,12 +27,13 @@
 
 ### StudyRequest (NX-003)
 - `id` generated UUID; required `patientId` and `encounterId` FKs (delete restricted).
-- `encounterId` is the immutable originating encounter. Study creation is currently bundled with **new encounter creation** in one transaction.
+- `encounterId` is the immutable originating encounter. Studies can be created atomically with a new encounter or appended to an existing encounter through the API; in both cases the API derives `patientId` from the encounter.
 - `category`: `laboratorio`, `imagenologia`, `rayos_x`, `ecg`, `ecografia`, `otro`; category confirmation is open (Q-NX-02).
 - `description`: 2–200-character doctor-authored text.
 - `status`: `ordered` default; `completed`, `reviewed`; `ordered → completed/reviewed`, `completed → reviewed`, reviewed final.
 - Nullable `resultNote` ≤1,000 characters; `createdAt`/`updatedAt`.
 - Only status/result note can be updated; no edit/delete route for the originating data.
+- `ordered` and `completed` are pending until `reviewed` and appear in the patient overview.
 
 ## 2. Relations
 

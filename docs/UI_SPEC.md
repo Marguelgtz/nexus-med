@@ -1,6 +1,6 @@
 # UI Specification — Medical Platform MVP
 
-**Status:** O-002 design delivered; O-005 expansion scope approved in D-023. NX-001/NX-002 are implemented; NX-003 code is present on `feat/studies-web` pending integrated verification; NX-004 remains unimplemented. Observed spec/code differences are logged in §7.0.1 without silently changing the intended design.
+**Status:** O-002 design delivered; O-005 expansion scope approved in D-023. NX-001 and NX-002 are implemented and browser-verified; NX-003 is implemented with its pending-status behavior reconciled to `TASKS.md`; its final integrated verification is tracked in `ACTION_PLAN.md`. NX-004 remains unimplemented.
 **Owner:** `apps/web` (Next.js App Router)  
 **Interface language:** Spanish (Mexico) — all UI strings below are the canonical copy; technical prose stays in English.  
 **Data:** Synthetic demo records only. A persistent demo banner is part of every screen.
@@ -408,15 +408,11 @@ No other entities. No recurrence, reminders, resources, catalogs, or integration
 
 This is an **as-built inventory**, not approval to change the requirements in the original §7.0 table.
 
-- NX-001: the current API additionally offers `POST /api/appointments/:id/link-encounter`, allowing link-after-creation for eligible appointments. Calendar day/week/month and patient appointment screens exist.
-- NX-002: encounter type is persisted and shown in form/detail/timeline/edit. Dedicated surgical workflow remains deferred, pending Q-NX-01.
-- NX-003: study requests are created only via `studies[]` on **new encounter creation**. The API has `GET /api/patients/:id/studies`, `GET /api/encounters/:id/studies`, and `PATCH /api/studies/:id`. The separate `POST /api/encounters/:id/studies` and `?status=` filter proposed in §7.0 **do not exist** in the branch. The current UI filters patient overview to `ordered` only.
-- **Unresolved:** `TASKS.md` NX-003 defines pending as `ordered` or `completed` until reviewed, but §7.3 and the current overview only show `ordered`. Do not silently resolve this acceptance-criteria difference.
-- `ordered → reviewed` is permitted directly, in addition to `ordered → completed → reviewed`. Two study fixtures and tests exist in source, but NX-003 full end-to-end acceptance has not been independently documented.
+- NX-001: the API also offers `POST /api/appointments/:id/link-encounter` for eligible appointments. Day/week/month views, patient appointment screens, date validation, outside-hours display, and weekly overflow behavior meet the detailed acceptance criteria.
+- NX-002: encounter type is persisted and editable, appears in the detail header, and appears in the timeline only for non-default types. Dedicated surgical workflow remains deferred under Q-NX-01.
+- NX-003: new-encounter creation continues to create studies atomically with the encounter; `POST /api/encounters/:id/studies` adds rows to an existing encounter with patient association derived by the API. Patient study listing accepts repeatable `status` values; `ordered` and `completed` remain pending until reviewed, matching `TASKS.md`.
+- `ordered → reviewed` is permitted directly, in addition to `ordered → completed → reviewed`. The two exact study fixtures remain unchanged and the seed remains idempotent.
 - NX-004 remains design only: no `MedicalDocument`/`PrescriptionLine`, document API, form or print view currently exists.
-- NX-001 calendar implementation differs from the detailed spec in §7.1: the day grid uses **56 px/hour** versus the specified 48; it does **not** list out-of-window appointments separately below the grid; week view currently displays **up to eight** chips per day rather than three; an invalid `fecha` falls back to today instead of rendering the specified 404. These are implementation differences, **not** an approved change in design.
-- NX-002 timeline currently renders a type badge even for `consulta`, whereas §7.2 says to show it only for non-default types. Verification or scope reconciliation is outstanding.
-- Some calendar visual details (such as exact status/overlap styling and loading states) have not been independently assessed in this source-only pass; do not infer compliance from the presence of the calendar components.
 
 Refer to `API_CONTRACT.md`, `DATA_MODEL.md`, and `ACTION_PLAN.md` for the current implementation inventory and verification status.
 
@@ -531,7 +527,7 @@ New card between `Antecedentes médicos` and `Historial de consultas`:
 - `Revisada`: none (final).
 Clicking any action opens an inline panel (complete-flow pattern) with an optional `Resultado / observación` textarea (≤ 1,000 chars; the doctor's words, never an interpretation) + `Guardar` / `Cancelar`. Saving sets the status and stores the note. Studies are never edited (category/description are immutable after save — the originating encounter is the record of what was ordered) and never deleted (consistent with the no-permanent-delete rule). A failed status update keeps the last known state + banner.
 
-**Patient overview (U-17):** card `Estudios pendientes` — shown **only when the patient has ≥ 1 study with status `Ordenada`** (studies are encounter-scoped, so there is no overview-level creation action to host). Header: `Estudios pendientes` + count. Rows: `Laboratorio · Biometría hemática` + `Solicitada en {fecha} — [motivo de la consulta → encounter]`. No actions on the card (status changes happen in the encounter context, where the clinical note is visible).
+**Patient overview (U-17):** card `Estudios pendientes` — shown **only when the patient has ≥ 1 study with status `Ordenada` or `Completada`** (both remain pending until reviewed, per `TASKS.md`). The server requests `GET /api/patients/:id/studies?status=ordered&status=completed`, and the response count includes both statuses. Rows show `Laboratorio · Biometría hemática`, a status badge, and `Solicitada en {fecha} — [motivo de la consulta → encounter]`. No actions on the card; status changes happen in the encounter context, where the clinical note is visible.
 
 **Follow-up:** unchanged mechanism — the doctor writes instructions in the encounter's free-text `Seguimiento` and schedules the return visit as an appointment (7.1). No second scheduler, no follow-up entity.
 

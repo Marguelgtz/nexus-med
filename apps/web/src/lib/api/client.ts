@@ -9,6 +9,7 @@ import {
   type Appointment,
   type CreateAppointmentInput,
   type CreateEncounterInput,
+  type CreateEncounterStudiesInput,
   type CreatePatientInput,
   type EncounterDetail,
   type EncounterSummary,
@@ -16,6 +17,7 @@ import {
   type PatientDetail,
   type PatientSummary,
   type StudyRequest,
+  type StudyStatus,
   type UpdateAppointmentInput,
   type UpdateEncounterInput,
   type UpdatePatientInput,
@@ -23,6 +25,7 @@ import {
   appointmentSchema,
   createAppointmentInputSchema,
   createEncounterInputSchema,
+  createEncounterStudiesInputSchema,
   createPatientInputSchema,
   encounterDetailSchema,
   encounterSummarySchema,
@@ -264,12 +267,30 @@ export function linkEncounter(id: string, encounterId: string): Promise<Appointm
 
 // ── Study requests (UI_SPEC §7.3) ──────────────────────────────────────
 
-/** All studies of a patient, newest first (the overview filters the
- * pending ones; the encounter detail uses the per-encounter list). */
-export function listPatientStudies(patientId: string): Promise<StudyRequest[]> {
+/** List patient studies; repeated statuses are ORed by the API. */
+export function listPatientStudies(
+  patientId: string,
+  statuses?: StudyStatus[],
+): Promise<StudyRequest[]> {
+  const params = new URLSearchParams();
+  statuses?.forEach((status) => params.append('status', status));
+  const query = params.toString();
   return request(
-    `/patients/${encodeURIComponent(patientId)}/studies`,
+    `/patients/${encodeURIComponent(patientId)}/studies${query ? `?${query}` : ''}`,
     undefined,
+    asList(studyRequestSchema),
+  );
+}
+
+/** Add studies to an existing encounter; patient association is server-derived. */
+export function createEncounterStudies(
+  encounterId: string,
+  input: CreateEncounterStudiesInput,
+): Promise<StudyRequest[]> {
+  createEncounterStudiesInputSchema.parse(input);
+  return request(
+    `/encounters/${encodeURIComponent(encounterId)}/studies`,
+    { method: 'POST', body: JSON.stringify(input) },
     asList(studyRequestSchema),
   );
 }

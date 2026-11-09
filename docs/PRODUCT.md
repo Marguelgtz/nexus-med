@@ -28,7 +28,7 @@ This is not a hospital management system or a full enterprise EHR. Optimize for 
 2. **Medical background:** relevant ongoing context associated with the patient, such as conditions, previous surgeries, allergies, and current medications.
 3. **Encounter:** one consultation or clinical interaction associated with exactly one patient. Clinical note sections belong to the encounter in the initial model.
 
-This section describes the **original P0 MVP**. O-005 subsequently approved appointments, encounter types, study requests, and printable doctor-authored prescriptions/reports. NX-001/NX-002 and NX-003 code exist on `feat/studies-web` (NX-003 acceptance still pending); NX-004 is not implemented. Authentication and file storage remain excluded.
+This section describes the **original P0 MVP**. O-005 subsequently approved appointments, encounter types, study requests, and printable doctor-authored prescriptions/reports. NX-001…NX-003 are implemented and verified on `feat/nx-expansion-complete`; NX-004 is not implemented. Authentication and file storage remain excluded.
 
 ## 4. MVP capabilities
 

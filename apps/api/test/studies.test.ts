@@ -102,6 +102,65 @@ describe('creating studies with an encounter', () => {
   });
 });
 
+describe('POST /encounters/:encounterId/studies', () => {
+  it('adds multiple studies to an existing encounter and derives the patient association', async () => {
+    const encounter = await makeEncounter();
+    const res = await app.request(`/api/encounters/${encounter.id}/studies`, {
+      method: 'POST',
+      headers: json,
+      body: JSON.stringify({
+        studies: [
+          { category: 'laboratorio', description: 'Biometría hemática' },
+          { category: 'ecg', description: 'ECG de 12 derivaciones' },
+        ],
+      }),
+    });
+
+    expect(res.status).toBe(201);
+    const body = (await res.json()) as any[];
+    expect(body).toHaveLength(2);
+    expect(body[0]).toMatchObject({
+      patientId,
+      encounter: { id: encounter.id, reason: 'Seguimiento de prueba' },
+      category: 'laboratorio',
+      description: 'Biometría hemática',
+      status: 'ordered',
+      resultNote: null,
+    });
+    expect(body[1]).toMatchObject({ patientId, encounter: { id: encounter.id }, status: 'ordered' });
+    const listed = (await (await app.request(`/api/encounters/${encounter.id}/studies`)).json()) as any[];
+    expect(listed.map((study) => study.id)).toEqual(body.map((study) => study.id));
+  });
+
+  it('rejects empty, invalid, or patient-supplied associations without creating rows', async () => {
+    const encounter = await makeEncounter();
+    const bodies = [
+      { studies: [] },
+      { studies: [{ category: 'laboratorio', description: 'x' }] },
+      { patientId, studies: [{ category: 'laboratorio', description: 'Glucosa' }] },
+    ];
+    for (const body of bodies) {
+      const res = await app.request(`/api/encounters/${encounter.id}/studies`, {
+        method: 'POST',
+        headers: json,
+        body: JSON.stringify(body),
+      });
+      expect(res.status).toBe(400);
+    }
+    const listed = await (await app.request(`/api/encounters/${encounter.id}/studies`)).json();
+    expect(listed).toEqual([]);
+  });
+
+  it('returns 404 for an unknown encounter', async () => {
+    const res = await app.request('/api/encounters/missing/studies', {
+      method: 'POST',
+      headers: json,
+      body: JSON.stringify({ studies: [{ category: 'laboratorio', description: 'Glucosa' }] }),
+    });
+    expect(res.status).toBe(404);
+  });
+});
+
 describe('GET /patients/:patientId/studies', () => {
   it('lists all the patient\'s studies with the encounter embedded', async () => {
     const first = await makeEncounter([{ category: 'laboratorio', description: 'Biometría hemática' }]);
@@ -125,6 +184,45 @@ describe('GET /patients/:patientId/studies', () => {
   it('returns 404 for an unknown patient', async () => {
     const res = await app.request('/api/patients/missing/studies');
     expect(res.status).toBe(404);
+  });
+
+  it('filters by one or more repeated status query values', async () => {
+    const encounter = await makeEncounter([
+      { category: 'laboratorio', description: 'Biometría hemática' },
+      { category: 'ecg', description: 'ECG de 12 derivaciones' },
+      { category: 'imagenologia', description: 'Radiografía de tórax AP' },
+    ]);
+    const all = (await (await app.request(`/api/encounters/${encounter.id}/studies`)).json()) as any[];
+    const lab = all.find((study) => study.description === 'Biometría hemática');
+    const ecg = all.find((study) => study.description === 'ECG de 12 derivaciones');
+    if (!lab || !ecg) throw new Error('Expected lab and ECG studies to exist');
+    await app.request(`/api/studies/${lab.id}`, {
+      method: 'PATCH',
+      headers: json,
+      body: JSON.stringify({ status: 'completed' }),
+    });
+    await app.request(`/api/studies/${ecg.id}`, {
+      method: 'PATCH',
+      headers: json,
+      body: JSON.stringify({ status: 'reviewed' }),
+    });
+
+    const ordered = (await (await app.request(`/api/patients/${patientId}/studies?status=ordered`)).json()) as any[];
+    const completed = (await (await app.request(`/api/patients/${patientId}/studies?status=completed`)).json()) as any[];
+    const pending = (await (
+      await app.request(`/api/patients/${patientId}/studies?status=ordered&status=completed`)
+    ).json()) as any[];
+    expect(ordered.map((study) => study.description)).toEqual(['Radiografía de tórax AP']);
+    expect(completed.map((study) => study.description)).toEqual(['Biometría hemática']);
+    expect(new Set(pending.map((study) => study.status))).toEqual(new Set(['ordered', 'completed']));
+    expect(pending).toHaveLength(2);
+  });
+
+  it('rejects empty, invalid, and unsupported query values', async () => {
+    for (const query of ['?status=', '?status=scheduled', '?status=ordered&status=bad', '?unexpected=yes']) {
+      const res = await app.request(`/api/patients/${patientId}/studies${query}`);
+      expect(res.status).toBe(400);
+    }
   });
 });
 

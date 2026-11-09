@@ -1,6 +1,6 @@
 # API Contract — Medical Platform MVP
 
-**Status:** O-001 original contract with NX-001/NX-002/NX-003 as-built addendum (§11) inspected on `feat/studies-web` 2026-11-08; NX-003 end-to-end verification is not recorded. NX-004 remains unimplemented.  
+**Status:** O-001 contract plus verified NX-001…NX-003 addendum (§11) on `feat/nx-expansion-complete` (2026-11-08); NX-004 remains unimplemented.
 **Owner:** Hono API (`apps/api`)  
 **Transport:** HTTP + JSON over local Node.js  
 **Audience:** Next.js frontend, API tests, future maintainers
@@ -108,7 +108,7 @@ Updates editable encounter fields including `type` and `occurredAt`; the patient
 
 ## 5.1 Encounter type and study creation
 
-The encounter type is the **actual** clinical interaction, independent of an appointment's planned type. API-validated values: `consulta`, `procedimiento`, `visita_domicilio`, `urgencia`. Encounter summaries include type. A study can currently be created only during **new encounter creation**, using optional `studies: [{ category, description }]` in the POST request. There is no independent study-create endpoint. New encounter + initial studies commit in one transaction.
+The encounter type is the **actual** clinical interaction, independent of an appointment's planned type. API-validated values: `consulta`, `procedimiento`, `visita_domicilio`, `urgencia`. Encounter summaries include type. Studies can be created atomically with a new encounter by supplying optional `studies: [{ category, description }]`, or appended to an existing encounter through `POST /api/encounters/:encounterId/studies`. In both paths the server derives the patient association from the encounter.
 
 ## 6. DTO conventions
 
@@ -189,9 +189,9 @@ The contract is a strong starting boundary, not an untouchable specification. Du
 
 Do not change the contract merely for stylistic preference or speculative future integrations.
 
-## 11. Implemented expansion endpoints (2026-11-08 code inventory)
+## 11. Implemented expansion endpoints (2026-11-08)
 
-This section supersedes the original foundation-only endpoint inventory above where it differs. Sources: `apps/api/src/domains/{appointments,studies,encounters}/`, `packages/contracts/src/{appointments,studies,encounters}.ts`, `prisma/schema.prisma`. The routes exist in `feat/studies-web`; no new tests were executed for this documentation-only reconciliation.
+This section supersedes the original foundation-only endpoint inventory above where it differs. Sources: `apps/api/src/domains/{appointments,studies,encounters}/`, `packages/contracts/src/{appointments,studies,encounters}.ts`, `prisma/schema.prisma`. Full API tests and browser workflows are recorded in `TESTING.md` and `ACTION_PLAN.md`.
 
 ### NX-001: Appointments and calendar
 
@@ -213,15 +213,18 @@ This section supersedes the original foundation-only endpoint inventory above wh
 | Method | Route | Current behavior |
 |---|---|---|
 | POST | `/api/patients/:patientId/encounters` | Creates new encounter and optional `studies[]` together |
-| GET | `/api/patients/:patientId/studies` | All patient studies, newest first, **no server-side status filter** |
+| POST | `/api/encounters/:encounterId/studies` | Adds one or more study requests to an existing encounter; patient association is derived from the encounter |
+| GET | `/api/patients/:patientId/studies?status=` | Lists patient studies, newest first; optional repeatable status filter |
 | GET | `/api/encounters/:encounterId/studies` | Studies from one encounter |
 | PATCH | `/api/studies/:studyId` | Change status and optional result note |
 
-The current API does **not** implement `POST /api/encounters/:id/studies` or `GET /api/patients/:id/studies?status=` proposed in `UI_SPEC.md` §7.0. The patient overview filters to `ordered` on the frontend.
+`POST /api/encounters/:encounterId/studies` accepts `{ "studies": [{ "category": "laboratorio", "description": "Biometría hemática" }] }` and returns the created `StudyRequest[]` with status `ordered` and `201`. At least one row is required. The API loads the encounter, derives its `patientId`, and creates all rows in one transaction; callers cannot supply a patient association. Unknown encounters return `404`.
+
+The patient-list `status` query parameter may be repeated; values are ORed. For example, `?status=ordered&status=completed` returns studies still pending doctor review. Omitting the filter returns all statuses. Invalid or empty values and unknown query keys return `400`.
 
 Study categories: `laboratorio`, `imagenologia`, `rayos_x`, `ecg`, `ecografia`, `otro`; doctor confirmation is still open (Q-NX-02). `description` is 2–200 characters; `resultNote` nullable and up to 1,000 characters. Legal transitions: `ordered → completed`, `ordered → reviewed`, `completed → reviewed`; `reviewed` is final. Repeated or backward transitions return `409`. The category, description and originating encounter cannot be edited and studies cannot be deleted.
 
-Study responses include `patientId`, nested `encounter: {id, occurredAt, reason}`, category, description, status, nullable result note, ID and timestamps. `TASKS.md` treats both `ordered` and `completed` as pending; `UI_SPEC.md` and current code only display `ordered`. This conflict is **unresolved**, not silently decided here.
+Study responses include `patientId`, nested `encounter: {id, occurredAt, reason}`, category, description, status, nullable result note, ID and timestamps. Per `TASKS.md`, `ordered` and `completed` remain pending until `reviewed`; the patient overview uses the repeatable status filter and shows the current status badge.
 
 ### NX-004: Printable documents
 

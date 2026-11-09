@@ -11,6 +11,7 @@ import {
   appointmentSchema,
   encounterSummarySchema,
   patientDetailSchema,
+  PENDING_STUDY_STATUSES,
   studyRequestSchema,
   type PatientDetail,
 } from '@nexus-med/contracts';
@@ -18,6 +19,7 @@ import {
 import {
   AppointmentStatusBadge,
   AppointmentTypeBadge,
+  StudyStatusBadge,
 } from '../../../components/appointments/badges';
 import { Timeline } from '../../../components/patients/timeline';
 import { ArchiveControl } from '../../../components/patients/archive-control';
@@ -53,6 +55,8 @@ const BACKGROUND_ROWS: { label: string; key: keyof PatientDetail }[] = [
 
 export default async function PatientPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
+  const pendingStudyQuery = new URLSearchParams();
+  PENDING_STUDY_STATUSES.forEach((status) => pendingStudyQuery.append('status', status));
 
   const [patientRes, encountersRes, apptsRes, studiesRes] = await Promise.all([
     fetchServer(`/api/patients/${encodeURIComponent(id)}`, patientDetailSchema),
@@ -65,7 +69,7 @@ export default async function PatientPage({ params }: { params: Promise<{ id: st
       z.array(appointmentSchema),
     ),
     fetchServer(
-      `/api/patients/${encodeURIComponent(id)}/studies`,
+      `/api/patients/${encodeURIComponent(id)}/studies?${pendingStudyQuery.toString()}`,
       z.array(studyRequestSchema),
     ),
   ]);
@@ -119,8 +123,8 @@ export default async function PatientPage({ params }: { params: Promise<{ id: st
     .filter((a) => a.status === 'scheduled' && localDateOfInstant(a.startAt) >= today)
     .reverse()
     .slice(0, 3);
-  // U-17: the card appears only while something is pending.
-  const pendingStudies = studiesRes.data.filter((s) => s.status === 'ordered');
+  // The server filter includes ordered and completed studies until review.
+  const pendingStudies = studiesRes.data;
 
   return (
     <>
@@ -221,15 +225,18 @@ export default async function PatientPage({ params }: { params: Promise<{ id: st
           </div>
           {pendingStudies.map((study) => (
             <div className="appt-row" key={study.id}>
-              <span className="study-row-label">
-                {STUDY_CATEGORY_LABELS[study.category] ?? study.category} · {study.description}
-              </span>
-              <span className="appt-row-range">
-                Solicitada en {formatDateTime(study.encounter.occurredAt)} —{' '}
-                <Link href={`/patients/${patient.id}/consultas/${study.encounter.id}`}>
-                  {study.encounter.reason ?? 'Ver consulta'}
-                </Link>
-              </span>
+              <div className="study-row-main">
+                <div className="study-row-label">
+                  {STUDY_CATEGORY_LABELS[study.category] ?? study.category} · {study.description}
+                </div>
+                <div className="appt-row-range">
+                  Solicitada en {formatDateTime(study.encounter.occurredAt)} —{' '}
+                  <Link href={`/patients/${patient.id}/consultas/${study.encounter.id}`}>
+                    {study.encounter.reason ?? 'Ver consulta'}
+                  </Link>
+                </div>
+              </div>
+              <StudyStatusBadge status={study.status} />
             </div>
           ))}
         </div>
