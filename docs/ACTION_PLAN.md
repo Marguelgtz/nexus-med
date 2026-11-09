@@ -18,6 +18,8 @@
 
 ---
 
+**Current research handoff:** O-007 is complete on `docs/ui-v0-readiness-research`; [PR #8](https://github.com/Marguelgtz/nexus-med/pull/8) is open, documentation/evidence only. UI v0 has not started.
+
 ## 1. Purpose and operating model
 
 This is the active execution plan. Update it continuously as work progresses: current objective, ordered sub-objectives, actual progress, dependencies, blockers, verification evidence, branch/PR state, and the next action.
@@ -66,7 +68,7 @@ See `DECISIONS.md` and `ARCHITECTURE.md` for details.
 | Expansion (NX-001…NX-004) | Complete on `feat/nx-expansion-complete` | All four vertical slices browser-verified; complete automated quality gate is green; implementation committed through `e2d6590` |
 | O-006 implementation | Complete; owner review pending | PR #7 is open against PR #6's latest documentation head; API/web tests, workspace checks, isolated startup, and Chrome journey checks pass; Q-O006-01…08 remain open where clinical meaning needs validation |
 
-## 3a. Current objective — O-007 UI research and visual investigation
+## 3a. Current objective — O-007 UI research and visual investigation — COMPLETE
 
 **Outcome:** Evidence-backed presentation audit and reference research against the latest O-006, before code-first UI v0, later Figma exploration, and eventual implementation of approved Figma designs. This mission authorizes research only.
 
@@ -74,13 +76,13 @@ See `DECISIONS.md` and `ARCHITECTURE.md` for details.
 
 **Completed sequence:** (1) Reviewed source/docs and checked remote freshness; local `99b0d7c` lacked follow-ups `9811192` and `30eafd1`, so fast-forwarded this research branch. (2) Launched an isolated exact-fixture runtime at `30eafd1`; inspected desktop/tablet/mobile, intermediate widths, interactive states and references. (3) Captured and visually inspected 87 images; documented classified/prioritized findings, constraints, strengths and readiness assessment in `UI_AUDIT.md`, with primary-source comparisons in `UI_RESEARCH.md`.
 
-**Dependencies/verification:** Separate detached runtime/worktree and SQLite DB; all five migrations applied, seed counts 7/9/9/2/2. Browser requests were forwarded to the isolated API to accommodate fixed default-port CORS. Required viewports 1440×900, 1024×768 and 390×844, plus 768px and exploratory body-text scaling. Saving/error captures use controlled delayed HTTP 500 without persistence. Screenshot inventory/file matching, local links, PNG readability, documentation scope and `git diff --check` are checked before publication. No application test suite/build rerun is warranted for documentation/images only; prior O-006 gates remain historical evidence.
+**Dependencies/verification:** Separate detached runtime/worktree and SQLite DB; all five migrations applied, seed counts 7/9/9/2/2. Browser requests were forwarded to the isolated API to accommodate fixed default-port CORS. Required viewports 1440×900, 1024×768 and 390×844, plus 768px and exploratory body-text scaling. Saving/error captures use controlled delayed HTTP 500 without persistence. Verified all 87 PNGs, exact inventory/file matching, 115 local documentation links, unchanged application source, and `git diff --check`; isolated DB counts remain 7/9/9/2/2. No application test suite/build rerun is warranted for documentation/images only; prior O-006 gates remain historical evidence.
 
 **Findings:** P0 month geometry/clipping, overflowing timeline reasons, malformed study-entry grid. P1 includes week sizing, low-contrast secondary/banner text, inconsistent controls and mobile/context density. Preferences about dated aesthetics remain P2. Preserve O-006 clinical workflows and open clinical questions. Assessment is a research handoff, not an approved design or implementation plan.
 
-**Branch/commits:** `docs/ui-v0-readiness-research`, directly based on `feat/o006-clinical-workflows` at `30eafd1`. Evidence committed as `7c3d61a`; audit/research and handoff follow separately. Documentation-only PR targets `feat/o006-clinical-workflows`; publication pending. No merge authorized or performed.
+**Branch/commits:** `docs/ui-v0-readiness-research`, directly based on `feat/o006-clinical-workflows` at `30eafd1`. Evidence commit `7c3d61a`; audit/research commit `e5fa1af`; this final handoff records publication. [PR #8](https://github.com/Marguelgtz/nexus-med/pull/8) is open against `feat/o006-clinical-workflows`; branch pushed to origin. No merge performed.
 
-**Next action:** Publish the research PR after documentation verification, then stop. UI v0 remains the next separate mission; Figma is later and was not connected.
+**Next action:** Owner review of PR #8 and its readiness assessment. Research is complete; stop here. UI v0 remains the next separate mission; Figma is later and was not connected.
 
 ## 3. Most recent objective — O-006 full clinical workflow and UX implementation — COMPLETE
 
