@@ -18,12 +18,14 @@ Seed at least:
 - **9 encounters** distributed across at least four patients.
 - **9 appointments**: 4 fixed past appointments (3 completed — two linked to demo encounters, one `procedimiento` — and 1 cancelled) plus 5 upcoming appointments anchored to the first seed run (see Section 3).
 - **2 study requests** attached to `demo-encounter-002b` / `demo-patient-002`: one `ordered`, one `reviewed` with a fictional result note.
+- **1 prescription** with two visibly fictional free-text lines, linked to `demo-encounter-002b` / `demo-patient-002`.
+- **1 report** with fictional narrative text for `demo-patient-007`, with no encounter link.
 - At least **2 patients with multiple encounters** so the timeline can be evaluated.
 - At least **1 patient with no encounters** to demonstrate the timeline empty state.
 - At least **1 archived patient** to demonstrate active/archive behavior.
 - A mix of populated and unrecorded optional medical-background fields.
 
-No printable prescription/report records are seeded yet: NX-004 is not implemented. File storage and uploads remain separately excluded.
+Printable prescription/report records contain no real medication, dose, findings, or recommendations. File storage and uploads remain separately excluded.
 
 ## 3. Suggested deterministic fixture composition
 
@@ -65,7 +67,16 @@ On a clean database, this fixture produces exactly seven demo patients (six acti
 | `demo-study-001` | `demo-patient-002` / `demo-encounter-002b` | `laboratorio`: Biometría hemática | `ordered` |
 | `demo-study-002` | `demo-patient-002` / `demo-encounter-002b` | `imagenologia`: Radiografía de tórax AP | `reviewed` (fictional result note) |
 
-The study seed exists in code but was not independently executed during this documentation review. Its associations and preservation on repeat seed still require NX-003 verification.
+The seed creates both records if missing, including the prescription lines in the same transaction. Existing documents and edited lines are preserved on later runs.
+
+### Printable-document fixtures (NX-004)
+
+| ID | Patient / encounter | Kind | Content |
+|---|---|---|---|
+| `demo-document-prescription-001` | `demo-patient-002` / `demo-encounter-002b` | `prescription` | Two `[DEMO]` fictional medication placeholders and explicit non-use text; not a real prescription. |
+| `demo-document-report-001` | `demo-patient-007` / no encounter | `report` | Fictional format example that explicitly contains no findings or recommendations. |
+
+The fixture lines use stable IDs and positions. Document and line records are create-if-missing, use the deterministic seed timestamp, and are not overwritten on re-seed.
 
 ## 4. Synthetic content rules
 
@@ -143,4 +154,5 @@ Tests must verify:
 - Past appointments keep their exact fixture timestamps, states, and encounter links.
 - Upcoming appointments are in the future, sit on the expected practice-timezone wall times, and do not move on re-seed (first-seed anchor).
 - Study fixture IDs, patient/encounter associations and preservation after repeat seed are verified during NX-003 closure.
+- Prescription/report fixture IDs, optional encounter association, line ordering, exact fictional content, idempotency, and edit preservation are covered by seed tests.
 - Startup does not require Cloudflare or internet connectivity after dependencies have been installed.

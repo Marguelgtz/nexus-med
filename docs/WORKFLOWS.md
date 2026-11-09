@@ -1,6 +1,6 @@
 # Product Workflows — Medical Platform MVP
 
-**Status:** Original MVP workflows plus verified NX-001…NX-003 behavior (2026-11-08); NX-004 remains approved but unimplemented.
+**Status:** Original MVP workflows plus verified NX-001…NX-003 behavior and NX-004 document API/seed foundation (2026-11-08); the NX-004 web workflow remains in progress.
 **Primary user:** One general surgeon  
 **Interface:** Spanish (Mexico)  
 **Data:** Synthetic demo records only
@@ -192,7 +192,7 @@ Overlaps are allowed but visibly signaled, not resolved automatically. Appointme
 
 ## 13. Planned documents (NX-004, not yet implemented)
 
-The approved workflow in `UI_SPEC.md` §7.4 includes doctor-authored prescription/report forms, patient/encounter association, persistence and browser printing with the demo marker. There are no NX-004 models, routes or UI pages on `feat/studies-web`. It must not be presented as a current capability.
+The approved workflow in `UI_SPEC.md` §7.4 includes doctor-authored prescription/report forms, patient/encounter association, persistence and browser printing with the demo marker. The document models, routes, and synthetic seed fixtures are implemented on `feat/nx-expansion-complete`; forms and UI pages are still in progress and should not be presented as available until verified.
 
 ## 14. Original MVP user story coverage
 

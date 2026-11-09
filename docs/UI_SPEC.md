@@ -1,6 +1,6 @@
 # UI Specification — Medical Platform MVP
 
-**Status:** O-002 design delivered; O-005 expansion scope approved in D-023. NX-001 and NX-002 are implemented and browser-verified; NX-003 is implemented with its pending-status behavior reconciled to `TASKS.md`; its final integrated verification is tracked in `ACTION_PLAN.md`. NX-004 remains unimplemented.
+**Status:** O-002 design delivered; O-005 expansion scope approved in D-023. NX-001 and NX-002 are implemented and browser-verified; NX-003 is implemented with its pending-status behavior reconciled to `TASKS.md`; NX-004 schema/API and synthetic seed are implemented while its web workflow remains active.
 **Owner:** `apps/web` (Next.js App Router)  
 **Interface language:** Spanish (Mexico) — all UI strings below are the canonical copy; technical prose stays in English.  
 **Data:** Synthetic demo records only. A persistent demo banner is part of every screen.
@@ -412,7 +412,7 @@ This is an **as-built inventory**, not approval to change the requirements in th
 - NX-002: encounter type is persisted and editable, appears in the detail header, and appears in the timeline only for non-default types. Dedicated surgical workflow remains deferred under Q-NX-01.
 - NX-003: new-encounter creation continues to create studies atomically with the encounter; `POST /api/encounters/:id/studies` adds rows to an existing encounter with patient association derived by the API. Patient study listing accepts repeatable `status` values; `ordered` and `completed` remain pending until reviewed, matching `TASKS.md`.
 - `ordered → reviewed` is permitted directly, in addition to `ordered → completed → reviewed`. The two exact study fixtures remain unchanged and the seed remains idempotent.
-- NX-004 remains design only: no `MedicalDocument`/`PrescriptionLine`, document API, form or print view currently exists.
+- NX-004 models, migration, contracts, API, and synthetic document fixtures are implemented; prescription/report forms and print views remain in progress.
 
 Refer to `API_CONTRACT.md`, `DATA_MODEL.md`, and `ACTION_PLAN.md` for the current implementation inventory and verification status.
 

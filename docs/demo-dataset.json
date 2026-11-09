@@ -268,5 +268,43 @@
       "status": "reviewed",
       "resultNote": "Cine cardiotorácico conservado; sin infiltrados."
     }
+  ],
+  "documents": [
+    {
+      "id": "demo-document-prescription-001",
+      "patientId": "demo-patient-002",
+      "encounterId": "demo-encounter-002b",
+      "kind": "prescription",
+      "title": "[DEMO] Receta ficticia",
+      "body": "[DEMO] Texto general ficticio; no contiene indicaciones médicas.",
+      "lines": [
+        {
+          "id": "demo-prescription-line-001",
+          "medication": "[DEMO] Medicamento ficticio A — no usar",
+          "dose": "[DEMO] Dato de ejemplo",
+          "route": "[DEMO] Dato de ejemplo",
+          "frequency": "[DEMO] Dato de ejemplo",
+          "duration": "[DEMO] Dato de ejemplo",
+          "instructions": "[DEMO] Texto de ejemplo; no seguir"
+        },
+        {
+          "id": "demo-prescription-line-002",
+          "medication": "[DEMO] Medicamento ficticio B — no usar",
+          "dose": null,
+          "route": null,
+          "frequency": null,
+          "duration": null,
+          "instructions": null
+        }
+      ]
+    },
+    {
+      "id": "demo-document-report-001",
+      "patientId": "demo-patient-007",
+      "encounterId": null,
+      "kind": "report",
+      "title": "[DEMO] Informe ficticio",
+      "body": "INFORME FICTICIO DE DEMOSTRACIÓN — NO USAR PARA ATENCIÓN REAL.\nEste texto solo muestra el formato del informe. No describe hallazgos ni recomendaciones médicas."
+    }
   ]
 }

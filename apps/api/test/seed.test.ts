@@ -46,16 +46,20 @@ describe('idempotent demo seed', () => {
       encountersCreated: 9,
       appointmentsCreated: 9,
       studiesCreated: 2,
+      documentsCreated: 2,
     });
 
     const patients = await prisma.patient.count();
     const encounters = await prisma.encounter.count();
     const appointments = await prisma.appointment.count();
     const studies = await prisma.studyRequest.count();
+    const documents = await prisma.medicalDocument.count();
     expect(patients).toBe(7);
     expect(encounters).toBe(9);
     expect(appointments).toBe(9);
     expect(studies).toBe(2);
+    expect(documents).toBe(2);
+    expect(await prisma.prescriptionLine.count()).toBe(2);
   });
 
   it('creates nothing on a second run', async () => {
@@ -65,11 +69,61 @@ describe('idempotent demo seed', () => {
       encountersCreated: 0,
       appointmentsCreated: 0,
       studiesCreated: 0,
+      documentsCreated: 0,
     });
     expect(await prisma.patient.count()).toBe(7);
     expect(await prisma.encounter.count()).toBe(9);
     expect(await prisma.appointment.count()).toBe(9);
     expect(await prisma.studyRequest.count()).toBe(2);
+    expect(await prisma.medicalDocument.count()).toBe(2);
+    expect(await prisma.prescriptionLine.count()).toBe(2);
+  });
+
+  it('seeds the exact fictional prescription and unlinked report fixtures', async () => {
+    const prescription = await prisma.medicalDocument.findUnique({
+      where: { id: 'demo-document-prescription-001' },
+      include: { lines: { orderBy: { position: 'asc' } } },
+    });
+    expect(prescription).toMatchObject({
+      patientId: 'demo-patient-002',
+      encounterId: 'demo-encounter-002b',
+      kind: 'prescription',
+      title: '[DEMO] Receta ficticia',
+      body: '[DEMO] Texto general ficticio; no contiene indicaciones médicas.',
+      createdAt: new Date('2026-01-01T18:00:00.000Z'),
+    });
+    expect(prescription?.lines.map((line) => [line.id, line.position, line.medication])).toEqual([
+      ['demo-prescription-line-001', 0, '[DEMO] Medicamento ficticio A — no usar'],
+      ['demo-prescription-line-002', 1, '[DEMO] Medicamento ficticio B — no usar'],
+    ]);
+
+    const report = await prisma.medicalDocument.findUnique({ where: { id: 'demo-document-report-001' } });
+    expect(report).toMatchObject({
+      patientId: 'demo-patient-007',
+      encounterId: null,
+      kind: 'report',
+      title: '[DEMO] Informe ficticio',
+    });
+    expect(report?.body).toContain('No describe hallazgos ni recomendaciones médicas.');
+  });
+
+  it('preserves edits to seeded documents and prescription lines on re-seed', async () => {
+    await prisma.medicalDocument.update({
+      where: { id: 'demo-document-prescription-001' },
+      data: { title: 'Título de prueba editado por usuario' },
+    });
+    await prisma.prescriptionLine.update({
+      where: { id: 'demo-prescription-line-001' },
+      data: { medication: 'Texto de prueba editado por usuario' },
+    });
+    const result = await idempotentSeed(prisma);
+    expect(result.documentsCreated).toBe(0);
+    const prescription = await prisma.medicalDocument.findUnique({
+      where: { id: 'demo-document-prescription-001' },
+      include: { lines: { where: { id: 'demo-prescription-line-001' } } },
+    });
+    expect(prescription?.title).toBe('Título de prueba editado por usuario');
+    expect(prescription?.lines[0]?.medication).toBe('Texto de prueba editado por usuario');
   });
 
   it('seeds the demo study requests with exact states and the result note', async () => {
@@ -174,6 +228,7 @@ describe('idempotent demo seed', () => {
       encountersCreated: 0,
       appointmentsCreated: 0,
       studiesCreated: 0,
+      documentsCreated: 0,
     });
 
     expect(await prisma.patient.count()).toBe(8);
