@@ -75,6 +75,16 @@ These are **design proposals only**. Owner/doctor review is required before upda
 - O-007: Confirm exact required patient demographic and encounter fields with the doctor.
 - Q-NX-01 (surgical follow-through, NX-002): Does the doctor want an explicit procedure record with its own status (recommended / scheduled / performed / cancelled) and links to the eventual appointment/encounter, beyond free-text plan + appointment type? If yes, design the minimal record before building — do not invent OR/team/anesthesia concepts (D-025).
 - Q-NX-02 (study categories, NX-003): Confirm the fixed category list with the doctor (proposed: `Laboratorio`, `Imagenología`, `Rayos X`, `ECG`, `Ecografía`, `Otro` + free-text description).
+- Q-O006-01: Should a study be orderable for a patient without an encounter? If so, what minimum reason/source and order-time information must be recorded, and can a later encounter link be added?
+- Q-O006-02: What does the existing study state `completed` mean in clinical practice: performed, result available, or both? Is direct `ordered → reviewed` valid?
+- Q-O006-03: How are results received and documented in this local prototype without uploads/integrations? When may a doctor-authored result note be edited, and is a separate review timestamp required?
+- Q-O006-04: How should an erroneous or cancelled study request be represented under the current no-delete rule?
+- Q-O006-05: Should appointment completion and encounter linkage happen together, separately, or during encounter save? Can an attended appointment be completed without an encounter note?
+- Q-O006-06: Are persisted encounter drafts needed? If so, what does a draft mean, who can see it, and how is it distinguished from an ordinary saved/edited encounter? Autosave is not assumed.
+- Q-O006-07: Should a study link to a scheduled appointment, and can its encounter association be added or changed later?
+- Q-O006-08: Which preparation tasks are clinically useful before a procedure, and which tasks could a secretary prepare versus doctor-only? No staff role or procedure lifecycle is authorized by this question.
+
+The Q-O006 items are open questions for design review. The recommendations in `UX_REDESIGN.md` and proposals P-UX-01…P-UX-05 above do not change accepted decisions or authorize application work.
 
 ## Superseded decisions
 

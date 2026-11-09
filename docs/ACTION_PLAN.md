@@ -64,12 +64,12 @@ See `DECISIONS.md` and `ARCHITECTURE.md` for details.
 
 **Ordered sub-objectives:**
 
-1. Verify the audit's claims against routes, components, API contracts, services, and Prisma schema; distinguish code observations from usability hypotheses and unvalidated physician workflows.
-2. Map the ten requested clinical/admin workflows from patient lookup through follow-up and return to outstanding work; describe current path, friction, and desired outcome for each.
-3. Specify the consultation workspace and contextual action behavior, including explicit-save, draft, and interruption tradeoffs.
-4. Specify standalone and encounter-linked study request/review journeys; preserve current status meanings until physician questions are answered; describe additive migration/API options conditionally.
-5. Add low-fidelity screen layouts, interaction and state specifications, navigation/patient context, accessibility/responsive behavior, and journey-level verification criteria.
-6. Organize future implementation by UI-only, API, migration, and decision dependencies; reconcile the O-006 documents, commit focused units, and open a reviewable documentation PR targeting `feat/nx-expansion-complete`.
+1. **Complete (`a2a65ad`):** verify audit claims against routes, components, API contracts, services, and Prisma; separate source observations from usability hypotheses and unvalidated physician workflows.
+2. **Complete:** map all ten requested clinical/admin workflows from patient lookup through follow-up and return to outstanding work; describe current path, friction, and desired outcome.
+3. **Complete in proposal:** specify the consultation workspace, contextual actions, explicit-save, draft, and interruption tradeoffs.
+4. **Complete in proposal:** specify standalone and encounter-linked study request/review journeys; preserve current status meanings and make conditional migration/API options explicit.
+5. **Complete in proposal:** add low-fidelity layouts, screen interactions/states, navigation/context, accessibility/responsive behavior, and task-based verification criteria.
+6. **In progress:** final consistency review; commit the proposal and decision register; push and open a reviewable documentation PR targeting `feat/nx-expansion-complete`.
 
 **Dependencies:** O-005 implementation baseline `1309b51` (complete). Physician/owner decisions are needed before any design proposal becomes normative or is implemented, but do not block producing the options and recommendation.
 
@@ -222,7 +222,7 @@ Do not allow future Cloudflare/D1 transaction constraints, Google authentication
 
 ## 7. Next action
 
-Complete and commit the source-verified audit, then expand the design proposal and clinical question register. After documentation review, push the commits and open the O-006 documentation PR against `feat/nx-expansion-complete`; leave it unmerged. No application implementation begins in this mission.
+Complete the final documentation consistency check, commit the redesign proposal and question register in a focused commit, then push and open the O-006 documentation PR against `feat/nx-expansion-complete`. Leave it unmerged. No application implementation begins in this mission.
 
 ## 8. Living update rules
 
