@@ -704,6 +704,388 @@ a.timeline-item:hover {
   }
 }
 
+/* ── O-006 clinical workspace ──────────────────────────────────────────── */
+
+.consultation-workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(300px, 0.85fr);
+  align-items: start;
+  gap: var(--s-4);
+}
+
+.consultation-note-form,
+.consultation-context-column {
+  min-width: 0;
+}
+
+.consultation-context-column {
+  position: sticky;
+  top: var(--s-4);
+  display: grid;
+  gap: var(--s-4);
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
+}
+
+.consultation-note-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--s-3);
+  padding: var(--s-4) var(--s-5);
+  margin-bottom: var(--s-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+}
+
+.consultation-note-header h2 {
+  margin: 0;
+}
+
+.consultation-note-header .section-label {
+  margin: 0 0 var(--s-1);
+}
+
+.consultation-visit-context {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2) var(--s-4);
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.consultation-patient-link {
+  display: inline-flex;
+  margin-top: var(--s-2);
+}
+
+.consultation-note-card {
+  padding: var(--s-4) var(--s-5);
+}
+
+.consultation-note-card .field:last-child {
+  margin-bottom: 0;
+}
+
+.consultation-save-actions {
+  margin-top: var(--s-3);
+}
+
+.consultation-context {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  overflow: hidden;
+}
+
+.consultation-context > summary {
+  padding: var(--s-4);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.consultation-context-body {
+  display: grid;
+  gap: var(--s-4);
+  max-height: calc(100vh - 96px);
+  overflow-y: auto;
+  padding: 0 var(--s-4) var(--s-4);
+}
+
+.consultation-context-body h2 {
+  font-size: 15px;
+  line-height: 22px;
+  margin: 0 0 var(--s-2);
+}
+
+.context-value-block,
+.context-note-section {
+  display: grid;
+  gap: var(--s-1);
+  padding: var(--s-2) 0;
+  overflow-wrap: anywhere;
+}
+
+.context-value-block + .context-value-block,
+.context-note-section + .context-note-section {
+  border-top: 1px solid var(--border);
+}
+
+.context-value-block strong,
+.context-note-section strong {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.context-background {
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  padding: var(--s-2) 0;
+}
+
+.context-background > summary,
+.patient-background-details > summary,
+.older-timeline > summary,
+.context-older-encounters > summary {
+  color: var(--primary);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  padding: var(--s-2) 0;
+}
+
+.context-list,
+.patient-study-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.context-list li {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--s-2);
+  padding: var(--s-2) 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.context-secondary {
+  display: block;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.context-note {
+  margin-top: var(--s-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: var(--s-3);
+  background: var(--bg);
+}
+
+.context-note-head,
+.study-staging-heading,
+.patient-study-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--s-3);
+}
+
+.context-note-section > span,
+.context-note-section > em {
+  white-space: pre-wrap;
+}
+
+.context-caveat,
+.study-status-caveat {
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 1.45;
+  margin: var(--s-2) 0 0;
+}
+
+.consultation-actions-card > .btn {
+  width: 100%;
+}
+
+.follow-up-panel {
+  grid-column: 1 / -1;
+}
+
+.patient-workspace-head .actions {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.patient-more-actions {
+  position: relative;
+}
+
+.patient-more-actions > summary {
+  list-style: none;
+}
+
+.patient-more-actions > summary::-webkit-details-marker {
+  display: none;
+}
+
+.patient-more-actions-menu {
+  position: absolute;
+  z-index: 5;
+  right: 0;
+  top: calc(100% + 4px);
+  min-width: 210px;
+  display: grid;
+  gap: var(--s-1);
+  padding: var(--s-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.patient-more-actions-menu > a,
+.patient-more-actions-menu button {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: var(--s-2);
+  border-radius: var(--radius-sm);
+}
+
+.patient-safety-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--s-3);
+}
+
+.patient-safety-item {
+  display: grid;
+  align-content: start;
+  gap: var(--s-2);
+  min-height: 88px;
+  padding: var(--s-3);
+  background: var(--bg);
+  border-radius: var(--radius-sm);
+  overflow-wrap: anywhere;
+}
+
+.patient-safety-item strong {
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.patient-background-details {
+  margin-top: var(--s-3);
+  border-top: 1px solid var(--border);
+}
+
+.pending-kind {
+  min-width: 150px;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.older-timeline {
+  margin-top: var(--s-3);
+  border-top: 1px solid var(--border);
+}
+
+.patient-study-list {
+  margin-top: var(--s-3);
+}
+
+.patient-study-item {
+  padding: var(--s-3) 0;
+  border-top: 1px solid var(--border);
+  scroll-margin-top: var(--s-4);
+}
+
+.patient-study-head {
+  align-items: center;
+}
+
+.study-result-note {
+  margin: var(--s-2) 0;
+  padding: var(--s-2) var(--s-3);
+  border-left: 3px solid var(--border-strong);
+  color: var(--text-muted);
+  white-space: pre-wrap;
+}
+
+.study-review-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-2);
+  margin-top: var(--s-2);
+}
+
+.study-review-panel,
+.study-create-panel {
+  width: 100%;
+  margin-top: var(--s-3);
+  padding: var(--s-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+}
+
+.patient-study-item .field-hint {
+  margin: var(--s-1) 0 0;
+}
+
+@media (max-width: 900px) {
+  .consultation-workspace {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .consultation-context-column {
+    position: static;
+    order: -1;
+    max-height: none;
+    overflow: visible;
+  }
+
+  .consultation-context > summary {
+    display: list-item;
+  }
+
+  .consultation-context-body {
+    max-height: none;
+    overflow: visible;
+  }
+}
+
+@media (min-width: 901px) {
+  .consultation-context > summary {
+    display: none;
+  }
+
+  .consultation-context-body {
+    padding-top: var(--s-4);
+  }
+}
+
+@media (max-width: 639px) {
+  .consultation-note-header {
+    padding: var(--s-3);
+  }
+
+  .consultation-note-card {
+    padding: var(--s-3);
+  }
+
+  .consultation-note-header .badge {
+    white-space: nowrap;
+  }
+
+  .patient-safety-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .patient-workspace-head .actions {
+    justify-content: flex-start;
+  }
+
+  .patient-more-actions-menu {
+    right: auto;
+    left: 0;
+  }
+
+  .pending-kind {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .patient-pending-card .appt-row {
+    flex-wrap: wrap;
+  }
+}
+
 /* Note sections (encounter detail / form) */
 .note-section {
   margin-bottom: var(--s-5);

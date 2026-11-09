@@ -9,8 +9,12 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
 import {
+  type Appointment,
   type CreateEncounterInput,
   type EncounterType,
+  type EncounterSummary,
+  type PatientDetail,
+  type StudyRequest,
   type StudyCategory,
   createEncounterInputSchema,
   encounterTypeSchema,
@@ -18,8 +22,15 @@ import {
 } from '@nexus-med/contracts';
 
 import { ApiError, createEncounter } from '../../lib/api/client';
-import { ENCOUNTER_TYPE_LABELS, STUDY_CATEGORY_LABELS } from '../../lib/format';
-import { ErrorBanner } from '../primitives';
+import {
+  APPOINTMENT_TYPE_LABELS,
+  ENCOUNTER_TYPE_LABELS,
+  STUDY_CATEGORY_LABELS,
+  formatDateTime,
+} from '../../lib/format';
+import { Badge, ErrorBanner } from '../primitives';
+import { ClinicalContext } from './clinical-context';
+import { AppointmentForm } from '../appointments/appointment-form';
 import { useBeforeUnloadGuard } from '../../lib/use-before-unload-guard';
 
 type FieldErrors = Record<string, string[]>;
@@ -79,8 +90,20 @@ function nowLocalInput(): string {
   )}`;
 }
 
-export function ConsultationForm({ patientId }: { patientId: string }) {
+export function ConsultationForm({
+  patient,
+  encounters,
+  pendingStudies,
+  appointment,
+}: {
+  patient: PatientDetail;
+  encounters: EncounterSummary[];
+  pendingStudies: StudyRequest[];
+  appointment: Appointment | null;
+}) {
   const router = useRouter();
+  const [showFollowUp, setShowFollowUp] = useState(false);
+  const [createdFollowUp, setCreatedFollowUp] = useState<Appointment | null>(null);
   const [initialOccurredAt] = useState(() => nowLocalInput());
   const [occurredAt, setOccurredAt] = useState(initialOccurredAt);
   const [type, setType] = useState<EncounterType>('consulta');
@@ -105,7 +128,10 @@ export function ConsultationForm({ patientId }: { patientId: string }) {
     occurredAt !== initialOccurredAt ||
     type !== 'consulta' ||
     studies.length > 0;
-  useBeforeUnloadGuard(dirty);
+  useBeforeUnloadGuard(
+    dirty || showFollowUp,
+    'Hay cambios sin guardar. Si sales, perderás la consulta, los estudios agregados o la cita en captura.',
+  );
 
   const setSection = (field: keyof SectionValues) => (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setValues((v) => ({ ...v, [field]: e.target.value }));
@@ -177,8 +203,11 @@ export function ConsultationForm({ patientId }: { patientId: string }) {
 
     setSaving(true);
     try {
-      const created = await createEncounter(patientId, candidate);
-      router.push(`/patients/${patientId}/consultas/${created.id}`);
+      const created = await createEncounter(patient.id, candidate);
+      const appointmentQuery = appointment
+        ? `?appointmentId=${encodeURIComponent(appointment.id)}`
+        : '';
+      router.push(`/patients/${patient.id}/consultas/${created.id}${appointmentQuery}`);
       router.refresh();
     } catch (err) {
       if (err instanceof ApiError && Object.keys(err.fieldErrors).length > 0) {
@@ -193,8 +222,30 @@ export function ConsultationForm({ patientId }: { patientId: string }) {
   const errorFor = (field: string) => fieldErrors[field]?.[0] ?? null;
 
   return (
-    <form onSubmit={onSubmit} noValidate>
-      <div className="card">
+    <div className="consultation-workspace">
+      <form className="consultation-note-form" onSubmit={onSubmit} noValidate>
+        <header className="consultation-note-header">
+          <div>
+            <p className="section-label">Paciente</p>
+            <h2>{patient.fullName}</h2>
+            {patient.isArchived ? <Badge tone="archived">Archivado</Badge> : null}
+            <div className="consultation-visit-context">
+              <span>{appointment ? 'Atención con cita' : 'Consulta sin cita'}</span>
+              {appointment ? (
+                <span>
+                  {formatDateTime(appointment.startAt)} · {APPOINTMENT_TYPE_LABELS[appointment.type]}
+                </span>
+              ) : null}
+              {patient.externalIdentifier ? <span>Identificador: {patient.externalIdentifier}</span> : null}
+            </div>
+            <Link href={`/patients/${patient.id}`} className="btn btn-ghost btn-sm consultation-patient-link">
+              ← Ver paciente
+            </Link>
+          </div>
+          <span className="badge badge-status-ordered">Sin guardar</span>
+        </header>
+
+        <div className="card consultation-note-card">
         <div className="field">
           <label htmlFor="occurredAt">
             Fecha y hora de la consulta <span className="required">*</span>
@@ -258,7 +309,13 @@ export function ConsultationForm({ patientId }: { patientId: string }) {
         ))}
 
         <div className="field">
-          <div className="section-label">Estudios solicitados</div>
+          <div className="study-staging-heading">
+            <div>
+              <div className="section-label">Estudios solicitados</div>
+              <p className="field-hint">Los estudios agregados se guardan junto con esta consulta.</p>
+            </div>
+            <span className="badge badge-status-ordered">Sin guardar</span>
+          </div>
           {studies.length > 0 ? (
             <div className="study-form-rows">
               {studies.map((row, i) => (
@@ -325,18 +382,62 @@ export function ConsultationForm({ patientId }: { patientId: string }) {
             Agregar estudio
           </button>
         </div>
-      </div>
+        </div>
 
-      {banner ? <ErrorBanner message={banner} /> : null}
+        {banner ? <ErrorBanner message={banner} /> : null}
 
-      <div className="btn-row">
-        <button type="submit" className="btn btn-primary" disabled={saving}>
-          {saving ? 'Guardando…' : 'Guardar consulta'}
-        </button>
-        <Link href={`/patients/${patientId}`} className="btn btn-ghost">
-          Cancelar
-        </Link>
-      </div>
-    </form>
+        <div className="btn-row consultation-save-actions">
+          <button type="submit" className="btn btn-primary" disabled={saving}>
+            {saving ? 'Guardando…' : 'Guardar consulta'}
+          </button>
+          <Link href={`/patients/${patient.id}`} className="btn btn-ghost">
+            Cancelar
+          </Link>
+        </div>
+      </form>
+
+      <aside className="consultation-context-column">
+        <ClinicalContext patient={patient} encounters={encounters} studies={pendingStudies} />
+        <section className="card consultation-actions-card" aria-labelledby="consult-actions-title">
+          <h2 id="consult-actions-title">Acciones relacionadas</h2>
+          <button
+            type="button"
+            className="btn btn-secondary"
+            onClick={() => setShowFollowUp((show) => !show)}
+            aria-expanded={showFollowUp}
+          >
+            Programar seguimiento
+          </button>
+          <p className="field-hint">
+            Para crear una receta o un informe vinculados, guarda primero esta consulta. Tu texto seguirá aquí.
+          </p>
+          {createdFollowUp ? (
+            <p className="notice" role="status">
+              Cita creada para {formatDateTime(createdFollowUp.startAt)}.{' '}
+              <Link href={`/patients/${patient.id}/citas/${createdFollowUp.id}`}>Ver cita</Link>
+            </p>
+          ) : null}
+        </section>
+      </aside>
+
+      {showFollowUp ? (
+        <section className="card follow-up-panel" aria-labelledby="follow-up-title">
+          <div className="card-header">
+            <h2 id="follow-up-title">Programar seguimiento — {patient.fullName}</h2>
+            <button type="button" className="btn btn-ghost btn-sm" onClick={() => setShowFollowUp(false)}>
+              Cerrar
+            </button>
+          </div>
+          <p className="field-hint">La cita se guarda como un registro independiente. Esta consulta permanece sin guardar.</p>
+          <AppointmentForm
+            patientId={patient.id}
+            onCreated={(created) => {
+              setCreatedFollowUp(created);
+              setShowFollowUp(false);
+            }}
+          />
+        </section>
+      ) : null}
+    </div>
   );
 }

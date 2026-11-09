@@ -21,15 +21,14 @@ import {
 import {
   AppointmentStatusBadge,
   AppointmentTypeBadge,
-  StudyStatusBadge,
 } from '../../../components/appointments/badges';
 import { Timeline } from '../../../components/patients/timeline';
+import { PatientStudyWorkflow } from '../../../components/patients/study-workflow';
 import { ArchiveControl } from '../../../components/patients/archive-control';
 import { PatientContext } from '../../../components/shell/patient-context';
 import { Badge, ErrorBanner } from '../../../components/primitives';
 import { fetchServer } from '../../../lib/api/server';
 import {
-  STUDY_CATEGORY_LABELS,
   formatDate,
   formatAge,
   formatDateTime,
@@ -65,9 +64,6 @@ function documentPreview(document: MedicalDocument): string {
 
 export default async function PatientPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const pendingStudyQuery = new URLSearchParams();
-  PENDING_STUDY_STATUSES.forEach((status) => pendingStudyQuery.append('status', status));
-
   const [patientRes, encountersRes, apptsRes, studiesRes, documentsRes] = await Promise.all([
     fetchServer(`/api/patients/${encodeURIComponent(id)}`, patientDetailSchema),
     fetchServer(
@@ -79,7 +75,7 @@ export default async function PatientPage({ params }: { params: Promise<{ id: st
       z.array(appointmentSchema),
     ),
     fetchServer(
-      `/api/patients/${encodeURIComponent(id)}/studies?${pendingStudyQuery.toString()}`,
+      `/api/patients/${encodeURIComponent(id)}/studies`,
       z.array(studyRequestSchema),
     ),
     fetchServer(`/api/patients/${encodeURIComponent(id)}/documents`, z.array(medicalDocumentSchema)),
@@ -143,8 +139,9 @@ export default async function PatientPage({ params }: { params: Promise<{ id: st
     .filter((a) => a.status === 'scheduled' && localDateOfInstant(a.startAt) >= today)
     .reverse()
     .slice(0, 3);
-  // The server filter includes ordered and completed studies until review.
-  const pendingStudies = studiesRes.data;
+  const pendingStudies = studiesRes.data.filter((study) =>
+    PENDING_STUDY_STATUSES.some((status) => status === study.status),
+  );
   const documents = documentsRes.data;
 
   return (
@@ -156,7 +153,7 @@ export default async function PatientPage({ params }: { params: Promise<{ id: st
         backHref="/patients"
       />
 
-      <div className="page-head">
+      <div className="page-head patient-workspace-head">
         <h1 style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           {patient.fullName}
           {patient.isArchived ? <Badge tone="archived">Archivado</Badge> : null}
@@ -165,15 +162,19 @@ export default async function PatientPage({ params }: { params: Promise<{ id: st
           <Link href={`/patients/${patient.id}/consultas/nueva`} className="btn btn-primary">
             Nueva consulta
           </Link>
-          <Link href={`/patients/${patient.id}/editar`} className="btn btn-secondary">
-            Editar
-          </Link>
-          <Link href={`/patients/${patient.id}/antecedentes`} className="btn btn-secondary">
-            Antecedentes
-          </Link>
-          {!patient.isArchived ? (
-            <ArchiveControl patientId={patient.id} fullName={patient.fullName} />
-          ) : null}
+          {!patient.isArchived ? <Link href={`/patients/${patient.id}/citas/nueva`} className="btn btn-secondary">Nueva cita</Link> : null}
+          <a href="#patient-studies" className="btn btn-secondary">Solicitar estudio</a>
+          <details className="patient-more-actions">
+            <summary className="btn btn-ghost">Más acciones</summary>
+            <div className="patient-more-actions-menu">
+              <Link href={`/patients/${patient.id}/citas`}>Ver citas</Link>
+              {!patient.isArchived ? <Link href={`/patients/${patient.id}/recetas/nueva`}>Nueva receta</Link> : null}
+              {!patient.isArchived ? <Link href={`/patients/${patient.id}/informes/nueva`}>Nuevo informe</Link> : null}
+              <Link href={`/patients/${patient.id}/editar`}>Editar datos</Link>
+              <Link href={`/patients/${patient.id}/antecedentes`}>Editar antecedentes</Link>
+              {!patient.isArchived ? <ArchiveControl patientId={patient.id} fullName={patient.fullName} /> : null}
+            </div>
+          </details>
         </div>
       </div>
 
@@ -191,61 +192,57 @@ export default async function PatientPage({ params }: { params: Promise<{ id: st
         <SublineItem label="Identificador" value={patient.externalIdentifier} />
       </div>
 
-      <div className="card">
+      <section className="card patient-safety-card" aria-labelledby="patient-safety-title">
         <div className="card-header">
-          <h2>Antecedentes médicos</h2>
-          <Link href={`/patients/${patient.id}/antecedentes`} className="btn btn-ghost btn-sm">
-            Editar
-          </Link>
+          <h2 id="patient-safety-title">Contexto de seguridad</h2>
+          <Link href={`/patients/${patient.id}/antecedentes`} className="btn btn-ghost btn-sm">Editar antecedentes</Link>
         </div>
-        {BACKGROUND_ROWS.map((row) => {
-          const value = patient[row.key];
-          return (
+        <div className="patient-safety-grid">
+          {(['allergies', 'currentMedications'] as const).map((key) => (
+            <div className="patient-safety-item" key={key}>
+              <strong>{key === 'allergies' ? 'Alergias' : 'Medicamentos actuales'}</strong>
+              <span>{patient[key] || <em className="faint">No registrado</em>}</span>
+            </div>
+          ))}
+        </div>
+        <details className="patient-background-details">
+          <summary>Ver otros antecedentes médicos</summary>
+          {BACKGROUND_ROWS.filter((row) => row.key === 'medicalConditions' || row.key === 'previousSurgeries').map((row) => (
             <div className="bg-row" key={row.key}>
               <span className="bg-label">{row.label}</span>
-              <span className="bg-value">
-                {value ? value : <em className="faint">No registrado</em>}
-              </span>
+              <span className="bg-value">{patient[row.key] || <em className="faint">No registrado</em>}</span>
             </div>
-          );
-        })}
-      </div>
+          ))}
+        </details>
+      </section>
 
-      <div className="card">
-        <div className="card-header">
-          <h2>Próximas citas</h2>
-          <Link href={`/patients/${patient.id}/citas`} className="btn btn-ghost btn-sm">
-            Ver todas
-          </Link>
-        </div>
-        {nextAppointments.length === 0 ? (
-          <p className="faint">Sin citas programadas.</p>
-        ) : (
-          nextAppointments.map((appt) => (
+      {pendingStudies.length > 0 || nextAppointments.length > 0 ? (
+        <section className="card patient-pending-card" aria-labelledby="pending-work-title">
+          <div className="card-header"><h2 id="pending-work-title">Pendiente de atención</h2></div>
+          {nextAppointments.slice(0, 1).map((appt) => (
             <Link key={appt.id} href={`/patients/${patient.id}/citas/${appt.id}`} className="appt-row">
+              <span className="pending-kind">Próxima cita</span>
               <span className="appt-row-date">{formatDateTime(appt.startAt)}</span>
               <AppointmentTypeBadge type={appt.type} />
               <AppointmentStatusBadge status={appt.status} />
             </Link>
-          ))
-        )}
-        {!patient.isArchived ? (
-          <div className="form-actions">
-            <Link href={`/patients/${patient.id}/citas/nueva`} className="btn btn-primary btn-sm">
-              Nueva cita
-            </Link>
-          </div>
-        ) : null}
-      </div>
+          ))}
+          {pendingStudies.slice(0, 3).map((study) => (
+            <div className="appt-row" key={study.id}>
+              <span className="pending-kind">Estudio por revisar</span>
+              <span className="study-row-label">{study.description}</span>
+              <a href={`#study-${study.id}`}>Revisar estudio</a>
+            </div>
+          ))}
+        </section>
+      ) : null}
+
+      <Timeline patientId={patient.id} encounters={encounters} />
 
       <div className="card">
         <div className="card-header">
           <h2>Recetas e informes</h2>
           <span className="badge badge-type">{documents.length}</span>
-          <div className="actions">
-            <Link href={`/patients/${patient.id}/recetas/nueva`} className="btn btn-secondary btn-sm">Nueva receta</Link>
-            <Link href={`/patients/${patient.id}/informes/nueva`} className="btn btn-ghost btn-sm">Nuevo informe</Link>
-          </div>
         </div>
         {documents.length === 0 ? (
           <p className="faint">Sin recetas ni informes</p>
@@ -264,32 +261,7 @@ export default async function PatientPage({ params }: { params: Promise<{ id: st
         )}
       </div>
 
-      {pendingStudies.length > 0 ? (
-        <div className="card">
-          <div className="card-header">
-            <h2>Estudios pendientes</h2>
-            <span className="badge badge-type">{pendingStudies.length}</span>
-          </div>
-          {pendingStudies.map((study) => (
-            <div className="appt-row" key={study.id}>
-              <div className="study-row-main">
-                <div className="study-row-label">
-                  {STUDY_CATEGORY_LABELS[study.category] ?? study.category} · {study.description}
-                </div>
-                <div className="appt-row-range">
-                  Solicitada en {formatDateTime(study.encounter.occurredAt)} —{' '}
-                  <Link href={`/patients/${patient.id}/consultas/${study.encounter.id}`}>
-                    {study.encounter.reason ?? 'Ver consulta'}
-                  </Link>
-                </div>
-              </div>
-              <StudyStatusBadge status={study.status} />
-            </div>
-          ))}
-        </div>
-      ) : null}
-
-      <Timeline patientId={patient.id} encounters={encounters} />
+      <PatientStudyWorkflow patientId={patient.id} studies={studiesRes.data} encounters={encounters} />
     </>
   );
 }

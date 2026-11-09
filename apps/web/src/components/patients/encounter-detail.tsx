@@ -8,26 +8,31 @@
 // Editing never reassigns the patient (API-enforced).
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
 import {
+  type Appointment,
   type EncounterDetail,
+  type EncounterSummary,
   type EncounterType,
+  type PatientDetail,
   type StudyRequest,
   type UpdateEncounterInput,
   encounterTypeSchema,
 } from '@nexus-med/contracts';
 
-import { ApiError, updateEncounter, updateStudyStatus } from '../../lib/api/client';
+import { ApiError, updateEncounter } from '../../lib/api/client';
 import { Badge, ErrorBanner } from '../primitives';
-import { StudyStatusBadge } from '../appointments/badges';
 import {
   ENCOUNTER_TYPE_LABELS,
-  STUDY_CATEGORY_LABELS,
   formatDateTime,
   wasEdited,
 } from '../../lib/format';
 import { useBeforeUnloadGuard } from '../../lib/use-before-unload-guard';
+import { ClinicalContext } from './clinical-context';
+import { EncounterStudyWorkflow } from './study-workflow';
+import { EncounterAppointmentHandoff } from '../appointments/encounter-handoff';
 
 const SECTIONS: { key: keyof SectionValues; label: string; rows: number }[] = [
   { key: 'reason', label: 'Motivo de consulta', rows: 2 },
@@ -53,6 +58,43 @@ type SectionValues = {
 
 type FieldErrors = Record<string, string[]>;
 
+function EncounterContextActions({
+  patient,
+  encounter,
+  encounters,
+  patientStudies,
+  appointment,
+}: {
+  patient: PatientDetail;
+  encounter: EncounterDetail;
+  encounters: EncounterSummary[];
+  patientStudies: StudyRequest[];
+  appointment: Appointment | null;
+}) {
+  const returnTo = `/patients/${patient.id}/consultas/${encounter.id}`;
+  const documentQuery = new URLSearchParams({ encounterId: encounter.id, returnTo }).toString();
+  const followUpQuery = new URLSearchParams({ returnTo }).toString();
+
+  return (
+    <aside className="consultation-context-column">
+      <ClinicalContext patient={patient} encounters={encounters} studies={patientStudies} />
+      {appointment ? <EncounterAppointmentHandoff appointment={appointment} encounter={encounter} /> : null}
+      <section className="card consultation-actions-card" aria-labelledby="encounter-actions-title">
+        <h2 id="encounter-actions-title">Acciones de esta consulta</h2>
+        <Link className="btn btn-secondary" href={`/patients/${patient.id}/recetas/nueva?${documentQuery}`}>
+          Nueva receta
+        </Link>
+        <Link className="btn btn-secondary" href={`/patients/${patient.id}/informes/nueva?${documentQuery}`}>
+          Nuevo informe
+        </Link>
+        <Link className="btn btn-ghost" href={`/patients/${patient.id}/citas/nueva?${followUpQuery}`}>
+          Programar seguimiento
+        </Link>
+      </section>
+    </aside>
+  );
+}
+
 function toValues(e: EncounterDetail): SectionValues {
   return {
     reason: e.reason ?? '',
@@ -68,9 +110,17 @@ function toValues(e: EncounterDetail): SectionValues {
 export function EncounterDetail({
   encounter,
   studies,
+  patient,
+  encounters,
+  patientStudies,
+  appointment,
 }: {
   encounter: EncounterDetail;
   studies?: StudyRequest[];
+  patient: PatientDetail;
+  encounters: EncounterSummary[];
+  patientStudies: StudyRequest[];
+  appointment: Appointment | null;
 }) {
   const router = useRouter();
   const [editing, setEditing] = useState(false);
@@ -80,11 +130,6 @@ export function EncounterDetail({
   const [banner, setBanner] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const list = studies ?? [];
-  // One inline panel at a time: which study and which target status.
-  const [panel, setPanel] = useState<{ studyId: string; to: 'completed' | 'reviewed' } | null>(null);
-  const [note, setNote] = useState('');
-  const [studyBanner, setStudyBanner] = useState<string | null>(null);
-  const [savingStudy, setSavingStudy] = useState(false);
 
   const edited = wasEdited(encounter.createdAt, encounter.updatedAt);
 
@@ -96,6 +141,11 @@ export function EncounterDetail({
         (k) => values[k] !== toValues(encounter)[k],
       ));
   useBeforeUnloadGuard(dirty);
+
+  const cancelEditing = () => {
+    if (dirty && !window.confirm('Hay cambios sin guardar. ¿Descartar la edición?')) return;
+    setEditing(false);
+  };
 
   const startEditing = () => {
     setValues(toValues(encounter));
@@ -149,48 +199,26 @@ export function EncounterDetail({
     }
   };
 
-  const openStudyPanel = (studyId: string, to: 'completed' | 'reviewed') => {
-    setPanel({ studyId, to });
-    setNote('');
-    setStudyBanner(null);
-  };
-
-  const onStudySave = async () => {
-    if (!panel) return;
-    setSavingStudy(true);
-    setStudyBanner(null);
-    try {
-      await updateStudyStatus(panel.studyId, {
-        status: panel.to,
-        ...(note.trim() !== '' ? { resultNote: note.trim() } : {}),
-      });
-      setPanel(null);
-      setNote('');
-      // SSR re-render shows the new status badge (and the stored note).
-      router.refresh();
-    } catch (err) {
-      // Failed update keeps the last known state + banner; the panel and
-      // the note stay so the doctor can retry without re-typing.
-      setStudyBanner(
-        err instanceof ApiError
-          ? err.message
-          : 'No se pudo actualizar el estado del estudio.',
-      );
-    }
-    setSavingStudy(false);
-  };
-
   if (editing) {
     const errorFor = (field: string) => fieldErrors[field]?.[0] ?? null;
     return (
-      <form
-        noValidate
-        onSubmit={(e) => {
-          e.preventDefault();
-          void onSave();
-        }}
-      >
-        <div className="card">
+      <div className="consultation-workspace">
+        <form
+          className="consultation-note-form"
+          noValidate
+          onSubmit={(e) => {
+            e.preventDefault();
+            void onSave();
+          }}
+        >
+          <div className="consultation-note-header">
+            <div>
+              <p className="section-label">Editar consulta</p>
+              <h2>{patient.fullName}</h2>
+            </div>
+            <span className="badge badge-status-ordered">{dirty ? 'Cambios sin guardar' : 'Editando'}</span>
+          </div>
+          <div className="card consultation-note-card">
           <div className="field">
             <label htmlFor="edit-type">Tipo de atención</label>
             <select
@@ -221,27 +249,36 @@ export function EncounterDetail({
               {errorFor(s.key) ? <div className="field-error">{errorFor(s.key)}</div> : null}
             </div>
           ))}
-        </div>
-        {banner ? <ErrorBanner message={banner} /> : null}
-        <div className="btn-row">
-          <button type="submit" className="btn btn-primary" disabled={saving}>
-            {saving ? 'Guardando…' : 'Guardar cambios'}
-          </button>
-          <button
-            type="button"
-            className="btn btn-ghost"
-            onClick={() => setEditing(false)}
-            disabled={saving}
-          >
-            Cancelar edición
-          </button>
-        </div>
-      </form>
+          </div>
+          {banner ? <ErrorBanner message={banner} /> : null}
+          <div className="btn-row consultation-save-actions">
+            <button type="submit" className="btn btn-primary" disabled={saving}>
+              {saving ? 'Guardando…' : 'Guardar cambios'}
+            </button>
+            <button
+              type="button"
+              className="btn btn-ghost"
+              onClick={cancelEditing}
+              disabled={saving}
+            >
+              Cancelar edición
+            </button>
+          </div>
+        </form>
+        <EncounterContextActions
+          patient={patient}
+          encounter={encounter}
+          encounters={encounters}
+          patientStudies={patientStudies}
+          appointment={appointment}
+        />
+      </div>
     );
   }
 
   return (
-    <>
+    <div className="consultation-workspace">
+      <section className="consultation-note-form">
       <div className="encounter-head">
         <h1>{formatDateTime(encounter.occurredAt)}</h1>
         <span className="badge badge-type">{ENCOUNTER_TYPE_LABELS[encounter.type]}</span>
@@ -263,91 +300,12 @@ export function EncounterDetail({
         ))}
       </div>
 
-      {list.length > 0 ? (
-        <div className="card">
-          <div className="card-header">
-            <h2>Estudios</h2>
-          </div>
-          {list.map((study) => (
-            <div className="study-row" key={study.id}>
-              <div className="study-row-main">
-                <span className="study-row-label">
-                  {STUDY_CATEGORY_LABELS[study.category] ?? study.category} · {study.description}
-                </span>
-                {study.resultNote ? (
-                  <div className="study-row-note">{study.resultNote}</div>
-                ) : null}
-              </div>
-              <StudyStatusBadge status={study.status} />
-              {study.status === 'ordered' ? (
-                <>
-                  <button
-                    type="button"
-                    className="btn btn-ghost btn-sm"
-                    onClick={() => openStudyPanel(study.id, 'completed')}
-                  >
-                    Marcar completada
-                  </button>
-                  <button
-                    type="button"
-                    className="btn btn-ghost btn-sm"
-                    onClick={() => openStudyPanel(study.id, 'reviewed')}
-                  >
-                    Marcar revisada
-                  </button>
-                </>
-              ) : null}
-              {study.status === 'completed' ? (
-                <button
-                  type="button"
-                  className="btn btn-ghost btn-sm"
-                  onClick={() => openStudyPanel(study.id, 'reviewed')}
-                >
-                  Marcar revisada
-                </button>
-              ) : null}
-            </div>
-          ))}
-          {panel ? (
-            <div className="study-panel">
-              <div className="field">
-                <label htmlFor="study-note">Resultado / observación</label>
-                <textarea
-                  id="study-note"
-                  rows={3}
-                  maxLength={1000}
-                  value={note}
-                  onChange={(e) => setNote(e.target.value)}
-                  placeholder="Palabras del doctor; nunca una interpretación"
-                />
-              </div>
-              <div className="btn-row">
-                <button
-                  type="button"
-                  className="btn btn-primary"
-                  onClick={() => void onStudySave()}
-                  disabled={savingStudy}
-                >
-                  {savingStudy ? 'Guardando…' : 'Guardar'}
-                </button>
-                <button
-                  type="button"
-                  className="btn btn-ghost"
-                  onClick={() => {
-                    setPanel(null);
-                    setNote('');
-                    setStudyBanner(null);
-                  }}
-                  disabled={savingStudy}
-                >
-                  Cancelar
-                </button>
-              </div>
-            </div>
-          ) : null}
-          {studyBanner ? <ErrorBanner message={studyBanner} /> : null}
-        </div>
-      ) : null}
+      <EncounterStudyWorkflow
+        patientId={patient.id}
+        encounterId={encounter.id}
+        encounters={encounters}
+        studies={list}
+      />
 
       {banner ? <ErrorBanner message={banner} /> : null}
 
@@ -356,6 +314,14 @@ export function EncounterDetail({
           Editar consulta
         </button>
       </div>
-    </>
+      </section>
+      <EncounterContextActions
+        patient={patient}
+        encounter={encounter}
+        encounters={encounters}
+        patientStudies={patientStudies}
+        appointment={appointment}
+      />
+    </div>
   );
 }

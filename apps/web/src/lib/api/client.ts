@@ -10,6 +10,7 @@ import {
   type CreateAppointmentInput,
   type CreateEncounterInput,
   type CreateEncounterStudiesInput,
+  type CreatePatientStudiesInput,
   type CreatePatientInput,
   type CreateMedicalDocumentInput,
   type EncounterDetail,
@@ -30,6 +31,7 @@ import {
   createAppointmentInputSchema,
   createEncounterInputSchema,
   createEncounterStudiesInputSchema,
+  createPatientStudiesInputSchema,
   createPatientInputSchema,
   encounterDetailSchema,
   encounterSummarySchema,
@@ -338,6 +340,19 @@ export function createEncounterStudies(
   createEncounterStudiesInputSchema.parse(input);
   return request(
     `/encounters/${encodeURIComponent(encounterId)}/studies`,
+    { method: 'POST', body: JSON.stringify(input) },
+    asList(studyRequestSchema),
+  );
+}
+
+/** Create patient-level study requests, optionally tied to one encounter. */
+export function createPatientStudies(
+  patientId: string,
+  input: CreatePatientStudiesInput,
+): Promise<StudyRequest[]> {
+  createPatientStudiesInputSchema.parse(input);
+  return request(
+    `/patients/${encodeURIComponent(patientId)}/studies`,
     { method: 'POST', body: JSON.stringify(input) },
     asList(studyRequestSchema),
   );

@@ -7,9 +7,12 @@ import { notFound } from 'next/navigation';
 import { z } from 'zod';
 
 import {
+  appointmentSchema,
+  encounterSummarySchema,
   encounterDetailSchema,
   patientDetailSchema,
   studyRequestSchema,
+  type Appointment,
 } from '@nexus-med/contracts';
 
 import { EncounterDetail as Detail } from '../../../../../components/patients/encounter-detail';
@@ -21,18 +24,32 @@ export const dynamic = 'force-dynamic';
 
 export default async function EncounterPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string; eid: string }>;
+  searchParams: Promise<{ appointmentId?: string | string[] }>;
 }) {
-  const { id, eid } = await params;
+  const [{ id, eid }, query] = await Promise.all([params, searchParams]);
+  const appointmentId = Array.isArray(query.appointmentId) ? query.appointmentId[0] : query.appointmentId;
+  const pendingStudyQuery = new URLSearchParams();
+  pendingStudyQuery.append('status', 'ordered');
+  pendingStudyQuery.append('status', 'completed');
 
-  const [patientRes, encounterRes, studiesRes] = await Promise.all([
+  const [patientRes, encounterRes, studiesRes, encountersRes, patientStudiesRes, appointmentRes] = await Promise.all([
     fetchServer(`/api/patients/${encodeURIComponent(id)}`, patientDetailSchema),
     fetchServer(`/api/encounters/${encodeURIComponent(eid)}`, encounterDetailSchema),
     fetchServer(
       `/api/encounters/${encodeURIComponent(eid)}/studies`,
       z.array(studyRequestSchema),
     ),
+    fetchServer(`/api/patients/${encodeURIComponent(id)}/encounters`, z.array(encounterSummarySchema)),
+    fetchServer(
+      `/api/patients/${encodeURIComponent(id)}/studies?${pendingStudyQuery.toString()}`,
+      z.array(studyRequestSchema),
+    ),
+    appointmentId
+      ? fetchServer(`/api/appointments/${encodeURIComponent(appointmentId)}`, appointmentSchema)
+      : Promise.resolve(null),
   ]);
 
   if (!patientRes.ok) {
@@ -62,11 +79,29 @@ export default async function EncounterPage({
       </>
     );
   }
+  if (!encountersRes.ok) {
+    if (encountersRes.notFound) notFound();
+    return <ErrorBanner message={encountersRes.error} retryHref={`/patients/${id}/consultas/${eid}`} />;
+  }
+  if (!patientStudiesRes.ok) {
+    if (patientStudiesRes.notFound) notFound();
+    return <ErrorBanner message={patientStudiesRes.error} retryHref={`/patients/${id}/consultas/${eid}`} />;
+  }
 
   const patient = patientRes.data;
   const encounter = encounterRes.data;
   if (encounter.patientId !== patient.id) {
     notFound();
+  }
+
+  let appointment: Appointment | null = null;
+  if (appointmentRes) {
+    if (!appointmentRes.ok) {
+      if (appointmentRes.notFound) notFound();
+      return <ErrorBanner message={appointmentRes.error} retryHref={`/patients/${id}/consultas/${eid}`} />;
+    }
+    if (appointmentRes.data.patient.id !== patient.id) notFound();
+    appointment = appointmentRes.data;
   }
 
   return (
@@ -77,7 +112,14 @@ export default async function EncounterPage({
         isArchived={patient.isArchived}
         backHref={`/patients/${patient.id}`}
       />
-      <Detail encounter={encounter} studies={studiesRes.data} />
+      <Detail
+        encounter={encounter}
+        studies={studiesRes.data}
+        patient={patient}
+        encounters={encountersRes.data}
+        patientStudies={patientStudiesRes.data}
+        appointment={appointment}
+      />
     </>
   );
 }
