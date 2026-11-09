@@ -305,3 +305,13 @@ Add the next entry when O-001 reaches a meaningful verified milestone, such as t
 **Impact:** The owner and physician have a concrete proposal to approve, revise, or reject before any implementation. O-005 remains the authoritative implemented behavior until then.
 
 **References:** `UX_AUDIT.md`, `UX_REDESIGN.md`, `DECISIONS.md` (P-UX-01…05 and Q-O006-01…08), `ACTION_PLAN.md` (PR #6 and next action), `ROADMAP.md`.
+
+### 2026-11-09 — O-006 implementation authorized
+
+**Type:** Scope transition
+
+**Context:** The owner mission authorizes the full clinical workflow and UX implementation described in PR #6, superseding the proposal-only boundary in the original design review. Work starts from the latest documentation head `b63e806` on `feat/o006-clinical-workflows`; PR #6 remains open and unmerged.
+
+**Execution boundary:** Implement optional encounter links for patient-owned study requests, consultation context, appointment handoff, contextual documents/follow-up, and the focused patient workspace. Keep the single-surgeon local prototype, synthetic records, explicit save, and O-005 regression behavior. Q-O006 clinical semantics remain open; preserve existing `completed` values and do not infer performed/result-received meaning or event times.
+
+**References:** O-006 mission brief (2026-11-09); `DECISIONS.md` D-033 and Q-O006-01…08; `TASKS.md` §7; `ACTION_PLAN.md` §3; PR #6.

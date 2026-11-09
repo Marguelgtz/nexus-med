@@ -256,3 +256,49 @@ Acceptance: doctor-authored content persists and reopens from patient context; p
 At the start of each phase, review its objective and acceptance criteria against actual findings. Revise this file only when scope, dependencies, sequence, or acceptance criteria need to change. Expand the active objective in `ACTION_PLAN.md` into the live sequential sub-objective stack.
 
 During a phase, track all progress in `ACTION_PLAN.md`, not here. At phase completion, use verified results to adjust the next phase. Record meaningful milestones and durable findings in `PROJECT_HISTORY.md`; keep current accepted decisions in `DECISIONS.md`.
+
+## 7. Phase 5 — O-006 clinical workflow and UX implementation (authorized)
+
+**Objective O-006:** Implement the owner-authorized design in `UX_REDESIGN.md` as a complete local clinical workflow. This phase extends O-005 without changing its unrelated scope or treating unresolved clinical semantics as settled. Owner mission brief 2026-11-09.
+
+**Phase status:** Active on `feat/o006-clinical-workflows`, stacked on the latest O-006 documentation branch `docs/o006-clinical-workflow-ux` (PR #6, open and unmerged). Clinical decisions Q-O006-01…08 remain tracked; conservative implementation assumptions are recorded in `DECISIONS.md`.
+
+### Work packages
+
+**O006-1 — Patient-owned study API and migration**
+- Make `StudyRequest.encounterId` optional while keeping `patientId` required. Preserve existing IDs, patient/encounter associations, categories, descriptions, statuses, and result notes. Validate an optional encounter belongs to the patient on the server.
+- Add patient-scoped study creation and maintain the existing encounter-scoped API as a compatible entry point. Keep nested new-encounter study creation atomic.
+- Extend shared DTOs, Zod validation, service mapping, patient and encounter list reads, and focused integration tests.
+- Retain the existing `ordered` / `completed` / `reviewed` semantics and transition rules. Surface the ambiguity of legacy `completed`; add no speculative event/date mapping.
+
+Acceptance: standalone requests persist with no encounter; linked requests reject cross-patient IDs; existing encounter creation/add/list/status behavior remains; the migration preserves all current rows; repeatable status filtering and seed preservation pass.
+
+**O006-2 — Consultation workspace and clinical context**
+- Reconcile the approved O-006 layouts/interactions into `UI_SPEC.md` before screen implementation.
+- Load patient safety/background context, recent encounter summaries, pending studies, and optional appointment context through request-time SSR/no-store reads. Fetch a full prior note only on explicit request.
+- Implement a desktop two-column consultation workspace, narrow-screen stacked context, staged unsaved study rows, explicit save states, in-app leave confirmation, and all existing note fields.
+
+Acceptance: note remains primary and editable while context is available; unknown stays distinct from negative; scheduled and walk-in context are explicit; save failures retain all input; internal navigation cannot silently discard changed text; no autosave/draft is added.
+
+**O006-3 — Study ordering and review surfaces**
+- Add standalone study request controls/listing on the patient workspace and add-study action on saved encounter detail; use the same patient-study API and preserve associations.
+- Support staged studies during a new consultation and persist them atomically with the encounter.
+- Keep current status transitions; display that no separate performed/result-received event is recorded until physician semantics are defined.
+
+Acceptance: create/list/review from patient and encounter context; statuses remain forward-only; result notes are doctor-entered verbatim; pending work links to the correct patient/encounter; no historical status is rewritten.
+
+**O006-4 — Appointment handoff and contextual continuity**
+- Add `Atender paciente` to eligible scheduled appointment surfaces and carry patient, appointment, planned type, and time into a new consultation.
+- Keep appointment status unchanged on entry and encounter save. Offer a separate explicit same-patient complete-and-link action after save; show completion/link failures separately.
+- Add encounter-context actions for prescriptions/reports after an explicit save checkpoint and follow-up appointment creation with patient context and return navigation.
+
+Acceptance: unscheduled care remains available; opening a visit never mutates it; appointment-link writes preserve single-patient integrity; follow-up/document actions do not lose note values or claim success before API confirmation.
+
+**O006-5 — Patient workspace and integrated reliability**
+- Reorder the patient workspace around identity, unknown/recorded safety context, next appointment, actionable study review, recent encounters, and historical documents without adding a dashboard.
+- Reconcile `PRODUCT.md`, `WORKFLOWS.md`, `API_CONTRACT.md`, `DATA_MODEL.md`, `UI_SPEC.md`, `DEMO_DATA.md`, `TESTING.md`, `DECISIONS.md`, `ACTION_PLAN.md`, and `PROJECT_HISTORY.md` with implemented behavior.
+- Run the complete quality gate and exercise all main O-006 and O-005 workflows using synthetic data.
+
+Acceptance: web/API types, tests, lint and build pass; fresh migrations and seed preserve the exact fixtures; repeated startup preserves edits; browser verification covers the primary journeys and responsive/keyboard behavior; no excluded capability or feature merge is introduced.
+
+**Phase exit:** All five work packages are integrated and verified, documentation matches code, the implementation PR stack is open and merge-ready, and unresolved physician questions are clearly recorded without unsupported clinical assumptions.

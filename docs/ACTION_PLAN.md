@@ -1,10 +1,10 @@
 # Living Action Plan — Medical Platform MVP
 
 **Document type:** Active execution state (living document)  
-**Last updated:** 2026-11-08  
+**Last updated:** 2026-11-09
 **Owner:** Project owner  
 **Primary agent:** Hermes Agent  
-**Current implementation state (updated 2026-11-08):** O-001–O-005 are implemented and verified; O-005 baseline is `feat/nx-expansion-complete` at `1309b51`. O-006 is a documentation-only redesign proposal on `docs/o006-clinical-workflow-ux`, based on that commit at `0f3bcb7`; source audit, redesign/question register, and review handoff are committed through `d11e452`. PR #6 is open against `feat/nx-expansion-complete`; no application code changed and nothing was merged. Earlier feature PRs #1–#4 remain open in their stack and PR #5 is merged.
+**Current implementation state (updated 2026-11-09):** O-001–O-005 remain implemented and verified on `feat/nx-expansion-complete` at `1309b513`. The owner has authorized full O-006 implementation from the reviewed design. PR #6 remains open and unmerged; implementation is on `feat/o006-clinical-workflows`, based on its latest head `b63e806`. No O-006 application changes are complete yet. Earlier feature PRs #1–#4 remain open in their stack and PR #5 is merged.
 
 ---
 
@@ -26,7 +26,7 @@ Do not duplicate the entire phase task catalog here. Reference task IDs where us
 
 ### Overall status
 
-**O-001–O-005 complete: the local MVP and four product expansions are implemented and verified.** The monorepo contains the Prisma 7 + SQLite data layer, Hono API, shared contracts, idempotent synthetic seed, Next.js SSR UI, and local runtime. O-005 adds appointments/calendar, encounter types, encounter-linked study requests, and printable prescriptions/reports. Its final recorded verification is in `TESTING.md` and the completed O-005 section below. O-006 is limited to auditing and proposing a clinical workflow/UX redesign; it does not authorize application code changes.
+**O-001–O-005 complete; O-006 implementation active.** The O-005 local MVP and four product expansions remain the verified code baseline. The owner-authorized O-006 scope adds an integrated consultation workspace, patient-level study requests, study review workflow improvements, appointment handoff, contextual documents/follow-up, and a focused patient workspace. Implementation must retain synthetic-only data, explicit saving, and O-005 behavior while clinical status questions remain unresolved.
 
 ### Confirmed direction
 
@@ -54,30 +54,30 @@ See `DECISIONS.md` and `ARCHITECTURE.md` for details.
 | UX/UI specification | Complete (O-002) | `docs/UI_SPEC.md` — screens, interactions, states, visual system, story coverage, decisions U-01–U-08 |
 | Frontend product workflows | Complete (O-003/O-004) | Full product UI per `UI_SPEC.md` (registry, forms, timeline, detail, edit); first-run demo verified with persistence across restarts |
 | Expansion (NX-001…NX-004) | Complete on `feat/nx-expansion-complete` | All four vertical slices browser-verified; complete automated quality gate is green; implementation committed through `e2d6590` |
-| O-006 design discovery | Proposal complete; PR #6 open | Source audit `a2a65ad`; ten journeys, screen layouts/states, conditional API/migration plan, and Q-O006 register in `628e7fa`; PR targets `feat/nx-expansion-complete` |
+| O-006 UX design | Reviewed; owner-authorized for implementation | PR #6 at `docs/o006-clinical-workflow-ux`; Q-O006-01…08 remain open where clinical meaning needs validation |
 
-## 3. Active objective — O-006 clinical workflow and UX redesign
+## 3. Active objective — O-006 full clinical workflow and UX implementation
 
-**Outcome:** A concrete, implementation-ready proposal for the whole surgeon workflow that remains non-authoritative until owner/physician approval. No Next.js, API, contracts, Prisma, fixtures, or runtime code changes.
+**Outcome:** Deliver the owner-authorized O-006 experience end to end through Next.js, Hono, shared contracts, Prisma/SQLite, tests, synthetic data, and synchronized documentation. PR #6 is the design parent and remains open and unmerged.
 
-**Scope:** Validate `UX_AUDIT.md` against the O-005 implementation; improve `UX_REDESIGN.md` with current/proposed end-to-end journeys, consultation workspace, independent study-ordering/review, navigation/context, screen-level interactions, wireframes, state handling, accessibility, responsive behavior, and conditional API/data migration implications. Record unresolved questions without promoting proposals into confirmed requirements.
+**Scope:** Implement the approved consultation workspace and patient context, independent study requests, conservative study review, appointment-to-consultation entry, contextual prescriptions/reports/follow-up, and patient workspace hierarchy. Preserve historical study associations and status values; do not add uploads, staff accounts, AI, external services, persistent drafts, appointment/procedure study links, or a procedure lifecycle.
 
 **Ordered sub-objectives:**
 
-1. **Complete (`a2a65ad`):** verify audit claims against routes, components, API contracts, services, and Prisma; separate source observations from usability hypotheses and unvalidated physician workflows.
-2. **Complete:** map all ten requested clinical/admin workflows from patient lookup through follow-up and return to outstanding work; describe current path, friction, and desired outcome.
-3. **Complete in proposal:** specify the consultation workspace, contextual actions, explicit-save, draft, and interruption tradeoffs.
-4. **Complete in proposal:** specify standalone and encounter-linked study request/review journeys; preserve current status meanings and make conditional migration/API options explicit.
-5. **Complete in proposal:** add low-fidelity layouts, screen interactions/states, navigation/context, accessibility/responsive behavior, and task-based verification criteria.
-6. **Complete:** final documentation-only review passed; branch pushed and documentation PR #6 opened against `feat/nx-expansion-complete`. Await owner/physician review; no application implementation begins before explicit approval.
+1. **In progress — data/API foundation:** make encounter association optional for patient studies; add patient-scoped creation/listing with same-patient validation; retain the existing encounter endpoint and statuses; migrate existing data without changing it; add API integration coverage.
+2. **Next — canonical UX contract:** reconcile `UI_SPEC.md`, `WORKFLOWS.md`, `API_CONTRACT.md`, and `DATA_MODEL.md` with the authorized O-006 behavior and explicit conservative assumptions before product screens.
+3. **Consultation workspace:** deliver request-time patient/encounter context, recent-encounter access, a two-column responsive note workspace, staged studies, contextual actions, save feedback, and in-app unsaved-change protection.
+4. **Study and patient workflows:** enable patient-level and encounter-linked study ordering/review, a focused patient workspace with current safety context and actionable work, and progressive access to historical encounters.
+5. **Care continuity:** add appointment handoff with patient/appointment context, explicit completion/linking after encounter save, contextual prescription/report creation, and patient-prefilled follow-up scheduling with return to the encounter.
+6. **Integrated verification and handoff:** run API/web tests, typecheck, lint, build, clean migration/seed, repeat-start persistence, and browser checks for the primary journeys; reconcile final docs and open the implementation PR stack without merging.
 
-**Dependencies:** O-005 implementation baseline `1309b51` (complete). Physician/owner decisions are needed before any design proposal becomes normative or is implemented, but do not block producing the options and recommendation.
+**Dependencies and assumptions:** Start from O-005 at `1309b513` through the latest O-006 docs head `b63e806`. Use existing SSR reads where practical. Q-O006-02/03 remain clinically unresolved: retain `ordered`/`completed`/`reviewed`, preserve old rows, and do not label `completed` as performed or result-received. Do not introduce event timestamps or new status semantics without physician validation. Use `createdAt` only as entry time for standalone requests; do not claim it is the clinical order time.
 
-**Deliverables:** Updated `docs/UX_AUDIT.md` and `docs/UX_REDESIGN.md`; O-006 open questions added to `docs/DECISIONS.md` without changing accepted decisions; current progress and review handoff in this file; documentation PR only after the artifacts are complete.
+**Deliverables:** Safe migration, Hono routes/services, shared DTOs/schemas, API integration tests, complete responsive workflow screens, updated normative product/API/UI/data docs, updated demo/test evidence, reviewable commits, and an open PR based on PR #6.
 
-**Acceptance:** All ten workflows are covered; scheduled and unscheduled consultations are distinguished; relevant history stays available during documentation; a standalone study request does not require a fictitious encounter; performed/result-available/reviewed meanings are not conflated without validation; save, error and interruption states are explicit; migration/API impact and implementation order are concrete; O-005 remains the authoritative as-built specification; no application code is changed.
+**Acceptance:** All twelve criteria in the owner O-006 mission are met, including persisted patient and optional same-patient encounter study associations; explicit appointment linking/completion; preserved unsaved notes and patient context; no invented clinical facts; legacy study status values unchanged; accessible responsive behavior; O-005 regression coverage; verified clean startup/re-seeding; and an implementation PR left unmerged.
 
-**Branch/PR:** PR #6 is open at `https://github.com/Marguelgtz/nexus-med/pull/6`. Base: `feat/nx-expansion-complete`; head: `docs/o006-clinical-workflow-ux`. The PR is documentation-only and must remain unmerged pending owner review.
+**Branch/PR:** `feat/o006-clinical-workflows` is based on `docs/o006-clinical-workflow-ux` at `b63e806`. PR #6 (`feat/nx-expansion-complete` ← `docs/o006-clinical-workflow-ux`) is open and unmerged. Open the implementation PR against the documentation branch after the integrated slice is reviewable; do not merge feature PRs.
 
 ## 4. Most recent completed objective — O-005
 

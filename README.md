@@ -2,7 +2,7 @@
 
 A local-first prototype specification for one general surgeon. The product objective is to validate patient management and clinical continuity using clearly synthetic demo records.
 
-> **Current implementation (2026-11-08):** O-001–O-005 are documented as implemented and integrated-verified on `feat/nx-expansion-complete` (`1309b513`): the most recent baseline has appointments/calendar, encounter types, study requests, and browser-printable prescriptions/reports. O-005 records 107 API + 32 web passing tests, clean migration/seed and browser checks in `docs/TESTING.md`; these were not rerun during this documentation-only work. `main` is still documentation-only and the earlier feature PR stack is open. A proposed O-006 UX review is tracked separately in `docs/UX_AUDIT.md` / `docs/UX_REDESIGN.md`.
+> **Current implementation baseline (2026-11-09):** O-001–O-005 are implemented and integrated-verified on `feat/nx-expansion-complete` (`1309b513`). O-006 implementation is authorized and underway on `feat/o006-clinical-workflows`, stacked on the O-006 design branch; O-006 capabilities are not yet included in this baseline. See `docs/ACTION_PLAN.md` and `docs/TESTING.md` for current execution and verification state.
 
 ## Implemented capabilities and phase status
 
@@ -93,7 +93,7 @@ All commands are implemented and verified; see `docs/TESTING.md` for the verific
 - `docs/PROJECT_HISTORY.md` — chronological archive of significant milestones, findings, lessons, and material scope changes.
 - `docs/TESTING.md` — verification requirements.
 - `docs/UX_AUDIT.md` — current UX/workflow issues grounded in source code (O-006 discovery).
-- `docs/UX_REDESIGN.md` — **proposed, not approved** clinical workflow and UX redesign.
+- `docs/UX_REDESIGN.md` — owner-authorized O-006 clinical workflow and UX direction; implementation status is tracked in `docs/ACTION_PLAN.md`.
 - `docs/BOOTSTRAP_PROMPT.md` — implementation prompt for Hermes.
 
 ## Development order

@@ -7,7 +7,7 @@
 
 `PRODUCT.md` defines scope and user-story acceptance criteria. This document describes how those stories should flow through the application. Together, the workflow sections cover patient create/search/update/archive, patient context, medical-background editing, encounter creation/review, save/error behavior, and the first-run demo experience. O-005 approved appointments, encounter types, study requests, and printable documents; all four slices are implemented and verified. File uploads/storage and Google authentication remain excluded.
 
-**Documentation boundary:** Sections below describe the implemented O-005 workflow. Draft O-006 alternatives are maintained separately in `UX_AUDIT.md` and `UX_REDESIGN.md`; they are not approved replacements for the behavior recorded here.
+**Documentation boundary:** O-006 implementation is owner-authorized by D-033 and is in progress. Until each vertical slice is implemented and verified, the sections below remain the as-built O-005 behavior; update them with the corresponding completed slice rather than claiming planned behavior early.
 
 ## 1. Application entry and navigation
 
