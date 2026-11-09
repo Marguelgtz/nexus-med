@@ -4,7 +4,7 @@
 **Last updated:** 2026-11-08  
 **Owner:** Project owner  
 **Primary agent:** Hermes Agent  
-**Current implementation state (updated 2026-11-08):** O-001–O-005 are implemented and verified; O-005 baseline is `feat/nx-expansion-complete` at `1309b51`. O-006 is an active documentation-only redesign proposal on `docs/o006-clinical-workflow-ux`, based on that baseline at `0f3bcb7`; no application changes are authorized. PRs #1–#4 remain open in their existing stack and PR #5 is merged. The O-006 documentation PR targeting `feat/nx-expansion-complete` has not yet been opened.
+**Current implementation state (updated 2026-11-08):** O-001–O-005 are implemented and verified; O-005 baseline is `feat/nx-expansion-complete` at `1309b51`. O-006 is an active documentation-only proposal on `docs/o006-clinical-workflow-ux`, based on that commit at `0f3bcb7`; the source-verified audit is committed as `a2a65ad` and the redesign proposal/question register as `628e7fa`. No application code is changed. PRs #1–#4 remain open in their existing stack and PR #5 is merged. The O-006 documentation PR targeting `feat/nx-expansion-complete` has not yet been opened.
 
 ---
 
@@ -54,7 +54,7 @@ See `DECISIONS.md` and `ARCHITECTURE.md` for details.
 | UX/UI specification | Complete (O-002) | `docs/UI_SPEC.md` — screens, interactions, states, visual system, story coverage, decisions U-01–U-08 |
 | Frontend product workflows | Complete (O-003/O-004) | Full product UI per `UI_SPEC.md` (registry, forms, timeline, detail, edit); first-run demo verified with persistence across restarts |
 | Expansion (NX-001…NX-004) | Complete on `feat/nx-expansion-complete` | All four vertical slices browser-verified; complete automated quality gate is green; implementation committed through `e2d6590` |
-| O-006 design discovery | Active on `docs/o006-clinical-workflow-ux` | Audit and redesign proposal exist at base `0f3bcb7`; validate findings against current code, complete journeys/screens/states/API-migration plan, record open clinical questions, then prepare a documentation PR to `feat/nx-expansion-complete` |
+| O-006 design discovery | Proposal complete; preparing review PR | Source audit `a2a65ad`; ten journeys, screen layouts/states, conditional API/migration plan, and Q-O006 register committed in `628e7fa`; final docs-only check and PR remain |
 
 ## 3. Active objective — O-006 clinical workflow and UX redesign
 
@@ -69,7 +69,7 @@ See `DECISIONS.md` and `ARCHITECTURE.md` for details.
 3. **Complete in proposal:** specify the consultation workspace, contextual actions, explicit-save, draft, and interruption tradeoffs.
 4. **Complete in proposal:** specify standalone and encounter-linked study request/review journeys; preserve current status meanings and make conditional migration/API options explicit.
 5. **Complete in proposal:** add low-fidelity layouts, screen interactions/states, navigation/context, accessibility/responsive behavior, and task-based verification criteria.
-6. **In progress:** final consistency review; commit the proposal and decision register; push and open a reviewable documentation PR targeting `feat/nx-expansion-complete`.
+6. **In progress:** run the final documentation-only consistency check, record the handoff, push, and open a reviewable documentation PR targeting `feat/nx-expansion-complete`.
 
 **Dependencies:** O-005 implementation baseline `1309b51` (complete). Physician/owner decisions are needed before any design proposal becomes normative or is implemented, but do not block producing the options and recommendation.
 
@@ -222,7 +222,7 @@ Do not allow future Cloudflare/D1 transaction constraints, Google authentication
 
 ## 7. Next action
 
-Complete the final documentation consistency check, commit the redesign proposal and question register in a focused commit, then push and open the O-006 documentation PR against `feat/nx-expansion-complete`. Leave it unmerged. No application implementation begins in this mission.
+Complete the final documentation consistency check and PR handoff, push `docs/o006-clinical-workflow-ux`, and open the O-006 documentation PR against `feat/nx-expansion-complete`. Leave it unmerged. No application implementation begins in this mission.
 
 ## 8. Living update rules
 

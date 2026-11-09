@@ -140,7 +140,7 @@ These layouts establish hierarchy and behavior only. They are not pixel specific
 ### 4.1 Patient workspace — desktop
 
 ```text
-┌ Pacientes / Paciente: María García · ID 0042 · Archivado? ───────────────┐
+┌ Pacientes / Paciente: [Nombre] · ID [identificador] · Archivado? ────────┐
 │ [Nueva consulta] [Cita] [Solicitar estudio] [Receta] [Informe]           │
 ├─────────────────────────────────────────────────────────────────────────┤
 │ Alergias: No registrado       Medicamentos: No registrado                 │
@@ -160,7 +160,7 @@ The example text is structural, not demo clinical content. Render unknown values
 ### 4.2 Consultation workspace — desktop
 
 ```text
-┌ María García · ID 0042 · [Cita 10:30 / Sin cita] · [Sin guardar]          │
+┌ [Nombre] · ID [identificador] · [Cita / Sin cita] · [Sin guardar]         │
 │ [Guardar consulta] [Cancelar]                                            │
 ├─────────────────────────────────────────────┬───────────────────────────┤
 │ NOTA CLÍNICA                                │ CONTEXTO CLÍNICO          │
@@ -183,7 +183,7 @@ The note is the dominant column. The context pane is read-only and independently
 ### 4.3 Consultation workspace — narrow screen
 
 ```text
-┌ María García · ID 0042                                      [Sin guardar] ┐
+┌ [Nombre] · ID [identificador]                             [Sin guardar] ┐
 │ [Guardar consulta]                                                       │
 │ [Contexto clínico · expandir]                                           │
 ├─────────────────────────────────────────────────────────────────────────┤
@@ -199,7 +199,7 @@ On small screens, context is an accessible disclosure region, not a separate rou
 ### 4.4 Appointment handoff
 
 ```text
-┌ Cita · María García · jueves 10:30 · Consulta · Programada ─────────────┐
+┌ Cita · [Nombre] · [fecha/hora] · [tipo] · Programada ────────────────────┐
 │ Contexto: alergias/medicamentos · próxima tarea                         │
 │ [Atender paciente] [Editar] [Cancelar cita]                             │
 │                                                                         │
@@ -214,13 +214,13 @@ Opening an appointment never completes it. The doctor sees which encounter will 
 ### 4.5 Patient study list and request panel
 
 ```text
-Estudios de María García                                  [Solicitar estudio]
+Estudios del paciente                                      [Solicitar estudio]
 ┌ Fecha/etapa por definir · categoría · descripción · [Consulta opcional] ┐
 │ Resultado: nota del doctor, si existe                   [Revisar]        │
 └─────────────────────────────────────────────────────────────────────────┘
 
 Solicitar estudio
-Paciente: María García (fijo)
+Paciente: [Nombre] (fijo)
 Categoría: [lista actual; Q-NX-02 sigue abierta]
 Estudio: [texto del médico]
 Motivo / fuente / fecha del pedido: [solo los campos aprobados]
@@ -229,6 +229,36 @@ Asociación: [Sin consulta] [Consulta existente…]
 ```
 
 “Fecha/etapa por definir” marks a design question, not proposed user-facing copy. The field set, relationship mutability, and statuses must be settled with the doctor before this panel becomes normative.
+
+### 4.6 Study result review
+
+```text
+Estudio · descripción en palabras del doctor
+Paciente: [Nombre] · Consulta relacionada: No registrada
+Solicitud: fecha/source text only after confirmed
+Etapa: [label and meaning approved by the doctor]
+
+Resultado / observación del doctor
+[texto ingresado por el doctor; no interpretación automática]
+
+[Registrar resultado] [Marcar revisado] [Cancelar]
+```
+
+If the doctor confirms result receipt and review in one visit, the interaction may record both explicitly. Do not show both actions or a date field until the underlying event meanings and transition rules are approved. Result files remain out of scope.
+
+### 4.7 Contextual prescription / follow-up panel
+
+```text
+Consulta guardada · [fecha/hora]
+┌ Receta / Informe / Programar seguimiento ─────────────────┐
+│ Paciente: [Nombre] (fijo)                                 │
+│ Consulta relacionada: [esta consulta]                     │
+│ Existing doctor-authored form fields                      │
+│ [Guardar] [Volver a la consulta]                          │
+└───────────────────────────────────────────────────────────┘
+```
+
+Date and text above are structural placeholders, not synthetic patient facts. The panel reuses current O-005 prescription/report fields; it does not generate clinical content or add signature/provider fields. When the encounter is not yet saved, the panel first asks the doctor to save the encounter before creating a linked document.
 
 ## 5. Consultation workspace behavior
 
@@ -355,11 +385,13 @@ The existing O-005 contract remains normative until approval. These are the like
 | Read context beside the note | The current patient, encounter-summary, appointment, and pending-study GET routes can provide much of the context. `EncounterSummary` contains date/type/reason only; fetch a full note on demand through the existing encounter detail route instead of N+1 full-note reads. A new aggregate endpoint is optional and should be added only if measured SSR/API needs justify it. | No migration required for read-only context. Keep patient reads request-time/no-store. |
 | Appointment → consultation handoff | Add `Atender paciente` entry and carry the appointment ID/context to the patient consultation route. After an encounter is saved, the existing complete endpoint accepts an encounter ID and can link it in the same explicit action. | Can reuse the current relation and endpoint if the doctor accepts completion-after-save. If the encounter must be linked while the appointment stays scheduled, the API rule/data relation must change and needs a separate decision. No status change on route entry. |
 | Contextual documents and follow-up | Use current document create and appointment create APIs in an in-page panel. Keep explicit checkpoint for linking a document to a new encounter before that encounter exists. | Likely UI-only if persisted encounter IDs are available; no new document schema implied. Appointment association/completion behavior still needs confirmation. |
-| Patient-level study requests | Add a patient-scoped create/read surface, e.g. `POST /api/patients/:patientId/studies`; accept an optional encounter ID and validate same-patient ownership. Preserve the current encounter-scoped endpoint as a compatible entry point if useful. Update the DTO so encounter context can be null, and update both patient and encounter views. | A possible additive SQLite migration makes `StudyRequest.encounterId` nullable. Preserve every current patient/encounter value; do not rewrite history. Add integrity tests for null links, wrong-patient links, lists, and transactions. Do not add appointment/procedure foreign keys until their need is confirmed. |
+| Patient-level study requests | Add a patient-scoped create/read surface, e.g. `POST /api/patients/:patientId/studies`; accept an optional encounter ID and validate same-patient ownership. Preserve the current encounter-scoped endpoint as a compatible entry point if useful. Update the DTO so encounter context can be null, and update both patient and encounter views. | A migration must relax the `NOT NULL` constraint on `StudyRequest.encounterId`; preserve every current patient/encounter value and do not rewrite history. Inspect generated SQL against the exact Prisma CLI and SQLite runtime used by the app. SQLite 3.53.0 added `ALTER COLUMN ... DROP NOT NULL`; Prisma ORM 7 ships a fixed SQLite version with each release, and the application also uses the `better-sqlite3` adapter, so verify the actual migration/runtime compatibility before selecting direct alteration or a table rebuild. If rebuilding, verify foreign keys and indexes. Add integrity tests for null links, wrong-patient links, lists, and transactions. Do not add appointment/procedure foreign keys until their need is confirmed. See the [SQLite ALTER TABLE reference](https://www.sqlite.org/lang_altertable.html) and [Prisma ORM 7 SQLite support](https://www.prisma.io/docs/orm/v7/core-concepts/supported-databases/sqlite). |
 | Distinct performed/result/review events | Extend request/response contracts, server validation, transition rules, and views only after the doctor defines the events and direct transitions. | If separate timestamps suffice, add nullable columns and leave historical values untouched until a mapping is agreed. If event history is required, an event table is a separate complexity choice. Do not silently backfill `completed` as either performed or resulted. |
 | Explicit persisted drafts | Add a clearly defined encounter draft state and retrieval of unfinished encounters; update timeline, query filters, editing and conflict handling. | Requires a migration and safe behavior for current encounters; no drafts exist in O-005. Do not use local storage as a substitute for a server draft. |
 
 API rules for any approved implementation: Hono remains authoritative; derive patient association from a patient-scoped route; validate optional encounter belongs to the same patient; update DTOs and schemas shared by web/API; preserve existing O-005 transitions until the doctor approves a new model; test historical data, migration, seed, idempotency, and rollback where writes span records.
+
+No O-006 migration was generated or applied; that work is intentionally deferred until the owner approves the design and the migration is validated against the repository's exact SQLite/Prisma versions.
 
 ## 10. Open decision register for review
 
