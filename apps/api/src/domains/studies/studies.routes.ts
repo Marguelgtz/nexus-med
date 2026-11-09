@@ -1,6 +1,7 @@
 // Study request routes (mounted under /api by app.ts, UI_SPEC §7.3).
 //
 // POST   /encounters/:encounterId/studies  add studies to an existing encounter
+// POST   /patients/:patientId/studies     create patient-level study requests
 // GET    /patients/:patientId/studies?status= (repeatable filter)
 // GET    /encounters/:encounterId/studies
 // PATCH  /studies/:studyId              advance status (+ optional note)
@@ -9,12 +10,14 @@ import { Hono } from 'hono';
 
 import {
   createEncounterStudiesInputSchema,
+  createPatientStudiesInputSchema,
   listPatientStudiesQuerySchema,
   updateStudyInputSchema,
 } from '@nexus-med/contracts';
 
 import {
   createEncounterStudies,
+  createPatientStudies,
   listEncounterStudies,
   listPatientStudies,
   updateStudyStatus,
@@ -22,6 +25,12 @@ import {
 import { parseOrThrow, readJsonBody } from '../../shared/http/parse';
 
 export const studiesRoutes = new Hono();
+
+studiesRoutes.post('/patients/:patientId/studies', async (c) => {
+  const input = parseOrThrow(createPatientStudiesInputSchema, await readJsonBody(c));
+  const studies = await createPatientStudies(c.req.param('patientId'), input);
+  return c.json(studies, 201);
+});
 
 studiesRoutes.get('/patients/:patientId/studies', async (c) => {
   const statusValues = c.req.queries('status');

@@ -78,6 +78,14 @@ export function AppointmentDetail({
           Cita — {patientName}
         </h1>
         <div className="actions">
+          {appt.status === 'scheduled' && !isArchived ? (
+            <Link
+              href={`/patients/${patientId}/consultas/nueva?appointmentId=${encodeURIComponent(appt.id)}`}
+              className="btn btn-primary"
+            >
+              Atender paciente
+            </Link>
+          ) : null}
           <Link href={`/patients/${patientId}/citas`} className="btn btn-secondary">
             Volver a citas
           </Link>

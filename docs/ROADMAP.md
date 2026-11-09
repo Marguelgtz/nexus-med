@@ -49,9 +49,15 @@ The agreed development order is **database/API foundation → UX/UI design → p
 
 **Exit condition:** All four slices implemented and integrated-tested with documented seed/persistence behavior; accepted contract, workflow, and UX docs reconciled to their verified final state; no deferred cloud/auth/upload work added.
 
-## Potential O-006 — Clinical workflow / UX review (proposal, not approved implementation scope)
+## O-006 — Clinical workflow and UX implementation (authorized)
 
-**Next proposed design activity:** evaluate consultation workspace, patient context, independent study ordering, study-status meanings, appointment-to-consultation handoff, and contextual prescriptions/follow-up. Findings and candidate flows are in `UX_AUDIT.md` and `UX_REDESIGN.md`. Preserve O-005 accepted behavior until owner/doctor validation; no implementation objective or API/data-model change is approved by these drafts.
+**Outcome:** Implement the owner-authorized O-006 workflows from `UX_REDESIGN.md`: a context-rich consultation workspace, independent patient-level studies, clear review handling, appointment-to-consultation entry, contextual documents/follow-up, and a focused patient workspace. Preserve the local single-surgeon/synthetic-data scope and all O-005 records and workflows.
+
+**Sequence:** data/API and safe migration → canonical UX/API documentation → consultation context and unsaved protection → study and patient workflows → appointment/document/follow-up continuity → integrated regression and browser verification.
+
+**Clinical boundary:** Q-O006 questions about the meaning and timing of performed, completed, result-available, and reviewed remain open. Keep existing status semantics and history until physician validation; do not infer clinical meanings from timestamps or result text.
+
+**Exit condition:** All O-006 mission acceptance criteria are met; clean and repeat startup preserve synthetic/user data; API/web tests, typecheck, lint, build, and main browser journeys pass; documentation reflects behavior; implementation PRs remain open pending review.
 
 ## Deferred — not part of the prototype
 

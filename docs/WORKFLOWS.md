@@ -1,13 +1,13 @@
 # Product Workflows — Medical Platform MVP
 
-**Status:** Original MVP workflows plus verified NX-001…NX-004 behavior (2026-11-08).
+**Status:** Original MVP workflows plus verified NX-001…NX-004 and owner-authorized O-006 behavior (2026-11-09); implementation PR #7 is open for owner review.
 **Primary user:** One general surgeon  
 **Interface:** Spanish (Mexico)  
 **Data:** Synthetic demo records only
 
 `PRODUCT.md` defines scope and user-story acceptance criteria. This document describes how those stories should flow through the application. Together, the workflow sections cover patient create/search/update/archive, patient context, medical-background editing, encounter creation/review, save/error behavior, and the first-run demo experience. O-005 approved appointments, encounter types, study requests, and printable documents; all four slices are implemented and verified. File uploads/storage and Google authentication remain excluded.
 
-**Documentation boundary:** Sections below describe the implemented O-005 workflow. Draft O-006 alternatives are maintained separately in `UX_AUDIT.md` and `UX_REDESIGN.md`; they are not approved replacements for the behavior recorded here.
+**Documentation boundary:** Sections 1–14 record the existing MVP/O-005 workflows. Section 15 records the implemented O-006 behavior and supersedes earlier details where stated. Q-O006 clinical questions remain open; the conservative implementation does not settle them.
 
 ## 1. Application entry and navigation
 
@@ -181,14 +181,14 @@ All data in this scenario is fictional. Document upload and authentication are n
 
 Overlaps are allowed but visibly signaled, not resolved automatically. Appointments and encounters have independent planned/actual type fields. The calendar uses `America/Monterrey`.
 
-## 12. Study-request workflow (NX-003)
+## 12. O-005 study-request workflow (baseline behavior)
 
 1. From **Nueva consulta**, add zero or more study rows with category and description.
 2. Saving a **new** encounter creates those study requests atomically, initially `ordered`.
 3. From encounter detail mark a study `completed` or `reviewed` and optionally write a doctor-authored result note; `ordered → reviewed` directly is allowed.
 4. Patient overview lists both `ordered` and `completed` studies until they reach `reviewed`; each row shows its current status and links to the originating encounter. Reviewed studies leave the overview card but remain on encounter detail.
 
-**Creation behavior:** The consultation form creates studies atomically with a new encounter. The API also supports adding one or more studies to an existing encounter, while preserving the patient and encounter association. There is no study-creation action on the patient overview.
+**O-005 creation behavior:** The consultation form creates studies atomically with a new encounter. The API supports adding studies to an existing encounter, while preserving the patient and encounter association. The O-005 patient overview had no study-creation action.
 
 **Limitations:** No upload, laboratory integration, or automated interpretation. The doctor records and reviews study status and any result note.
 
@@ -218,3 +218,32 @@ This map keeps product requirements and interaction flows aligned:
 | US-014 Open a populated prototype | Section 8 — First-run and demo-data workflow |
 
 Every product story must have observable acceptance criteria. If implementation reveals a workflow gap, update this mapping and the relevant workflow section rather than marking the story complete based only on a screen existing.
+
+## 15. Owner-authorized O-006 clinical workflow
+
+**Status:** Implemented and verified on `feat/o006-clinical-workflows`; PR #7 is open for owner review. Q-O006-01…08 remain open where physician validation is required.
+
+### 15.1 Prepare and document a consultation
+
+1. From a patient, start an unscheduled consultation or select **Atender paciente** from an eligible scheduled appointment. Keep patient identity and appointment context visible. Opening the appointment does not complete or link it.
+2. In the consultation workspace, keep the existing seven note sections and explicit save. On desktop show the note beside read-only safety context (allergies and current medications first), background, recent encounter summaries, and pending studies. On narrow screens expose context through a keyboard-accessible disclosure.
+3. Load a previous full note only after the doctor asks to open it. Never infer, copy, or generate clinical facts.
+4. Keep staged studies in an unsaved queue. The note and studies are created atomically. On a recoverable save failure, preserve all entered text and staged rows.
+5. Warn before an in-app link, history navigation, or unload would discard dirty consultation text or staged rows. Do not autosave or persist drafts.
+6. After a scheduled-visit encounter is saved, offer explicit appointment completion and linking to that encounter. Declining leaves appointment state and association unchanged.
+
+### 15.2 Order and review studies
+
+Study requests belong to a patient and may have no encounter or one immutable same-patient encounter. Use the patient route for a standalone request, the existing encounter route for adding to a saved encounter, and nested encounter creation for staged rows. An optional encounter is preselected only when the workflow has a saved encounter in context.
+
+Keep existing categories, statuses, legal transitions, and result-note behavior until physician validation. Both `ordered` and `completed` remain pending until `reviewed`. Display `createdAt` as record-entry time only for standalone requests. State that `completed` does not separately tell the doctor whether the study was performed or when a result arrived. Do not add source/order-time fields, event dates, appointment/procedure links, editing/reassociation, delete, or automatic interpretation.
+
+The patient workspace shows linked and standalone studies, current stored status, association (or `Sin consulta asociada`), doctor-authored result note, and available forward-only review actions. Encounter detail provides the same review actions and a control to add studies.
+
+### 15.3 Create related records and return
+
+From a saved encounter, open the existing prescription, report, or new-appointment form with patient context preserved. Prefill the encounter association for documents. After a successful save, return to that encounter. A new unsaved encounter cannot create a linked document; keep the note on screen and explain the save checkpoint. A follow-up appointment is an ordinary appointment and is not silently linked to or used to complete an encounter.
+
+### 15.4 Focus the patient workspace
+
+Order the patient workspace as identity and direct actions, safety context, compact next appointment/study-review work, recent clinical activity, then full encounter/appointment/study/document history. Show the next scheduled visit and unreviewed studies only when present. Keep the existing registry, calendar, document, print, and chronological history routes available. Do not add a global task dashboard or staff-role behavior.

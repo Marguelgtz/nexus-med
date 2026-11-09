@@ -1,6 +1,6 @@
 # Product Definition — Medical Platform MVP
 
-**Status:** MVP scope confirmed; field-level details remain open where noted  
+**Status:** MVP/O-005 scope confirmed; owner-authorized O-006 implementation complete and pending owner review. Clinical semantics remain open where noted.
 **Version:** 1.0  
 **Primary user:** One general surgeon  
 **Interface language:** Spanish (Mexico)  
@@ -80,7 +80,7 @@ These exclusions were drafted before the accepted O-005 expansion. They remain h
 - Multiple doctors, staff roles, or multi-clinic tenancy.
 - Appointment reminders and recurrence. Basic scheduling is now in-scope and implemented under NX-001.
 - Billing, payments, insurance, accounting, or inventory.
-- Pharmacy integrations, AI diagnosis, treatment recommendations, or clinical decision support. Doctor-authored browser-printable prescriptions/reports are approved as NX-004, but not yet implemented.
+- Pharmacy integrations, AI diagnosis, treatment recommendations, or clinical decision support. Doctor-authored browser-printable prescriptions/reports are approved and implemented as NX-004.
 - FHIR/HL7 or external hospital integrations.
 - DICOM viewing, OCR, automated document interpretation, or analytics.
 - Docker, CI/CD, remote Cloudflare resources, and production deployment.
@@ -269,3 +269,23 @@ Do not block scaffolding unless a decision directly affects schema or workflow. 
 The prototype is local-only, binds to loopback, and uses synthetic data. It is not production-ready, is not a declaration of regulatory compliance, and must not be used with real patient information. No remote Cloudflare resources, authentication, file storage, Docker, or CI/CD are implemented.
 
 **Product objective:** make patient information easy to find, clinical context easy to understand, and consultation documentation straightforward to maintain for one general surgeon.
+
+## 10. Owner-authorized O-006 workflow acceptance
+
+The owner authorized the full clinical workflow redesign on 2026-11-09 (D-033). This section extends the P0/O-005 scope during implementation; it does not resolve clinical questions about study-status meaning or procedure lifecycle.
+
+**O006-01 — Document care with patient context.** The doctor can create and edit an encounter in a responsive two-column desktop workspace with patient identity, allergies, current medications, background, recent encounter summaries, and pending study context accessible without losing the note. Previous full notes load only when requested. The seven existing note fields remain unchanged.
+
+**O006-02 — Preserve unsaved clinical work.** Encounter and staged study entry uses explicit save, no autosave or persisted draft. Failed saves preserve values. In-app navigation and page unload warn before discarding changed note text or staged studies.
+
+**O006-03 — Request studies without fabricating an encounter.** Studies can be staged in a new encounter, added to an existing encounter, or created directly from a patient record with an optional same-patient encounter association. Existing linked records and status values survive migration. No appointment/procedure association, order-source field, clinical order timestamp, or status reinterpretation is added without physician validation.
+
+**O006-04 — Review studies conservatively.** Existing `ordered`, `completed`, and `reviewed` values and transitions remain. Patient context surfaces `ordered` and `completed` until reviewed. Doctor-authored result notes remain verbatim. The UI does not claim that `completed` means performed or that a result arrived; no separate event dates are inferred.
+
+**O006-05 — Attend a scheduled appointment explicitly.** An eligible appointment can open the consultation workspace with patient and appointment context. Opening or saving the encounter does not change appointment status or association. The doctor explicitly confirms completion and encounter linking after a saved encounter exists; unscheduled consultations remain supported.
+
+**O006-06 — Create related records and return to care.** A saved encounter can open the existing prescription, report, and appointment forms with patient context and, where supported, the encounter preselected. Successful save returns to the encounter. An unsaved note remains on screen until explicitly saved; the app does not create a linked document from an unsaved encounter.
+
+**O006-07 — Keep the patient workspace focused.** The patient route prioritizes identity and safety context, then the next appointment and study-review work, then recent clinical activity. Direct actions reach consultations, studies, appointments, prescriptions, and reports. History remains accessible without turning the workspace into a cross-patient dashboard.
+
+All O-006 records use synthetic fixtures. O-005 workflows and the local offline runtime remain covered by the mission's regression and integrated verification gates.

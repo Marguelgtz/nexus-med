@@ -9,16 +9,18 @@ export function PatientContext({
   externalIdentifier,
   isArchived,
   backHref,
+  backLabel = 'Pacientes',
 }: {
   fullName: string;
   externalIdentifier: string | null;
   isArchived: boolean;
   backHref: string;
+  backLabel?: string;
 }) {
   return (
     <div className="context-strip">
       <Link href={backHref} className="back">
-        ← Pacientes
+        ← {backLabel}
       </Link>
       <span className="name">{fullName}</span>
       {externalIdentifier ? <span className="mono">{externalIdentifier}</span> : null}

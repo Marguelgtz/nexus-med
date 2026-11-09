@@ -113,18 +113,17 @@ model Appointment {
   @@map("appointments")
 }
 
-// One specific study ordered during a consultation (UI_SPEC §7.3, U-15).
-// `category` + `description` are immutable after creation — the
-// originating encounter is the record of what was ordered. Only the status
-// and an optional result note change (ordered → completed → reviewed).
+// One specific study request belonging to a patient. A request may be made
+// outside a consultation; when an encounter is associated, it must belong to
+// the same patient (validated by Hono). Existing encounter links are kept.
 // No edit, no delete (no permanent-delete rule).
 model StudyRequest {
   id          String    @id @default(uuid())
   patientId   String
   patient     Patient   @relation(fields: [patientId], references: [id], onDelete: Restrict)
-  // The consultation during which the study was ordered (immutable).
-  encounterId String
-  encounter   Encounter @relation(fields: [encounterId], references: [id], onDelete: Restrict)
+  // Optional consultation context; immutable after request creation.
+  encounterId String?
+  encounter   Encounter? @relation(fields: [encounterId], references: [id], onDelete: Restrict)
   // Fixed list (validated at the API): laboratorio, imagenologia, rayos_x,
   // ecg, ecografia, otro.
   category    String

@@ -61,6 +61,8 @@ export function Timeline({
   encounters: EncounterSummary[];
 }) {
   const count = encounters.length;
+  const recent = encounters.slice(0, 5);
+  const older = encounters.slice(5);
   return (
     <div className="card">
       <div className="card-header">
@@ -79,11 +81,21 @@ export function Timeline({
         </div>
       ) : (
         <ul className="timeline">
-          {encounters.map((e) => (
+          {recent.map((e) => (
             <TimelineEntry key={e.id} patientId={patientId} encounter={e} />
           ))}
         </ul>
       )}
+      {older.length > 0 ? (
+        <details className="older-timeline">
+          <summary>Ver {older.length} consultas anteriores</summary>
+          <ul className="timeline">
+            {older.map((encounter) => (
+              <TimelineEntry key={encounter.id} patientId={patientId} encounter={encounter} />
+            ))}
+          </ul>
+        </details>
+      ) : null}
     </div>
   );
 }

@@ -1,10 +1,20 @@
 # Living Action Plan — Medical Platform MVP
 
 **Document type:** Active execution state (living document)  
-**Last updated:** 2026-11-08  
+**Last updated:** 2026-11-09
 **Owner:** Project owner  
 **Primary agent:** Hermes Agent  
-**Current implementation state (updated 2026-11-08):** O-001–O-005 are implemented and verified; O-005 baseline is `feat/nx-expansion-complete` at `1309b51`. O-006 is a documentation-only redesign proposal on `docs/o006-clinical-workflow-ux`, based on that commit at `0f3bcb7`; source audit, redesign/question register, and review handoff are committed through `d11e452`. PR #6 is open against `feat/nx-expansion-complete`; no application code changed and nothing was merged. Earlier feature PRs #1–#4 remain open in their stack and PR #5 is merged.
+**Current implementation state (updated 2026-11-09):** O-001–O-005 remain implemented and verified on `feat/nx-expansion-complete` at `1309b513`. The owner-authorized O-006 implementation is complete and verified on `feat/o006-clinical-workflows`; its patient-study API, canonical behavior docs, and integrated UI are committed as `48304a4`, `e3a3cc1`, and `e27cbf8`. PR #7 is open against `docs/o006-clinical-workflow-ux`, stacked on open, unmerged PR #6. Both await owner review; no merge was performed. The local app is available at `http://127.0.0.1:3000`. Earlier feature PRs #1–#4 remain open in their stack and PR #5 is merged.
+
+---
+
+## O-006 follow-up review — 2026-11-09
+
+**Review branch:** `feat/o006-clinical-workflows`, PR #7 (base `docs/o006-clinical-workflow-ux`). A follow-up commit addresses three code-review gaps: (1) reset the study-review saving flag after a successful status update, (2) protect unsaved patient/encounter study requests from Cancel and in-app navigation, and (3) embed the existing doctor-authored prescription/report form beneath the saved encounter without a route change. The inline document editor retains explicit save, validated encounter association, cancel confirmation, and success feedback.
+
+**Focused regression coverage:** `apps/web/test/study-draft.test.ts` checks untouched form, typed/whitespace values, category, encounter association, and additional blank rows. This review made **no API, schema, migration, or clinical status changes**.
+
+**Verification boundary:** The GitHub connector was used for a static source review and commit; no local repository checkout, dependency install, compiler, browser, or test runner was available to execute post-change checks. The previously recorded O-006 112 API / 32 web passes predate these follow-up commits. Before merge, run `npm run test -w apps/web`, `npm run test -w apps/api`, `npm run typecheck`, `npm run lint`, `npm run build -w apps/web` and browser scenarios listed in `TESTING.md`. Treat this follow-up as **implemented, awaiting post-change runtime verification**, not newly test-verified.
 
 ---
 
@@ -26,7 +36,7 @@ Do not duplicate the entire phase task catalog here. Reference task IDs where us
 
 ### Overall status
 
-**O-001–O-005 complete: the local MVP and four product expansions are implemented and verified.** The monorepo contains the Prisma 7 + SQLite data layer, Hono API, shared contracts, idempotent synthetic seed, Next.js SSR UI, and local runtime. O-005 adds appointments/calendar, encounter types, encounter-linked study requests, and printable prescriptions/reports. Its final recorded verification is in `TESTING.md` and the completed O-005 section below. O-006 is limited to auditing and proposing a clinical workflow/UX redesign; it does not authorize application code changes.
+**O-001–O-006 implementation complete; O-006 awaits owner review.** The O-005 local MVP and four product expansions remain the verified code baseline. O-006 adds the integrated consultation workspace, patient-level study requests, conservative study review, appointment handoff, contextual documents/follow-up, and focused patient workspace. Synthetic-only data, explicit saving, O-005 behavior, and open clinical-status questions are preserved.
 
 ### Confirmed direction
 
@@ -48,36 +58,37 @@ See `DECISIONS.md` and `ARCHITECTURE.md` for details.
 | Product definition | Prepared | `PRODUCT.md`, `WORKFLOWS.md` |
 | Architecture | Implemented per `ARCHITECTURE.md` | Monorepo, Hono API, Prisma 7 + SQLite, SSR shell |
 | Data model | Implemented and migrated | `prisma/schema.prisma`, committed migration |
-| API surface | Patient/encounter/appointment/study/document routes present | Full API suite passes 107/107; document create/list/get/update and association validation are covered |
+| API surface | Patient/encounter/appointment/study/document routes present | O-006 patient-scoped study create supports standalone and validated same-patient encounter requests; full API suite passes 112/112 |
 | Synthetic fixture | Patient, encounter, appointment, study, prescription and report fixtures present | 7 patients, 9 encounters, 9 appointments, 2 studies, 2 documents (one linked prescription with 2 lines, one unlinked report) |
 | Database and API code | Core and NX-001…NX-004 implemented | Prisma domain modules, migrations, validation, shared DTOs, integration coverage, and seed idempotency pass |
 | UX/UI specification | Complete (O-002) | `docs/UI_SPEC.md` — screens, interactions, states, visual system, story coverage, decisions U-01–U-08 |
 | Frontend product workflows | Complete (O-003/O-004) | Full product UI per `UI_SPEC.md` (registry, forms, timeline, detail, edit); first-run demo verified with persistence across restarts |
 | Expansion (NX-001…NX-004) | Complete on `feat/nx-expansion-complete` | All four vertical slices browser-verified; complete automated quality gate is green; implementation committed through `e2d6590` |
-| O-006 design discovery | Proposal complete; PR #6 open | Source audit `a2a65ad`; ten journeys, screen layouts/states, conditional API/migration plan, and Q-O006 register in `628e7fa`; PR targets `feat/nx-expansion-complete` |
+| O-006 implementation | Complete; owner review pending | PR #7 is open against PR #6's latest documentation head; API/web tests, workspace checks, isolated startup, and Chrome journey checks pass; Q-O006-01…08 remain open where clinical meaning needs validation |
 
-## 3. Active objective — O-006 clinical workflow and UX redesign
+## 3. Most recent objective — O-006 full clinical workflow and UX implementation — COMPLETE
 
-**Outcome:** A concrete, implementation-ready proposal for the whole surgeon workflow that remains non-authoritative until owner/physician approval. No Next.js, API, contracts, Prisma, fixtures, or runtime code changes.
+**Outcome:** Delivered the owner-authorized O-006 experience end to end through Next.js, Hono, shared contracts, Prisma/SQLite, tests, synthetic data, and synchronized documentation. PR #6 is the design/documentation parent; PR #7 contains the implementation. Both remain open and unmerged for owner review.
 
-**Scope:** Validate `UX_AUDIT.md` against the O-005 implementation; improve `UX_REDESIGN.md` with current/proposed end-to-end journeys, consultation workspace, independent study-ordering/review, navigation/context, screen-level interactions, wireframes, state handling, accessibility, responsive behavior, and conditional API/data migration implications. Record unresolved questions without promoting proposals into confirmed requirements.
+**Scope:** Implement the approved consultation workspace and patient context, independent study requests, conservative study review, appointment-to-consultation entry, contextual prescriptions/reports/follow-up, and patient workspace hierarchy. Preserve historical study associations and status values; do not add uploads, staff accounts, AI, external services, persistent drafts, appointment/procedure study links, or a procedure lifecycle.
 
 **Ordered sub-objectives:**
 
-1. **Complete (`a2a65ad`):** verify audit claims against routes, components, API contracts, services, and Prisma; separate source observations from usability hypotheses and unvalidated physician workflows.
-2. **Complete:** map all ten requested clinical/admin workflows from patient lookup through follow-up and return to outstanding work; describe current path, friction, and desired outcome.
-3. **Complete in proposal:** specify the consultation workspace, contextual actions, explicit-save, draft, and interruption tradeoffs.
-4. **Complete in proposal:** specify standalone and encounter-linked study request/review journeys; preserve current status meanings and make conditional migration/API options explicit.
-5. **Complete in proposal:** add low-fidelity layouts, screen interactions/states, navigation/context, accessibility/responsive behavior, and task-based verification criteria.
-6. **Complete:** final documentation-only review passed; branch pushed and documentation PR #6 opened against `feat/nx-expansion-complete`. Await owner/physician review; no application implementation begins before explicit approval.
+1. **Complete — data/API foundation:** made encounter association optional; added patient-scoped creation with same-patient validation; retained the existing encounter endpoint/statuses; migration preserves existing study rows; API suite passes.
+2. **Complete — canonical UX contract:** reconciled product, UI, workflow, API, data-model, decision, and redesign documents with authorized behavior and conservative status/association rules.
+3. **Complete — consultation and study workspace:** added request-time patient/encounter context, on-demand prior notes, responsive note workspace, staged studies, patient-level create/review, and unsaved-change protection.
+4. **Complete — patient workspace and care continuity:** prioritized safety context and current work; added appointment handoff, contextual prescriptions/reports, follow-up scheduling, and return paths.
+5. **Complete — integrated verification and handoff:** full API/web tests, typecheck, lint, production build, isolated migration/seed/repeat startup, and headless Chrome flows passed; docs reconciled; implementation PR opened without merging.
 
-**Dependencies:** O-005 implementation baseline `1309b51` (complete). Physician/owner decisions are needed before any design proposal becomes normative or is implemented, but do not block producing the options and recommendation.
+**Dependencies and assumptions:** Start from O-005 at `1309b513` through the latest O-006 docs head `b63e806`. Use existing SSR reads where practical. Q-O006-02/03 remain clinically unresolved: retain `ordered`/`completed`/`reviewed`, preserve old rows, and do not label `completed` as performed or result-received. Do not introduce event timestamps or new status semantics without physician validation. Use `createdAt` only as entry time for standalone requests; do not claim it is the clinical order time.
 
-**Deliverables:** Updated `docs/UX_AUDIT.md` and `docs/UX_REDESIGN.md`; O-006 open questions added to `docs/DECISIONS.md` without changing accepted decisions; current progress and review handoff in this file; documentation PR only after the artifacts are complete.
+**Deliverables:** Safe migration, Hono routes/services, shared DTOs/schemas, API integration tests, complete responsive workflow screens, updated normative product/API/UI/data docs, updated demo/test evidence, reviewable commits, and an open PR based on PR #6.
 
-**Acceptance:** All ten workflows are covered; scheduled and unscheduled consultations are distinguished; relevant history stays available during documentation; a standalone study request does not require a fictitious encounter; performed/result-available/reviewed meanings are not conflated without validation; save, error and interruption states are explicit; migration/API impact and implementation order are concrete; O-005 remains the authoritative as-built specification; no application code is changed.
+**Final verification (2026-11-09):** API 112/112; web 32/32; workspace typecheck and Next.js production build pass; ESLint exits 0 with the existing missing-`pages/` warning. Fresh isolated SQLite startup applied all five migrations and seeded the exact 7/9/9/2/2 demo counts; repeat startup had no pending migration and created zero records. The optional-study migration preserved both existing study rows and fields, associations, timestamps, indexes, and foreign keys. Headless Chrome verified the primary study, consultation, appointment handoff, contextual document/follow-up, unsaved-navigation, keyboard-operated mobile disclosure, and 390px responsive journeys. Default local `/health` and `/patients` returned 200 after applying the O-006 migration; seed created zero records.
 
-**Branch/PR:** PR #6 is open at `https://github.com/Marguelgtz/nexus-med/pull/6`. Base: `feat/nx-expansion-complete`; head: `docs/o006-clinical-workflow-ux`. The PR is documentation-only and must remain unmerged pending owner review.
+**Acceptance:** All twelve criteria in the owner O-006 mission are met, including persisted patient and optional same-patient encounter study associations; explicit appointment linking/completion; preserved unsaved notes and patient context; no invented clinical facts; legacy study status values unchanged; accessible responsive behavior; O-005 regression coverage; verified clean startup/re-seeding; and an implementation PR left unmerged.
+
+**Branch/PR:** `feat/o006-clinical-workflows` is based on `docs/o006-clinical-workflow-ux` at `b63e806`. PR #7 (`docs/o006-clinical-workflow-ux` ← `feat/o006-clinical-workflows`) is open for owner review. PR #6 (`feat/nx-expansion-complete` ← `docs/o006-clinical-workflow-ux`) remains open and unmerged. No PR was merged.
 
 ## 4. Most recent completed objective — O-005
 
@@ -103,7 +114,7 @@ See `DECISIONS.md` and `ARCHITECTURE.md` for details.
 | NX-004 documents | Implemented and browser-verified | Models, routes, forms, overview, edit/detail, print, synthetic fixtures, and seed preservation are complete. Browser checks exercised create/edit/reload, line add/remove, validation recovery, 404 copy, and print output. |
 | Integrated first run and existing MVP regression | Verified | Clean temporary database migrated and seeded 7 patients, 9 encounters, 9 appointments, 2 studies, and 2 documents; repeat startup created zero records, preserved edits, health passed, and `/` redirected to `/patients`. Full automated checks and all O-005 browser flows pass. |
 
-**Decision reconciliation:** D-032 records the explicit `TASKS.md` acceptance over the narrower UI-spec wording: `ordered` and `completed` remain in “Estudios pendientes” until reviewed, and the card shows the current status. The separate study-create route and patient status filter are listed in UI_SPEC §7.0; the API derives the patient from the immutable encounter association and keeps nested encounter creation atomic. The open study-category confirmation remains recorded as Q-NX-02 and does not block the approved fixed list. D-025/Q-NX-01 remains deferred.
+**Decision reconciliation:** D-032 records the explicit `TASKS.md` acceptance: `ordered` and `completed` remain pending until reviewed. O-006 adds a patient-scoped create route where the patient ID comes from the route and an optional encounter must match that patient; the existing encounter-scoped route still derives the patient from the encounter. Nested encounter creation remains atomic. The open study-category confirmation remains recorded as Q-NX-02 and does not block the approved fixed list. D-025/Q-NX-01 remains deferred.
 
 **Ordered execution stack:** (1) NX-003 acceptance and docs; (2) NX-004 database/API, fixtures and seed; (3) document overview, forms, edit/detail and print; (4) integrated clean-start, restart, regression and quality gate. All steps are complete and committed.
 
@@ -209,7 +220,7 @@ Planned sub-objectives:
 
 ## 6. Current blockers and technical questions
 
-No owner input is currently blocking. Pending-study semantics are reconciled to `TASKS.md` acceptance (`ordered` and `completed` until `reviewed`), and the study create/filter routes are accepted from UI_SPEC §7.0. A fresh empty SQLite path initially caused Prisma 7 to emit an empty “Schema engine error”; append-opening the database file before migration fixes startup while preserving an existing database. This is covered by the clean-start/API test setup and was verified on the fresh local run. The prior O-005 implementation and end-to-end acceptance have been recorded as completed. Proposed O-006 design decisions remain for owner/doctor validation; this does not reopen O-005.
+No implementation blocker remains. Owner review is pending on PR #7. Pending-study visibility follows `TASKS.md` acceptance (`ordered` and `completed` until `reviewed`); underlying clinical meaning remains open under Q-O006-02/03. The patient-study migration preserves existing associations and adds validated optional same-patient association. A fresh empty SQLite path initially caused Prisma 7 to emit an empty “Schema engine error”; append-opening the database file before migration fixes startup while preserving an existing database. This is covered by the clean-start/API test setup and verified on the fresh local run.
 
 Resolved during O-001 (implementation findings now recorded in `DECISIONS.md`):
 
@@ -222,7 +233,7 @@ Do not allow future Cloudflare/D1 transaction constraints, Google authentication
 
 ## 7. Next action
 
-Review PR #6 and resolve owner/physician feedback on the proposed design. Keep it unmerged until review is complete. Any application implementation requires a separate explicit approval and implementation objective.
+Review PR #7 for the O-006 implementation and resolve owner/physician feedback. Keep PRs #6 and #7 unmerged until review is complete; preserve the open clinical questions in `DECISIONS.md`.
 
 ## 8. Living update rules
 

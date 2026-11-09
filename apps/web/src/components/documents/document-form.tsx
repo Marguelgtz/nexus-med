@@ -64,6 +64,8 @@ export function MedicalDocumentForm({
   patientId,
   kind,
   encounters,
+  initialEncounterId,
+  returnTo,
   initial,
   onSaved,
   onCancel,
@@ -71,13 +73,15 @@ export function MedicalDocumentForm({
   patientId: string;
   kind: MedicalDocumentKind;
   encounters: EncounterSummary[];
+  initialEncounterId?: string;
+  returnTo?: string;
   initial?: MedicalDocument;
   onSaved?: (document: MedicalDocument) => void;
   onCancel?: () => void;
 }) {
   const router = useRouter();
   const [title, setTitle] = useState(initial?.title ?? '');
-  const [encounterId, setEncounterId] = useState(initial?.encounter?.id ?? '');
+  const [encounterId, setEncounterId] = useState(initial?.encounter?.id ?? initialEncounterId ?? '');
   const [body, setBody] = useState(initial?.body ?? '');
   const [lines, setLines] = useState<LineValues[]>(() => initialLines(initial));
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
@@ -147,6 +151,7 @@ export function MedicalDocumentForm({
         : await createMedicalDocument(patientId, parsed.data);
       setDirty(false);
       if (onSaved) onSaved(saved);
+      else if (returnTo) router.push(returnTo);
       else router.push(`/patients/${patientId}/${kind === 'prescription' ? 'recetas' : 'informes'}/${saved.id}`);
       router.refresh();
     } catch (error) {
@@ -289,9 +294,18 @@ export function MedicalDocumentForm({
             {saving ? 'Guardando…' : initial ? 'Guardar cambios' : kind === 'prescription' ? 'Guardar receta' : 'Guardar informe'}
           </button>
           {onCancel ? (
-            <button type="button" className="btn btn-ghost" onClick={onCancel}>Cancelar edición</button>
+            <button
+              type="button"
+              className="btn btn-ghost"
+              disabled={saving}
+              onClick={() => {
+                if (!dirty || window.confirm('Hay un documento sin guardar. ¿Descartar los cambios?')) onCancel();
+              }}
+            >
+              Cancelar
+            </button>
           ) : (
-            <Link href={`/patients/${patientId}`} className="btn btn-ghost">Cancelar</Link>
+            <Link href={returnTo ?? `/patients/${patientId}`} className="btn btn-ghost">Cancelar</Link>
           )}
         </div>
       </section>

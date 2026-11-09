@@ -1,10 +1,10 @@
-# O-006 — Proposed clinical workflow and UX redesign
+# O-006 — Clinical workflow and UX design
 
-**Status: PROPOSED FOR OWNER/PHYSICIAN REVIEW — NOT APPROVED OR IMPLEMENTED.**
+**Status: OWNER-AUTHORIZED AND IMPLEMENTED (2026-11-09).** The owner mission authorized the workflows in this document, with conservative handling for unresolved clinical questions Q-O006-01…08. The implementation is integrated and verified on `feat/o006-clinical-workflows`; PR #7 is open for owner review. This document retains design rationale and options; as-built behavior is recorded in `UI_SPEC.md` §8 and `WORKFLOWS.md` §15.
 
 **Baseline:** O-005 at `feat/nx-expansion-complete` commit `1309b51`; current findings are in `UX_AUDIT.md`.
 
-**Mission boundary:** This document proposes workflow and interface changes only. It does not authorize changes to Next.js, Hono, contracts, Prisma, migrations, seed data, or runtime behavior. O-005 `UI_SPEC.md`, `WORKFLOWS.md`, `API_CONTRACT.md`, `DATA_MODEL.md`, and accepted `DECISIONS.md` entries remain authoritative until the owner explicitly approves a design and implementation phase.
+**Mission boundary:** Owner mission O-006 (2026-11-09) authorizes the workflow changes described here and the necessary Next.js, Hono, shared-contract, Prisma, migration, seed, test, and documentation updates. Existing O-005 records and behavior remain authoritative wherever an O-006 clinical question is still open.
 
 ## 1. Intended outcome and constraints
 
@@ -31,7 +31,7 @@ Keep the current top-level navigation small: **Pacientes** and **Calendario**. D
 - **Patient workspace:** identity and safety context first; a compact view of active work; then related appointments, studies, documents, and encounter history.
 - **Calendar:** retain the current day/week/month schedule. An appointment becomes an entry into the clinical workspace, not a separate destination that must be completed before care can be documented.
 - **Consultation workspace:** a note editor with a persistent patient header, a relevant-context pane, and same-page actions for study, prescription, report, and follow-up.
-- **Patient studies:** a patient-scoped list that can contain requests with or without an originating encounter if the owner approves independent ordering.
+- **Patient studies:** a patient-scoped list that can contain requests with or without an originating encounter (owner-authorized by O-006; minimum source/order-time fields remain open).
 - **Contextual actions:** use an in-page panel for short related tasks. Keep existing deep-linkable document and appointment routes available for direct access and browser navigation.
 
 In the patient workspace, keep one compact **Pendiente de atención** region for actionable items only (for example, studies awaiting doctor review and the next scheduled visit). Do not duplicate every historical record there. Whether a practice-wide review queue or secretary-prepared agenda is useful remains a validation question.
@@ -53,7 +53,7 @@ In the patient workspace, keep one compact **Pendiente de atención** region for
 
 ## 3. Current and proposed user journeys
 
-The proposed journeys below are interaction designs, not approved acceptance criteria. Each starts from the current O-005 behavior described in `UX_AUDIT.md`.
+The journeys below are the owner-authorized interaction direction for O-006, subject to the conservative clinical boundaries recorded in `DECISIONS.md`. Each starts from the current O-005 behavior described in `UX_AUDIT.md`.
 
 ### J-01 — Find or register a patient
 
@@ -228,7 +228,7 @@ Asociación: [Sin consulta] [Consulta existente…]
 [Guardar solicitud] [Cancelar]
 ```
 
-“Fecha/etapa por definir” marks a design question, not proposed user-facing copy. The field set, relationship mutability, and statuses must be settled with the doctor before this panel becomes normative.
+“Fecha/etapa por definir” marks a design question, not proposed user-facing copy. O-006 resolves the initial field set conservatively: patient is required, encounter is optional and immutable when supplied, category and description use existing fields, and `createdAt` is record-entry time only. Existing statuses remain unchanged; their clinical meaning is still pending physician validation.
 
 ### 4.6 Study result review
 
@@ -244,7 +244,7 @@ Resultado / observación del doctor
 [Registrar resultado] [Marcar revisado] [Cancelar]
 ```
 
-If the doctor confirms result receipt and review in one visit, the interaction may record both explicitly. Do not show both actions or a date field until the underlying event meanings and transition rules are approved. Result files remain out of scope.
+Keep the existing forward actions (`ordered → completed`, `ordered → reviewed`, `completed → reviewed`) and optional doctor-authored note. The interface must state that `completed` does not separately record performance or result arrival. Do not add event-specific actions or dates until the underlying meanings and transition rules are approved. Result files remain out of scope.
 
 ### 4.7 Contextual prescription / follow-up panel
 
@@ -274,7 +274,7 @@ Date and text above are structural placeholders, not synthetic patient facts. Th
 
 | Action | Proposed behavior | Persistence rule |
 |---|---|---|
-| Solicitar estudio | Open a same-page panel. For a new unsaved encounter, stage the rows beside the form; for a saved encounter, create under the encounter; from patient overview, allow a standalone patient request only if approved. | New-encounter note + staged studies use the existing atomic save. A standalone request is visibly independent. Do not imply a staged row was persisted. |
+| Solicitar estudio | Open a same-page panel. For a new unsaved encounter, stage the rows beside the form; for a saved encounter, create under the encounter; from patient overview, allow the owner-authorized standalone patient request. | New-encounter note + staged studies use the existing atomic save. A standalone request is visibly independent. Do not imply a staged row was persisted. |
 | Nueva receta / Nuevo informe | Open an in-place panel with patient and saved encounter prefilled. | Existing document endpoint can serve a saved encounter. If the note is new/unsaved, ask for an explicit save checkpoint before creating a linked document; keep the note values and return to it. |
 | Programar seguimiento | Open appointment form in a panel with patient prefilled and a clear return date/time. | Appointment saves independently. Do not imply it was created merely because free text exists in `Seguimiento`. |
 | Abrir nota previa | Show the selected saved encounter in a secondary panel or a stable side view. | Read-only until the user explicitly selects `Editar`; changing patient context never mutates the current note. |
@@ -312,16 +312,16 @@ The `beforeunload` message remains browser-controlled. For in-app navigation, in
 
 ### 6.1 Candidate ownership and associations
 
-**Candidate direction for review:** every request belongs to a patient. An originating encounter may be absent for telephone, pre-visit, or other patient-level requests. When present, the API must verify that the encounter belongs to that patient. Start with patient + optional encounter; do not add appointment/procedure links unless the doctor confirms they materially improve preparation or follow-up. A separate procedure object remains deferred under D-025/Q-NX-01.
+**Owner-authorized O-006 model (D-034):** every request belongs to a patient. An originating encounter may be absent for telephone, pre-visit, or other patient-level requests. When present, the API verifies that the encounter belongs to that patient. Keep the existing association immutable. Do not add appointment/procedure links absent a demonstrated workflow need. A separate procedure object remains deferred under D-025/Q-NX-01.
 
 | Association option | What it supports | Tradeoff | Provisional direction |
 |---|---|---|---|
-| Encounter required (current) | Clear origin for every study ordered during a documented consultation. | Cannot represent phone/pre-visit orders honestly. | Preserve current behavior until independent ordering is approved; do not fabricate an encounter. |
-| Patient required, encounter optional | In-visit and standalone orders; stable patient-level review. | Requires an explicit source/reason policy and optional-link validation. | Preferred minimal candidate if Q-O006-01 is approved. Keep an existing encounter link immutable unless the doctor approves reassociation. |
+| Encounter required (O-005) | Clear origin for every study ordered during a documented consultation. | Cannot represent phone/pre-visit orders honestly. | Retained as the historical O-005 behavior; no fake encounter is created. |
+| Patient required, encounter optional | In-visit and standalone orders; stable patient-level review. | Minimum source/order-time policy remains open. | Implemented under O-006 with same-patient validation. Keep an existing encounter link immutable. |
 | Patient + optional encounter + optional appointment | Can tie a pre-visit study to a planned visit. | Adds multiple relationships, precedence questions, and more invalid/stale cases. | Defer unless Q-O006-07 confirms a concrete clinical need. |
 | Generic clinical-event/procedure relationship | Could model many future sources. | Introduces a broad abstraction and a procedure lifecycle outside current scope. | Reject for this prototype unless separately justified and approved. |
 
-This is a relationship proposal, not a final schema. In particular, confirm whether a standalone request may later be linked to an encounter, whether a linked encounter is immutable, and whether a scheduled appointment should be a separate association.
+The relationship is implemented by the O-006 migration. Standalone requests are not later reassociated; a linked encounter is immutable. Appointment association is excluded unless a demonstrated need changes the decision.
 
 ### 6.2 Keep clinical events distinct
 
@@ -376,53 +376,53 @@ Do not reuse “No registrado” for system failures. Do not show a success stat
 - Desktop uses a two-column note/context workspace. Tablet may use a narrower context rail or disclosure. Phone uses a single column and full-width action panel. Do not horizontally scroll a note to reach fields or actions.
 - Use sufficient contrast and large targets. Do not rely on status color alone; keep visible status text. Avoid motion and timed notifications that disappear before the doctor can read them.
 
-## 9. API and data-model implications — conditional, not approved contracts
+## 9. API and data-model implementation notes
 
-The existing O-005 contract remains normative until approval. These are the likely changes if the associated UX is approved.
+The existing O-005 contract is the implementation baseline. O-006 changes required by the owner mission are authorized; decisions that would add clinical meanings or historical mappings remain open.
 
-| Proposed capability | Likely technical impact | Migration/data-integrity notes |
+| O-006 capability | Contract and implementation | Data-integrity notes |
 |---|---|---|
 | Read context beside the note | The current patient, encounter-summary, appointment, and pending-study GET routes can provide much of the context. `EncounterSummary` contains date/type/reason only; fetch a full note on demand through the existing encounter detail route instead of N+1 full-note reads. A new aggregate endpoint is optional and should be added only if measured SSR/API needs justify it. | No migration required for read-only context. Keep patient reads request-time/no-store. |
-| Appointment → consultation handoff | Add `Atender paciente` entry and carry the appointment ID/context to the patient consultation route. After an encounter is saved, the existing complete endpoint accepts an encounter ID and can link it in the same explicit action. | Can reuse the current relation and endpoint if the doctor accepts completion-after-save. If the encounter must be linked while the appointment stays scheduled, the API rule/data relation must change and needs a separate decision. No status change on route entry. |
-| Contextual documents and follow-up | Use current document create and appointment create APIs in an in-page panel. Keep explicit checkpoint for linking a document to a new encounter before that encounter exists. | Likely UI-only if persisted encounter IDs are available; no new document schema implied. Appointment association/completion behavior still needs confirmation. |
-| Patient-level study requests | Add a patient-scoped create/read surface, e.g. `POST /api/patients/:patientId/studies`; accept an optional encounter ID and validate same-patient ownership. Preserve the current encounter-scoped endpoint as a compatible entry point if useful. Update the DTO so encounter context can be null, and update both patient and encounter views. | A migration must relax the `NOT NULL` constraint on `StudyRequest.encounterId`; preserve every current patient/encounter value and do not rewrite history. Inspect generated SQL against the exact Prisma CLI and SQLite runtime used by the app. SQLite 3.53.0 added `ALTER COLUMN ... DROP NOT NULL`; Prisma ORM 7 ships a fixed SQLite version with each release, and the application also uses the `better-sqlite3` adapter, so verify the actual migration/runtime compatibility before selecting direct alteration or a table rebuild. If rebuilding, verify foreign keys and indexes. Add integrity tests for null links, wrong-patient links, lists, and transactions. Do not add appointment/procedure foreign keys until their need is confirmed. See the [SQLite ALTER TABLE reference](https://www.sqlite.org/lang_altertable.html) and [Prisma ORM 7 SQLite support](https://www.prisma.io/docs/orm/v7/core-concepts/supported-databases/sqlite). |
+| Appointment → consultation handoff | Add `Atender paciente` and carry appointment context into the consultation route. After encounter save, use the existing completion endpoint with that encounter ID. | Reuses the existing relation and endpoint. No status change on route entry or encounter save. |
+| Contextual documents and follow-up | Use current document create and appointment create APIs with the patient and saved encounter context. Require explicit save before a new encounter can have a linked document. | No new document schema. A follow-up appointment is independent and does not imply completion/linking. |
+| Patient-level study requests | Implemented `POST /api/patients/:patientId/studies`; optional encounter ID is same-patient validated. DTO permits `encounter: null`; existing encounter-scoped API remains available. | Migration `20261109050649_o006_optional_study_encounter` rebuilds SQLite table and preserves all existing study fields, indexes, and associations; temporary seeded DB verification passed. Tests cover standalone requests and mismatched/missing associations. No appointment/procedure foreign key. |
 | Distinct performed/result/review events | Extend request/response contracts, server validation, transition rules, and views only after the doctor defines the events and direct transitions. | If separate timestamps suffice, add nullable columns and leave historical values untouched until a mapping is agreed. If event history is required, an event table is a separate complexity choice. Do not silently backfill `completed` as either performed or resulted. |
-| Explicit persisted drafts | Add a clearly defined encounter draft state and retrieval of unfinished encounters; update timeline, query filters, editing and conflict handling. | Requires a migration and safe behavior for current encounters; no drafts exist in O-005. Do not use local storage as a substitute for a server draft. |
+| Explicit persisted drafts | Not part of O-006. Keep explicit save and protect unsaved work with in-app/unload confirmation. | No draft state, migration, or local-storage copy is introduced. |
 
-API rules for any approved implementation: Hono remains authoritative; derive patient association from a patient-scoped route; validate optional encounter belongs to the same patient; update DTOs and schemas shared by web/API; preserve existing O-005 transitions until the doctor approves a new model; test historical data, migration, seed, idempotency, and rollback where writes span records.
+API rules for O-006 implementation: Hono remains authoritative; derive patient association from a patient-scoped route; validate an optional encounter belongs to the same patient; update DTOs and schemas shared by web/API; preserve existing O-005 transitions until the doctor approves a new model; test historical data, migration, seed, idempotency, and rollback where writes span records.
 
-No O-006 migration was generated or applied; that work is intentionally deferred until the owner approves the design and the migration is validated against the repository's exact SQLite/Prisma versions.
+The optional-study migration has been generated and verified against the local Prisma 7/SQLite runtime. Remaining UI-only work should reuse current contracts where possible; any further API or schema change must be tied to an O-006 acceptance need, tested, and documented in the same slice.
 
 ## 10. Open decision register for review
 
-These questions are also recorded as open items in `DECISIONS.md`. Recommendations below are provisional and are not accepted decisions.
+These questions are also recorded as open items in `DECISIONS.md`. D-033…D-039 contain the owner-authorized implementation decisions; this register retains the clinical meanings that still require physician input.
 
 | ID | Question and options | Provisional recommendation | Changes gated on answer |
 |---|---|---|---|
-| Q-O006-01 | Is standalone patient-level study ordering needed for phone/pre-visit requests? If yes, what is the minimum reason/source and order-time information? | Support it with a patient association and optional same-patient encounter; start without appointment linkage unless the doctor needs it. Distinguish “ordered at” from “entered at” only if late entry is common or clinically important. | Patient-scoped create API, encounter optionality/migration, order form, patient pending view. |
+| Q-O006-01 | Patient-level ordering is authorized; what minimum reason/source or separate clinical order-time information does the doctor require? | Start with patient + optional same-patient encounter, existing category/description, and `createdAt` as entry time only. | Add fields only after physician validation; no implementation blocker for current workflow. |
 | Q-O006-02 | What does `completed` mean: performed, result available, or both? Is direct `ordered → reviewed` valid? | Preserve existing records; define distinct events if doctor says performance and receipt occur separately. | Status labels, transitions, timestamps/event data, migration mapping, result-review UI. |
 | Q-O006-03 | How does the doctor receive and document a result without uploads/integrations? When may a result note be edited? | Keep a verbatim physician-entered text note; never interpret it. Decide whether a review timestamp is required. | Result-entry fields, review actions, event capture. |
 | Q-O006-04 | How should an incorrect or cancelled order be represented under the no-delete rule? | Preserve the request and record an explicit correction/cancellation only after the doctor chooses its meaning. | New status/event, edit policy, correction UI, history display. |
 | Q-O006-05 | Should appointment completion and encounter linkage happen together, separately, or at encounter save? Can a completed visit have no note? | Start from appointment context; do not change state on open. Use a separate explicit completion/link action unless the doctor requests another rule. | Handoff UI; possibly API transition rules or relation changes. |
 | Q-O006-06 | Are persistent drafts necessary? What does “draft” mean, who may see one, and how is it distinct from a saved/edited encounter? | First add in-app unsaved-change protection and same-page panels. Add persisted drafts only after an observed need and approved semantics. No autosave. | Encounter state, save API, migration, draft list, recovery and concurrency behavior. |
-| Q-O006-07 | Should a study link to a scheduled appointment, and can it later link to an encounter? | Begin with patient + optional immutable encounter. Add appointment linkage or reassignment only if the clinical relationship is concrete. | Foreign key/constraint, association validation, editability, list filters, migration. |
+| Q-O006-07 | Does a demonstrated workflow need a study-to-appointment relationship? | O-006 has no appointment/procedure association; encounter association is optional and immutable. Revisit only with a concrete need. | No current implementation change. |
 | Q-O006-08 | Which pre-procedure tasks are needed? Which tasks could an assistant prepare, and which must stay doctor-only? | Keep Q-NX-01 deferred; map secretary tasks in research only. Do not add staff roles or a procedure lifecycle in this phase. | Separate scope/decision before any role or procedure implementation. |
 
-Existing Q-NX-02 (study categories) remains open. The current fixed category list is retained for this proposal; no new category is introduced without physician confirmation.
+Existing Q-NX-02 (study categories) remains open. O-006 retains the current fixed category list; no new category is introduced without physician confirmation.
 
-## 11. Proposed implementation sequence after explicit approval
+## 11. Authorized implementation sequence
 
-This is a dependency map for a future implementation mission, not authorization to begin it.
+This is the authorized execution sequence for the current O-006 implementation mission. The owner mission supplies Gate 0 authorization; unresolved clinical questions remain explicit constraints within later slices.
 
 ### Gate 0 — Owner/physician review
 
-Review the journeys and answer Q-O006-01 through Q-O006-08, prioritizing study semantics, standalone ordering, appointment handoff, and drafts. Approve a subset of the proposal and identify any clinical wording that needs revision. Update normative docs only after that approval.
+**Complete — owner authorization:** The full O-006 mission authorizes implementation of this workflow direction. Q-O006-01 through Q-O006-08 remain open where physician input is needed; proceed with the smallest reversible behavior that does not assert an unvalidated clinical meaning.
 
 ### Slice 1 — Consultation context workspace (primarily UI)
 
 **Deliver:** persistent patient/visit header, note + context layout, prior encounter on-demand view, pending work summary, accessible in-page action panels, and in-app unsaved-change guard. Keep the seven current note fields and explicit save.
 
-**Dependencies:** UI and context design approval. Existing SSR reads are the starting point; add no aggregate endpoint unless profiling shows it is needed.
+**Dependencies:** Owner authorization is recorded in D-033. Existing SSR reads are the starting point; add no aggregate endpoint unless profiling shows it is needed.
 
 **Acceptance:** scheduled and walk-in entry both show correct context; history is accessible while the note remains intact; no hidden save occurs; validation/network failure preserves content; internal navigation warns before discarding; all O-005 encounter behavior still works.
 
@@ -430,25 +430,25 @@ Review the journeys and answer Q-O006-01 through Q-O006-08, prioritizing study s
 
 **Deliver:** `Atender paciente` from appointment detail/calendar, prefilled appointment context, then an explicit completion/link action after encounter save; in-context follow-up appointment form.
 
-**Dependencies:** Q-O006-05. Reuse `POST /appointments/:id/complete` if the approved rule matches its current behavior. Change the API only if the link/status decision requires it.
+**Dependencies:** The owner mission authorizes an explicit completion/link action after encounter save. Reuse `POST /appointments/:id/complete`; keep the appointment unchanged until the doctor confirms that action. Preserve a way to save the encounter and leave the appointment pending.
 
 **Acceptance:** patient and appointment are not re-entered; opening does not mutate status; encounter save and appointment completion failures are reported separately; exact same-patient encounter link is shown; unscheduled care remains available.
 
 ### Slice 3 — Patient-level study ordering (API + migration + UI)
 
-**Deliver:** patient-scoped request entry, optional encounter association, patient-level list/detail, encounter-linked entry from the workspace, and visible association/source text.
+**Deliver:** patient-scoped request entry, optional immutable encounter association, patient-level list/detail, encounter-linked entry from the workspace, and visible association plus entry time. A source field remains deferred while Q-O006-01 is open.
 
-**Dependencies:** Q-O006-01, Q-O006-07, minimum order fields, and a decision on invalid/cancelled order handling. Existing status meanings can remain only if Q-O006-02 explicitly accepts that limitation.
+**Dependencies:** Owner mission authorizes patient-level requests and optional same-patient encounter links. Use the existing category/description fields and entry timestamp; do not invent source, clinical order-time, cancellation, or reassociation semantics while Q-O006-01/04/07 remain open. Preserve the current status meanings and explain their limits while Q-O006-02/03 remain open.
 
 **Acceptance:** create by phone/pre-visit without a fake encounter; create from an encounter with correct same-patient link; list linked and standalone requests; migration preserves all existing associations; seed is idempotent; all invalid cross-patient associations fail safely.
 
-### Slice 4 — Study event/status behavior (API + migration + UI)
+### Slice 4 — Study event/status behavior (deferred pending physician semantics)
 
-**Deliver:** doctor-approved distinction for performed, result available, and reviewed (or a documented accepted limitation); result-entry and review interactions; confirmed timestamps/event history as needed.
+**Deliver:** For this mission, preserve `ordered`, `completed`, and `reviewed` transitions and historical values. Improve the review surface and document that `completed` does not separately identify performance or result arrival. Add event states/timestamps only in a later approved change after physician validation.
 
-**Dependencies:** Q-O006-02, Q-O006-03, Q-O006-04. This slice must not ship before the meaning and historical treatment of `completed` are agreed.
+**Dependencies:** Q-O006-02/03/04 remain open and block any new event semantics, timestamps, or correction states. They do not block the conservative status-preserving workflow in this mission.
 
-**Acceptance:** each event and transition is named in plain Spanish; receipt and review are distinguishable if clinically needed; direct review is possible only when valid; prior records are preserved and have an explicitly approved mapping; test status transitions, invalid transitions, result edits, and persistence.
+**Acceptance:** Existing transitions and result-note behavior remain validated and unchanged; the UI does not claim a `completed` study was performed or that a result arrived; existing records are not remapped. Further event-level distinctions wait for physician input.
 
 ### Slice 5 — Contextual documents and continuity (UI, mostly existing APIs)
 
@@ -477,7 +477,7 @@ If approved, use these as task-based review scenarios rather than coding-only ch
 - **R3 Walk-in:** Create and save an unscheduled encounter without an appointment or fabricated association.
 - **R4 History during note:** See allergies, current medication, recent encounter summaries, and pending studies while the note remains visible and editable.
 - **R5 Unsaved note:** Open and close a contextual panel; all note values and cursor context remain. Attempt in-app navigation with edits; choose “seguir editando” or explicitly discard. Failed saves never look successful.
-- **R6 Standalone study:** If approved, create a phone/pre-visit request with no encounter and find it from the patient workspace without a fake note.
+- **R6 Standalone study:** Create a phone/pre-visit request with no encounter and find it from the patient workspace without a fake note; show only the entry timestamp unless a separate clinical order time is recorded in a later approved change.
 - **R7 Study lifecycle:** Doctor correctly distinguishes order, performance, result availability, and review according to definitions approved for the prototype; historical data is not silently reinterpreted.
 - **R8 Clinical actions:** Create a prescription/report and schedule a return visit from the encounter; the patient and encounter context are correct and the note remains accessible.
 - **R9 Return to work:** Reopen a patient and identify the next appointment and work that genuinely requires action without scanning unrelated historical cards.
@@ -487,8 +487,8 @@ Record baseline and proposed completion time, route changes, errors, association
 
 ## 13. Governance and exclusions
 
-- This document and `UX_AUDIT.md` are discovery artifacts, not product requirements.
-- `DECISIONS.md` contains the unresolved O-006 questions; no recommendation here is accepted by default.
-- Keep O-005 specs authoritative until explicit approval. Then revise `PRODUCT.md`, `WORKFLOWS.md`, `UI_SPEC.md`, `DATA_MODEL.md`, `API_CONTRACT.md`, `TASKS.md`, and migration/tests together as applicable.
-- No UI/API/schema/seed implementation is part of O-006. The next mission begins only after owner review and scope approval.
+- This document is the approved O-006 workflow direction under D-033; `UX_AUDIT.md` remains the source-verified audit of the O-005 baseline.
+- Q-O006 items remain unresolved clinical questions. Implementation must not promote uncertain status meanings, timestamps, or role assumptions into facts.
+- Revise `PRODUCT.md`, `WORKFLOWS.md`, `UI_SPEC.md`, `DATA_MODEL.md`, `API_CONTRACT.md`, `TASKS.md`, and tests with verified behavior as each slice is delivered.
+- This mission authorizes O-006 implementation only; excluded capabilities remain out of scope.
 - Excluded here: authentication, staff accounts/permissions, uploads, external labs, AI interpretation, FHIR/HL7, production deployment, billing, and dedicated procedural lifecycle.

@@ -9,16 +9,23 @@ import { patientDetailSchema } from '@nexus-med/contracts';
 
 import { AppointmentForm } from '../../../../../components/appointments/appointment-form';
 import { ErrorBanner } from '../../../../../components/primitives';
+import { PatientContext } from '../../../../../components/shell/patient-context';
 import { fetchServer } from '../../../../../lib/api/server';
 
 export const dynamic = 'force-dynamic';
 
 export default async function NewAppointmentPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ returnTo?: string | string[] }>;
 }) {
-  const { id } = await params;
+  const [{ id }, query] = await Promise.all([params, searchParams]);
+  const requestedReturnTo = Array.isArray(query.returnTo) ? query.returnTo[0] : query.returnTo;
+  const returnTo = requestedReturnTo?.startsWith(`/patients/${id}/consultas/`) && !requestedReturnTo.includes('//')
+    ? requestedReturnTo
+    : undefined;
   const res = await fetchServer(`/api/patients/${encodeURIComponent(id)}`, patientDetailSchema);
   if (!res.ok) {
     if (res.notFound) notFound();
@@ -33,16 +40,23 @@ export default async function NewAppointmentPage({
 
   return (
     <>
+      <PatientContext
+        fullName={patient.fullName}
+        externalIdentifier={patient.externalIdentifier}
+        isArchived={patient.isArchived}
+        backHref={returnTo ?? `/patients/${patient.id}/citas`}
+        backLabel={returnTo ? 'Volver a consulta' : 'Volver a citas'}
+      />
       <div className="page-head">
         <h1>Nueva cita — {patient.fullName}</h1>
         <div className="actions">
-          <Link href={`/patients/${id}/citas`} className="btn btn-secondary">
-            Volver a citas
+          <Link href={returnTo ?? `/patients/${id}/citas`} className="btn btn-secondary">
+            {returnTo ? 'Volver a consulta' : 'Volver a citas'}
           </Link>
         </div>
       </div>
       <div className="card">
-        <AppointmentForm patientId={patient.id} />
+        <AppointmentForm patientId={patient.id} returnTo={returnTo} />
       </div>
     </>
   );

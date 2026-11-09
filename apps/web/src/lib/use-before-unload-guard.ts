@@ -3,21 +3,80 @@
 import { useEffect } from 'react';
 
 /**
- * Dirty-form protection (UI_SPEC §2 / U-08): while `isDirty` is true, the
- * native `beforeunload` dialog guards closing or reloading the tab.
- * In-app navigation is intentionally NOT intercepted — leaving a dirty
- * form via an in-app link may drop unsaved values (documented prototype
- * tradeoff; the spec requires exactly this, not more).
+ * Protect unsaved clinical text from page unloads, in-app links, and browser
+ * history navigation. The browser controls the beforeunload wording; local
+ * navigation uses the supplied Spanish message. No text is persisted.
  */
-export function useBeforeUnloadGuard(isDirty: boolean): void {
+export function useBeforeUnloadGuard(
+  isDirty: boolean,
+  message = 'Hay cambios sin guardar. Si sales, perderás la información capturada.',
+): void {
   useEffect(() => {
     if (!isDirty) return;
+
     const handler = (event: BeforeUnloadEvent) => {
       event.preventDefault();
-      // Chrome requires returnValue to be set for the native dialog to show.
       event.returnValue = '';
     };
+
+    const onDocumentClick = (event: MouseEvent) => {
+      if (
+        event.defaultPrevented ||
+        event.button !== 0 ||
+        event.metaKey ||
+        event.ctrlKey ||
+        event.shiftKey ||
+        event.altKey
+      ) {
+        return;
+      }
+
+      const anchor = event.composedPath().find(
+        (target): target is HTMLAnchorElement => target instanceof HTMLAnchorElement,
+      );
+      if (!anchor || anchor.hasAttribute('download') || (anchor.target && anchor.target !== '_self')) {
+        return;
+      }
+
+      const destination = new URL(anchor.href, window.location.href);
+      if (destination.origin !== window.location.origin || destination.href === window.location.href) {
+        return;
+      }
+
+      if (!window.confirm(message)) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+      }
+    };
+
+    // A same-URL history sentinel gives us a popstate boundary before the
+    // previous app route. On cancellation, consume the event and restore it.
+    const currentState = window.history.state;
+    const hasSentinel =
+      currentState && typeof currentState === 'object' && '__nexusMedUnsavedGuard' in currentState;
+    if (!hasSentinel) {
+      window.history.pushState(
+        { ...(currentState && typeof currentState === 'object' ? currentState : {}), __nexusMedUnsavedGuard: true },
+        '',
+        window.location.href,
+      );
+    }
+
+    const onPopState = (event: PopStateEvent) => {
+      if (!window.confirm(message)) {
+        event.stopImmediatePropagation();
+        window.history.go(1);
+      }
+    };
+
     window.addEventListener('beforeunload', handler);
-    return () => window.removeEventListener('beforeunload', handler);
-  }, [isDirty]);
+    document.addEventListener('click', onDocumentClick, true);
+    window.addEventListener('popstate', onPopState, true);
+
+    return () => {
+      window.removeEventListener('beforeunload', handler);
+      document.removeEventListener('click', onDocumentClick, true);
+      window.removeEventListener('popstate', onPopState, true);
+    };
+  }, [isDirty, message]);
 }

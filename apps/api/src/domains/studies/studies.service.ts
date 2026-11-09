@@ -1,17 +1,18 @@
 // Study request domain operations (UI_SPEC §7.3, U-15).
 //
 // Business rules:
-// - A study request belongs to one patient and one encounter (the
-//   consultation during which it was ordered). It is created with that
-//   encounter — inside the encounter-creation transaction, so the two
-//   commit atomically. There is no standalone create endpoint and no edit
-//   or delete: after creation only the status and an optional result note
-//   change.
+// - A study request belongs to one patient and may have no encounter. If an
+//   encounter is supplied, it must belong to the same patient.
+// - Encounter creation keeps nested study creation atomic. Standalone and
+//   existing-encounter requests also commit all rows in one transaction.
+// - Requests cannot be edited or deleted; status and result note retain the
+//   existing O-005 behavior until clinical semantics are validated.
 // - Status transitions are explicit and one-directional:
 //   ordered → completed, ordered → reviewed, completed → reviewed.
 //   `reviewed` is final. A backward or repeated transition is a 409.
 
 import type {
+  CreatePatientStudiesInput,
   StudyInput,
   StudyRequest,
   StudyStatus,
@@ -19,7 +20,7 @@ import type {
 } from '@nexus-med/contracts';
 
 import { prisma } from '../../infrastructure/database/prisma';
-import { ConflictError, NotFoundError } from '../../shared/http/errors';
+import { ConflictError, NotFoundError, ValidationError } from '../../shared/http/errors';
 
 const STUDY_NOT_FOUND = 'Estudio no encontrado';
 const PATIENT_NOT_FOUND = 'Paciente no encontrado';
@@ -30,7 +31,7 @@ const ENCOUNTER_NOT_FOUND = 'Consulta no encontrada';
 interface StudyRow {
   id: string;
   patientId: string;
-  encounter: { id: string; occurredAt: Date; reason: string | null };
+  encounter: { id: string; occurredAt: Date; reason: string | null } | null;
   category: string;
   description: string;
   status: string;
@@ -43,11 +44,13 @@ function toStudyRequest(row: StudyRow): StudyRequest {
   return {
     id: row.id,
     patientId: row.patientId,
-    encounter: {
-      id: row.encounter.id,
-      occurredAt: row.encounter.occurredAt.toISOString(),
-      reason: row.encounter.reason,
-    },
+    encounter: row.encounter
+      ? {
+          id: row.encounter.id,
+          occurredAt: row.encounter.occurredAt.toISOString(),
+          reason: row.encounter.reason,
+        }
+      : null,
     // Only ever written through the validated API boundary.
     category: row.category as StudyRequest['category'],
     description: row.description,
@@ -98,14 +101,45 @@ export async function createEncounterStudies(
   });
   if (!encounter) throw new NotFoundError(ENCOUNTER_NOT_FOUND);
 
+  return createStudies(encounter.patientId, encounter.id, studies);
+}
+
+export async function createPatientStudies(
+  patientId: string,
+  input: CreatePatientStudiesInput,
+): Promise<StudyRequest[]> {
+  const patient = await prisma.patient.findUnique({ where: { id: patientId }, select: { id: true } });
+  if (!patient) throw new NotFoundError(PATIENT_NOT_FOUND);
+
+  if (input.encounterId) {
+    const encounter = await prisma.encounter.findUnique({
+      where: { id: input.encounterId },
+      select: { id: true, patientId: true },
+    });
+    if (!encounter) throw new NotFoundError(ENCOUNTER_NOT_FOUND);
+    if (encounter.patientId !== patientId) {
+      throw new ValidationError('La consulta pertenece a otro paciente', {
+        encounterId: ['La consulta pertenece a otro paciente'],
+      });
+    }
+  }
+
+  return createStudies(patientId, input.encounterId ?? null, input.studies);
+}
+
+async function createStudies(
+  patientId: string,
+  encounterId: string | null,
+  studies: StudyInput[],
+): Promise<StudyRequest[]> {
   const rows = await prisma.$transaction(async (tx) => {
     const created: StudyRow[] = [];
     for (const study of studies) {
       created.push(
         await tx.studyRequest.create({
           data: {
-            patientId: encounter.patientId,
-            encounterId: encounter.id,
+            patientId,
+            ...(encounterId ? { encounterId } : {}),
             category: study.category,
             description: study.description,
           },

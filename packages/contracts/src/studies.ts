@@ -1,10 +1,8 @@
 // Study request contracts (UI_SPEC §7.3, decision U-15).
 //
-// A study request is the order for one specific study, created with its
-// originating encounter and immutable after that: only the status and an
-// optional result note can change (ordered → completed → reviewed, with
-// ordered → reviewed allowed). No edit, no delete — the originating
-// encounter is the record of what was ordered.
+// A study request belongs to one patient and may have an optional immutable
+// encounter association. Existing statuses are retained until the physician
+// defines whether `completed` means performed or result available.
 //
 // `category` is a fixed list (Q-NX-02: to be confirmed with the doctor);
 // `description` carries the specific study (e.g. "Biometría hemática").
@@ -48,7 +46,7 @@ export const studyDescriptionSchema = z.string().trim().min(2).max(200);
 export const studyResultNoteSchema = z.string().trim().max(1000);
 
 /**
- * One study request. `encounter` is embedded (id + occurrence + reason) so
+ * One study request. The optional `encounter` is embedded (id + occurrence + reason) so
  * the overview pending card and the encounter detail can render their rows
  * without a second fetch per study.
  */
@@ -61,7 +59,7 @@ const studyEncounterSchema = z.object({
 export const studyRequestSchema = z.object({
   id: idSchema,
   patientId: idSchema,
-  encounter: studyEncounterSchema,
+  encounter: studyEncounterSchema.nullable(),
   category: studyCategorySchema,
   description: studyDescriptionSchema,
   status: studyStatusSchema,
@@ -86,6 +84,16 @@ export const createEncounterStudiesInputSchema = z
   .object({ studies: z.array(studyInputSchema).min(1) })
   .strict();
 export type CreateEncounterStudiesInput = z.infer<typeof createEncounterStudiesInputSchema>;
+
+/** Create requests from a patient context with an optional same-patient
+ * encounter association. The patient ID is always derived from the route. */
+export const createPatientStudiesInputSchema = z
+  .object({
+    encounterId: idSchema.optional(),
+    studies: z.array(studyInputSchema).min(1),
+  })
+  .strict();
+export type CreatePatientStudiesInput = z.infer<typeof createPatientStudiesInputSchema>;
 
 /**
  * Advance a study's status (the only mutation). `status` is required —

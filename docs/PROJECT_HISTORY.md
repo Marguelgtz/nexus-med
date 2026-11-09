@@ -305,3 +305,49 @@ Add the next entry when O-001 reaches a meaningful verified milestone, such as t
 **Impact:** The owner and physician have a concrete proposal to approve, revise, or reject before any implementation. O-005 remains the authoritative implemented behavior until then.
 
 **References:** `UX_AUDIT.md`, `UX_REDESIGN.md`, `DECISIONS.md` (P-UX-01…05 and Q-O006-01…08), `ACTION_PLAN.md` (PR #6 and next action), `ROADMAP.md`.
+
+### 2026-11-09 — O-006 implementation authorized
+
+**Type:** Scope transition
+
+**Context:** The owner mission authorizes the full clinical workflow and UX implementation described in PR #6, superseding the proposal-only boundary in the original design review. Work starts from the latest documentation head `b63e806` on `feat/o006-clinical-workflows`; PR #6 remains open and unmerged.
+
+**Execution boundary:** Implement optional encounter links for patient-owned study requests, consultation context, appointment handoff, contextual documents/follow-up, and the focused patient workspace. Keep the single-surgeon local prototype, synthetic records, explicit save, and O-005 regression behavior. Q-O006 clinical semantics remain open; preserve existing `completed` values and do not infer performed/result-received meaning or event times.
+
+**References:** O-006 mission brief (2026-11-09); `DECISIONS.md` D-033 and Q-O006-01…08; `TASKS.md` §7; `ACTION_PLAN.md` §3; PR #6.
+
+### 2026-11-09 — O-006 study API foundation and canonical workflow contract
+
+**Type:** Implementation milestone
+
+**Context:** The implementation branch starts from PR #6's latest documentation head. The owner mission explicitly requires patient-owned study requests with an optional same-patient encounter and migration preservation.
+
+**Findings and outcomes:**
+
+- Added nullable `StudyRequest.encounterId` and a SQLite table-rebuild migration; a temporary seeded database retained both existing study rows and every field, passed `foreign_key_check`, and retained both indexes.
+- Added `POST /api/patients/:patientId/studies` with route-derived patient ownership, optional same-patient encounter validation, shared strict contract schema, and atomic multi-row creation. Existing encounter-scoped creation and study statuses remain unchanged.
+- API integration suite passes 112/112; API and contracts typechecks pass. Commit `48304a4` (`feat(studies): support patient-level requests`) is pushed to `feat/o006-clinical-workflows`.
+- Added O-006 acceptance and workflow requirements to the product, workflow, decision, and canonical UI documents. No O-006 web UI has been implemented at this milestone.
+
+**Impact:** Independent study requests have a persisted, validated API foundation. Status semantics, clinical order time/source, and cancellation/correction behavior remain open and are not inferred.
+
+**References:** `API_CONTRACT.md` §11, `DATA_MODEL.md` §1/§3, `UI_SPEC.md` §8, `WORKFLOWS.md` §15, `DECISIONS.md` D-034…D-039, `TESTING.md`, `ACTION_PLAN.md` §3.
+
+### 2026-11-09 — O-006 clinical workflows integrated and verified
+
+**Type:** Implementation milestone
+
+**Context:** The complete owner-authorized O-006 mission was implemented on `feat/o006-clinical-workflows`, based on PR #6's latest docs head `b63e806`.
+
+**Findings and outcomes:**
+
+- Added responsive consultation create/edit/detail workspaces with patient safety context, on-demand historical notes, pending studies, explicit save, and in-app unsaved-change protection. The patient workspace now prioritizes safety context, next appointment and study review, recent encounters, and historical records.
+- Added patient-level standalone study creation, optional immutable same-patient encounter links, review controls and doctor-authored notes; requests can also be staged atomically in a new encounter or added to a saved encounter. Existing study states and transitions were retained without interpreting `completed`.
+- Added appointment-to-consultation entry and explicit completion/linking, contextual prescription/report prefill and return, and follow-up appointment return navigation.
+- Final gate passed: API 112/112; web 32/32; workspace typecheck; ESLint (exit 0 with the existing App Router `pages/` warning); Next production build; isolated migration/seed/repeat startup; primary headless Chrome workflows and 390px responsive layout. Existing study rows/associations survived the migration. Default local `/health` and `/patients` returned 200 after migration; the seed created no records.
+- Commits: API `48304a4`, canonical O-006 contract `e3a3cc1`, integrated UI `e27cbf8`. PR #7 is open against `docs/o006-clinical-workflow-ux` and stacked on PR #6. Both remain unmerged pending owner review.
+- No new dependencies, AI, uploads, staff workflows, event timestamps, or speculative study-status semantics were added. Q-O006-01…08 remain current physician-validation questions.
+
+**Impact:** O-006 implementation and integrated verification are complete; no further implementation work is required before owner review.
+
+**References:** PR #6, PR #7, `TASKS.md` §7, `ACTION_PLAN.md` §3, `TESTING.md`, `WORKFLOWS.md` §15, `DECISIONS.md` D-033…D-039 and Q-O006-01…08.

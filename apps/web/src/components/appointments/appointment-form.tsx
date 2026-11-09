@@ -29,6 +29,10 @@ type Props = {
   initial?: Appointment;
   /** Called after a successful edit; the parent refreshes server data. */
   onSaved?: () => void;
+  /** Keep the current clinical workspace mounted after an in-context create. */
+  onCreated?: (appointment: Appointment) => void;
+  /** Return here after a standalone follow-up appointment is saved. */
+  returnTo?: string;
 };
 
 function toIso(dateStr: string, timeStr: string): string {
@@ -38,7 +42,7 @@ function toIso(dateStr: string, timeStr: string): string {
   return instantAtLocalTime(dateStr, h, m).toISOString();
 }
 
-export function AppointmentForm({ patientId, initial, onSaved }: Props) {
+export function AppointmentForm({ patientId, initial, onSaved, onCreated, returnTo }: Props) {
   const router = useRouter();
   const [date, setDate] = useState(() =>
     initial ? localDateOfInstant(initial.startAt) : localDateOfInstant(new Date().toISOString()),
@@ -96,7 +100,11 @@ export function AppointmentForm({ patientId, initial, onSaved }: Props) {
           durationMinutes: duration,
           type,
         });
-        router.push(`/patients/${appt.patient.id}/citas/${appt.id}`);
+        if (onCreated) {
+          onCreated(appt);
+        } else {
+          router.push(returnTo ?? `/patients/${appt.patient.id}/citas/${appt.id}`);
+        }
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'No se pudo guardar la cita.');
