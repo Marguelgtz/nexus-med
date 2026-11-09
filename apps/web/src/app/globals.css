@@ -1000,8 +1000,18 @@ a.timeline-item:hover {
 
 .day-grid-hour {
   position: relative;
-  height: 56px;
+  height: 48px;
   border-top: 1px solid var(--border);
+}
+
+.day-grid-end {
+  position: relative;
+  height: 0;
+  border-top: 1px solid var(--border);
+}
+
+.day-grid-end .day-grid-label {
+  top: -15px;
 }
 
 .day-grid-label {
@@ -1033,6 +1043,52 @@ a.timeline-item:hover {
 .cal-block:hover {
   z-index: 2;
   background: var(--surface-hover);
+}
+
+.calendar-outside-hours {
+  margin-top: var(--s-4);
+  padding: var(--s-4);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+
+.calendar-outside-hours h2 {
+  margin: 0 0 var(--s-3);
+  font-size: 15px;
+}
+
+.calendar-outside-hours ul {
+  display: grid;
+  gap: var(--s-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.calendar-outside-link {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  min-height: 36px;
+  padding: var(--s-2);
+  border-radius: var(--radius-sm);
+  color: inherit;
+  text-decoration: none;
+}
+
+.calendar-outside-link:hover {
+  background: var(--surface-hover);
+}
+
+.calendar-outside-link time {
+  min-width: 42px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+.calendar-outside-name {
+  flex: 1;
 }
 
 /* Week view */
@@ -1209,8 +1265,7 @@ a.timeline-item:hover {
     min-height: 44px;
   }
 
-  /* Calendar: the week grid scrolls horizontally; the day grid keeps
-     its 100% width with a smaller hour height. */
+  /* Calendar: the week grid scrolls horizontally; hourly scale stays fixed. */
   .week-grid {
     display: block;
     overflow-x: auto;
@@ -1222,7 +1277,4 @@ a.timeline-item:hover {
     margin-right: var(--s-2);
   }
 
-  .day-grid-hour {
-    height: 44px;
-  }
 }

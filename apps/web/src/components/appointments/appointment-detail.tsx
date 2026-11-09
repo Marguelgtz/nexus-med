@@ -106,7 +106,7 @@ export function AppointmentDetail({
               <strong>{appt.actualDurationMinutes ?? appt.durationMinutes} min</strong>
             </span>
             {appt.linkedEncounterId ? (
-              <Link href={`/encounters/${appt.linkedEncounterId}`}>
+              <Link href={`/patients/${patientId}/consultas/${appt.linkedEncounterId}`}>
                 Ver consulta enlazada →
               </Link>
             ) : (
@@ -133,8 +133,9 @@ export function AppointmentDetail({
                 Duración real (min)
                 <input
                   type="number"
-                  min={1}
+                  min={5}
                   max={480}
+                  step={5}
                   value={actualDuration}
                   onChange={(e) => setActualDuration(Number(e.target.value))}
                 />

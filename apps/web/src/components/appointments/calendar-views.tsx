@@ -6,6 +6,14 @@ import Link from 'next/link';
 import type { Appointment } from '@nexus-med/contracts';
 
 import {
+  CALENDAR_DAY_END_HOUR,
+  CALENDAR_DAY_START_HOUR,
+  CALENDAR_HOUR_HEIGHT_PX,
+  CALENDAR_MAX_CHIPS_PER_DAY,
+  splitDayAppointments,
+  visibleAppointmentSlice,
+} from '../../lib/calendar';
+import {
   formatDayHeader,
   formatTime,
   localDateOfInstant,
@@ -14,10 +22,7 @@ import {
   sameMonth,
   weekDays,
 } from '../../lib/format';
-
-const DAY_START_HOUR = 6;
-const DAY_END_HOUR = 22;
-const HOUR_HEIGHT = 56; // px per hour in the day grid
+import { AppointmentStatusBadge, AppointmentTypeBadge } from './badges';
 
 type Placed = { appt: Appointment; top: number; height: number; left: number; width: number };
 
@@ -65,8 +70,8 @@ function placeBlocks(appts: Appointment[]): Placed[] {
     if (cluster.length > 0 && start >= clusterEnd) flush();
     cluster.push({
       appt,
-      top: ((start - DAY_START_HOUR * 60) / 60) * HOUR_HEIGHT,
-      height: Math.max((appt.durationMinutes / 60) * HOUR_HEIGHT, 24),
+      top: ((start - CALENDAR_DAY_START_HOUR * 60) / 60) * CALENDAR_HOUR_HEIGHT_PX,
+      height: Math.max((appt.durationMinutes / 60) * CALENDAR_HOUR_HEIGHT_PX, 24),
       left: 0,
       width: 100,
     });
@@ -93,40 +98,65 @@ function chipClasses(appt: Appointment, today: string): string {
 
 /** Real time grid, 06:00–22:00 (UI_SPEC §7.1). */
 export function DayView({ fecha, appointments }: { fecha: string; appointments: Appointment[] }) {
-  const dayAppts = appointments.filter((a) => localDateOfInstant(a.startAt) === fecha);
-  const placed = placeBlocks(dayAppts);
-  const hours = Array.from({ length: DAY_END_HOUR - DAY_START_HOUR }, (_, i) => DAY_START_HOUR + i);
+  const { inGrid, outsideHours } = splitDayAppointments(appointments, fecha);
+  const placed = placeBlocks(inGrid);
+  const hours = Array.from(
+    { length: CALENDAR_DAY_END_HOUR - CALENDAR_DAY_START_HOUR },
+    (_, i) => CALENDAR_DAY_START_HOUR + i,
+  );
 
   return (
-    <div className="day-grid">
-      <div className="day-grid-body">
-        {hours.map((h) => (
-          <div className="day-grid-hour" key={h}>
-            <span className="day-grid-label">{String(h).padStart(2, '0')}:00</span>
+    <>
+      <div className="day-grid">
+        <div className="day-grid-body">
+          {hours.map((h) => (
+            <div className="day-grid-hour" key={h}>
+              <span className="day-grid-label">{String(h).padStart(2, '0')}:00</span>
+            </div>
+          ))}
+          <div className="day-grid-end">
+            <span className="day-grid-label">{String(CALENDAR_DAY_END_HOUR).padStart(2, '0')}:00</span>
           </div>
-        ))}
-        {placed.map(({ appt, top, height, left, width }) => (
-          <Link
-            key={appt.id}
-            href={apptHref(appt)}
-            className={`cal-block cal-type-${appt.type}${appt.status === 'cancelled' ? ' cal-cancelled' : ''}`}
-            style={{ top, height, left: `${left}%`, width: `calc(${width}% - 4px)` }}
-          >
-            <strong>{formatTime(appt.startAt)}</strong> {appt.patient.fullName}
-          </Link>
-        ))}
-        {dayAppts.length === 0 ? (
-          <div className="empty empty-inline">Sin citas en este día.</div>
-        ) : null}
+          {placed.map(({ appt, top, height, left, width }) => (
+            <Link
+              key={appt.id}
+              href={apptHref(appt)}
+              className={`cal-block cal-type-${appt.type}${appt.status === 'cancelled' ? ' cal-cancelled' : ''}`}
+              style={{ top, height, left: `${left}%`, width: `calc(${width}% - 4px)` }}
+            >
+              <strong>{formatTime(appt.startAt)}</strong> {appt.patient.fullName}
+            </Link>
+          ))}
+          {inGrid.length === 0 && outsideHours.length === 0 ? (
+            <div className="empty empty-inline">Sin citas en este día.</div>
+          ) : null}
+        </div>
       </div>
-    </div>
+      {outsideHours.length > 0 ? (
+        <section className="calendar-outside-hours" aria-labelledby="outside-hours-heading">
+          <h2 id="outside-hours-heading">Fuera del horario mostrado (06:00–22:00)</h2>
+          <ul>
+            {outsideHours.map((appt) => (
+              <li key={appt.id}>
+                <Link href={apptHref(appt)} className="calendar-outside-link">
+                  <time>{formatTime(appt.startAt)}</time>
+                  <span className="calendar-outside-name">{appt.patient.fullName}</span>
+                  <AppointmentTypeBadge type={appt.type} />
+                  <AppointmentStatusBadge status={appt.status} />
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+    </>
   );
 }
 
 function WeekColumn({ day, appointments }: { day: string; appointments: Appointment[] }) {
   const today = practiceToday();
   const items = appointments.filter((a) => localDateOfInstant(a.startAt) === day);
-  const visible = items.slice(0, 8);
+  const { visible, remaining } = visibleAppointmentSlice(items, CALENDAR_MAX_CHIPS_PER_DAY);
   return (
     <div className={`cal-week-col${day === today ? ' cal-today-col' : ''}`}>
       <Link href={`/calendar?vista=dia&fecha=${day}`} className="cal-col-head">
@@ -138,9 +168,9 @@ function WeekColumn({ day, appointments }: { day: string; appointments: Appointm
             {formatTime(appt.startAt)} {appt.patient.fullName}
           </Link>
         ))}
-        {items.length > visible.length ? (
+        {remaining > 0 ? (
           <Link href={`/calendar?vista=dia&fecha=${day}`} className="cal-more">
-            +{items.length - visible.length} más
+            +{remaining} más
           </Link>
         ) : null}
         {items.length === 0 ? <span className="faint">—</span> : null}
@@ -162,7 +192,7 @@ export function WeekView({ fecha, appointments }: { fecha: string; appointments:
 function MonthCell({ day, appointments }: { day: string; appointments: Appointment[] }) {
   const today = practiceToday();
   const items = appointments.filter((a) => localDateOfInstant(a.startAt) === day);
-  const visible = items.slice(0, 3);
+  const { visible, remaining } = visibleAppointmentSlice(items);
   return (
     <div className={`cal-month-cell${day === today ? ' cal-today-col' : ''}`}>
       <Link href={`/calendar?vista=dia&fecha=${day}`} className="cal-month-daynum">
@@ -174,9 +204,9 @@ function MonthCell({ day, appointments }: { day: string; appointments: Appointme
             {formatTime(appt.startAt)} {appt.patient.fullName}
           </Link>
         ))}
-        {items.length > visible.length ? (
+        {remaining > 0 ? (
           <Link href={`/calendar?vista=dia&fecha=${day}`} className="cal-more">
-            +{items.length - visible.length}
+            +{remaining}
           </Link>
         ) : null}
       </div>

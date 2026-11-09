@@ -25,6 +25,16 @@ import { ConflictError, NotFoundError, ValidationError } from '../../shared/http
 const APPOINTMENT_NOT_FOUND = 'Cita no encontrada';
 const PATIENT_NOT_FOUND = 'Paciente no encontrado';
 const ENCOUNTER_NOT_FOUND = 'Consulta no encontrada';
+const ENCOUNTER_ALREADY_LINKED = 'La consulta ya está enlazada a otra cita.';
+
+function isUniqueConstraintViolation(error: unknown): boolean {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'code' in error &&
+    error.code === 'P2002'
+  );
+}
 
 // Prisma rows carry Dates and raw enum strings; the public contract carries
 // ISO 8601 strings and validated enums. Services serialize at this boundary.
@@ -189,12 +199,21 @@ export async function completeAppointment(
     await requireEncounterForPatient(input.encounterId, existing.patient.id);
     data.linkedEncounterId = input.encounterId;
   }
-  const row = await prisma.appointment.update({
-    where: { id: appointmentId },
-    data,
-    include: rowInclude,
-  });
-  return toAppointment(row);
+  try {
+    const row = await prisma.appointment.update({
+      where: { id: appointmentId },
+      data,
+      include: rowInclude,
+    });
+    return toAppointment(row);
+  } catch (error) {
+    // The unique index is the final guard if two local requests attempt to
+    // link the same encounter concurrently. Keep that race a domain conflict.
+    if (input.encounterId !== undefined && isUniqueConstraintViolation(error)) {
+      throw new ConflictError(ENCOUNTER_ALREADY_LINKED);
+    }
+    throw error;
+  }
 }
 
 /** Cancel a scheduled appointment (record kept in history). */
@@ -229,12 +248,17 @@ export async function linkEncounter(
     throw new ConflictError('La cita está cancelada y no puede enlazarse a una consulta.');
   }
   await requireEncounterForPatient(input.encounterId, existing.patient.id);
-  const row = await prisma.appointment.update({
-    where: { id: appointmentId },
-    data: { linkedEncounterId: input.encounterId },
-    include: rowInclude,
-  });
-  return toAppointment(row);
+  try {
+    const row = await prisma.appointment.update({
+      where: { id: appointmentId },
+      data: { linkedEncounterId: input.encounterId },
+      include: rowInclude,
+    });
+    return toAppointment(row);
+  } catch (error) {
+    if (isUniqueConstraintViolation(error)) throw new ConflictError(ENCOUNTER_ALREADY_LINKED);
+    throw error;
+  }
 }
 
 /** The encounter must exist and belong to the same patient as the

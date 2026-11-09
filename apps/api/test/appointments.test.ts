@@ -306,6 +306,27 @@ describe('POST /appointments/:appointmentId/complete', () => {
     expect(((await res.json()) as any).error.fieldErrors.encounterId).toBeDefined();
   });
 
+  it('returns a conflict when another appointment already uses the encounter', async () => {
+    const encounter = await makeEncounter(patientId);
+    const first = await makeAppointment('2026-11-02T09:00:00-06:00');
+    const second = await makeAppointment('2026-11-02T10:00:00-06:00');
+    await app.request(`/api/appointments/${first.id}/complete`, {
+      method: 'POST',
+      headers: json,
+      body: JSON.stringify({ encounterId: encounter.id }),
+    });
+
+    const res = await app.request(`/api/appointments/${second.id}/complete`, {
+      method: 'POST',
+      headers: json,
+      body: JSON.stringify({ actualDurationMinutes: 35, encounterId: encounter.id }),
+    });
+    expect(res.status).toBe(409);
+    expect(((await res.json()) as any).error.message).toMatch(/enlazada a otra cita/);
+    const unchanged = await (await app.request(`/api/appointments/${second.id}`)).json() as any;
+    expect(unchanged).toMatchObject({ status: 'scheduled', actualDurationMinutes: null, linkedEncounterId: null });
+  });
+
   it('rejects an unknown encounter with 404', async () => {
     const created = await makeAppointment('2026-11-02T09:00:00-06:00');
     const res = await app.request(`/api/appointments/${created.id}/complete`, {
@@ -399,6 +420,25 @@ describe('POST /appointments/:appointmentId/link-encounter', () => {
       body: JSON.stringify({ encounterId: e2.id }),
     });
     expect(res.status).toBe(409);
+  });
+
+  it('returns a conflict when the encounter is linked to a different appointment', async () => {
+    const encounter = await makeEncounter(patientId);
+    const first = await makeAppointment('2026-11-02T09:00:00-06:00');
+    const second = await makeAppointment('2026-11-02T10:00:00-06:00');
+    await app.request(`/api/appointments/${first.id}/link-encounter`, {
+      method: 'POST',
+      headers: json,
+      body: JSON.stringify({ encounterId: encounter.id }),
+    });
+
+    const res = await app.request(`/api/appointments/${second.id}/link-encounter`, {
+      method: 'POST',
+      headers: json,
+      body: JSON.stringify({ encounterId: encounter.id }),
+    });
+    expect(res.status).toBe(409);
+    expect(((await res.json()) as any).error.message).toMatch(/enlazada a otra cita/);
   });
 
   it('rejects linking a cancelled appointment with 409', async () => {

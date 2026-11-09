@@ -4,6 +4,7 @@
 // pure markup and navigate through links (no client state).
 
 import Link from 'next/link';
+import { notFound } from 'next/navigation';
 import { z } from 'zod';
 
 import { appointmentSchema } from '@nexus-med/contracts';
@@ -75,7 +76,8 @@ export default async function CalendarPage({
   const { vista: vistaParam, fecha: fechaParam } = await searchParams;
   const vista: Vista = VISTAS.includes(vistaParam as Vista) ? (vistaParam as Vista) : 'semana';
   const today = practiceToday();
-  const fecha = isValidCalendarDate(fechaParam ?? '') ? (fechaParam as string) : today;
+  if (fechaParam !== undefined && !isValidCalendarDate(fechaParam)) notFound();
+  const fecha = fechaParam ?? today;
   const label = labelForVista(vista, fecha);
   const hoyHref = `/calendar?vista=${vista}&fecha=${today}`;
 

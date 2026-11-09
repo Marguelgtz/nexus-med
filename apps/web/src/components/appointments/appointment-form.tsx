@@ -18,6 +18,7 @@ import {
   instantAtLocalTime,
   localDateOfInstant,
 } from '../../lib/format';
+import { overlappingScheduledAppointments } from '../../lib/calendar';
 import { createAppointment, listAppointmentsInRange, updateAppointment } from '../../lib/api/client';
 
 const DURATIONS = [15, 20, 30, 45, 60, 90, 120];
@@ -56,22 +57,13 @@ export function AppointmentForm({ patientId, initial, onSaved }: Props) {
     let cancelled = false;
     const timer = setTimeout(async () => {
       try {
-        const start = new Date(candidateStart);
-        const end = new Date(start.getTime() + duration * 60_000);
         const day = localDateOfInstant(candidateStart);
         const range = await listAppointmentsInRange({
           from: instantAtLocalTime(day, 0, 0).toISOString(),
           to: instantAtLocalTime(addDays(day, 1), 0, 0).toISOString(),
         });
         if (cancelled) return;
-        const hits = range
-          .filter(
-            (a) =>
-              a.id !== initial?.id &&
-              a.patient.id === patientId &&
-              new Date(a.startAt) < end &&
-              new Date(new Date(a.startAt).getTime() + a.durationMinutes * 60_000) > start,
-          )
+        const hits = overlappingScheduledAppointments(range, candidateStart, duration, initial?.id)
           .map((a) => `${formatTime(a.startAt)} (${a.patient.fullName})`);
         setOverlap(hits);
       } catch {
@@ -166,7 +158,13 @@ export function AppointmentForm({ patientId, initial, onSaved }: Props) {
 
       <div className="form-actions">
         <button type="submit" className="btn btn-primary" disabled={busy || !date || !time}>
-          {busy ? 'Guardando…' : initial ? 'Guardar cambios' : 'Crear cita'}
+          {busy
+            ? 'Guardando…'
+            : initial?.status === 'cancelled'
+              ? 'Reprogramar'
+              : initial
+                ? 'Guardar cambios'
+                : 'Crear cita'}
         </button>
         {initial && onSaved ? (
           <button type="button" className="btn btn-ghost" onClick={onSaved}>
