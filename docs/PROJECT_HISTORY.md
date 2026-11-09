@@ -287,3 +287,21 @@ Add the next entry when O-001 reaches a meaningful verified milestone, such as t
 **Impact:** O-005 is complete. The local MVP plus its four approved product expansions are implemented and integrated. No next implementation objective has been selected.
 
 **References:** `ACTION_PLAN.md` (O-005 verification and branch state); `ROADMAP.md`; `TASKS.md` §6; `DECISIONS.md` D-023, D-025, D-027, D-032; `TESTING.md`.
+
+### 2026-11-08 — O-006 clinical workflow and UX proposal ready for review
+
+**Type:** Design milestone
+
+**Context:** O-006 was authorized as a documentation-only design mission on `docs/o006-clinical-workflow-ux`, based on completed O-005 at `1309b51`. The redesign document remains a proposal; this work does not authorize application implementation.
+
+**Findings and outcomes:**
+
+- Source review verified the O-005 consultation form/context, appointment handoff, study creation/status, patient overview, and contextual document behavior. The audit separates observed code from usability hypotheses and notes that no fresh browser usability study or physician observation was performed.
+- The redesign covers ten complete journeys and includes layout/navigation alternatives, patient and consultation workspace wireframes, appointment handoff, patient-level study ordering/review, contextual documents/follow-up, responsive/accessibility behavior, save/interruption states, conditional API/migration implications, and future implementation slices.
+- Study association and status semantics remain unresolved. The proposal evaluates patient + optional encounter, does not assume appointment/procedure links, and does not map existing `completed` records to performed or result-received events. Q-O006-01…08 were added as open questions; P-UX-01…05 and all other recommendations remain unconfirmed.
+- No application/API/contract/schema/migration/seed code changed. Documentation checks passed (`git diff --check`; fenced Markdown blocks balanced); application tests and fresh browser usability checks were not run for this documentation-only mission.
+- Review PR #6 is open: [`docs(ux): propose O-006 clinical workflow redesign`](https://github.com/Marguelgtz/nexus-med/pull/6), base `feat/nx-expansion-complete`, head `docs/o006-clinical-workflow-ux`. It is not merged.
+
+**Impact:** The owner and physician have a concrete proposal to approve, revise, or reject before any implementation. O-005 remains the authoritative implemented behavior until then.
+
+**References:** `UX_AUDIT.md`, `UX_REDESIGN.md`, `DECISIONS.md` (P-UX-01…05 and Q-O006-01…08), `ACTION_PLAN.md` (PR #6 and next action), `ROADMAP.md`.
