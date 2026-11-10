@@ -10,7 +10,9 @@ import type { EncounterSummary } from '@nexus-med/contracts';
 import {
   ENCOUNTER_TYPE_LABELS,
   formatDateTime,
-  shouldShowEncounterTypeBadge,
+  formatShortDate,
+  formatTime,
+  formatShortDateTime,
   wasEdited,
 } from '../../lib/format';
 
@@ -28,25 +30,22 @@ function TimelineEntry({
         className="timeline-link"
         href={`/patients/${patientId}/consultas/${encounter.id}`}
       >
-        <div className="when">
-          {formatDateTime(encounter.occurredAt)}
-          {shouldShowEncounterTypeBadge(encounter.type) ? (
-            <span className="badge badge-type" style={{ marginLeft: 8 }}>
-              {ENCOUNTER_TYPE_LABELS[encounter.type]}
-            </span>
-          ) : null}
-          <span className="reason" style={{ marginLeft: 12, fontWeight: 400 }}>
-            {encounter.reason ? (
-              <>
-                Motivo: {encounter.reason}
-              </>
-            ) : (
-              <em className="faint">Sin motivo</em>
-            )}
+        <div className="timeline-entry-content">
+          <div className="timeline-entry-meta">
+            <time className="timeline-date" dateTime={encounter.occurredAt} title={formatDateTime(encounter.occurredAt)}>
+              {formatShortDate(encounter.occurredAt)}
+            </time>
+            <time className="timeline-time" dateTime={encounter.occurredAt}>
+              {formatTime(encounter.occurredAt)}
+            </time>
+            <span className="badge badge-type">{ENCOUNTER_TYPE_LABELS[encounter.type]}</span>
+          </div>
+          <span className="timeline-reason">
+            {encounter.reason ? encounter.reason : <em className="faint">Sin motivo registrado</em>}
           </span>
         </div>
         {edited ? (
-          <div className="edited">Actualizada {formatDateTime(encounter.updatedAt)}</div>
+          <div className="edited">Actualizada {formatShortDateTime(encounter.updatedAt)}</div>
         ) : null}
       </Link>
     </li>
@@ -64,9 +63,9 @@ export function Timeline({
   const recent = encounters.slice(0, 5);
   const older = encounters.slice(5);
   return (
-    <div className="card">
+    <section className="card" id="patient-history">
       <div className="card-header">
-        <h2>Historial</h2>
+        <h2>Historial de consultas</h2>
         <span className="faint">
           {count === 1 ? '1 consulta' : `${count} consultas`}
         </span>
@@ -96,6 +95,6 @@ export function Timeline({
           </ul>
         </details>
       ) : null}
-    </div>
+    </section>
   );
 }

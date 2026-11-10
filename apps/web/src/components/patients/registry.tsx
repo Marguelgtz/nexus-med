@@ -25,16 +25,27 @@ const TABS: { value: 'active' | 'archived' | 'all'; label: string }[] = [
 function PatientRow({ patient }: { patient: PatientSummary }) {
   const age = formatAge(patient.dateOfBirth);
   return (
-    <Link href={`/patients/${patient.id}`} className="row registry-row">
-      <span className="main">{patient.fullName}</span>
-      <span className="cell">{age !== null ? `${age} años` : '—'}</span>
-      <span className="cell mono">{patient.externalIdentifier ?? '—'}</span>
-      <span className="registry-state">
-        {patient.isArchived ? (
-          <span className="badge badge-archived">Archivado</span>
+    <article className="row registry-row">
+      <Link href={`/patients/${patient.id}`} className="registry-person">
+        <span className="main">{patient.fullName}</span>
+        <span className="cell">{age !== null ? `${age} años` : '—'}</span>
+        <span className="cell mono">{patient.externalIdentifier ?? '—'}</span>
+        <span className="registry-state">
+          {patient.isArchived ? <span className="badge badge-archived">Archivado</span> : null}
+        </span>
+      </Link>
+      <div className="registry-actions">
+        {!patient.isArchived ? (
+          <Link
+            href={`/patients/${patient.id}/consultas/nueva`}
+            className="btn btn-secondary btn-sm"
+            aria-label={`Nueva consulta para ${patient.fullName}`}
+          >
+            Nueva consulta
+          </Link>
         ) : null}
-      </span>
-    </Link>
+      </div>
+    </article>
   );
 }
 

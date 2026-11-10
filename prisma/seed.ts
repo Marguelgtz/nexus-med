@@ -62,7 +62,8 @@ interface FixtureStudyRequest {
   patientId: string;
   encounterId: string;
   category: string;
-  description: string;
+  name: string;
+  description?: string | null;
   status: string;
   resultNote?: string | null;
 }
@@ -297,7 +298,8 @@ export async function idempotentSeed(
           patientId: s.patientId,
           encounterId: s.encounterId,
           category: s.category,
-          description: s.description,
+          name: s.name,
+          description: s.description ?? null,
           status: s.status,
           resultNote: s.resultNote ?? null,
           createdAt: SEEDED_AT,

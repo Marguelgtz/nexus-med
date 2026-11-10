@@ -97,7 +97,7 @@ Rules:
 3. The form is created in the selected patient context.
 4. Patient identity remains visible.
 5. Encounter date/time defaults sensibly and is editable.
-6. Doctor selects an encounter type (default `consulta`), records the clinical sections, and may add zero or more `Estudios solicitados` rows (category + description).
+6. Doctor selects an encounter type (default `consulta`), records the clinical sections, and may add zero or more `Estudios solicitados` rows (category + required study name, plus optional detail for `Otro`).
 7. Doctor selects **Guardar consulta**.
 8. Hono validates the input and persists the encounter and initial studies in one transaction.
 9. Next.js refreshes the relevant patient view and displays the saved encounter in the timeline.
@@ -183,7 +183,7 @@ Overlaps are allowed but visibly signaled, not resolved automatically. Appointme
 
 ## 12. O-005 study-request workflow (baseline behavior)
 
-1. From **Nueva consulta**, add zero or more study rows with category and description.
+1. From **Nueva consulta**, add zero or more study rows with category and required name; `Otro` also allows optional additional detail.
 2. Saving a **new** encounter creates those study requests atomically, initially `ordered`.
 3. From encounter detail mark a study `completed` or `reviewed` and optionally write a doctor-authored result note; `ordered → reviewed` directly is allowed.
 4. Patient overview lists both `ordered` and `completed` studies until they reach `reviewed`; each row shows its current status and links to the originating encounter. Reviewed studies leave the overview card but remain on encounter detail.

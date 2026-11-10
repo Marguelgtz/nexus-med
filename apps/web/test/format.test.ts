@@ -6,6 +6,8 @@ import {
   formatAge,
   formatDate,
   formatDateTime,
+  formatShortDate,
+  formatShortDateTime,
   formatTime,
   formatTimeRange,
   instantAtLocalTime,
@@ -58,6 +60,17 @@ describe('formatDateTime (instant, practice timezone)', () => {
 
   it('returns the raw value when unparseable', () => {
     expect(formatDateTime('garbage')).toBe('garbage');
+  });
+});
+
+describe('compact timeline timestamps (practice timezone)', () => {
+  it('renders a short date and 24-hour time in es-MX', () => {
+    expect(formatShortDateTime('2026-11-09T16:30:00Z')).toBe('9 nov 2026, 10:30');
+    expect(formatShortDate('2026-11-09T16:30:00Z')).toBe('9 nov 2026');
+  });
+
+  it('keeps the practice-zone date across UTC midnight', () => {
+    expect(formatShortDateTime('2026-11-09T04:30:00Z')).toBe('8 nov 2026, 22:30');
   });
 });
 

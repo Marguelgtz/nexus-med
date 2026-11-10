@@ -31,11 +31,8 @@ export default async function EncounterPage({
 }) {
   const [{ id, eid }, query] = await Promise.all([params, searchParams]);
   const appointmentId = Array.isArray(query.appointmentId) ? query.appointmentId[0] : query.appointmentId;
-  const pendingStudyQuery = new URLSearchParams();
-  pendingStudyQuery.append('status', 'ordered');
-  pendingStudyQuery.append('status', 'completed');
 
-  const [patientRes, encounterRes, studiesRes, encountersRes, patientStudiesRes, appointmentRes] = await Promise.all([
+  const [patientRes, encounterRes, studiesRes, encountersRes, appointmentRes] = await Promise.all([
     fetchServer(`/api/patients/${encodeURIComponent(id)}`, patientDetailSchema),
     fetchServer(`/api/encounters/${encodeURIComponent(eid)}`, encounterDetailSchema),
     fetchServer(
@@ -43,10 +40,6 @@ export default async function EncounterPage({
       z.array(studyRequestSchema),
     ),
     fetchServer(`/api/patients/${encodeURIComponent(id)}/encounters`, z.array(encounterSummarySchema)),
-    fetchServer(
-      `/api/patients/${encodeURIComponent(id)}/studies?${pendingStudyQuery.toString()}`,
-      z.array(studyRequestSchema),
-    ),
     appointmentId
       ? fetchServer(`/api/appointments/${encodeURIComponent(appointmentId)}`, appointmentSchema)
       : Promise.resolve(null),
@@ -83,11 +76,6 @@ export default async function EncounterPage({
     if (encountersRes.notFound) notFound();
     return <ErrorBanner message={encountersRes.error} retryHref={`/patients/${id}/consultas/${eid}`} />;
   }
-  if (!patientStudiesRes.ok) {
-    if (patientStudiesRes.notFound) notFound();
-    return <ErrorBanner message={patientStudiesRes.error} retryHref={`/patients/${id}/consultas/${eid}`} />;
-  }
-
   const patient = patientRes.data;
   const encounter = encounterRes.data;
   if (encounter.patientId !== patient.id) {
@@ -117,7 +105,6 @@ export default async function EncounterPage({
         studies={studiesRes.data}
         patient={patient}
         encounters={encountersRes.data}
-        patientStudies={patientStudiesRes.data}
         appointment={appointment}
       />
     </>

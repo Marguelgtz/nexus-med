@@ -94,7 +94,7 @@ Returns the patient's encounters ordered by `occurredAt` descending. Verify the 
 
 Creates an encounter for the specified patient.
 
-Request includes required `occurredAt`; optional `type` (`consulta` by default), note sections (`reason`, `historyOfPresentIllness`, `relevantHistory`, `physicalExamination`, `assessment`, `plan`, `followUp`), and `studies[]` rows with `category` + `description`. Study rows are created atomically with the new encounter in a Prisma transaction. The server generates IDs and timestamps.
+Request includes required `occurredAt`; optional `type` (`consulta` by default), note sections (`reason`, `historyOfPresentIllness`, `relevantHistory`, `physicalExamination`, `assessment`, `plan`, `followUp`), and `studies[]` rows with `category` + required `name` and optional `description`. Study rows are created atomically with the new encounter in a Prisma transaction. The server generates IDs and timestamps.
 
 Success: `201 Created` with the encounter DTO.
 
@@ -108,7 +108,7 @@ Updates editable encounter fields including `type` and `occurredAt`; the patient
 
 ## 5.1 Encounter type and study creation
 
-The encounter type is the **actual** clinical interaction, independent of an appointment's planned type. API-validated values: `consulta`, `procedimiento`, `visita_domicilio`, `urgencia`. Encounter summaries include type. Studies can be created atomically with a new encounter by supplying optional `studies: [{ category, description }]`, or appended to an existing encounter through `POST /api/encounters/:encounterId/studies`. In both paths the server derives the patient association from the encounter.
+The encounter type is the **actual** clinical interaction, independent of an appointment's planned type. API-validated values: `consulta`, `procedimiento`, `visita_domicilio`, `urgencia`. Encounter summaries include type. Studies can be created atomically with a new encounter by supplying optional `studies: [{ category, name, description? }]`, or appended to an existing encounter through `POST /api/encounters/:encounterId/studies`. In both paths the server derives the patient association from the encounter.
 
 ## 6. DTO conventions
 
@@ -219,15 +219,15 @@ This section supersedes the original foundation-only endpoint inventory above wh
 | GET | `/api/encounters/:encounterId/studies` | Studies from one encounter |
 | PATCH | `/api/studies/:studyId` | Change status and optional result note |
 
-`POST /api/encounters/:encounterId/studies` continues to accept `{ "studies": [{ "category": "laboratorio", "description": "Biometría hemática" }] }` and returns the created `StudyRequest[]` with status `ordered` and `201`. At least one row is required. The API loads the encounter, derives its `patientId`, and creates all rows in one transaction; callers cannot supply a patient association. Unknown encounters return `404`.
+`POST /api/encounters/:encounterId/studies` accepts `{ "studies": [{ "category": "laboratorio", "name": "Biometría hemática" }] }` with optional `description` detail and returns the created `StudyRequest[]` with status `ordered` and `201`. Each name is 2–200 characters; optional detail is at most 500 characters. At least one row is required. The API loads the encounter, derives its `patientId`, and creates all rows in one transaction; callers cannot supply a patient association. Unknown encounters return `404`.
 
-`POST /api/patients/:patientId/studies` accepts `{ "encounterId": "<optional-id>", "studies": [{ "category": "laboratorio", "description": "Biometría hemática" }] }`. Omit `encounterId` for a patient-level request. The patient ID is derived from the route. If an encounter ID is present, Hono verifies that it exists and belongs to the same patient before creating all rows atomically. Unknown patients or encounters return `404`; a cross-patient encounter returns `400` with an `encounterId` field error. The response is `201` with `StudyRequest[]`; each request has `encounter: null` when standalone.
+`POST /api/patients/:patientId/studies` accepts `{ "encounterId": "<optional-id>", "studies": [{ "category": "laboratorio", "name": "Biometría hemática", "description": "<optional detail>" }] }`. Omit `encounterId` for a patient-level request. The patient ID is derived from the route. If an encounter ID is present, Hono verifies that it exists and belongs to the same patient before creating all rows atomically. Unknown patients or encounters return `404`; a cross-patient encounter returns `400` with an `encounterId` field error. The response is `201` with `StudyRequest[]`; each request has `encounter: null` when standalone.
 
 The patient-list `status` query parameter may be repeated; values are ORed. For example, `?status=ordered&status=completed` returns studies still pending doctor review. Omitting the filter returns all statuses. Invalid or empty values and unknown query keys return `400`.
 
-Study categories: `laboratorio`, `imagenologia`, `rayos_x`, `ecg`, `ecografia`, `otro`; doctor confirmation is still open (Q-NX-02). `description` is 2–200 characters; `resultNote` nullable and up to 1,000 characters. Legal transitions: `ordered → completed`, `ordered → reviewed`, `completed → reviewed`; `reviewed` is final. Repeated or backward transitions return `409`. The category, description, and optional encounter association are immutable after creation; studies cannot be deleted.
+Study categories: `laboratorio`, `imagenologia`, `rayos_x`, `ecg`, `ecografia`, `otro`; doctor confirmation is still open (Q-NX-02). `name` is required and 2–200 characters; optional `description` is up to 500 characters; `resultNote` is nullable and up to 1,000 characters. Legal transitions: `ordered → completed`, `ordered → reviewed`, `completed → reviewed`; `reviewed` is final. Repeated or backward transitions return `409`. The category, name, description, and optional encounter association are immutable after creation; studies cannot be deleted.
 
-Study responses include `patientId`, nullable nested `encounter: {id, occurredAt, reason}`, category, description, status, nullable result note, ID and timestamps. `createdAt` is the record-entry time and does not assert when a standalone request was clinically ordered. Per `TASKS.md`, `ordered` and `completed` remain pending until `reviewed`; the patient overview uses the repeatable status filter and shows the current status badge. Historical `completed` values are not reinterpreted; the API does not separately record performance or result arrival.
+Study responses include `patientId`, nullable nested `encounter: {id, occurredAt, reason}`, category, name, nullable description, status, nullable result note, ID and timestamps. `createdAt` is the record-entry time and does not assert when a standalone request was clinically ordered. Per `TASKS.md`, `ordered` and `completed` remain pending until `reviewed`; the patient overview uses the repeatable status filter and shows the current status badge. Historical `completed` values are not reinterpreted; the API does not separately record performance or result arrival.
 
 ### NX-004: Printable documents
 

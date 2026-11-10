@@ -1,11 +1,7 @@
 'use client';
 
-// Consultation detail + in-place edit (UI_SPEC §3.7). Read view renders the
-// full note verbatim (never a form); `Editar consulta` toggles edit mode
-// with the same field layout as the new-consultation form, pre-filled.
-// Save is explicit: `Guardar cambios` → PATCH → SSR re-render (a new
-// `Editada` badge appears when the edit time differs from the occurrence).
-// Editing never reassigns the patient (API-enforced).
+// Consultation detail + focused field editing. Clinical text remains verbatim;
+// only the selected section becomes a form, and each change is explicitly saved.
 
 import { useRef, useState } from 'react';
 import Link from 'next/link';
@@ -32,7 +28,7 @@ import {
 } from '../../lib/format';
 import { useBeforeUnloadGuard } from '../../lib/use-before-unload-guard';
 import { ClinicalContext } from './clinical-context';
-import { EncounterStudyWorkflow } from './study-workflow';
+import { EncounterStudyRequestForm, EncounterStudyWorkflow } from './study-workflow';
 import { EncounterAppointmentHandoff } from '../appointments/encounter-handoff';
 import { MedicalDocumentForm } from '../documents/document-form';
 
@@ -64,7 +60,7 @@ function EncounterContextActions({
   patient,
   encounter,
   encounters,
-  patientStudies,
+  studies,
   appointment,
   documentKind,
   onDocumentKindChange,
@@ -73,30 +69,47 @@ function EncounterContextActions({
   patient: PatientDetail;
   encounter: EncounterDetail;
   encounters: EncounterSummary[];
-  patientStudies: StudyRequest[];
+  studies: StudyRequest[];
   appointment: Appointment | null;
   documentKind: MedicalDocumentKind | null;
   onDocumentKindChange: (kind: MedicalDocumentKind | null) => void;
   editing: boolean;
 }) {
   const router = useRouter();
-  const actionsHeading = useRef<HTMLHeadingElement>(null);
   const [savedDocumentMessage, setSavedDocumentMessage] = useState<string | null>(null);
+  const [savedStudyMessage, setSavedStudyMessage] = useState(false);
+  const [studyRequestOpen, setStudyRequestOpen] = useState(false);
+  const actionsHeading = useRef<HTMLHeadingElement>(null);
   const returnTo = `/patients/${patient.id}/consultas/${encounter.id}`;
   const followUpQuery = new URLSearchParams({ returnTo }).toString();
 
   return (
     <>
       <aside className="consultation-context-column">
-        <ClinicalContext patient={patient} encounters={encounters} studies={patientStudies} />
+        <ClinicalContext patient={patient} />
         {appointment ? <EncounterAppointmentHandoff appointment={appointment} encounter={encounter} /> : null}
         <section className="card consultation-actions-card" aria-labelledby="encounter-actions-title">
           <h2 id="encounter-actions-title" tabIndex={-1} ref={actionsHeading}>Acciones de esta consulta</h2>
           {savedDocumentMessage ? <p className="notice" role="status">{savedDocumentMessage}</p> : null}
+          {savedStudyMessage ? <p className="notice" role="status">Estudio guardado en esta consulta.</p> : null}
           {editing ? (
-            <p className="field-hint">Guarda o cancela la edición de la consulta antes de crear un documento.</p>
+            <p className="field-hint">Guarda o cancela la edición antes de iniciar otra acción de esta consulta.</p>
+          ) : studyRequestOpen ? (
+            <>
+              <p className="study-request-active" role="status">Solicitud sin guardar</p>
+              <EncounterStudyRequestForm
+                patientId={patient.id}
+                encounterId={encounter.id}
+                encounters={encounters}
+                onSaved={() => { setSavedStudyMessage(true); actionsHeading.current?.focus(); }}
+                onClose={() => { setStudyRequestOpen(false); actionsHeading.current?.focus(); }}
+              />
+            </>
           ) : (
             <>
+              <button type="button" className="btn btn-secondary" disabled={documentKind !== null} onClick={() => { setSavedStudyMessage(false); setStudyRequestOpen(true); }}>
+                Solicitar estudio
+              </button>
               <button type="button" className="btn btn-secondary" disabled={documentKind !== null} onClick={() => { setSavedDocumentMessage(null); onDocumentKindChange('prescription'); }}>
                 Nueva receta
               </button>
@@ -111,6 +124,7 @@ function EncounterContextActions({
             </>
           )}
         </section>
+        <EncounterStudyWorkflow patientId={patient.id} studies={studies} />
       </aside>
       {!editing && documentKind ? (
         <section className="consultation-related-form" aria-labelledby="related-document-title">
@@ -128,8 +142,8 @@ function EncounterContextActions({
             onSaved={() => {
               setSavedDocumentMessage(documentKind === 'prescription' ? 'Receta guardada.' : 'Informe guardado.');
               onDocumentKindChange(null);
-              actionsHeading.current?.focus();
               router.refresh();
+              actionsHeading.current?.focus();
             }}
             onCancel={() => { onDocumentKindChange(null); actionsHeading.current?.focus(); }}
           />
@@ -139,239 +153,187 @@ function EncounterContextActions({
   );
 }
 
-function toValues(e: EncounterDetail): SectionValues {
-  return {
-    reason: e.reason ?? '',
-    historyOfPresentIllness: e.historyOfPresentIllness ?? '',
-    relevantHistory: e.relevantHistory ?? '',
-    physicalExamination: e.physicalExamination ?? '',
-    assessment: e.assessment ?? '',
-    plan: e.plan ?? '',
-    followUp: e.followUp ?? '',
-  };
-}
-
 export function EncounterDetail({
   encounter,
-  studies,
+  studies = [],
   patient,
   encounters,
-  patientStudies,
   appointment,
 }: {
   encounter: EncounterDetail;
   studies?: StudyRequest[];
   patient: PatientDetail;
   encounters: EncounterSummary[];
-  patientStudies: StudyRequest[];
   appointment: Appointment | null;
 }) {
-  const router = useRouter();
-  const [editing, setEditing] = useState(false);
-  const [values, setValues] = useState<SectionValues>(() => toValues(encounter));
-  const [type, setType] = useState<EncounterType>(encounter.type);
+  const [editingField, setEditingField] = useState<keyof SectionValues | 'type' | null>(null);
+  const [draftValue, setDraftValue] = useState('');
+  const [draftType, setDraftType] = useState<EncounterType>(encounter.type);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [banner, setBanner] = useState<string | null>(null);
+  const [savedMessage, setSavedMessage] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [documentKind, setDocumentKind] = useState<MedicalDocumentKind | null>(null);
-  const list = studies ?? [];
-
+  const router = useRouter();
   const edited = wasEdited(encounter.createdAt, encounter.updatedAt);
 
-  // Dirty only while editing AND any field differs from the saved note.
-  const dirty =
-    editing &&
-    (type !== encounter.type ||
-      (Object.keys(values) as (keyof SectionValues)[]).some(
-        (k) => values[k] !== toValues(encounter)[k],
-      ));
-  useBeforeUnloadGuard(dirty);
+  const originalValue = editingField && editingField !== 'type' ? encounter[editingField] ?? '' : '';
+  const dirty = editingField === 'type'
+    ? draftType !== encounter.type
+    : editingField !== null && draftValue !== originalValue;
+  useBeforeUnloadGuard(dirty, 'Hay cambios sin guardar en este campo. Si sales, perderás el texto capturado.');
 
-  const cancelEditing = () => {
-    if (dirty && !window.confirm('Hay cambios sin guardar. ¿Descartar la edición?')) return;
-    setEditing(false);
-  };
-
-  const startEditing = () => {
-    setValues(toValues(encounter));
-    setType(encounter.type);
+  function beginEdit(field: keyof SectionValues | 'type') {
+    setEditingField(field);
+    setDraftValue(field === 'type' ? '' : encounter[field] ?? '');
+    setDraftType(encounter.type);
     setFieldErrors({});
     setBanner(null);
-    setEditing(true);
-  };
+    setSavedMessage(null);
+  }
 
-  const setSection = (field: keyof SectionValues) => (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setValues((v) => ({ ...v, [field]: e.target.value }));
-    setFieldErrors((fe) => {
-      if (!fe[field]) return fe;
-      const next = { ...fe };
-      delete next[field];
-      return next;
-    });
-  };
+  function cancelEdit() {
+    if (dirty && !window.confirm('Hay cambios sin guardar. ¿Descartar este campo?')) return;
+    setEditingField(null);
+    setFieldErrors({});
+    setBanner(null);
+  }
 
-  const onSave = async () => {
-    const candidate: UpdateEncounterInput = {
-      type,
-      reason: values.reason.trim() || null,
-      historyOfPresentIllness: values.historyOfPresentIllness.trim() || null,
-      relevantHistory: values.relevantHistory.trim() || null,
-      physicalExamination: values.physicalExamination.trim() || null,
-      assessment: values.assessment.trim() || null,
-      plan: values.plan.trim() || null,
-      followUp: values.followUp.trim() || null,
-    };
-    if (Object.values(candidate).every((v) => v === null)) {
-      setBanner('La consulta no puede quedar completamente vacía.');
-      return;
+  async function saveField() {
+    if (!editingField) return;
+    let candidate: UpdateEncounterInput;
+    if (editingField === 'type') {
+      candidate = { type: draftType };
+    } else {
+      const nextValue = draftValue.trim() || null;
+      const otherSectionHasContent = SECTIONS.some(
+        ({ key }) => key !== editingField && Boolean(encounter[key]?.trim()),
+      );
+      if (!nextValue && !otherSectionHasContent) {
+        setBanner('La consulta no puede quedar completamente vacía.');
+        return;
+      }
+      candidate = { [editingField]: nextValue } as UpdateEncounterInput;
     }
+
     setSaving(true);
     setBanner(null);
     try {
       await updateEncounter(encounter.id, candidate);
-      // SSR re-render shows the updated note and, when the time differs,
-      // the `Editada` badge.
-      setEditing(false);
+      const label = editingField === 'type'
+        ? 'Tipo de atención'
+        : SECTIONS.find(({ key }) => key === editingField)?.label ?? 'Campo';
+      setEditingField(null);
+      setFieldErrors({});
+      setSavedMessage(`${label} actualizado.`);
       setSaving(false);
       router.refresh();
     } catch (err) {
       if (err instanceof ApiError && Object.keys(err.fieldErrors).length > 0) {
         setFieldErrors(err.fieldErrors);
       } else {
-        setBanner('No se pudieron guardar los cambios. Tu texto se conserva.');
+        setBanner('No se pudieron guardar los cambios. El texto sigue en este campo.');
       }
       setSaving(false);
     }
-  };
-
-  if (editing) {
-    const errorFor = (field: string) => fieldErrors[field]?.[0] ?? null;
-    return (
-      <div className="consultation-workspace">
-        <form
-          className="consultation-note-form"
-          noValidate
-          onSubmit={(e) => {
-            e.preventDefault();
-            void onSave();
-          }}
-        >
-          <div className="consultation-note-header">
-            <div>
-              <p className="section-label">Editar consulta</p>
-              <h2>{patient.fullName}</h2>
-            </div>
-            <span className="badge badge-status-ordered">{dirty ? 'Cambios sin guardar' : 'Editando'}</span>
-          </div>
-          <div className="card consultation-note-card">
-          <div className="field">
-            <label htmlFor="edit-type">Tipo de atención</label>
-            <select
-              id="edit-type"
-              name="type"
-              value={type}
-              onChange={(e) => setType(e.target.value as EncounterType)}
-            >
-              {encounterTypeSchema.options.map((t) => (
-                <option key={t} value={t}>
-                  {ENCOUNTER_TYPE_LABELS[t]}
-                </option>
-              ))}
-            </select>
-          </div>
-          {SECTIONS.map((s) => (
-            <div className="field" key={s.key}>
-              <label htmlFor={`edit-${s.key}`}>{s.label}</label>
-              <textarea
-                id={`edit-${s.key}`}
-                name={s.key}
-                rows={s.rows}
-                maxLength={MAX_CHARS}
-                value={values[s.key]}
-                onChange={setSection(s.key)}
-                aria-invalid={errorFor(s.key) ? 'true' : undefined}
-              />
-              {errorFor(s.key) ? <div className="field-error">{errorFor(s.key)}</div> : null}
-            </div>
-          ))}
-          </div>
-          {banner ? <ErrorBanner message={banner} /> : null}
-          <div className="btn-row consultation-save-actions">
-            <button type="submit" className="btn btn-primary" disabled={saving}>
-              {saving ? 'Guardando…' : 'Guardar cambios'}
-            </button>
-            <button
-              type="button"
-              className="btn btn-ghost"
-              onClick={cancelEditing}
-              disabled={saving}
-            >
-              Cancelar edición
-            </button>
-          </div>
-        </form>
-        <EncounterContextActions
-          patient={patient}
-          encounter={encounter}
-          encounters={encounters}
-          patientStudies={patientStudies}
-          appointment={appointment}
-          documentKind={documentKind}
-          onDocumentKindChange={setDocumentKind}
-          editing={true}
-        />
-      </div>
-    );
   }
+
+  const errorFor = (field: string) => fieldErrors[field]?.[0] ?? null;
 
   return (
     <div className="consultation-workspace">
-      <section className="consultation-note-form">
-      <div className="encounter-head">
-        <h1>{formatDateTime(encounter.occurredAt)}</h1>
-        <span className="badge badge-type">{ENCOUNTER_TYPE_LABELS[encounter.type]}</span>
-        {edited ? (
-          <Badge tone="edited">Editada el {formatDateTime(encounter.updatedAt)}</Badge>
-        ) : null}
-      </div>
+      <section className="consultation-note-form" aria-labelledby="encounter-title">
+        <div className="encounter-head">
+          <h1 id="encounter-title">{formatDateTime(encounter.occurredAt)}</h1>
+          {edited ? <Badge tone="edited">Editada el {formatDateTime(encounter.updatedAt)}</Badge> : null}
+        </div>
 
-      <div className="card">
-        {SECTIONS.map((s) => (
-          <div className="note-section" key={s.key}>
-            <div className="section-label">{s.label}</div>
-            {encounter[s.key] ? (
-              <div className="section-body">{encounter[s.key]}</div>
+        {savedMessage ? <p className="notice" role="status">{savedMessage}</p> : null}
+        {banner ? <ErrorBanner message={banner} /> : null}
+
+        <div className="card encounter-note-card">
+          <section className="note-section note-type-section" aria-labelledby="note-type-label">
+            <div className="note-section-heading">
+              <div className="section-label" id="note-type-label">Tipo de atención</div>
+              {editingField !== 'type' ? (
+                <button type="button" className="btn btn-ghost btn-sm" onClick={() => beginEdit('type')}>
+                  Editar
+                </button>
+              ) : null}
+            </div>
+            {editingField === 'type' ? (
+              <form className="note-field-editor" onSubmit={(event) => { event.preventDefault(); void saveField(); }}>
+                <label htmlFor="edit-type">Tipo de atención</label>
+                <select id="edit-type" value={draftType} autoFocus
+                  aria-invalid={errorFor('type') ? 'true' : undefined}
+                  aria-describedby={errorFor('type') ? 'edit-type-error' : undefined}
+                  onChange={(event) => setDraftType(event.target.value as EncounterType)}>
+                  {encounterTypeSchema.options.map((type) => (
+                    <option key={type} value={type}>{ENCOUNTER_TYPE_LABELS[type]}</option>
+                  ))}
+                </select>
+                {errorFor('type') ? <div className="field-error" id="edit-type-error" role="alert">{errorFor('type')}</div> : null}
+                <div className="form-actions">
+                  <button type="submit" className="btn btn-primary" disabled={saving || !dirty}>{saving ? 'Guardando…' : 'Guardar tipo'}</button>
+                  <button type="button" className="btn btn-ghost" onClick={cancelEdit} disabled={saving}>Cancelar</button>
+                </div>
+              </form>
             ) : (
-              <em className="faint">No registrado</em>
+              <span className="badge badge-type">{ENCOUNTER_TYPE_LABELS[encounter.type]}</span>
             )}
-          </div>
-        ))}
-      </div>
+          </section>
 
-      <EncounterStudyWorkflow
-        patientId={patient.id}
-        encounterId={encounter.id}
-        encounters={encounters}
-        studies={list}
-      />
-
-      {banner ? <ErrorBanner message={banner} /> : null}
-
-      <div className="btn-row">
-        <button type="button" className="btn btn-secondary" disabled={documentKind !== null} onClick={startEditing}>
-          Editar consulta
-        </button>
-      </div>
+          {SECTIONS.map((section) => {
+            const isEditing = editingField === section.key;
+            return (
+              <section className="note-section" key={section.key} aria-labelledby={`note-label-${section.key}`}>
+                <div className="note-section-heading">
+                  <div className="section-label" id={`note-label-${section.key}`}>{section.label}</div>
+                  {!isEditing ? (
+                    <button type="button" className="btn btn-ghost btn-sm" onClick={() => beginEdit(section.key)} aria-label={`Editar ${section.label}`}>
+                      Editar
+                    </button>
+                  ) : null}
+                </div>
+                {isEditing ? (
+                  <form className="note-field-editor" onSubmit={(event) => { event.preventDefault(); void saveField(); }}>
+                    <label htmlFor={`edit-${section.key}`}>{section.label}</label>
+                    <textarea
+                      id={`edit-${section.key}`}
+                      rows={section.rows}
+                      maxLength={MAX_CHARS}
+                      value={draftValue}
+                      onChange={(event) => setDraftValue(event.target.value)}
+                      aria-invalid={errorFor(section.key) ? 'true' : undefined}
+                      aria-describedby={errorFor(section.key) ? `edit-${section.key}-error` : undefined}
+                      autoFocus
+                    />
+                    {errorFor(section.key) ? <div className="field-error" id={`edit-${section.key}-error`} role="alert">{errorFor(section.key)}</div> : null}
+                    <div className="form-actions">
+                      <button type="submit" className="btn btn-primary" disabled={saving || !dirty}>{saving ? 'Guardando…' : 'Guardar campo'}</button>
+                      <button type="button" className="btn btn-ghost" onClick={cancelEdit} disabled={saving}>Cancelar</button>
+                    </div>
+                  </form>
+                ) : encounter[section.key] ? (
+                  <div className="section-body">{encounter[section.key]}</div>
+                ) : (
+                  <em className="faint">No registrado</em>
+                )}
+              </section>
+            );
+          })}
+        </div>
       </section>
+
       <EncounterContextActions
         patient={patient}
         encounter={encounter}
         encounters={encounters}
-        patientStudies={patientStudies}
+        studies={studies}
         appointment={appointment}
         documentKind={documentKind}
         onDocumentKindChange={setDocumentKind}
-        editing={false}
+        editing={editingField !== null}
       />
     </div>
   );

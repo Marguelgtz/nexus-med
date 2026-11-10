@@ -14,7 +14,7 @@ This is a development fixture dataset, not medical guidance and not a substitute
 
 Seed at least:
 
-- **7 patients** with clearly synthetic names such as `DEMO — Paciente 001`, `DEMO — Paciente 002`, etc.
+- **7 patients** with plausible fictional Spanish names. The persistent demo banner identifies the entire dataset as synthetic without making every patient row look like a placeholder.
 - **9 encounters** distributed across at least four patients.
 - **9 appointments**: 4 fixed past appointments (3 completed — two linked to demo encounters, one `procedimiento` — and 1 cancelled) plus 5 upcoming appointments anchored to the first seed run (see Section 3).
 - **2 study requests** attached to `demo-encounter-002b` / `demo-patient-002`: one `ordered`, one `reviewed` with a fictional result note.
@@ -33,13 +33,13 @@ The exact checked-in fixture payload is `docs/demo-dataset.json`; use it as the 
 
 | Seed patient | Encounters | State / purpose |
 |---|---:|---|
-| `DEMO — Paciente 001` | 2 | Medical background populated; demonstrates repeat consultation history |
-| `DEMO — Paciente 002` | 2 | Different fictional context; demonstrates timeline ordering |
-| `DEMO — Paciente 003` | 0 | Demonstrates a patient with no recorded consultations |
-| `DEMO — Paciente 004` | 1 | Archived patient; demonstrates archive visibility and retrieval |
-| `DEMO — Paciente 005` | 2 | Demonstrates multiple encounters and partially unrecorded background |
-| `DEMO — Paciente 006` | 1 | Demonstrates a simple patient record |
-| `DEMO — Paciente 007` | 1 | Demonstrates another active patient record |
+| `Juan Pérez` (`NM-001`) | 2 | Medical background populated; demonstrates repeat consultation history |
+| `Mariana López` (`NM-002`) | 2 | Different fictional context; demonstrates timeline ordering |
+| `José Martínez` (`NM-003`) | 0 | Demonstrates a patient with no recorded consultations |
+| `Elena Rodríguez` (`NM-004`) | 1 | Archived patient; demonstrates archive visibility and retrieval |
+| `Carlos Hernández` (`NM-005`) | 2 | Demonstrates multiple encounters and partially unrecorded background |
+| `Sofía Torres` (`NM-006`) | 1 | Demonstrates a simple patient record |
+| `Lucía Gómez` (`NM-007`) | 1 | Demonstrates another active patient record |
 
 On a clean database, this fixture produces exactly seven demo patients (six active and one archived), nine demo encounters, nine demo appointments, and two demo study requests. All seven fixture patient IDs, nine fixture encounter IDs, and the four fixture appointment IDs must be inserted. Keep all note text visibly marked as fictional. The agent may add more fixtures when useful, but must preserve these UI states.
 
@@ -49,10 +49,10 @@ On a clean database, this fixture produces exactly seven demo patients (six acti
 
 | Seed appointment | Patient | startAt (America/Monterrey) | State / purpose |
 |---|---|---|---|
-| `demo-appt-past-001` | `DEMO — Paciente 001` | 2026-09-04 12:00 | Completed, linked to `demo-encounter-001a` (actual 35 min) |
-| `demo-appt-past-002` | `DEMO — Paciente 002` | 2026-10-08 10:00 | Completed, linked to `demo-encounter-002b` (actual 40 min) |
-| `demo-appt-past-003` | `DEMO — Paciente 005` | 2026-10-16 11:00 | Cancelled (demonstrates the cancelled state) |
-| `demo-appt-past-004` | `DEMO — Paciente 007` | 2026-10-25 09:00 | Completed `procedimiento`, linked to `demo-encounter-007a` (actual 75 min) |
+| `demo-appt-past-001` | `Juan Pérez` | 2026-09-04 12:00 | Completed, linked to `demo-encounter-001a` (actual 35 min) |
+| `demo-appt-past-002` | `Mariana López` | 2026-10-08 10:00 | Completed, linked to `demo-encounter-002b` (actual 40 min) |
+| `demo-appt-past-003` | `Carlos Hernández` | 2026-10-16 11:00 | Cancelled (demonstrates the cancelled state) |
+| `demo-appt-past-004` | `Lucía Gómez` | 2026-10-25 09:00 | Completed `procedimiento`, linked to `demo-encounter-007a` (actual 75 min) |
 
 **Upcoming appointments** (computed in `prisma/seed.ts`, deliberately NOT in the fixture file): five `scheduled` appointments for demo patients at practice-timezone wall times — anchor +1 d 09:00 (consulta), +3 d 10:30 (procedimiento), +6 d 12:00 (consulta), +10 d 16:00 (visita_domicilio), +14 d 11:00 (urgencia).
 
@@ -91,7 +91,7 @@ The fixture lines use stable IDs and positions. Document and line records are cr
 ## 5. Visible demo state
 
 - Show a persistent banner in the application shell: **MODO DEMOSTRACIÓN — TODOS LOS DATOS SON FICTICIOS**.
-- Patient names must visibly include a `DEMO` or `Paciente Demo` marker.
+- Patient display names and identifiers should look natural; the persistent banner and explicit fictional labels in note/document examples identify demo content.
 - The registry should show seeded records immediately.
 - The root route `/` should redirect to `/patients`.
 - Empty states must still be reachable, including a patient with no encounters.
@@ -111,6 +111,8 @@ Required behavior:
 5. The seed must never delete user-created records or reset the database.
 6. New demo fixture records may be added in later revisions, but existing records should not be rewritten automatically.
 7. Normal startup runs migrations first, then the seed command, then starts both services.
+
+One owner-approved exception updates the seven untouched placeholder patient names and `DEMO-00x` identifiers once. Its migration matches each stable fixture ID plus both original placeholder values, so renamed or otherwise edited patient rows and all user-created rows remain unchanged. The fixture seeds the same plausible fictional display names on clean installs. Clinical note text keeps its fictional-content markers, and the persistent banner stays visible.
 
 A destructive reset belongs only in an explicit local-only command (`npm run db:reset`) and must never run as part of normal startup.
 

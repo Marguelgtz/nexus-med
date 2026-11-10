@@ -14,6 +14,7 @@ import {
   visibleAppointmentSlice,
 } from '../../lib/calendar';
 import {
+  formatDate,
   formatDayHeader,
   formatTime,
   localDateOfInstant,
@@ -189,15 +190,34 @@ export function WeekView({ fecha, appointments }: { fecha: string; appointments:
   );
 }
 
-function MonthCell({ day, appointments }: { day: string; appointments: Appointment[] }) {
+function MonthCell({ day, month, selectedDay, appointments }: {
+  day: string;
+  month: string;
+  selectedDay: string;
+  appointments: Appointment[];
+}) {
   const today = practiceToday();
   const items = appointments.filter((a) => localDateOfInstant(a.startAt) === day);
   const { visible, remaining } = visibleAppointmentSlice(items);
+  const isSelected = selectedDay === day;
+  const dayNumber = Number(day.slice(8, 10));
+  const monthForSelection = sameMonth(day, month) ? month : day;
   return (
-    <div className={`cal-month-cell${day === today ? ' cal-today-col' : ''}`}>
-      <Link href={`/calendar?vista=dia&fecha=${day}`} aria-label={`Ver citas del ${day}`} className="cal-month-daynum">
-        {Number(day.slice(8, 10))}
+    <div className={`cal-month-cell${day === today ? ' cal-today-col' : ''}${isSelected ? ' cal-month-selected' : ''}`}>
+      <Link href={`/calendar?vista=dia&fecha=${day}`} aria-label={`Ver citas del ${formatDate(day)}`} className="cal-month-daynum cal-month-open-day">
+        {dayNumber}
       </Link>
+      <Link
+        href={`/calendar?vista=mes&fecha=${monthForSelection}&dia=${day}`}
+        aria-label={`Seleccionar ${formatDate(day)}${items.length ? `, ${items.length} ${items.length === 1 ? 'cita' : 'citas'}` : ', sin citas'}`}
+        aria-current={isSelected ? 'date' : undefined}
+        className="cal-month-daynum cal-month-select-day"
+      >
+        {dayNumber}
+      </Link>
+      <span className="cal-month-count" aria-hidden="true">
+        {items.length || ''}
+      </span>
       <div className="cal-month-items">
         {visible.map((appt) => (
           <Link key={appt.id} href={apptHref(appt)} title={`${formatTime(appt.startAt)} ${appt.patient.fullName}`} className={chipClasses(appt, today)}>
@@ -214,21 +234,59 @@ function MonthCell({ day, appointments }: { day: string; appointments: Appointme
   );
 }
 
-export function MonthView({ fecha, appointments }: { fecha: string; appointments: Appointment[] }) {
+function MonthAgenda({ selectedDay, appointments }: { selectedDay: string; appointments: Appointment[] }) {
+  const dayItems = appointments
+    .filter((appointment) => localDateOfInstant(appointment.startAt) === selectedDay)
+    .sort((left, right) => left.startAt.localeCompare(right.startAt));
+
   return (
-    <div className="month-grid">
-      <div className="month-head">
-        {['lun', 'mar', 'mié', 'jue', 'vie', 'sáb', 'dom'].map((d) => (
-          <span key={d} className="faint">
-            {d}
-          </span>
+    <section className="month-agenda" aria-labelledby="month-agenda-title">
+      <div className="month-agenda-head">
+        <h2 id="month-agenda-title">Citas · {formatDate(selectedDay)}</h2>
+        <span className="faint">{dayItems.length}</span>
+      </div>
+      {dayItems.length === 0 ? (
+        <p className="faint">Sin citas para este día.</p>
+      ) : (
+        <ul>
+          {dayItems.map((appointment) => (
+            <li key={appointment.id}>
+              <Link href={apptHref(appointment)} className="month-agenda-item">
+                <time dateTime={appointment.startAt}>{formatTime(appointment.startAt)}</time>
+                <span className="month-agenda-patient">{appointment.patient.fullName}</span>
+                <AppointmentTypeBadge type={appointment.type} />
+                <AppointmentStatusBadge status={appointment.status} />
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
+  );
+}
+
+export function MonthView({ fecha, appointments, selectedDay }: {
+  fecha: string;
+  appointments: Appointment[];
+  selectedDay: string;
+}) {
+  return (
+    <>
+      <div className="month-grid">
+        <div className="month-head">
+          {['lun', 'mar', 'mié', 'jue', 'vie', 'sáb', 'dom'].map((d) => (
+            <span key={d} className="faint">
+              {d}
+            </span>
+          ))}
+        </div>
+        {monthGrid(fecha).map((day) => (
+          <div className={`cal-month-wrap${sameMonth(day, fecha) ? '' : ' dimmed'}`} key={day}>
+            <MonthCell day={day} month={fecha} selectedDay={selectedDay} appointments={appointments} />
+          </div>
         ))}
       </div>
-      {monthGrid(fecha).map((day) => (
-        <div className={`cal-month-wrap${sameMonth(day, fecha) ? '' : ' dimmed'}`} key={day}>
-          <MonthCell day={day} appointments={appointments} />
-        </div>
-      ))}
-    </div>
+      <MonthAgenda selectedDay={selectedDay} appointments={appointments} />
+    </>
   );
 }

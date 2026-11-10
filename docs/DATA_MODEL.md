@@ -30,7 +30,8 @@
 - A request may be standalone. When linked, its encounter is immutable and must belong to the same patient; Hono validates the association. Existing encounter-linked records remain linked.
 - Requests can be created in a new encounter transaction, added to an existing encounter, or created from a patient with no encounter.
 - `category`: `laboratorio`, `imagenologia`, `rayos_x`, `ecg`, `ecografia`, `otro`; category confirmation is open (Q-NX-02).
-- `description`: 2–200-character doctor-authored text.
+- `name`: required 2–200-character doctor-authored study name.
+- `description`: nullable optional doctor-authored detail up to 500 characters.
 - `status`: `ordered` default; `completed`, `reviewed`; `ordered → completed/reviewed`, `completed → reviewed`, reviewed final.
 - Nullable `resultNote` ≤1,000 characters; `createdAt`/`updatedAt`.
 - Only status/result note can be updated; no edit/delete/reassociation route for the originating data. The patient relation is always required.
@@ -59,6 +60,7 @@ Date of birth uses date-only semantics. `occurredAt`, `startAt`, `createdAt`, an
 - `20261108180347_study_requests`: StudyRequest.
 - `20261108195000_medical_documents`: MedicalDocument + PrescriptionLine.
 - `20261109050649_o006_optional_study_encounter`: makes `StudyRequest.encounterId` nullable while preserving all existing rows and indexes.
+- `20261109200000_study_name_and_optional_description`: migrates each former study `description` into `name`, sets optional `description` to `NULL`, and preserves study IDs, associations, statuses, result notes and timestamps.
 
 The SQLite database lives in `.local/data/medical.db`; the development orchestrator generates Prisma client, deploys migrations and seeds.
 

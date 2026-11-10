@@ -12,9 +12,7 @@ import {
   type Appointment,
   type CreateEncounterInput,
   type EncounterType,
-  type EncounterSummary,
   type PatientDetail,
-  type StudyRequest,
   type StudyCategory,
   createEncounterInputSchema,
   encounterTypeSchema,
@@ -58,7 +56,7 @@ type SectionValues = {
 };
 
 /** One study row in the form (UI_SPEC §7.3, U-15). Zero rows = no studies. */
-type StudyRowInput = { category: StudyCategory; description: string };
+type StudyRowInput = { category: StudyCategory; name: string; description?: string };
 
 function pad(n: number): string {
   return String(n).padStart(2, '0');
@@ -91,13 +89,9 @@ function nowLocalInput(): string {
 
 export function ConsultationForm({
   patient,
-  encounters,
-  pendingStudies,
   appointment,
 }: {
   patient: PatientDetail;
-  encounters: EncounterSummary[];
-  pendingStudies: StudyRequest[];
   appointment: Appointment | null;
 }) {
   const router = useRouter();
@@ -157,11 +151,11 @@ export function ConsultationForm({
     }
 
     // Client check on kept study rows (server repeats it with per-row
-    // fieldErrors, e.g. `studies.0.description`).
+    // fieldErrors, e.g. `studies.0.name`).
     const rowErrors: FieldErrors = {};
     studies.forEach((row, i) => {
-      if (row.description.trim() === '') {
-        rowErrors[`studies.${i}.description`] = ['Indica el estudio'];
+      if (row.name.trim().length < 2) {
+        rowErrors[`studies.${i}.name`] = ['Indica el nombre del estudio'];
       }
     });
     if (Object.keys(rowErrors).length > 0) {
@@ -183,7 +177,8 @@ export function ConsultationForm({
         ? {
             studies: studies.map((s) => ({
               category: s.category,
-              description: s.description.trim(),
+              name: s.name.trim(),
+              ...(s.description?.trim() ? { description: s.description.trim() } : {}),
             })),
           }
         : {}),
@@ -319,12 +314,12 @@ export function ConsultationForm({
             <div className="study-form-rows">
               {studies.map((row, i) => (
                 <StudyFields key={i} value={row} index={i}
-                  invalid={Boolean(errorFor(`studies.${i}.description`))}
+                  invalid={Boolean(errorFor(`studies.${i}.name`))}
                   onChange={(value) => {
                     setStudies((rows) => rows.map((item, j) => j === i ? value : item));
                     setFieldErrors((current) => {
                       const next = { ...current };
-                      delete next[`studies.${i}.description`];
+                      delete next[`studies.${i}.name`];
                       return next;
                     });
                   }}
@@ -332,8 +327,8 @@ export function ConsultationForm({
                 />
               ))}
               {studies.map((_, i) =>
-                errorFor(`studies.${i}.description`) ? (
-                  <div className="field-error" key={`err-${i}`}>{errorFor(`studies.${i}.description`)}</div>
+                errorFor(`studies.${i}.name`) ? (
+                  <div className="field-error" key={`err-${i}`}>{errorFor(`studies.${i}.name`)}</div>
                 ) : null,
               )}
             </div>
@@ -341,7 +336,7 @@ export function ConsultationForm({
           <button
             type="button"
             className="btn btn-ghost btn-sm"
-            onClick={() => setStudies((rows) => [...rows, { category: 'laboratorio', description: '' }])}
+            onClick={() => setStudies((rows) => [...rows, { category: 'laboratorio', name: '' }])}
           >
             Agregar estudio
           </button>
@@ -361,7 +356,7 @@ export function ConsultationForm({
       </form>
 
       <aside className="consultation-context-column">
-        <ClinicalContext patient={patient} encounters={encounters} studies={pendingStudies} />
+        <ClinicalContext patient={patient} />
         <section className="card consultation-actions-card" aria-labelledby="consult-actions-title">
           <h2 id="consult-actions-title">Acciones relacionadas</h2>
           <button

@@ -48,10 +48,10 @@ function SublineItem({ label, value }: { label: string; value: string | null }) 
 }
 
 const BACKGROUND_ROWS: { label: string; key: keyof PatientDetail }[] = [
-  { label: 'Afecciones', key: 'medicalConditions' },
-  { label: 'Cirugías previas', key: 'previousSurgeries' },
   { label: 'Alergias', key: 'allergies' },
   { label: 'Medicamentos actuales', key: 'currentMedications' },
+  { label: 'Afecciones', key: 'medicalConditions' },
+  { label: 'Cirugías previas', key: 'previousSurgeries' },
 ];
 
 function documentPreview(document: MedicalDocument): string {
@@ -192,45 +192,47 @@ export default async function PatientPage({ params }: { params: Promise<{ id: st
         <SublineItem label="Identificador" value={patient.externalIdentifier} />
       </div>
 
-      <section className="card patient-safety-card" aria-labelledby="patient-safety-title">
+      <section className="card patient-safety-card" aria-labelledby="patient-safety-title" id="patient-background">
         <div className="card-header">
-          <h2 id="patient-safety-title">Contexto de seguridad</h2>
+          <h2 id="patient-safety-title">Antecedentes médicos</h2>
           <Link href={`/patients/${patient.id}/antecedentes`} className="btn btn-ghost btn-sm">Editar antecedentes</Link>
         </div>
         <div className="patient-safety-grid">
-          {(['allergies', 'currentMedications'] as const).map((key) => (
+          {BACKGROUND_ROWS.map(({ key, label }) => (
             <div className="patient-safety-item" key={key}>
-              <strong>{key === 'allergies' ? 'Alergias' : 'Medicamentos actuales'}</strong>
+              <strong>{label}</strong>
               <span>{patient[key] || <em className="faint">No registrado</em>}</span>
             </div>
           ))}
         </div>
-        <details className="patient-background-details">
-          <summary>Ver otros antecedentes médicos</summary>
-          {BACKGROUND_ROWS.filter((row) => row.key === 'medicalConditions' || row.key === 'previousSurgeries').map((row) => (
-            <div className="bg-row" key={row.key}>
-              <span className="bg-label">{row.label}</span>
-              <span className="bg-value">{patient[row.key] || <em className="faint">No registrado</em>}</span>
-            </div>
-          ))}
-        </details>
+        <Link href={`/patients/${patient.id}/contexto-clinico#antecedentes`} className="text-link">Ver contexto clínico completo</Link>
       </section>
 
       {pendingStudies.length > 0 || nextAppointments.length > 0 ? (
         <section className="card patient-pending-card" aria-labelledby="pending-work-title">
           <div className="card-header"><h2 id="pending-work-title">Pendiente de atención</h2></div>
           {nextAppointments.slice(0, 1).map((appt) => (
-            <Link key={appt.id} href={`/patients/${patient.id}/citas/${appt.id}`} className="appt-row">
-              <span className="pending-kind">Próxima cita</span>
-              <span className="appt-row-date">{formatDateTime(appt.startAt)}</span>
-              <AppointmentTypeBadge type={appt.type} />
-              <AppointmentStatusBadge status={appt.status} />
-            </Link>
+            <div key={appt.id} className="appt-row pending-appointment-row">
+              <div className="pending-appointment-info">
+                <span className="pending-kind">Próxima cita</span>
+                <Link href={`/patients/${patient.id}/citas/${appt.id}`} className="appt-row-date">{formatDateTime(appt.startAt)}</Link>
+                <div className="pending-appointment-meta">
+                  <AppointmentTypeBadge type={appt.type} />
+                  <AppointmentStatusBadge status={appt.status} />
+                </div>
+              </div>
+              <div className="pending-appointment-actions">
+                <Link href={`/patients/${patient.id}/citas/${appt.id}`} className="btn btn-ghost btn-sm">Ver cita</Link>
+                {appt.status === 'scheduled' ? (
+                  <Link href={`/patients/${patient.id}/consultas/nueva?appointmentId=${encodeURIComponent(appt.id)}`} className="btn btn-secondary btn-sm">Iniciar consulta</Link>
+                ) : null}
+              </div>
+            </div>
           ))}
           {pendingStudies.slice(0, 3).map((study) => (
             <div className="appt-row" key={study.id}>
               <span className="pending-kind">Estudio por revisar</span>
-              <span className="study-row-label">{study.description}</span>
+              <span className="study-row-label">{study.name}</span>
               <a href={`#study-${study.id}`}>Revisar estudio</a>
             </div>
           ))}
@@ -239,7 +241,7 @@ export default async function PatientPage({ params }: { params: Promise<{ id: st
 
       <Timeline patientId={patient.id} encounters={encounters} />
 
-      <div className="card">
+      <div className="card" id="patient-documents">
         <div className="card-header">
           <h2>Recetas e informes</h2>
           <span className="badge badge-type">{documents.length}</span>
