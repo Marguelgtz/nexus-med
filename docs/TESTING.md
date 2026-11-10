@@ -4,6 +4,8 @@
 
 Dialog/follow-up milestone: web 39/39, web typecheck and ESLint pass (existing warning only). Local Chromium at 390px checks new/saved consultation follow-up dialogs, initial field focus, Tab containment, trigger focus return, dirty Escape cancel/accept and note retention. No clinical write was submitted. A repeated native Escape close-request behavior was found and fixed by handling/preventing Escape at keydown before the guarded close.
 
+Consultation-stage milestone: web typecheck/lint and Chromium checks pass for three stages, retained text/review, custom contextual study, zero requests during stage changes, captured atomic-save payload, simulated 500 retention, simulated cross-stage 400 focus, 320px reflow and saved-note study modal. All final test writes were intercepted. An earlier failed check exposed a Continue/Save DOM-button reuse default-submit bug; separate keyed buttons fixed it. That failed check created exactly two uniquely identified synthetic notes/requests in the local DB. They were backed up and removed with strict fixture/time/association checks; all unrelated table rows matched the pre-cleanup digest and foreign-key checks passed. Final persistence verification uses an isolated fixture DB.
+
 ## Focused patient views — 2026-11-10
 
 The second owner review replaces overview anchor navigation with separate SSR views (D-042). Web tests pass **39/39**; the final Next.js production build, including TypeScript validation, passes; ESLint exits 0 with its existing App Router `pages/` warning. No API/schema/domain code changed, so the historical 113-test API result is not presented as a fresh run.

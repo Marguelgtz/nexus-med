@@ -19,6 +19,7 @@ import {
 } from '../../lib/api/client';
 import { formatDateTime, STUDY_CATEGORY_LABELS } from '../../lib/format';
 import { StudyStatusBadge } from '../appointments/badges';
+import { Modal } from '../modal';
 import { ErrorBanner } from '../primitives';
 import { StudyFields } from './study-fields';
 import { useBeforeUnloadGuard } from '../../lib/use-before-unload-guard';
@@ -43,12 +44,14 @@ function StudyCreatePanel({
   encounterId,
   onSaved,
   onClose,
+  dialogTitle,
 }: {
   patientId: string;
   encounters: EncounterSummary[];
   encounterId?: string;
   onSaved?: () => void;
   onClose: () => void;
+  dialogTitle?: string;
 }) {
   const router = useRouter();
   const [selectedEncounterId, setSelectedEncounterId] = useState(encounterId ?? '');
@@ -60,6 +63,7 @@ function StudyCreatePanel({
   useBeforeUnloadGuard(dirty && !saving);
 
   function cancel() {
+    if (saving) return;
     if (dirty && !window.confirm('Hay una solicitud de estudios sin guardar. ¿Descartar los cambios?')) return;
     onClose();
   }
@@ -94,7 +98,7 @@ function StudyCreatePanel({
     }
   }
 
-  return (
+  const form = (
     <form className="study-create-panel" onSubmit={submit} noValidate aria-busy={saving}>
       {encounterId ? (
         <p className="field-hint">La solicitud quedará asociada a esta consulta y al paciente actual.</p>
@@ -148,17 +152,20 @@ function StudyCreatePanel({
       </div>
     </form>
   );
+  return dialogTitle ? <Modal title={dialogTitle} onClose={cancel} closeDisabled={saving}>{form}</Modal> : form;
 }
 
 export function EncounterStudyRequestForm({
   patientId,
   encounterId,
   encounters,
+  patientName,
   onSaved,
   onClose,
 }: {
   patientId: string;
   encounterId: string;
+  patientName: string;
   encounters: EncounterSummary[];
   onSaved?: () => void;
   onClose: () => void;
@@ -166,6 +173,7 @@ export function EncounterStudyRequestForm({
   return (
     <StudyCreatePanel
       patientId={patientId}
+      dialogTitle={`Solicitar estudio · ${patientName}`}
       encounterId={encounterId}
       encounters={encounters}
       onSaved={onSaved}

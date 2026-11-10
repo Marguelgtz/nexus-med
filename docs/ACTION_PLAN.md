@@ -20,7 +20,11 @@
 
 **Milestone 1 verified:** Native dialog and new/saved-consultation follow-up modal implemented. Web 39/39, web typecheck and lint pass (existing App Router warning only). Chromium at 390px verifies modal focus containment/return, dirty Escape cancel/accept, and preservation of the unsaved note. Native repeated Escape close requests were prevented at keydown before accepting a close. No clinical write submitted.
 
-**Next action:** commit the verified dialog/follow-up milestone, then implement staged consultation and contextual study requests.
+**Milestone 1 commit:** `786533b`.
+
+**Milestone 2 verified:** Three presentation stages preserve all seven note fields and explicit final save; contextual new/saved-note study dialogs retain association. Web typecheck/lint and Chromium stage/draft/error/focus/320px checks pass. Stage transitions make zero POST requests. The conditional Continue→Save button reuse regression was fixed with distinct keys; two own synthetic test artifacts from the failed check were strictly scoped, backed up and cleaned with unrelated-row digest/FK preservation.
+
+**Next action:** commit milestone 2, then implement compact medication entry and move background into overview.
 
 ## Previous follow-up — Focused patient views (2026-11-10)
 

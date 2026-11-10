@@ -26,33 +26,16 @@ import {
   wasEdited,
 } from '../../lib/format';
 import { useBeforeUnloadGuard } from '../../lib/use-before-unload-guard';
+import { CONSULTATION_SECTIONS as SECTIONS, type ConsultationValues } from './consultation-sections';
 import { ClinicalContext } from './clinical-context';
 import { EncounterStudyRequestForm, EncounterStudyWorkflow } from './study-workflow';
 import { EncounterAppointmentHandoff } from '../appointments/encounter-handoff';
 import { AppointmentForm } from '../appointments/appointment-form';
 import { MedicalDocumentForm } from '../documents/document-form';
 
-const SECTIONS: { key: keyof SectionValues; label: string; rows: number }[] = [
-  { key: 'reason', label: 'Motivo de consulta', rows: 2 },
-  { key: 'historyOfPresentIllness', label: 'Enfermedad actual', rows: 4 },
-  { key: 'relevantHistory', label: 'Antecedentes relevantes', rows: 3 },
-  { key: 'physicalExamination', label: 'Exploración física', rows: 4 },
-  { key: 'assessment', label: 'Valoración', rows: 3 },
-  { key: 'plan', label: 'Plan', rows: 4 },
-  { key: 'followUp', label: 'Seguimiento', rows: 2 },
-];
-
 const MAX_CHARS = 10_000;
 
-type SectionValues = {
-  reason: string;
-  historyOfPresentIllness: string;
-  relevantHistory: string;
-  physicalExamination: string;
-  assessment: string;
-  plan: string;
-  followUp: string;
-};
+type SectionValues = ConsultationValues;
 
 type FieldErrors = Record<string, string[]>;
 
@@ -100,6 +83,7 @@ function EncounterContextActions({
               <p className="study-request-active" role="status">Solicitud sin guardar</p>
               <EncounterStudyRequestForm
                 patientId={patient.id}
+                patientName={patient.fullName}
                 encounterId={encounter.id}
                 encounters={encounters}
                 onSaved={() => { setSavedStudyMessage(true); actionsHeading.current?.focus(); }}

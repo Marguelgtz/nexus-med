@@ -692,6 +692,10 @@ This section supersedes conflicting presentation rules in §§5/7/8; clinical be
 
 Follow-up scheduling opens the existing appointment form in this dialog from a new or saved consultation. The new note stays mounted. Saving creates only an independent appointment; it neither saves the unsaved note nor completes/links an appointment. Changed appointment fields require confirmation before dismissing. Save failures keep fields in the open modal; saving disables close.
 
+New consultation entry uses three freely selectable presentation stages: Motivo y antecedentes, Exploración y valoración, and Plan y revisión. All seven clinical fields retain their meaning and optionality; changing stage keeps in-memory text and never submits. The final stage offers a complete-note disclosure and explicit save. Validation selects/focuses the field's stage. Shared labels/order live in `patients/consultation-sections.ts` and also drive saved-note editing.
+
+`Solicitar estudio` is available throughout new-note entry. Its dialog takes category/name/optional detail without an association selector; requests remain explicitly pending until the existing atomic note save creates them with the new encounter. Compact staged rows can be edited or removed before saving. Saved-note study requests use the same native dialog shell and the existing encounter-scoped API; the association statement stays visible. Patient-level Estudios remains the independent request/review view.
+
 ### Figma handoff boundary
 
 UI v0 is a working baseline, not a final brand approval. Preserve the workflow hierarchy, component ownership, states, tokens, labels, keyboard behavior and print isolation during later design work. Palette personality, iconography, typeface branding, density preferences and decorative treatment remain for later Figma exploration/owner review. No Figma access occurred. Evidence and verification limits live in `TESTING.md` and `assets/ui-v0/README.md`; PR #8's audit remains the historical comparison.

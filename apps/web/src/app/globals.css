@@ -2582,3 +2582,26 @@ body:has(.app-dialog[open]) { overflow: hidden; }
 .app-dialog-content { padding: var(--s-4); }
 .app-dialog-content > .field-hint:first-child { margin-top: 0; }
 @media print { .app-dialog { display: none !important; } }
+
+.consultation-step-nav { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s-2); margin-bottom: var(--s-4); }
+.consultation-step-nav button { display: flex; align-items: center; gap: var(--s-2); padding: var(--s-3); border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); color: var(--text-muted); text-align: left; font: inherit; font-size: 14px; cursor: pointer; }
+.consultation-step-nav button[aria-current] { border-color: var(--primary); color: var(--primary); background: var(--info-bg); font-weight: 600; }
+.consultation-step-nav button > span { flex: 0 0 auto; font-variant-numeric: tabular-nums; }
+.consultation-stage-tools { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: var(--s-3); margin-bottom: var(--s-3); }
+.consultation-stage-tools h2 { margin: 0; font-size: 18px; }
+.consultation-meta-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s-3); }
+.consultation-review { border-top: 1px solid var(--border); padding: var(--s-3) 0; }
+.consultation-review summary { cursor: pointer; color: var(--primary); font-weight: 600; }
+.consultation-review dl > div { padding: var(--s-2) 0; }
+.consultation-review dt { font-size: 13px; color: var(--text-muted); }
+.consultation-review dd { margin: var(--s-1) 0 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.compact-record-list { list-style: none; padding: 0; margin: 0; }
+.compact-record-list > li { display: flex; justify-content: space-between; align-items: start; gap: var(--s-3); padding: var(--s-3) 0; border-top: 1px solid var(--border); }
+.compact-record-list > li > div { min-width: 0; overflow-wrap: anywhere; }
+.compact-record-list .field-hint { display: block; }
+.app-dialog .study-form-row { grid-template-columns: minmax(0, 1fr); }
+@media (max-width: 639px) {
+  .consultation-step-nav button { flex-direction: column; align-items: start; padding: var(--s-2); font-size: 13px; min-height: 64px; }
+  .consultation-meta-grid { grid-template-columns: minmax(0, 1fr); gap: 0; }
+  .compact-record-list > li { flex-direction: column; }
+}

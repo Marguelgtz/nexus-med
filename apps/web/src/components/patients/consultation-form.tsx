@@ -4,7 +4,7 @@
 // The patient context strip is rendered by the page; this form is the note
 // body. Clinical content is verbatim: no suggestions anywhere.
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
@@ -13,7 +13,7 @@ import {
   type CreateEncounterInput,
   type EncounterType,
   type PatientDetail,
-  type StudyCategory,
+  type StudyInput,
   createEncounterInputSchema,
   encounterTypeSchema,
 } from '@nexus-med/contracts';
@@ -26,37 +26,21 @@ import {
 } from '../../lib/format';
 import { Badge, ErrorBanner } from '../primitives';
 import { ClinicalContext } from './clinical-context';
-import { StudyFields } from './study-fields';
+import { StagedStudyDialog } from './staged-study-dialog';
+import { CONSULTATION_SECTIONS as SECTIONS, CONSULTATION_STAGES, type ConsultationValues } from './consultation-sections';
+import { STUDY_CATEGORY_LABELS } from '../../lib/format';
 import { AppointmentForm } from '../appointments/appointment-form';
 import { useBeforeUnloadGuard } from '../../lib/use-before-unload-guard';
 
 type FieldErrors = Record<string, string[]>;
 
-const SECTIONS: { key: keyof SectionValues; label: string; rows: number }[] = [
-  { key: 'reason', label: 'Motivo de consulta', rows: 2 },
-  { key: 'historyOfPresentIllness', label: 'Enfermedad actual', rows: 4 },
-  { key: 'relevantHistory', label: 'Antecedentes relevantes', rows: 3 },
-  { key: 'physicalExamination', label: 'Exploración física', rows: 4 },
-  { key: 'assessment', label: 'Valoración', rows: 3 },
-  { key: 'plan', label: 'Plan', rows: 4 },
-  { key: 'followUp', label: 'Seguimiento', rows: 2 },
-];
-
 const MAX_CHARS = 10_000;
 const COUNTER_AT = 9_500;
 
-type SectionValues = {
-  reason: string;
-  historyOfPresentIllness: string;
-  relevantHistory: string;
-  physicalExamination: string;
-  assessment: string;
-  plan: string;
-  followUp: string;
-};
+type SectionValues = ConsultationValues;
 
 /** One study row in the form (UI_SPEC §7.3, U-15). Zero rows = no studies. */
-type StudyRowInput = { category: StudyCategory; name: string; description?: string };
+type StudyRowInput = StudyInput;
 
 function pad(n: number): string {
   return String(n).padStart(2, '0');
@@ -87,6 +71,11 @@ function nowLocalInput(): string {
   )}`;
 }
 
+/** Event-time check; never run during render or against the initial form timestamp. */
+function consultationIsFuture(occurredIso: string): boolean {
+  return new Date(occurredIso).getTime() > Date.now() + 60_000;
+}
+
 export function ConsultationForm({
   patient,
   appointment,
@@ -95,6 +84,23 @@ export function ConsultationForm({
   appointment: Appointment | null;
 }) {
   const router = useRouter();
+  const [stage, setStage] = useState(0);
+  const [studyEditor, setStudyEditor] = useState<number | 'new' | null>(null);
+  const stageHeading = useRef<HTMLHeadingElement>(null);
+  function changeStage(next: number) {
+    setStage(next);
+    requestAnimationFrame(() => stageHeading.current?.focus());
+  }
+  function showErrors(errors: FieldErrors) {
+    setFieldErrors(errors);
+    const key = Object.keys(errors)[0] ?? 'form';
+    const field = SECTIONS.find((section) => section.key === key);
+    setStage(key === 'occurredAt' ? 0 : field?.stage ?? 2);
+    requestAnimationFrame(() => {
+      const target = document.getElementById(key);
+      (target ?? stageHeading.current)?.focus();
+    });
+  }
   const [showFollowUp, setShowFollowUp] = useState(false);
   const [createdFollowUp, setCreatedFollowUp] = useState<Appointment | null>(null);
   const [initialOccurredAt] = useState(() => nowLocalInput());
@@ -136,17 +142,18 @@ export function ConsultationForm({
     });
   };
 
-  const onSubmit = async (e: React.FormEvent) => {
+  async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (stage < 2) { changeStage(stage + 1); return; }
     setBanner(null);
 
     const occurredIso = localToIso(occurredAt);
     if (!occurredIso) {
-      setFieldErrors({ occurredAt: ['Indica la fecha y hora de la consulta'] });
+      showErrors({ occurredAt: ['Indica la fecha y hora de la consulta'] });
       return;
     }
-    if (new Date(occurredIso).getTime() > Date.now() + 60_000) {
-      setFieldErrors({ occurredAt: ['La fecha de la consulta no puede estar en el futuro'] });
+    if (consultationIsFuture(occurredIso)) {
+      showErrors({ occurredAt: ['La fecha de la consulta no puede estar en el futuro'] });
       return;
     }
 
@@ -159,7 +166,7 @@ export function ConsultationForm({
       }
     });
     if (Object.keys(rowErrors).length > 0) {
-      setFieldErrors(rowErrors);
+      showErrors(rowErrors);
       return;
     }
 
@@ -191,7 +198,7 @@ export function ConsultationForm({
         const key = String(issue.path[0] ?? 'form');
         (errs[key] ??= []).push(issue.message);
       }
-      setFieldErrors(errs);
+      showErrors(errs);
       return;
     }
 
@@ -205,7 +212,7 @@ export function ConsultationForm({
       router.refresh();
     } catch (err) {
       if (err instanceof ApiError && Object.keys(err.fieldErrors).length > 0) {
-        setFieldErrors(err.fieldErrors);
+        showErrors(err.fieldErrors);
       } else {
         setBanner('No se pudo guardar la consulta. Tu texto se conserva.');
       }
@@ -239,7 +246,20 @@ export function ConsultationForm({
           <span className="badge badge-status-ordered">Sin guardar</span>
         </header>
 
+        <nav className="consultation-step-nav" aria-label="Etapas de la consulta">
+          {CONSULTATION_STAGES.map((label, index) => <button type="button" key={label}
+            aria-current={stage === index ? 'step' : undefined} disabled={saving} onClick={() => changeStage(index)}>
+            <span>{index + 1}</span>{label}
+          </button>)}
+        </nav>
+        <div className="consultation-stage-tools">
+          <h2 ref={stageHeading} tabIndex={-1}>{CONSULTATION_STAGES[stage]}</h2>
+          <button type="button" className="btn btn-secondary btn-sm" disabled={saving} onClick={() => setStudyEditor('new')}>
+            Solicitar estudio{studies.length > 0 ? ` (${studies.length})` : ''}
+          </button>
+        </div>
         <div className="card consultation-note-card">
+        {stage === 0 ? <div className="consultation-meta-grid">
         <div className="field">
           <label htmlFor="occurredAt">
             Fecha y hora de la consulta <span className="required">*</span>
@@ -281,7 +301,9 @@ export function ConsultationForm({
           </select>
         </div>
 
-        {SECTIONS.map((s) => (
+        </div> : null}
+
+        {SECTIONS.filter((section) => section.stage === stage).map((s) => (
           <div className="field" key={s.key}>
             <label htmlFor={s.key}>
               {s.label}
@@ -302,53 +324,30 @@ export function ConsultationForm({
           </div>
         ))}
 
-        <div className="field">
-          <div className="study-staging-heading">
-            <div>
-              <div className="section-label">Estudios solicitados</div>
-              <p className="field-hint">Los estudios agregados se guardan junto con esta consulta.</p>
-            </div>
-            <span className="badge badge-status-ordered">Sin guardar</span>
-          </div>
-          {studies.length > 0 ? (
-            <div className="study-form-rows">
-              {studies.map((row, i) => (
-                <StudyFields key={i} value={row} index={i}
-                  invalid={Boolean(errorFor(`studies.${i}.name`))}
-                  onChange={(value) => {
-                    setStudies((rows) => rows.map((item, j) => j === i ? value : item));
-                    setFieldErrors((current) => {
-                      const next = { ...current };
-                      delete next[`studies.${i}.name`];
-                      return next;
-                    });
-                  }}
-                  onRemove={studies.length > 1 ? () => setStudies((rows) => rows.filter((_, j) => j !== i)) : undefined}
-                />
-              ))}
-              {studies.map((_, i) =>
-                errorFor(`studies.${i}.name`) ? (
-                  <div className="field-error" key={`err-${i}`}>{errorFor(`studies.${i}.name`)}</div>
-                ) : null,
-              )}
-            </div>
-          ) : null}
-          <button
-            type="button"
-            className="btn btn-ghost btn-sm"
-            onClick={() => setStudies((rows) => [...rows, { category: 'laboratorio', name: '' }])}
-          >
-            Agregar estudio
-          </button>
-        </div>
+        {stage === 2 ? <>
+          <details className="consultation-review">
+            <summary>Revisar nota completa</summary>
+            <dl>{SECTIONS.map(({ key, label }) => <div key={key}><dt>{label}</dt><dd>{values[key] || <em className="faint">No registrado</em>}</dd></div>)}</dl>
+          </details>
+          <section className="staged-studies" aria-labelledby="staged-study-title">
+            <h3 id="staged-study-title">Solicitudes de estudio · {studies.length}</h3>
+            <p className="field-hint">Se guardan y se asocian a esta consulta al guardar la nota.</p>
+            {studies.length === 0 ? <p className="faint">Sin solicitudes preparadas.</p> : <ul className="compact-record-list">{studies.map((study, index) => <li key={index}>
+              <div><strong>{study.name}</strong><span className="field-hint">{STUDY_CATEGORY_LABELS[study.category]}</span>{study.description ? <p>{study.description}</p> : null}</div>
+              <div className="actions"><button type="button" className="btn btn-ghost btn-sm" aria-label={`Editar estudio ${index + 1}`} onClick={() => setStudyEditor(index)}>Editar</button>
+              <button type="button" className="btn btn-ghost btn-sm" aria-label={`Quitar estudio ${index + 1}`} onClick={() => setStudies((current) => current.filter((_, i) => i !== index))}>Quitar</button></div>
+            </li>)}</ul>}
+          </section>
+        </> : null}
         </div>
 
+        {Object.keys(fieldErrors).length > 0 ? <ErrorBanner message={Object.values(fieldErrors).flat().join(" ")} /> : null}
         {banner ? <ErrorBanner message={banner} /> : null}
 
         <div className="btn-row consultation-save-actions">
-          <button type="submit" className="btn btn-primary" disabled={saving}>
-            {saving ? 'Guardando…' : 'Guardar consulta'}
-          </button>
+          {stage > 0 ? <button type="button" className="btn btn-secondary" disabled={saving} onClick={() => changeStage(stage - 1)}>Anterior</button> : null}
+          {stage < 2 ? <button key="next-stage" type="button" className="btn btn-primary" onClick={() => changeStage(stage + 1)}>Continuar</button> :
+            <button key="save-note" type="submit" className="btn btn-primary" disabled={saving}>{saving ? 'Guardando…' : 'Guardar consulta'}</button>}
           <Link href={appointment ? `/patients/${patient.id}/citas/${appointment.id}` : `/patients/${patient.id}/consultas`} className="btn btn-ghost">
             Cancelar
           </Link>
@@ -379,6 +378,13 @@ export function ConsultationForm({
         </section>
       </aside>
 
+      {studyEditor !== null ? <StagedStudyDialog patientName={patient.fullName}
+        initial={typeof studyEditor === 'number' ? studies[studyEditor] : undefined}
+        onCancel={() => setStudyEditor(null)}
+        onConfirm={(study) => {
+          setStudies((current) => typeof studyEditor === 'number' ? current.map((value, index) => index === studyEditor ? study : value) : [...current, study]);
+          setStudyEditor(null);
+        }} /> : null}
       {showFollowUp ? (
         <AppointmentForm patientId={patient.id} dialogTitle={`Programar seguimiento · ${patient.fullName}`}
           onCancel={() => setShowFollowUp(false)}
