@@ -222,7 +222,7 @@ export function ConsultationForm({
 
   return (
     <div className="consultation-workspace">
-      <form className="consultation-note-form" onSubmit={onSubmit} noValidate>
+      <form className="consultation-note-form" onSubmit={onSubmit} noValidate aria-busy={saving}>
         <header className="consultation-note-header">
           <div>
             <p className="section-label">Paciente</p>

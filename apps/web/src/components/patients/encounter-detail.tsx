@@ -7,7 +7,7 @@
 // `Editada` badge appears when the edit time differs from the occurrence).
 // Editing never reassigns the patient (API-enforced).
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
@@ -80,6 +80,7 @@ function EncounterContextActions({
   editing: boolean;
 }) {
   const router = useRouter();
+  const actionsHeading = useRef<HTMLHeadingElement>(null);
   const [savedDocumentMessage, setSavedDocumentMessage] = useState<string | null>(null);
   const returnTo = `/patients/${patient.id}/consultas/${encounter.id}`;
   const followUpQuery = new URLSearchParams({ returnTo }).toString();
@@ -90,7 +91,7 @@ function EncounterContextActions({
         <ClinicalContext patient={patient} encounters={encounters} studies={patientStudies} />
         {appointment ? <EncounterAppointmentHandoff appointment={appointment} encounter={encounter} /> : null}
         <section className="card consultation-actions-card" aria-labelledby="encounter-actions-title">
-          <h2 id="encounter-actions-title">Acciones de esta consulta</h2>
+          <h2 id="encounter-actions-title" tabIndex={-1} ref={actionsHeading}>Acciones de esta consulta</h2>
           {savedDocumentMessage ? <p className="notice" role="status">{savedDocumentMessage}</p> : null}
           {editing ? (
             <p className="field-hint">Guarda o cancela la edición de la consulta antes de crear un documento.</p>
@@ -127,9 +128,10 @@ function EncounterContextActions({
             onSaved={() => {
               setSavedDocumentMessage(documentKind === 'prescription' ? 'Receta guardada.' : 'Informe guardado.');
               onDocumentKindChange(null);
+              actionsHeading.current?.focus();
               router.refresh();
             }}
-            onCancel={() => onDocumentKindChange(null)}
+            onCancel={() => { onDocumentKindChange(null); actionsHeading.current?.focus(); }}
           />
         </section>
       ) : null}

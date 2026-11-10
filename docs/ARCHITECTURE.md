@@ -852,3 +852,8 @@ Keep implementation DRY and organized: one authoritative place for domain rules,
 Keep the frontend and API separate because independent deployment and a reusable backend are intentional product architecture choices. Use Next.js SSR for initial page rendering, but keep all business logic and persistence in Hono. Use Prisma with local SQLite during the prototype and treat D1 transaction compatibility as a future, explicit deployment validation.
 
 Build the smallest complete patient-to-consultation workflow. Do not introduce additional infrastructure or deploy-time tooling until the local product works.
+
+
+### UI v0 component conventions
+
+The existing `apps/web/src/app/globals.css` owns light-theme tokens and component styles; `components/primitives.tsx` stays server-safe. Patient-specific repeated study entry is shared through `components/patients/study-fields.tsx` and uses the contracts' `StudyInput` without owning validation/persistence. Workflow components retain draft/save/error state and call the existing typed Hono client. No new app, package, persistence layer or dependency was added. See `UI_SPEC.md` §9 for responsive composition, control APIs and Figma handoff conventions.

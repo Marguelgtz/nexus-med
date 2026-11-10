@@ -165,12 +165,13 @@ export function MedicalDocumentForm({
   }
 
   return (
-    <form className="document-form" onSubmit={submit} noValidate>
+    <form className="document-form" onSubmit={submit} noValidate aria-busy={saving}>
       <section className="card">
         <div className="field">
           <label htmlFor="document-title">Título</label>
           <input
             id="document-title"
+            autoFocus={Boolean(onSaved)}
             value={title}
             maxLength={120}
             placeholder={kind === 'prescription' ? 'Ej. Receta — control de dolor' : 'Ej. Informe de evolución'}

@@ -78,7 +78,7 @@ Navigation rules:
 
 ## 3. Screen specifications (T-009)
 
-Common to all screens: top bar, demo banner (Section 5.4), container `max-width: 1040px`, content left-aligned. All text in Spanish (Mexico).
+Common to all screens: top bar, demo banner (Section 5.4), container `max-width: 1120px`, content left-aligned. All text in Spanish (Mexico).
 
 ### 3.1 Registro de pacientes — `/patients`
 
@@ -252,13 +252,13 @@ Minimal, calm, high legibility. A local tool for a single surgeon working during
   --bg:            #f6f7f8;   /* page background */
   --surface:       #ffffff;   /* cards, inputs, rows */
   --surface-hover: #eef1f4;
-  --border:        #d8dee4;
-  --border-strong: #b9c2cb;
+  --border:        #d3dbe3;
+  --border-strong: #8493a2;
 
   /* Text */
   --text:          #1c2430;
   --text-muted:    #5c6875;
-  --text-faint:    #8b96a2;   /* "No registrado", timestamps */
+  --text-faint:    #626f7c;   /* "No registrado", timestamps */
 
   /* Brand / action */
   --primary:       #155eab;   /* clinical blue */
@@ -266,8 +266,8 @@ Minimal, calm, high legibility. A local tool for a single surgeon working during
   --primary-contrast: #ffffff;
 
   /* Semantic */
-  --success:       #1e7e44;
-  --warning:       #9a6b00;   /* archived badge, demo banner text */
+  --success:       #186d3b;
+  --warning:       #805800;   /* archived badge, demo banner text */
   --warning-bg:    #fdf3d7;
   --danger:        #c23b3b;
   --danger-hover:  #a52f2f;
@@ -284,10 +284,10 @@ Minimal, calm, high legibility. A local tool for a single surgeon working during
   --s-5: 24; --s-6: 32; --s-7: 48;
 
   /* Radii */
-  --radius-sm: 4px; --radius-md: 8px;
+  --radius-sm: 6px; --radius-md: 8px;
 
   /* Layout */
-  --container: 1040px;
+  --container: 1120px;
   --topbar-h: 56px;
 }
 ```
@@ -652,3 +652,26 @@ From a saved encounter, offer `Nueva receta`, `Nuevo informe`, and `Programar se
 ### 8.5 Responsive, accessible, and regression behavior
 
 Retain the O-005 typography, color tokens, Spanish (Mexico), system font stack, demo banner, and no-runtime-external-assets rule. At desktop, the note remains visually dominant; at narrow widths, context becomes an accessible disclosure and action buttons wrap. All actions remain keyboard operable with visible focus, labels, and text status cues. Preserve the O-005 registry, calendar, appointment, document, print, note-edit, and status-transition flows. These requirements are not considered verified until the O-006 browser and regression checks pass.
+
+
+## 9. O-007 UI v0 conventions (owner-authorized implementation)
+
+This section supersedes conflicting presentation rules in §§5/7/8; clinical behavior remains governed by §8. The existing information architecture is retained: registry/calendar navigation → patient identity/safety/pending work/history → consultation → contextual studies/documents/follow-up. No new dashboard, feature, API, schema or clinical interpretation is introduced.
+
+### Foundation and composition
+
+- `globals.css` remains the single light-theme token and visual-rule owner. Extend the existing spacing, semantic colors, surfaces and component classes; do not introduce a parallel framework or token vocabulary. System fonts and local assets preserve offline use. `--success-bg` and `--procedure-accent` name existing colors. Print paper retains its deliberate document-specific styling.
+- `primitives.tsx` remains server-safe for shared display/link/feedback primitives. Interactive state and explicit saves stay in domain components. Existing `.btn` variants (`primary`, `secondary`, `ghost`, `ghost-danger`, `danger`) and `.btn-sm` cover actions; wrapping action containers must not override variant sizing. Mobile buttons have a 44px minimum height. Use links for navigation and buttons for state changes.
+- `.field` stacks labels and controls; `.form-row` composes wrapping appointment fields. Both and search use one control rule: inherited system typography, 16px input text, 44px minimum height, semantic border, visible focus. Keep validation with the owning form/Hono. `patients/study-fields.tsx` renders the shared typed category/description/removal row for staged, standalone and saved-encounter study entry; it owns no persistence or draft behavior. Visible nested labels accompany every repeated field.
+- Page headings and card headings wrap with contextual actions. Registry rows align name, age, identifier and archive state at wide widths and stack metadata at narrow widths. Timeline reasons wrap completely without altering saved text. Badges retain readable width and text status; color is supplementary.
+
+### Responsive interaction and feedback
+
+- Month header spans all seven equal date tracks. Neighboring-month dates are muted without reducing text opacity. Month chips may truncate visually at narrow widths; their full accessible names and day/detail links remain available. Week uses equal columns above 639px and seven chronological full-width day rows below it. No horizontal-scroll calendar is required.
+- Consultation remains note-first in its wide two-column workspace. Context/actions use ordinary page scrolling, with no nested rail scroll. At ≤900px the context starts collapsed and can be expanded with native summary keyboard activation; identity remains in the note header. The responsive subscription supplies a stable collapsed SSR snapshot and expands desktop context after hydration. Other background details remain disclosures.
+- Global `:focus-visible`, skip-to-main navigation, current-page navigation cues, pressed filter buttons, reduced-motion handling and `.sr-only` are shared rules. Do not give independent filter buttons incomplete ARIA tab semantics.
+- Forms expose busy state and preserve explicit save/disabled/error behavior. Appointment failures announce an alert. Embedded document opening focuses its title field; successful save or cancellation returns focus to the encounter action heading. Saved feedback uses success tokens and a polite status. Unknown data and study-state caveats remain explicit.
+
+### Figma handoff boundary
+
+UI v0 is a working baseline, not a final brand approval. Preserve the workflow hierarchy, component ownership, states, tokens, labels, keyboard behavior and print isolation during later design work. Palette personality, iconography, typeface branding, density preferences and decorative treatment remain for later Figma exploration/owner review. No Figma access occurred. Evidence and verification limits live in `TESTING.md` and `assets/ui-v0/README.md`; PR #8's audit remains the historical comparison.

@@ -34,9 +34,9 @@ Ordered delivery:
 
 Dependencies: sequential implementation and final verification; no delegation. No new packages, Figma, API/schema changes or clinical semantics. P2 visual preferences remain provisional. One focused implementation PR against PR #8 is sufficient if the final diff stays cohesive.
 
-Verification in progress: web baseline 36/36. Initial sandbox API run passed 111 tests but blocked Prisma subprocess (`EPERM`); rerunning with subprocess permission. Typecheck/lint/build running. Browser verification will use a separate synthetic database, never reset the existing one.
+Foundation committed as `6c412c3`. API 112/112, web 36/36, workspace typecheck/lint and production build pass (existing tool warnings retained). Initial sandbox-only failures were resolved by permitting Prisma/Next subprocesses; no app workaround. Geometry: 64 route/viewport combinations at 320/390/639/640/768/900/1024/1440px, no document overflow, equal week tracks, month alignment; skip-link/main focus and 200%-equivalent CSS-width reflow pass. Browser checks across reruns verified consultation/staged-study save/reload, cancelled dirty navigation, standalone/linked study draft protection and create, consecutive completed/reviewed status saves, both embedded document kinds and association/cancel/save feedback, note edit persistence, follow-up return, explicit appointment completion/link, delayed failure retention and print visibility/PDF generation. Final patient/standalone regressions and clean-fixture final screenshots are in progress. Browser harness waits for hydration before submitting SSR forms. No existing application DB reset.
 
-Next action: implement layout/control foundation, then execute browser regression and evidence capture.
+Next action: complete remaining patient/standalone checks, refresh final screenshots, inspect print pages and reconcile evidence; commit refinements/documentation and publish PR against PR #8.
 
 ## 1. Purpose and operating model
 

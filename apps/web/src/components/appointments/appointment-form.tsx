@@ -113,7 +113,7 @@ export function AppointmentForm({ patientId, initial, onSaved, onCreated, return
   }
 
   return (
-    <form className="appt-form" onSubmit={handleSubmit}>
+    <form className="appt-form" onSubmit={handleSubmit} aria-busy={busy}>
       <div className="form-row">
         <label>
           Fecha
@@ -162,7 +162,7 @@ export function AppointmentForm({ patientId, initial, onSaved, onCreated, return
           Se superpone con: {overlap.join(', ')}. Puedes guardar igualmente.
         </p>
       ) : null}
-      {error ? <p className="error">{error}</p> : null}
+      {error ? <p className="error" role="alert">{error}</p> : null}
 
       <div className="form-actions">
         <button type="submit" className="btn btn-primary" disabled={busy || !date || !time}>

@@ -46,6 +46,10 @@ Use `Confirmed`, `Proposed`, `Open`, or `Superseded`. Record the date and ration
 | D-038 | Prescription/report creation from an encounter uses the existing form and API with the current patient/encounter association selected; successful save returns to the encounter. Follow-up scheduling creates an ordinary patient appointment and returns to the encounter without implicit linking/completion. An unsaved encounter must be saved before creating a linked document. | Owner O-006 mission. Reuses existing document/appointment contracts and preserves unsaved encounter text by keeping the user in the workspace until save. |
 | D-039 | The patient workspace puts identity and safety context first, then compact next-appointment/study-review work, recent activity, and full historical records. No cross-patient task dashboard is added. | Owner-authorized O-006 design and UX_REDESIGN.md; keeps the patient record as the anchor and avoids adding a new prioritization model. |
 
+## O-007 UI v0 presentation decision — 2026-11-09
+
+**D-040 — Confirmed implementation direction under the owner's UI v0 mission:** extend the existing CSS-token/primitives/domain-component system without new UI packages. Share study-entry rendering within the patient domain, consolidate control styles, fix calendar/history geometry and contrast, and use a collapsed narrow-screen context with ordinary page scrolling. Keep clinical contracts/status semantics, explicit saves, offline assets and browser-print isolation unchanged. The visual refinement is provisional for later Figma/owner review, not final branding approval. See `UI_SPEC.md` §9 and `TESTING.md` for actual behavior/evidence.
+
 ## Historical O-006 proposals (superseded by D-033 and UI_SPEC.md §8)
 
 - P-UX-01, P-UX-02, and P-UX-04 were authorized by D-033 and are now implementation scope, subject to the accepted data/status rules in D-034…D-039.

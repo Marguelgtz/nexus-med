@@ -81,7 +81,7 @@ function StudyCreatePanel({
   }
 
   return (
-    <form className="study-create-panel" onSubmit={submit} noValidate>
+    <form className="study-create-panel" onSubmit={submit} noValidate aria-busy={saving}>
       {encounterId ? (
         <p className="field-hint">La solicitud quedará asociada a esta consulta y al paciente actual.</p>
       ) : (
@@ -179,7 +179,7 @@ function StudyReviewActions({ study }: { study: StudyRequest }) {
         </button>
       ))}
       {target ? (
-        <div className="study-review-panel">
+        <div className="study-review-panel" aria-busy={saving}>
           <div className="field">
             <label htmlFor={`study-note-${study.id}`}>Nota del médico sobre el resultado (opcional)</label>
             <textarea
