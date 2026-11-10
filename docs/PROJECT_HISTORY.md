@@ -379,6 +379,6 @@ The study contract now uses a required name and optional description; the SQLite
 
 Verification passed: API 113/113, web 39/39, workspace typecheck, ESLint exit 0 with its existing App Router warning, and the final Next.js production build. Fourteen owner-review screenshots were inspected at desktop, tablet and mobile sizes and their SHA-256 inventory was checked. This is Chromium visual evidence, not screen-reader, physician usability, Safari/Firefox, or final brand approval. The pre-existing local `apps/web/next-env.d.ts` edit remains uncommitted.
 
-**Publication:** code commit `28c00cc` plus a separate evidence/documentation commit on the existing branch. PR #9 remains open against PR #8 and is not merged. No Figma file was accessed; the refined palette is a working foundation for later Figma review.
+**Publication:** code commit `28c00cc` and evidence/documentation commit `b371bbc` are pushed on the existing branch. PR #9 has the verification/evidence summary, remains open against PR #8, and is not merged. No Figma file was accessed; the refined palette is a working foundation for later Figma review.
 
 **References:** PR #9; `UI_AUDIT.md`; `UI_SPEC.md`; `TESTING.md`; `docs/assets/ui-v0/owner-review-2026-11-10/README.md`; `ACTION_PLAN.md`.
