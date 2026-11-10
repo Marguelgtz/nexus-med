@@ -35,8 +35,8 @@ export default async function EditBackgroundPage({ params }: { params: Promise<{
         fullName={patient.fullName}
         externalIdentifier={patient.externalIdentifier}
         isArchived={patient.isArchived}
-        backHref={`/patients/${patient.id}/contexto-clinico`}
-        backLabel="Antecedentes"
+        backHref={`/patients/${patient.id}#patient-background`}
+        backLabel="Resumen"
       />
 
       <div className="page-head">

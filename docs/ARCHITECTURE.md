@@ -347,7 +347,7 @@ nexus-med/
 │   │   │   │           ├── page.tsx      # /patients/:id (demographics + pending work)
 │   │   │   │           ├── editar/page.tsx
 │   │   │   │           ├── antecedentes/page.tsx  # Background edit
-│   │   │   │           ├── contexto-clinico/page.tsx # Background read view
+│   │   │   │           ├── contexto-clinico/page.tsx # Compatibility redirect to overview background
 │   │   │   │           ├── estudios/page.tsx
 │   │   │   │           ├── documentos/page.tsx
 │   │   │   │           ├── citas/
@@ -369,6 +369,7 @@ nexus-med/
 │   │   │   │   ├── appointments/          # Appointment/calendar workflow UI
 │   │   │   │   ├── documents/             # Prescription/report forms and print detail
 │   │   │   │   ├── shell/                # Top bar, demo banner, patient context strip
+│   │   │   │   ├── modal.tsx             # Client native-dialog shell
 │   │   │   │   └── primitives.tsx        # Genuinely shared visual primitives
 │   │   │   └── lib/
 │   │   │       ├── api/
@@ -861,3 +862,5 @@ Build the smallest complete patient-to-consultation workflow. Do not introduce a
 ### UI v0 component conventions
 
 The existing `apps/web/src/app/globals.css` owns light-theme tokens and component styles; `components/primitives.tsx` stays server-safe. Patient-specific repeated study entry is shared through `components/patients/study-fields.tsx` and uses the contracts' `StudyInput` without owning validation/persistence. Workflow components retain draft/save/error state and call the existing typed Hono client. No new app, package, persistence layer or dependency was added. See `UI_SPEC.md` §9 for responsive composition, control APIs and Figma handoff conventions.
+
+Compact-entry ownership (D-043): `components/modal.tsx` owns only native dialog/focus/viewport behavior. Existing domain forms own drafts, validation, confirmation and API operations. `patients/consultation-sections.ts` shares clinical field labels/order across staged new-note entry and saved-note editing; `patients/staged-study-dialog.tsx` collects a local order for the existing atomic encounter save. `documents/medication-editor.tsx` validates a single local medication draft while the parent document form retains explicit document saving and historical line instructions. No package, API, schema or persistence boundary changes.

@@ -24,7 +24,11 @@
 
 **Milestone 2 verified:** Three presentation stages preserve all seven note fields and explicit final save; contextual new/saved-note study dialogs retain association. Web typecheck/lint and Chromium stage/draft/error/focus/320px checks pass. Stage transitions make zero POST requests. The conditional Continue→Save button reuse regression was fixed with distinct keys; two own synthetic test artifacts from the failed check were strictly scoped, backed up and cleaned with unrelated-row digest/FK preservation.
 
-**Next action:** commit milestone 2, then implement compact medication entry and move background into overview.
+**Milestone 2 commit:** `fd2cf83`.
+
+**Milestone 3 verified:** Compact medication dialogs/expandable rows, one general-instructions capture field and preserved historical per-line instructions; background moved into overview and old URL redirects. Web 39/39, typecheck/lint and Chromium modal create/edit/dirty-close/focus/payload/failure/background checks pass; all writes intercepted.
+
+**Next action:** commit milestone 3, then run final isolated production workflows/screenshots and reconcile publication state.
 
 ## Previous follow-up — Focused patient views (2026-11-10)
 

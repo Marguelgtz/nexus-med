@@ -131,6 +131,7 @@ export function AppointmentForm({ patientId, initial, onSaved, onCreated, return
           Fecha
           <input
             type="date"
+            disabled={busy}
             value={date}
             onChange={(e) => setDate(e.target.value)}
             required
@@ -141,6 +142,7 @@ export function AppointmentForm({ patientId, initial, onSaved, onCreated, return
           Hora
           <input
             type="time"
+            disabled={busy}
             value={time}
             onChange={(e) => setTime(e.target.value)}
             required
@@ -149,7 +151,7 @@ export function AppointmentForm({ patientId, initial, onSaved, onCreated, return
         </label>
         <label>
           Duración (min)
-          <select value={duration} onChange={(e) => setDuration(Number(e.target.value))}>
+          <select disabled={busy} value={duration} onChange={(e) => setDuration(Number(e.target.value))}>
             {DURATIONS.map((d) => (
               <option key={d} value={d}>
                 {d}
@@ -159,7 +161,7 @@ export function AppointmentForm({ patientId, initial, onSaved, onCreated, return
         </label>
         <label>
           Tipo
-          <select value={type} onChange={(e) => setType(e.target.value as AppointmentType)}>
+          <select disabled={busy} value={type} onChange={(e) => setType(e.target.value as AppointmentType)}>
             {TYPES.map((t) => (
               <option key={t} value={t}>
                 {APPOINTMENT_TYPE_LABELS[t]}

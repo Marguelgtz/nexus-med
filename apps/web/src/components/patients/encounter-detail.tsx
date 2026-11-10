@@ -124,6 +124,7 @@ function EncounterContextActions({
           <MedicalDocumentForm
             key={documentKind}
             patientId={patient.id}
+            patientName={patient.fullName}
             kind={documentKind}
             encounters={encounters}
             initialEncounterId={encounter.id}

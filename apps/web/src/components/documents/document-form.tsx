@@ -18,22 +18,11 @@ import { createMedicalDocumentInputSchema } from '@nexus-med/contracts';
 
 import { ApiError, createMedicalDocument, updateMedicalDocument } from '../../lib/api/client';
 import { formatDateTime } from '../../lib/format';
+import { MedicationEditor, type MedicationValues } from './medication-editor';
 import { useBeforeUnloadGuard } from '../../lib/use-before-unload-guard';
 
-type LineValues = {
-  medication: string;
-  dose: string;
-  route: string;
-  frequency: string;
-  duration: string;
-  instructions: string;
-};
-
+type LineValues = MedicationValues;
 type FieldErrors = Record<string, string[]>;
-
-const blankLine = (): LineValues => ({
-  medication: '', dose: '', route: '', frequency: '', duration: '', instructions: '',
-});
 
 function initialLines(document?: MedicalDocument): LineValues[] {
   if (document?.kind === 'prescription') {
@@ -46,7 +35,7 @@ function initialLines(document?: MedicalDocument): LineValues[] {
       instructions: line.instructions ?? '',
     }));
   }
-  return [blankLine()];
+  return [];
 }
 
 function lineInput(line: LineValues): PrescriptionLineInput {
@@ -62,6 +51,7 @@ function lineInput(line: LineValues): PrescriptionLineInput {
 
 export function MedicalDocumentForm({
   patientId,
+  patientName,
   kind,
   encounters,
   initialEncounterId,
@@ -71,6 +61,7 @@ export function MedicalDocumentForm({
   onCancel,
 }: {
   patientId: string;
+  patientName: string;
   kind: MedicalDocumentKind;
   encounters: EncounterSummary[];
   initialEncounterId?: string;
@@ -88,6 +79,7 @@ export function MedicalDocumentForm({
   const [banner, setBanner] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [dirty, setDirty] = useState(false);
+  const [editingMedication, setEditingMedication] = useState<number | 'new' | null>(null);
   useBeforeUnloadGuard(dirty && !saving);
 
   const errorFor = (field: string) => fieldErrors[field]?.[0] ?? null;
@@ -96,14 +88,10 @@ export function MedicalDocumentForm({
     setBanner(null);
   };
 
-  function updateLine(index: number, field: keyof LineValues, value: string) {
-    changed();
-    setLines((current) => current.map((line, i) => (i === index ? { ...line, [field]: value } : line)));
-    setFieldErrors((current) => {
-      const next = { ...current };
-      delete next[`lines.${index}.${field}`];
-      return next;
-    });
+  function showErrors(errors: FieldErrors) {
+    setFieldErrors(errors);
+    const lineKey = Object.keys(errors).find((key) => /^lines\.\d+\./.test(key));
+    if (lineKey) setEditingMedication(Number(lineKey.split('.')[1]));
   }
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
@@ -140,7 +128,7 @@ export function MedicalDocumentForm({
         const field = issue.path.join('.') || '_form';
         (errors[field] ??= []).push(issue.message);
       }
-      setFieldErrors(errors);
+      showErrors(errors);
       return;
     }
 
@@ -156,7 +144,7 @@ export function MedicalDocumentForm({
       router.refresh();
     } catch (error) {
       if (error instanceof ApiError && Object.keys(error.fieldErrors).length > 0) {
-        setFieldErrors(error.fieldErrors);
+        showErrors(error.fieldErrors);
       } else {
         setBanner(error instanceof Error ? error.message : 'No se pudo guardar el documento. El texto se conserva.');
       }
@@ -164,13 +152,14 @@ export function MedicalDocumentForm({
     }
   }
 
-  return (
+  return (<>
     <form className="document-form" onSubmit={submit} noValidate aria-busy={saving}>
       <section className="card">
         <div className="field">
           <label htmlFor="document-title">Título</label>
           <input
             id="document-title"
+            disabled={saving}
             autoFocus={Boolean(onSaved)}
             value={title}
             maxLength={120}
@@ -185,6 +174,7 @@ export function MedicalDocumentForm({
           <label htmlFor="related-encounter">Consulta relacionada</label>
           <select
             id="related-encounter"
+            disabled={saving}
             value={encounterId}
             onChange={(event) => { changed(); setEncounterId(event.target.value); }}
             aria-invalid={errorFor('encounterId') ? 'true' : undefined}
@@ -208,62 +198,31 @@ export function MedicalDocumentForm({
           <>
             <div className="document-form-section">
               <h2>Medicamentos</h2>
-              {lines.map((line, index) => (
-                <fieldset className="document-line" key={index}>
-                  <legend>Medicamento {index + 1}</legend>
-                  <div className="document-line-fields">
-                    <div className="field">
-                      <label htmlFor={`medication-${index}`}>Medicamento <span className="required">*</span></label>
-                      <input
-                        id={`medication-${index}`}
-                        value={line.medication}
-                        maxLength={200}
-                        onChange={(event) => updateLine(index, 'medication', event.target.value)}
-                        aria-invalid={errorFor(`lines.${index}.medication`) ? 'true' : undefined}
-                      />
-                      {errorFor(`lines.${index}.medication`) ? <div className="field-error">{errorFor(`lines.${index}.medication`)}</div> : null}
-                    </div>
-                    {([
-                      ['dose', 'Dosis', 'Ej. 500 mg'],
-                      ['route', 'Vía', 'Ej. Oral'],
-                      ['frequency', 'Frecuencia', 'Ej. Cada 8 h'],
-                      ['duration', 'Duración', 'Ej. 5 días'],
-                      ['instructions', 'Indicaciones', 'Ej. Tomar con alimentos'],
-                    ] as const).map(([field, label, placeholder]) => (
-                      <div className="field" key={field}>
-                        <label htmlFor={`${field}-${index}`}>{label}</label>
-                        <input
-                          id={`${field}-${index}`}
-                          value={line[field]}
-                          placeholder={placeholder}
-                          maxLength={field === 'instructions' ? 500 : field === 'frequency' ? 120 : field === 'route' ? 80 : 100}
-                          onChange={(event) => updateLine(index, field, event.target.value)}
-                        />
-                      </div>
-                    ))}
+              {lines.length === 0 ? <p className="faint">Sin medicamentos en la receta.</p> : <ul className="compact-record-list prescription-medications">
+                {lines.map((line, index) => <li key={index}>
+                  <details>
+                    <summary><strong>{index + 1}. {line.medication}</strong><span className="field-hint">{[line.dose, line.frequency, line.duration].filter(Boolean).join(' · ') || 'Pauta sin registrar'}</span></summary>
+                    <dl className="medication-details">{([
+                      ['dose', 'Dosis'], ['route', 'Vía'], ['frequency', 'Frecuencia'], ['duration', 'Duración'],
+                    ] as const).map(([key, label]) => <div key={key}><dt>{label}</dt><dd>{line[key] || <em className="faint">No registrado</em>}</dd></div>)}</dl>
+                    {line.instructions ? <p>Indicaciones específicas registradas: {line.instructions}</p> : null}
+                  </details>
+                  <div className="actions">
+                    <button type="button" className="btn btn-ghost btn-sm" disabled={saving} aria-label={`Editar medicamento ${index + 1}`} onClick={() => setEditingMedication(index)}>Editar</button>
+                    <button type="button" className="btn btn-ghost btn-sm" disabled={saving} aria-label={`Quitar medicamento ${index + 1}`} onClick={() => { changed(); setLines((current) => current.filter((_, i) => i !== index)); }}>Quitar</button>
                   </div>
-                  {lines.length > 1 ? (
-                    <button
-                      type="button"
-                      className="btn btn-ghost btn-sm"
-                      onClick={() => { changed(); setLines((current) => current.filter((_, i) => i !== index)); }}
-                    >
-                      Quitar
-                    </button>
-                  ) : null}
-                </fieldset>
-              ))}
-              {errorFor('lines') ? <div className="field-error">{errorFor('lines')}</div> : null}
-              <button type="button" className="btn btn-ghost btn-sm" disabled={lines.length >= 50} onClick={() => { changed(); setLines((current) => [...current, blankLine()]); }}>
-                Agregar medicamento
-              </button>
+                </li>)}
+              </ul>}
+              {errorFor('lines') ? <div className="field-error" role="alert">{errorFor('lines')}</div> : null}
+              <button type="button" className="btn btn-secondary btn-sm" disabled={saving || lines.length >= 50} onClick={() => setEditingMedication('new')}>Agregar medicamento</button>
             </div>
 
             <div className="field">
               <label htmlFor="document-body">Indicaciones generales</label>
               <textarea
                 id="document-body"
-                rows={4}
+              disabled={saving}
+                rows={3}
                 maxLength={2000}
                 value={body}
                 onChange={(event) => { changed(); setBody(event.target.value); }}
@@ -277,6 +236,7 @@ export function MedicalDocumentForm({
             <label htmlFor="document-body">Texto del informe <span className="required">*</span></label>
             <textarea
               id="document-body"
+              disabled={saving}
               rows={12}
               maxLength={20000}
               required
@@ -311,5 +271,16 @@ export function MedicalDocumentForm({
         </div>
       </section>
     </form>
+    {editingMedication !== null ? <MedicationEditor patientName={patientName}
+      initial={typeof editingMedication === 'number' ? lines[editingMedication] : undefined}
+      initialError={typeof editingMedication === 'number' ? Object.entries(fieldErrors).filter(([key]) => key.startsWith(`lines.${editingMedication}.`)).flatMap(([, errors]) => errors).join(' ') || undefined : undefined}
+      onCancel={() => setEditingMedication(null)}
+      onConfirm={(line) => {
+        changed();
+        setLines((current) => typeof editingMedication === 'number' ? current.map((item, index) => index === editingMedication ? line : item) : [...current, line]);
+        setFieldErrors({});
+        setEditingMedication(null);
+      }} /> : null}
+    </>
   );
 }

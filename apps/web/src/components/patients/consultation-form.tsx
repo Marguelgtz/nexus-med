@@ -266,6 +266,7 @@ export function ConsultationForm({
           </label>
           <input
             id="occurredAt"
+            disabled={saving}
             name="occurredAt"
             type="datetime-local"
             value={occurredAt}
@@ -289,6 +290,7 @@ export function ConsultationForm({
           <label htmlFor="encounterType">Tipo de atención</label>
           <select
             id="encounterType"
+            disabled={saving}
             name="type"
             value={type}
             onChange={(e) => setType(e.target.value as EncounterType)}
@@ -313,6 +315,7 @@ export function ConsultationForm({
             </label>
             <textarea
               id={s.key}
+              disabled={saving}
               name={s.key}
               rows={s.rows}
               maxLength={MAX_CHARS}
@@ -334,8 +337,8 @@ export function ConsultationForm({
             <p className="field-hint">Se guardan y se asocian a esta consulta al guardar la nota.</p>
             {studies.length === 0 ? <p className="faint">Sin solicitudes preparadas.</p> : <ul className="compact-record-list">{studies.map((study, index) => <li key={index}>
               <div><strong>{study.name}</strong><span className="field-hint">{STUDY_CATEGORY_LABELS[study.category]}</span>{study.description ? <p>{study.description}</p> : null}</div>
-              <div className="actions"><button type="button" className="btn btn-ghost btn-sm" aria-label={`Editar estudio ${index + 1}`} onClick={() => setStudyEditor(index)}>Editar</button>
-              <button type="button" className="btn btn-ghost btn-sm" aria-label={`Quitar estudio ${index + 1}`} onClick={() => setStudies((current) => current.filter((_, i) => i !== index))}>Quitar</button></div>
+              <div className="actions"><button type="button" className="btn btn-ghost btn-sm" disabled={saving} aria-label={`Editar estudio ${index + 1}`} onClick={() => setStudyEditor(index)}>Editar</button>
+              <button type="button" className="btn btn-ghost btn-sm" disabled={saving} aria-label={`Quitar estudio ${index + 1}`} onClick={() => setStudies((current) => current.filter((_, i) => i !== index))}>Quitar</button></div>
             </li>)}</ul>}
           </section>
         </> : null}

@@ -50,7 +50,11 @@ Gaps and decisions recorded here (no API/data changes required; per D-017 the AP
 
 /patients                        Registro de pacientes (list + search + filter)
 /patients/new                    Nuevo paciente (create form)
-/patients/[id]                   Resumen del paciente (identity, background, citas card, timeline, actions)
+/patients/[id]                   Resumen del paciente (identity, background, compact pending work)
+/patients/[id]/consultas         Clinical note history
+/patients/[id]/estudios          Patient study requests and review
+/patients/[id]/documentos        Prescriptions/reports
+/patients/[id]/contexto-clinico  Compatibility redirect to overview background
 /patients/[id]/editar            Editar datos del paciente (demographics form)
 /patients/[id]/antecedentes      Editar antecedentes médicos (background form)
 /patients/[id]/citas             Citas del paciente (próximas + historial)
@@ -70,9 +74,9 @@ Navigation rules:
 
 - The primary nav items are **Pacientes** (the registry is the home working screen) and **Calendario** (the schedule at a glance). Everything else is reached through contextual actions on the registry row, the calendar, or the patient overview.
 - Patient-specific screens carry a persistent context strip under the top bar: `← Pacientes` (back link) + patient full name + external identifier (if any) + `Archivado` badge when archived.
-- Encounter screens nest under the patient; back from an encounter returns to the patient overview, not the registry.
+- Encounter screens nest under the patient; back returns to Consultas. Appointment/document forms return to their owning section unless an explicit consultation return context is supplied.
 - URL patterns are the single source of navigation state (shareable, bookmarkable, restorable after restart — US-013).
-- No modals for data entry. The only inline confirmations are archiving (destructive-feeling, one-way) and leaving a form with unsaved changes. O-006 §8 supersedes U-08: dirty consultation notes and staged studies require both unload and in-app navigation protection.
+- D-043 authorizes focused native dialogs for medication entry, consultation studies and follow-up scheduling (§9), superseding the original no-modal convention. Forms retain explicit saves and dirty-close/navigation confirmation; no modal framework or persisted draft is added.
 
 ---
 
@@ -542,7 +546,7 @@ Clicking any action opens an inline panel (complete-flow pattern) with an option
 - Context strip mandatory.
 - `Consulta relacionada` — select, default `Sin consulta relacionada`; options = the patient's encounters (same labeling as 7.1.4).
 - `Título` — optional text (placeholder `Ej. Receta — control de dolor`); printed documents fall back to `Receta`.
-- `Medicamentos` — repeatable rows (pattern of 7.3), starting empty + `Agregar medicamento`. Per row: `Medicamento *` (text) · `Dosis` (text, placeholder `Ej. 500 mg`) · `Vía` (placeholder `Ej. Oral`) · `Frecuencia` (placeholder `Ej. Cada 8 h`) · `Duración` (placeholder `Ej. 5 días`) · `Indicaciones` (placeholder `Ej. Tomar con alimentos`). Only `Medicamento` is required per kept row (server `400` fieldErrors `lines[0].medication` etc.).
+- `Medicamentos` — compact, expandable summaries, starting empty. `Agregar medicamento` and each row’s `Editar` open one native dialog with `Medicamento *`, `Dosis`, `Vía`, `Frecuencia` and `Duración`. Only medication is required. Confirmation updates the in-memory prescription; the complete prescription is saved explicitly. New capture has no per-medication instructions input. Existing stored line instructions remain visible read-only, are preserved in the payload and still print; they are never silently moved into general instructions.
 - `Indicaciones generales` — textarea (optional, ≤ 2,000 chars).
 - No catalog, no dose calculation, no interaction checks, no formulary (mission constraint).
 - Actions: `Guardar receta` (primary) · `Cancelar` (ghost). Success → detail.
@@ -620,24 +624,23 @@ This section is normative for O-006 and supersedes conflicting O-005 layout/inte
 
 ### 8.1 Patient workspace — `/patients/[id]`
 
-The patient workspace has focused URL-driven views (D-042), with one persistent navigation and current-page state. Each route server-renders fresh Hono data using the existing no-store transport; it does not fetch unrelated lists.
+The patient workspace has five focused URL-driven views (D-042/D-043), with one persistent navigation and current-page state. Each route server-renders fresh Hono data using the existing no-store transport; it does not fetch unrelated lists.
 
 | View | Route under `/patients/[id]` | Responsibility |
 |---|---|---|
-| Resumen | `/` | Identity, demographics, direct entry actions, the earliest still-scheduled appointment and count of studies pending review. No complete history, background grid, study list or document list. |
+| Resumen | `/` | Identity, demographics, direct actions, compact pending appointment/study work and the four medical-background fields with edit entry. No full note/study/document list. |
 | Consultas | `/consultas` | One chronological list of clinical notes; create/open consultation. |
 | Citas | `/citas` | Scheduling records and explicit handoff to a new consultation, or to the existing linked note. All still-scheduled records remain visible, even after their scheduled date; a past date never implies completion/cancellation. |
 | Estudios | `/estudios` | Canonical patient-level request/review workflow, including standalone and linked studies. Summary `Solicitar estudio` opens `/estudios?solicitar=1`. |
 | Recetas e informes | `/documentos` | Patient document list and creation entry points; existing individual document and print routes remain. |
-| Antecedentes | `/contexto-clinico` | The four medical-background fields in a 2×2 grid, with edit entry to `/antecedentes`. The historical read URL is retained; no copied recent notes, studies or appointment form. |
 
-The stored appointment is a scheduling record; a consultation is a clinical note and may exist without an appointment. Navigation copy makes that distinction without merging these entities. Legacy overview hashes (`patient-history`, `patient-studies`, `patient-documents`, `patient-background`, individual `study-*`) navigate to the corresponding focused view. Browser back/forward and direct links preserve the selected view. The patient header is composed by `patients/patient-section-header.tsx`; domain components remain the owners of forms, saves and validation.
+The stored appointment is a scheduling record; a consultation is a clinical note and may exist without an appointment. Navigation copy makes that distinction without merging these entities. Legacy history/study/document hashes navigate to the owning view; `patient-background` stays in overview. The former `/contexto-clinico` read URL redirects to overview background; `/antecedentes` remains its edit route. Browser back/forward and direct links preserve the selected view. The patient header is composed by `patients/patient-section-header.tsx`; domain components remain the owners of forms, saves and validation.
 
 Patient-level study review shows the stored status, doctor-entered association (or `Sin consulta asociada`), record-entry time and result notes. Unknown background remains `No registrado`. Allergies/current medication remain visible in consultation safety context because they inform the active note; this contextual summary is not another history list. Clinical state semantics and explicit saving stay as defined in §8.3.
 
 ### 8.2 Consultation workspace — new and saved encounter
 
-On desktop, use a two-column workspace: the seven existing clinical note fields and explicit save action are the primary column; a read-only clinical context pane shows patient identity, allergies, current medications, other background, recent encounter summaries, and pending studies. Open a prior full encounter only on demand, in a secondary panel or stable disclosure; do not fetch every full note eagerly. At narrow widths, place the context in an accessible disclosure above the note. No note field order or clinical meaning changes.
+On desktop, use a two-column workspace with the note as the primary column and allergy/medication safety context plus contextual actions alongside it. New-note entry groups the same seven fields into the three freely selectable presentation stages in §9; saved-note editing remains field-specific. At narrow widths the safety context uses a collapsed native disclosure above the note. Saved-note studies remain reviewable in context. No full historical notes are fetched eagerly and no clinical meaning changes.
 
 The header always names the patient and shows either `Sin cita` or the selected appointment date/type. The appointment entry point is `Atender paciente` on an eligible scheduled appointment. Opening it carries `appointmentId` into the consultation route and must not change appointment state. Saving an encounter also must not complete or link an appointment. After the encounter exists, expose an explicit `Completar cita y enlazar esta consulta` action, with actual duration review; if the doctor declines, leave the appointment as it is. Existing appointment completion/link flows remain available from appointment detail.
 
@@ -674,14 +677,14 @@ This section supersedes conflicting presentation rules in §§5/7/8; clinical be
 ### Responsive interaction and feedback
 
 - Month header spans all seven equal date tracks. Neighboring-month dates are muted without reducing text opacity. Month chips may truncate visually at narrow widths; their full accessible names and day/detail links remain available. Week uses equal columns above 639px and seven chronological full-width day rows below it. No horizontal-scroll calendar is required.
-- Consultation remains note-first in its wide two-column workspace. Context/actions use ordinary page scrolling, with no nested rail scroll. At ≤900px the context starts collapsed and can be expanded with native summary keyboard activation; identity remains in the note header. The responsive subscription supplies a stable collapsed SSR snapshot and expands desktop context after hydration. Other background details remain disclosures.
+- Consultation remains note-first in its wide two-column workspace. Context/actions use ordinary page scrolling, with no nested rail scroll. At ≤900px the context starts collapsed and can be expanded with native summary keyboard activation; identity remains in the note header. The responsive subscription supplies a stable collapsed SSR snapshot and expands desktop context after hydration. Complete background is linked to its overview section.
 - Global `:focus-visible`, skip-to-main navigation, current-page navigation cues, pressed filter buttons, reduced-motion handling and `.sr-only` are shared rules. Do not give independent filter buttons incomplete ARIA tab semantics.
 - Forms expose busy state and preserve explicit save/disabled/error behavior. Appointment failures announce an alert. Embedded document opening focuses its title field; successful save or cancellation returns focus to the encounter action heading. Saved feedback uses success tokens and a polite status. Unknown data and study-state caveats remain explicit.
 
 ### Owner-review refinements — 2026-11-10
 
 - Patient pages share a compact workflow navigation. The active-patient registry exposes `Nueva consulta` directly; a scheduled appointment also exposes `Ver cita` and `Iniciar consulta` at the point of pending work.
-- Focused patient views follow §8.1. `Antecedentes` owns the four-field background grid; `Consultas` owns the timeline with short date, time, encounter-type chip and wrapping reason. The overview shows only demographics and compact pending work. Citas explains its scheduling role and offers direct handoff/note links. Section navigation replaces the visible content instead of scrolling a combined page.
+- Focused patient views follow §8.1. Resumen contains the four-field background grid; Consultas owns the timeline with short date, time, encounter-type chip and wrapping reason. The overview keeps demographics and compact pending work alongside background, with no extra background navigation item. Citas explains its scheduling role and offers direct handoff/note links. Section navigation replaces the visible content instead of scrolling a combined page.
 - Saved consultation edits expose one named field at a time with explicit save/cancel. Study entry opens from `Acciones de esta consulta`, uses one unboxed single-level form with stacked fields in the side column, and states the patient/consultation association before save. Focus returns to the action heading after save/cancel. For `Otro`, doctors enter a required study name and can add optional detail.
 - Mobile month view reduces each date to a compact, selectable cell and presents the selected day's appointments in a readable agenda below the grid. The shared visual tokens use a restrained evergreen and warm-neutral clinical palette; this is provisional, not a final brand decision.
 - The study transport/database contract now separates `name` (2–200 characters) and nullable optional `description` (≤500 characters). A data-preserving SQLite migration maps every prior description into name while retaining identifiers, patient/encounter association, status, result note and timestamps.
@@ -695,6 +698,8 @@ Follow-up scheduling opens the existing appointment form in this dialog from a n
 New consultation entry uses three freely selectable presentation stages: Motivo y antecedentes, Exploración y valoración, and Plan y revisión. All seven clinical fields retain their meaning and optionality; changing stage keeps in-memory text and never submits. The final stage offers a complete-note disclosure and explicit save. Validation selects/focuses the field's stage. Shared labels/order live in `patients/consultation-sections.ts` and also drive saved-note editing.
 
 `Solicitar estudio` is available throughout new-note entry. Its dialog takes category/name/optional detail without an association selector; requests remain explicitly pending until the existing atomic note save creates them with the new encounter. Compact staged rows can be edited or removed before saving. Saved-note study requests use the same native dialog shell and the existing encounter-scoped API; the association statement stays visible. Patient-level Estudios remains the independent request/review view.
+
+Medication entry uses `documents/medication-editor.tsx`, the same dialog shell and the shared prescription-line contract. Close/cancel protects modal edits; confirming only changes the local prescription draft. Each compact row expands for the full medication regimen. The only editable instructions field is `Indicaciones generales`; historical per-line instructions are displayed and preserved. Report entry stays doctor-authored free text. Background is displayed/editable only from Resumen; its former read route is a compatibility redirect.
 
 ### Figma handoff boundary
 

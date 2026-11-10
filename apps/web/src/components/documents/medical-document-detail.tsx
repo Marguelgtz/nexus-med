@@ -80,6 +80,7 @@ export function MedicalDocumentDetail({
         <MedicalDocumentForm
           key={`${document.id}-${document.updatedAt}`}
           patientId={document.patientId}
+          patientName={document.patient.fullName}
           kind={document.kind}
           encounters={encounters}
           initial={document}

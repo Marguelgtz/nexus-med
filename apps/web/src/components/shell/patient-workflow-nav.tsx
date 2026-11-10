@@ -18,7 +18,7 @@ export function PatientWorkflowNav() {
       const destination = hash === '#patient-history' ? '/consultas'
         : hash === '#patient-studies' ? '/estudios'
         : hash === '#patient-documents' ? '/documentos'
-        : hash === '#patient-background' ? '/contexto-clinico'
+
         : hash.startsWith('#study-') ? `/estudios${hash}` : null;
       if (destination) router.replace(`${patientHref}${destination}`);
     };
@@ -32,12 +32,11 @@ export function PatientWorkflowNav() {
   const onDocument = pathname === `${patientHref}/documentos` || pathname.startsWith(`${patientHref}/recetas`) || pathname.startsWith(`${patientHref}/informes`);
   const onNewConsultation = pathname === `${patientHref}/consultas/nueva`;
   const links = [
-    { href: patientHref, label: 'Resumen', active: pathname === patientHref },
+    { href: patientHref, label: 'Resumen', active: pathname === patientHref || pathname === `${patientHref}/antecedentes` || pathname === `${patientHref}/editar` },
     { href: `${patientHref}/consultas`, label: 'Consultas', active: onConsultation },
     { href: `${patientHref}/citas`, label: 'Citas', active: onAppointment },
     { href: `${patientHref}/estudios`, label: 'Estudios', active: pathname === `${patientHref}/estudios` },
     { href: `${patientHref}/documentos`, label: 'Recetas e informes', active: onDocument },
-    { href: `${patientHref}/contexto-clinico`, label: 'Antecedentes', active: pathname === `${patientHref}/contexto-clinico` || pathname === `${patientHref}/antecedentes` },
   ];
 
   return (

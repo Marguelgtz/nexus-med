@@ -54,6 +54,7 @@ export async function NewMedicalDocumentPage({
       <div className="page-head"><h1>{title}</h1></div>
       <MedicalDocumentForm
         patientId={patient.id}
+        patientName={patient.fullName}
         kind={kind}
         encounters={encountersRes.data}
         initialEncounterId={encounterId}

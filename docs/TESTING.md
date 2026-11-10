@@ -6,6 +6,8 @@ Dialog/follow-up milestone: web 39/39, web typecheck and ESLint pass (existing w
 
 Consultation-stage milestone: web typecheck/lint and Chromium checks pass for three stages, retained text/review, custom contextual study, zero requests during stage changes, captured atomic-save payload, simulated 500 retention, simulated cross-stage 400 focus, 320px reflow and saved-note study modal. All final test writes were intercepted. An earlier failed check exposed a Continue/Save DOM-button reuse default-submit bug; separate keyed buttons fixed it. That failed check created exactly two uniquely identified synthetic notes/requests in the local DB. They were backed up and removed with strict fixture/time/association checks; all unrelated table rows matched the pre-cleanup digest and foreign-key checks passed. Final persistence verification uses an isolated fixture DB.
 
+Medication/background milestone: web typecheck/lint and Chromium checks pass for modal create/edit/dirty Escape/focus return, compact two-medication payload, simulated save failure retention, preserved existing per-line instructions, overview-only background, edit/cancel return and former-context redirect. All writes were intercepted. Validation alert selectors were scoped away from Next's route announcer in the harness.
+
 ## Focused patient views — 2026-11-10
 
 The second owner review replaces overview anchor navigation with separate SSR views (D-042). Web tests pass **39/39**; the final Next.js production build, including TypeScript validation, passes; ESLint exits 0 with its existing App Router `pages/` warning. No API/schema/domain code changed, so the historical 113-test API result is not presented as a fresh run.

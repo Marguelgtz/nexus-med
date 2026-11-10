@@ -1698,30 +1698,6 @@ a.timeline-item:hover {
   margin: 0 0 var(--s-3);
 }
 
-.document-line {
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  padding: var(--s-3);
-  margin: 0 0 var(--s-3);
-}
-
-.document-line legend {
-  padding: 0 var(--s-1);
-  color: var(--text-muted);
-  font-size: 13px;
-  font-weight: 600;
-}
-
-.document-line-fields {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0 var(--s-3);
-}
-
-.document-line .field {
-  margin-bottom: var(--s-3);
-}
-
 .medical-document-paper {
   max-width: 850px;
   min-height: 520px;
@@ -1909,10 +1885,6 @@ a.timeline-item:hover {
 
   .medical-document-paper {
     padding: var(--s-4);
-  }
-
-  .document-line-fields {
-    grid-template-columns: 1fr;
   }
 
 }
@@ -2273,7 +2245,7 @@ a.timeline-item:hover {
   overflow-wrap: anywhere;
 }
 
-.patient-background-view h2 {
+.patient-background-section h3 {
   margin: 0;
   font-size: 16px;
 }
@@ -2605,3 +2577,19 @@ body:has(.app-dialog[open]) { overflow: hidden; }
   .consultation-meta-grid { grid-template-columns: minmax(0, 1fr); gap: 0; }
   .compact-record-list > li { flex-direction: column; }
 }
+
+.medication-editor-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 var(--s-3); }
+.medication-field-medication { grid-column: 1 / -1; }
+.prescription-medications > li > details { flex: 1; min-width: 0; }
+.prescription-medications summary { cursor: pointer; }
+.prescription-medications summary .field-hint { margin: var(--s-1) 0 0; }
+.medication-details { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s-2); }
+.medication-details dt { font-size: 13px; color: var(--text-muted); }
+.medication-details dd { margin: 2px 0 0; }
+.patient-background-section { margin-top: var(--s-5); }
+.patient-background-section .page-head { margin-bottom: var(--s-2); }
+.patient-background-section h2 { margin: 0; font-size: 20px; }
+
+.clinical-context-summary > summary { cursor: pointer; font-size: 16px; font-weight: 600; min-height: 28px; }
+.clinical-context-summary .clinical-context-safety { margin-top: var(--s-3); }
+.clinical-context-summary > .text-link { display: inline-block; margin-top: var(--s-3); }
