@@ -302,3 +302,15 @@ Acceptance: unscheduled care remains available; opening a visit never mutates it
 Acceptance: web/API types, tests, lint and build pass; fresh migrations and seed preserve the exact fixtures; repeated startup preserves edits; browser verification covers the primary journeys and responsive/keyboard behavior; no excluded capability or feature merge is introduced.
 
 **Phase exit:** Met. All five work packages are integrated and verified; documentation matches code; PR #7 is open and mergeable against PR #6's documentation branch; unresolved physician questions remain explicit without unsupported clinical assumptions. Owner review is pending; neither PR is merged.
+
+
+## 8. O-007 — UI v0 presentation baseline (owner-authorized)
+
+**Outcome:** Extend the PR #8 research into a coherent working UI for later Figma exploration. Preserve the existing clinical workflows, persistence, Spanish copy, offline/demo behavior and print boundary; no API/schema/dependency expansion.
+
+Sequential work packages:
+- **O007-1 — Baseline and defects:** clear the O-006 follow-up verification gate; resolve audit P0/P1 geometry, contrast, responsive and accessibility issues.
+- **O007-2 — Shared presentation:** consolidate existing tokens, control/button composition and repeated study entry; refine registry, context density and contextual feedback without changing clinical meaning.
+- **O007-3 — Verification and handoff:** verify critical workflows, keyboard/reflow/states/print; compare real screenshots with PR #8; synchronize canonical conventions and Figma boundaries; publish focused commits and a dependent UI PR without merging.
+
+Dependencies: PR #8 on PR #7; implementation follows research. Detailed execution/evidence belongs in `ACTION_PLAN.md` / `TESTING.md`, not this catalog. Acceptance: high-impact audit findings addressed, no known blocking workflow regression, automated gates and representative browser checks pass, screenshots inspected, reviewable pushed implementation with explicit limits. Figma refinement remains a later owner-directed mission.

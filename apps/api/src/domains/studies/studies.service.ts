@@ -33,7 +33,8 @@ interface StudyRow {
   patientId: string;
   encounter: { id: string; occurredAt: Date; reason: string | null } | null;
   category: string;
-  description: string;
+  name: string;
+  description: string | null;
   status: string;
   resultNote: string | null;
   createdAt: Date;
@@ -53,6 +54,7 @@ function toStudyRequest(row: StudyRow): StudyRequest {
       : null,
     // Only ever written through the validated API boundary.
     category: row.category as StudyRequest['category'],
+    name: row.name,
     description: row.description,
     status: row.status as StudyRequest['status'],
     resultNote: row.resultNote,
@@ -141,7 +143,8 @@ async function createStudies(
             patientId,
             ...(encounterId ? { encounterId } : {}),
             category: study.category,
-            description: study.description,
+            name: study.name,
+            description: study.description?.trim() || null,
           },
           include: rowInclude,
         }),

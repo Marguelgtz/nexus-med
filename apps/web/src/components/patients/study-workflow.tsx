@@ -7,10 +7,8 @@ import { useRouter } from 'next/navigation';
 import {
   type CreatePatientStudiesInput,
   type EncounterSummary,
-  type StudyCategory,
   type StudyInput,
   type StudyRequest,
-  studyCategorySchema,
 } from '@nexus-med/contracts';
 
 import {
@@ -21,26 +19,43 @@ import {
 } from '../../lib/api/client';
 import { formatDateTime, STUDY_CATEGORY_LABELS } from '../../lib/format';
 import { StudyStatusBadge } from '../appointments/badges';
+import { Modal } from '../modal';
 import { ErrorBanner } from '../primitives';
+import { StudyFields } from './study-fields';
 import { useBeforeUnloadGuard } from '../../lib/use-before-unload-guard';
 import { hasUnsavedStudyRequest } from '../../lib/study-draft';
 
 type StudyDraft = StudyInput;
 
+function normalizeRows(rows: readonly StudyDraft[]): StudyInput[] {
+  return rows.map((row) => {
+    const description = row.description?.trim();
+    return {
+      category: row.category,
+      name: row.name.trim(),
+      ...(description ? { description } : {}),
+    };
+  });
+}
+
 function StudyCreatePanel({
   patientId,
   encounters,
   encounterId,
+  onSaved,
   onClose,
+  dialogTitle,
 }: {
   patientId: string;
   encounters: EncounterSummary[];
   encounterId?: string;
+  onSaved?: () => void;
   onClose: () => void;
+  dialogTitle?: string;
 }) {
   const router = useRouter();
   const [selectedEncounterId, setSelectedEncounterId] = useState(encounterId ?? '');
-  const [rows, setRows] = useState<StudyDraft[]>([{ category: 'laboratorio', description: '' }]);
+  const [rows, setRows] = useState<StudyDraft[]>([{ category: 'laboratorio', name: '' }]);
   const [error, setError] = useState<string | null>(null);
   const [fieldError, setFieldError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -48,6 +63,7 @@ function StudyCreatePanel({
   useBeforeUnloadGuard(dirty && !saving);
 
   function cancel() {
+    if (saving) return;
     if (dirty && !window.confirm('Hay una solicitud de estudios sin guardar. ¿Descartar los cambios?')) return;
     onClose();
   }
@@ -56,7 +72,7 @@ function StudyCreatePanel({
     event.preventDefault();
     setError(null);
     setFieldError(null);
-    const invalidIndex = rows.findIndex((row) => row.description.trim().length < 2);
+    const invalidIndex = rows.findIndex((row) => row.name.trim().length < 2);
     if (invalidIndex >= 0) {
       setFieldError(`Indica el estudio ${invalidIndex + 1} con al menos 2 caracteres.`);
       return;
@@ -65,15 +81,16 @@ function StudyCreatePanel({
     setSaving(true);
     try {
       if (encounterId) {
-        await createEncounterStudies(encounterId, { studies: rows });
+        await createEncounterStudies(encounterId, { studies: normalizeRows(rows) });
       } else {
         const input: CreatePatientStudiesInput = {
-          studies: rows,
+          studies: normalizeRows(rows),
           ...(selectedEncounterId ? { encounterId: selectedEncounterId } : {}),
         };
         await createPatientStudies(patientId, input);
       }
       router.refresh();
+      onSaved?.();
       onClose();
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'No se pudo guardar la solicitud. Los datos siguen en el formulario.');
@@ -81,8 +98,8 @@ function StudyCreatePanel({
     }
   }
 
-  return (
-    <form className="study-create-panel" onSubmit={submit} noValidate>
+  const form = (
+    <form className="study-create-panel" onSubmit={submit} noValidate aria-busy={saving}>
       {encounterId ? (
         <p className="field-hint">La solicitud quedará asociada a esta consulta y al paciente actual.</p>
       ) : (
@@ -108,50 +125,17 @@ function StudyCreatePanel({
         <span className="section-label">Estudios</span>
         <div className="study-form-rows">
           {rows.map((row, index) => (
-            <div className="study-form-row" key={index}>
-              <label className="sr-only" htmlFor={`patient-study-category-${index}`}>Categoría</label>
-              <select
-                id={`patient-study-category-${index}`}
-                value={row.category}
-                onChange={(event) =>
-                  setRows((current) => current.map((item, rowIndex) =>
-                    rowIndex === index ? { ...item, category: event.target.value as StudyCategory } : item,
-                  ))
-                }
-              >
-                {studyCategorySchema.options.map((category) => (
-                  <option key={category} value={category}>{STUDY_CATEGORY_LABELS[category]}</option>
-                ))}
-              </select>
-              <label className="sr-only" htmlFor={`patient-study-description-${index}`}>Descripción del estudio</label>
-              <input
-                id={`patient-study-description-${index}`}
-                value={row.description}
-                maxLength={200}
-                placeholder="Ej. Biometría hemática"
-                onChange={(event) =>
-                  setRows((current) => current.map((item, rowIndex) =>
-                    rowIndex === index ? { ...item, description: event.target.value } : item,
-                  ))
-                }
-              />
-              {rows.length > 1 ? (
-                <button
-                  type="button"
-                  className="btn btn-ghost btn-sm"
-                  onClick={() => setRows((current) => current.filter((_, rowIndex) => rowIndex !== index))}
-                >
-                  Quitar
-                </button>
-              ) : null}
-            </div>
+            <StudyFields key={index} value={row} index={index}
+              onChange={(value) => setRows((current) => current.map((item, rowIndex) => rowIndex === index ? value : item))}
+              onRemove={rows.length > 1 ? () => setRows((current) => current.filter((_, rowIndex) => rowIndex !== index)) : undefined}
+            />
           ))}
         </div>
         {fieldError ? <div className="field-error" role="alert">{fieldError}</div> : null}
         <button
           type="button"
           className="btn btn-ghost btn-sm"
-          onClick={() => setRows((current) => [...current, { category: 'laboratorio', description: '' }])}
+          onClick={() => setRows((current) => [...current, { category: 'laboratorio', name: '' }])}
         >
           Agregar otro estudio
         </button>
@@ -167,6 +151,34 @@ function StudyCreatePanel({
         </button>
       </div>
     </form>
+  );
+  return dialogTitle ? <Modal title={dialogTitle} onClose={cancel} closeDisabled={saving}>{form}</Modal> : form;
+}
+
+export function EncounterStudyRequestForm({
+  patientId,
+  encounterId,
+  encounters,
+  patientName,
+  onSaved,
+  onClose,
+}: {
+  patientId: string;
+  encounterId: string;
+  patientName: string;
+  encounters: EncounterSummary[];
+  onSaved?: () => void;
+  onClose: () => void;
+}) {
+  return (
+    <StudyCreatePanel
+      patientId={patientId}
+      dialogTitle={`Solicitar estudio · ${patientName}`}
+      encounterId={encounterId}
+      encounters={encounters}
+      onSaved={onSaved}
+      onClose={onClose}
+    />
   );
 }
 
@@ -213,7 +225,7 @@ function StudyReviewActions({ study }: { study: StudyRequest }) {
         </button>
       ))}
       {target ? (
-        <div className="study-review-panel">
+        <div className="study-review-panel" aria-busy={saving}>
           <div className="field">
             <label htmlFor={`study-note-${study.id}`}>Nota del médico sobre el resultado (opcional)</label>
             <textarea
@@ -245,7 +257,11 @@ function StudyItem({ study, patientId }: { study: StudyRequest; patientId: strin
     <li className="patient-study-item" id={`study-${study.id}`}>
       <div className="patient-study-head">
         <div>
-          <strong>{STUDY_CATEGORY_LABELS[study.category]} · {study.description}</strong>
+          <div className="study-item-title">
+            <span className="study-category-label">{STUDY_CATEGORY_LABELS[study.category]}</span>
+            <strong>{study.name}</strong>
+            {study.description ? <p className="study-description">{study.description}</p> : null}
+          </div>
           <p className="field-hint">Registrada {formatDateTime(study.createdAt)}</p>
           <p className="field-hint">
             {study.encounter ? (
@@ -274,27 +290,28 @@ export function PatientStudyWorkflow({
   patientId,
   studies,
   encounters,
+  initiallyCreating = false,
 }: {
   patientId: string;
   studies: StudyRequest[];
   encounters: EncounterSummary[];
+  initiallyCreating?: boolean;
 }) {
-  const [showCreate, setShowCreate] = useState(false);
+  const [showCreate, setShowCreate] = useState(initiallyCreating);
   return (
     <section className="card" id="patient-studies" aria-labelledby="patient-studies-title">
       <div className="card-header">
         <h2 id="patient-studies-title">Estudios del paciente</h2>
-        {showCreate ? (
-          <span className="field-hint">Solicitud en curso. Usa Cancelar para cerrar.</span>
-        ) : (
+        {!showCreate ? (
           <button type="button" className="btn btn-primary btn-sm" onClick={() => setShowCreate(true)}>
             Solicitar estudio
           </button>
-        )}
+        ) : null}
       </div>
       <p className="study-status-caveat">
-        La app conserva el estado Completada de O-005. No registra por separado si el estudio se realizó o cuándo llegó el resultado.
+        “Completada” no confirma que el estudio se realizó ni cuándo se recibió un resultado.
       </p>
+      {showCreate ? <p className="study-request-active" role="status">Solicitud sin guardar</p> : null}
       {showCreate ? (
         <StudyCreatePanel patientId={patientId} encounters={encounters} onClose={() => setShowCreate(false)} />
       ) : null}
@@ -311,41 +328,19 @@ export function PatientStudyWorkflow({
 
 export function EncounterStudyWorkflow({
   patientId,
-  encounterId,
-  encounters,
   studies,
 }: {
   patientId: string;
-  encounterId: string;
-  encounters: EncounterSummary[];
   studies: StudyRequest[];
 }) {
-  const [showCreate, setShowCreate] = useState(false);
-  const encounter = encounters.find((item) => item.id === encounterId);
-
   return (
     <section className="card" aria-labelledby="encounter-studies-title">
       <div className="card-header">
         <h2 id="encounter-studies-title">Estudios de esta consulta</h2>
-        {showCreate ? (
-          <span className="field-hint">Solicitud en curso. Usa Cancelar para cerrar.</span>
-        ) : (
-          <button type="button" className="btn btn-secondary btn-sm" onClick={() => setShowCreate(true)}>
-            Agregar estudio
-          </button>
-        )}
       </div>
       <p className="study-status-caveat">
-        La app conserva el estado Completada de O-005. No registra por separado si el estudio se realizó o cuándo llegó el resultado.
+        “Completada” no confirma que el estudio se realizó ni cuándo se recibió un resultado.
       </p>
-      {showCreate ? (
-        <StudyCreatePanel
-          patientId={patientId}
-          encounters={encounters}
-          encounterId={encounterId}
-          onClose={() => setShowCreate(false)}
-        />
-      ) : null}
       {studies.length === 0 ? (
         <p className="faint">Esta consulta no tiene estudios registrados.</p>
       ) : (
@@ -355,7 +350,6 @@ export function EncounterStudyWorkflow({
           ))}
         </ul>
       )}
-      {encounter ? <p className="field-hint">Los estudios nuevos quedarán vinculados a la consulta del {formatDateTime(encounter.occurredAt)}.</p> : null}
     </section>
   );
 }

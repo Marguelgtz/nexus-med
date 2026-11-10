@@ -20,6 +20,7 @@ import {
   isValidCalendarDate,
   practiceToday,
   startOfMonth,
+  sameMonth,
   weekDays,
 } from '../../lib/format';
 
@@ -71,13 +72,20 @@ function stepDate(vista: Vista, fecha: string, dir: -1 | 1): string {
 export default async function CalendarPage({
   searchParams,
 }: {
-  searchParams: Promise<{ vista?: string; fecha?: string }>;
+  searchParams: Promise<{ vista?: string; fecha?: string; dia?: string }>;
 }) {
-  const { vista: vistaParam, fecha: fechaParam } = await searchParams;
+  const { vista: vistaParam, fecha: fechaParam, dia: dayParam } = await searchParams;
   const vista: Vista = VISTAS.includes(vistaParam as Vista) ? (vistaParam as Vista) : 'semana';
   const today = practiceToday();
   if (fechaParam !== undefined && !isValidCalendarDate(fechaParam)) notFound();
   const fecha = fechaParam ?? today;
+  const selectedDay = vista === 'mes'
+    ? dayParam && isValidCalendarDate(dayParam) && sameMonth(dayParam, fecha)
+      ? dayParam
+      : sameMonth(today, fecha)
+        ? today
+        : startOfMonth(fecha)
+    : undefined;
   const label = labelForVista(vista, fecha);
   const hoyHref = `/calendar?vista=${vista}&fecha=${today}`;
 
@@ -118,6 +126,7 @@ export default async function CalendarPage({
               <Link
                 key={v}
                 href={`/calendar?vista=${v}&fecha=${fecha}`}
+                aria-current={v === vista ? 'page' : undefined}
                 className={`btn btn-sm ${v === vista ? 'btn-secondary active-toggle' : 'btn-ghost'}`}
               >
                 {v === 'dia' ? 'Día' : v === 'semana' ? 'Semana' : 'Mes'}
@@ -125,13 +134,13 @@ export default async function CalendarPage({
             ))}
           </div>
           <div className="cal-nav">
-            <Link href={`/calendar?vista=${vista}&fecha=${stepDate(vista, fecha, -1)}`} className="btn btn-ghost btn-sm">
+            <Link href={`/calendar?vista=${vista}&fecha=${stepDate(vista, fecha, -1)}`} aria-label="Periodo anterior" className="btn btn-ghost btn-sm">
               ‹
             </Link>
             <Link href={hoyHref} className="btn btn-ghost btn-sm">
               Hoy
             </Link>
-            <Link href={`/calendar?vista=${vista}&fecha=${stepDate(vista, fecha, 1)}`} className="btn btn-ghost btn-sm">
+            <Link href={`/calendar?vista=${vista}&fecha=${stepDate(vista, fecha, 1)}`} aria-label="Periodo siguiente" className="btn btn-ghost btn-sm">
               ›
             </Link>
           </div>
@@ -143,7 +152,7 @@ export default async function CalendarPage({
       ) : vista === 'semana' ? (
         <WeekView fecha={fecha} appointments={appointments} />
       ) : (
-        <MonthView fecha={fecha} appointments={appointments} />
+        <MonthView fecha={fecha} appointments={appointments} selectedDay={selectedDay ?? fecha} />
       )}
     </>
   );

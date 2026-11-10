@@ -25,16 +25,27 @@ const TABS: { value: 'active' | 'archived' | 'all'; label: string }[] = [
 function PatientRow({ patient }: { patient: PatientSummary }) {
   const age = formatAge(patient.dateOfBirth);
   return (
-    <Link href={`/patients/${patient.id}`} className="row">
-      <span className="main">{patient.fullName}</span>
-      <span className="cell">{age !== null ? `${age} años` : '—'}</span>
-      <span className="cell mono">{patient.externalIdentifier ?? '—'}</span>
-      <span style={{ marginLeft: 'auto' }}>
-        {patient.isArchived ? (
-          <span className="badge badge-archived">Archivado</span>
+    <article className="row registry-row">
+      <Link href={`/patients/${patient.id}`} className="registry-person">
+        <span className="main">{patient.fullName}</span>
+        <span className="cell">{age !== null ? `${age} años` : '—'}</span>
+        <span className="cell mono">{patient.externalIdentifier ?? '—'}</span>
+        <span className="registry-state">
+          {patient.isArchived ? <span className="badge badge-archived">Archivado</span> : null}
+        </span>
+      </Link>
+      <div className="registry-actions">
+        {!patient.isArchived ? (
+          <Link
+            href={`/patients/${patient.id}/consultas/nueva`}
+            className="btn btn-secondary btn-sm"
+            aria-label={`Nueva consulta para ${patient.fullName}`}
+          >
+            Nueva consulta
+          </Link>
         ) : null}
-      </span>
-    </Link>
+      </div>
+    </article>
   );
 }
 
@@ -140,12 +151,11 @@ export function PatientRegistry({ initialPatients }: { initialPatients: PatientS
         />
       </div>
 
-      <div className="segmented" role="tablist" aria-label="Filtrar por estado">
+      <div className="segmented" role="group" aria-label="Filtrar por estado">
         {TABS.map((tab) => (
           <button
             key={tab.value}
-            role="tab"
-            aria-selected={status === tab.value}
+            aria-pressed={status === tab.value}
             className={status === tab.value ? 'active' : undefined}
             onClick={() => onTab(tab.value)}
           >

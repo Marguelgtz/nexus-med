@@ -8,5 +8,5 @@ export function hasUnsavedStudyRequest(
 ): boolean {
   return selectedEncounterId !== (initialEncounterId ?? '') ||
     rows.length !== 1 ||
-    rows.some((row) => row.category !== 'laboratorio' || row.description.length > 0);
+    rows.some((row) => row.category !== 'laboratorio' || row.name.length > 0 || Boolean(row.description?.length));
 }

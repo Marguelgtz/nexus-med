@@ -131,6 +131,8 @@ describe('idempotent demo seed', () => {
     expect(ordered).not.toBeNull();
     expect(ordered!.patientId).toBe('demo-patient-002');
     expect(ordered!.encounterId).toBe('demo-encounter-002b');
+    expect(ordered!.name).toBe('Biometría hemática');
+    expect(ordered!.description).toBeNull();
     expect(ordered!.status).toBe('ordered');
     expect(ordered!.resultNote).toBeNull();
     // Deterministic seeded timestamp (see SEEDED_AT).
@@ -200,14 +202,14 @@ describe('idempotent demo seed', () => {
   it('keeps user edits to seeded records', async () => {
     await prisma.patient.update({
       where: { id: 'demo-patient-001' },
-      data: { fullName: 'DEMO — Paciente 001 (editado por el usuario)' },
+      data: { fullName: 'Juan Pérez (editado por el usuario)' },
     });
 
     const result = await idempotentSeed(prisma);
     expect(result.patientsCreated).toBe(0);
 
     const patient = await prisma.patient.findUnique({ where: { id: 'demo-patient-001' } });
-    expect(patient?.fullName).toBe('DEMO — Paciente 001 (editado por el usuario)');
+    expect(patient?.fullName).toBe('Juan Pérez (editado por el usuario)');
   });
 
   it('keeps user-created records and does not touch them', async () => {

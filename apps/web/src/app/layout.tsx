@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 
 import { DemoBanner } from '../components/shell/demo-banner';
+import { PatientWorkflowNav } from '../components/shell/patient-workflow-nav';
 import { TopBar } from '../components/shell/top-bar';
 
 import './globals.css';
@@ -17,10 +18,16 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="es">
       <body>
+        <a href="#main-content" className="skip-link">Ir al contenido</a>
         <TopBar />
         <DemoBanner />
         <div className="container">
-          <main>{children}</main>
+          <main id="main-content" tabIndex={-1}>
+            <div className="patient-workspace-shell">
+              <PatientWorkflowNav />
+              <div className="patient-workspace-content">{children}</div>
+            </div>
+          </main>
         </div>
       </body>
     </html>

@@ -97,7 +97,7 @@ Rules:
 3. The form is created in the selected patient context.
 4. Patient identity remains visible.
 5. Encounter date/time defaults sensibly and is editable.
-6. Doctor selects an encounter type (default `consulta`), records the clinical sections, and may add zero or more `Estudios solicitados` rows (category + description).
+6. Doctor selects an encounter type (default `consulta`), records the clinical sections, and may add zero or more `Estudios solicitados` rows (category + required study name, plus optional detail for `Otro`).
 7. Doctor selects **Guardar consulta**.
 8. Hono validates the input and persists the encounter and initial studies in one transaction.
 9. Next.js refreshes the relevant patient view and displays the saved encounter in the timeline.
@@ -183,7 +183,7 @@ Overlaps are allowed but visibly signaled, not resolved automatically. Appointme
 
 ## 12. O-005 study-request workflow (baseline behavior)
 
-1. From **Nueva consulta**, add zero or more study rows with category and description.
+1. From **Nueva consulta**, add zero or more study rows with category and required name; `Otro` also allows optional additional detail.
 2. Saving a **new** encounter creates those study requests atomically, initially `ordered`.
 3. From encounter detail mark a study `completed` or `reviewed` and optionally write a doctor-authored result note; `ordered → reviewed` directly is allowed.
 4. Patient overview lists both `ordered` and `completed` studies until they reach `reviewed`; each row shows its current status and links to the originating encounter. Reviewed studies leave the overview card but remain on encounter detail.
@@ -194,7 +194,7 @@ Overlaps are allowed but visibly signaled, not resolved automatically. Appointme
 
 ## 13. Printable documents (NX-004)
 
-The doctor can create a prescription with repeatable free-text medication lines or a report with a free-text narrative from the patient overview. Each document belongs to one patient and may link to one of that patient's encounters. The detail view supports editing and presents the same paper card sent to the browser print dialog. Print output contains the persistent fictional-data marker and no invented provider or legal information. Document content persists through reloads; failed validation preserves form values. The screen explains that printing is local and is not a certified electronic prescription. Uploads and stored PDFs are excluded.
+The doctor can create a prescription using individual medication dialogs and expandable summary rows, or a report with a free-text narrative. The prescription has one general-instructions capture field; stored per-line instructions remain visible and preserved when editing/printing. Each document belongs to one patient and may link to one of that patient's encounters. The detail view supports editing and presents the same paper card sent to the browser print dialog. Print output contains the persistent fictional-data marker and no invented provider or legal information. Document content persists through reloads; failed validation preserves form values. The screen explains that printing is local and is not a certified electronic prescription. Uploads and stored PDFs are excluded.
 
 ## 14. Original MVP user story coverage
 
@@ -226,7 +226,7 @@ Every product story must have observable acceptance criteria. If implementation 
 ### 15.1 Prepare and document a consultation
 
 1. From a patient, start an unscheduled consultation or select **Atender paciente** from an eligible scheduled appointment. Keep patient identity and appointment context visible. Opening the appointment does not complete or link it.
-2. In the consultation workspace, keep the existing seven note sections and explicit save. On desktop show the note beside read-only safety context (allergies and current medications first), background, recent encounter summaries, and pending studies. On narrow screens expose context through a keyboard-accessible disclosure.
+2. In the consultation workspace, keep the existing seven note sections in three freely selectable presentation stages and an explicit final save. Stage changes never submit or discard content. On desktop show the note beside read-only safety context (allergies and current medications first), background, recent encounter summaries, and pending studies. On narrow screens expose context through a keyboard-accessible disclosure.
 3. Load a previous full note only after the doctor asks to open it. Never infer, copy, or generate clinical facts.
 4. Keep staged studies in an unsaved queue. The note and studies are created atomically. On a recoverable save failure, preserve all entered text and staged rows.
 5. Warn before an in-app link, history navigation, or unload would discard dirty consultation text or staged rows. Do not autosave or persist drafts.
@@ -234,7 +234,7 @@ Every product story must have observable acceptance criteria. If implementation 
 
 ### 15.2 Order and review studies
 
-Study requests belong to a patient and may have no encounter or one immutable same-patient encounter. Use the patient route for a standalone request, the existing encounter route for adding to a saved encounter, and nested encounter creation for staged rows. An optional encounter is preselected only when the workflow has a saved encounter in context.
+Study requests belong to a patient and may have no encounter or one immutable same-patient encounter. Use Estudios for a standalone request, the encounter-scoped request dialog for a saved encounter, and the contextual study dialog plus nested encounter creation for a new note. New/saved encounter dialogs require no manual association selection. An optional encounter is preselected only when the workflow has a saved encounter in context.
 
 Keep existing categories, statuses, legal transitions, and result-note behavior until physician validation. Both `ordered` and `completed` remain pending until `reviewed`. Display `createdAt` as record-entry time only for standalone requests. State that `completed` does not separately tell the doctor whether the study was performed or when a result arrived. Do not add source/order-time fields, event dates, appointment/procedure links, editing/reassociation, delete, or automatic interpretation.
 
@@ -242,8 +242,12 @@ The patient workspace shows linked and standalone studies, current stored status
 
 ### 15.3 Create related records and return
 
-From a saved encounter, open the existing prescription, report, or new-appointment form with patient context preserved. Prefill the encounter association for documents. After a successful save, return to that encounter. A new unsaved encounter cannot create a linked document; keep the note on screen and explain the save checkpoint. A follow-up appointment is an ordinary appointment and is not silently linked to or used to complete an encounter.
+From a saved encounter, open the existing prescription/report form or a follow-up appointment dialog with patient context preserved. Follow-up can also be scheduled in a dialog while a new note remains mounted and unsaved. Prefill the encounter association for documents. After a successful save, return to that encounter. A new unsaved encounter cannot create a linked document; keep the note on screen and explain the save checkpoint. A follow-up appointment is an ordinary appointment and is not silently linked to or used to complete an encounter.
 
 ### 15.4 Focus the patient workspace
 
-Order the patient workspace as identity and direct actions, safety context, compact next appointment/study-review work, recent clinical activity, then full encounter/appointment/study/document history. Show the next scheduled visit and unreviewed studies only when present. Keep the existing registry, calendar, document, print, and chronological history routes available. Do not add a global task dashboard or staff-role behavior.
+Use one patient navigation with five focused views: Resumen, Consultas, Citas, Estudios, and Recetas e informes (D-042/D-043; route responsibilities in `UI_SPEC.md` §8.1). Selecting one replaces the visible workflow. Resumen contains demographics, compact pending attention and the four background fields, without full note/study/document histories. Background has no navigation item.
+
+A cita reserves/plans attention and carries its scheduling state; a consulta documents clinical attention and may exist without a cita. In Citas, start a note from an unlinked scheduled appointment or open the linked note. A scheduled date in the past stays visible as still scheduled, without inferred attendance/cancellation. Opening or saving a note never completes/links the cita automatically.
+
+Consultas owns the chronological note list; Resumen owns background and its edit entry, with no repeated recent notes/studies/scheduling form. The old clinical-context read URL redirects to overview background. Consultation safety context still shows allergies/current medication while documenting care. Default form/detail returns stay in their owning section; explicit return-to-consultation paths remain intact. Legacy overview bookmarks route to the corresponding focused view. Navigation keeps the existing unsaved-change confirmation and preserves entered text when the doctor cancels leaving.

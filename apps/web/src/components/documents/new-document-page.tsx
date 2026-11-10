@@ -48,12 +48,13 @@ export async function NewMedicalDocumentPage({
         fullName={patient.fullName}
         externalIdentifier={patient.externalIdentifier}
         isArchived={patient.isArchived}
-        backHref={returnTo ?? `/patients/${patient.id}`}
-        backLabel={returnTo ? 'Volver a consulta' : 'Ver paciente'}
+        backHref={returnTo ?? `/patients/${patient.id}/documentos`}
+        backLabel={returnTo ? 'Volver a consulta' : 'Recetas e informes'}
       />
       <div className="page-head"><h1>{title}</h1></div>
       <MedicalDocumentForm
         patientId={patient.id}
+        patientName={patient.fullName}
         kind={kind}
         encounters={encountersRes.data}
         initialEncounterId={encounterId}

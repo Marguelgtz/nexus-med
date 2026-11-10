@@ -2,13 +2,10 @@
 // mandatory — the doctor always sees whose note they are writing.
 
 import { notFound } from 'next/navigation';
-import { z } from 'zod';
 
 import {
   appointmentSchema,
-  encounterSummarySchema,
   patientDetailSchema,
-  studyRequestSchema,
   type Appointment,
 } from '@nexus-med/contracts';
 
@@ -27,17 +24,9 @@ export default async function NewConsultationPage({
 }) {
   const [{ id }, query] = await Promise.all([params, searchParams]);
   const appointmentId = Array.isArray(query.appointmentId) ? query.appointmentId[0] : query.appointmentId;
-  const pendingStudyQuery = new URLSearchParams();
-  pendingStudyQuery.append('status', 'ordered');
-  pendingStudyQuery.append('status', 'completed');
 
-  const [patientRes, encountersRes, studiesRes, appointmentRes] = await Promise.all([
+  const [patientRes, appointmentRes] = await Promise.all([
     fetchServer(`/api/patients/${encodeURIComponent(id)}`, patientDetailSchema),
-    fetchServer(`/api/patients/${encodeURIComponent(id)}/encounters`, z.array(encounterSummarySchema)),
-    fetchServer(
-      `/api/patients/${encodeURIComponent(id)}/studies?${pendingStudyQuery.toString()}`,
-      z.array(studyRequestSchema),
-    ),
     appointmentId
       ? fetchServer(`/api/appointments/${encodeURIComponent(appointmentId)}`, appointmentSchema)
       : Promise.resolve(null),
@@ -52,15 +41,6 @@ export default async function NewConsultationPage({
       </>
     );
   }
-  if (!encountersRes.ok) {
-    if (encountersRes.notFound) notFound();
-    return <ErrorBanner message={encountersRes.error} retryHref={`/patients/${id}/consultas/nueva`} />;
-  }
-  if (!studiesRes.ok) {
-    if (studiesRes.notFound) notFound();
-    return <ErrorBanner message={studiesRes.error} retryHref={`/patients/${id}/consultas/nueva`} />;
-  }
-
   const patient = patientRes.data;
   let appointment: Appointment | null = null;
   if (appointmentRes) {
@@ -82,8 +62,6 @@ export default async function NewConsultationPage({
 
       <ConsultationForm
         patient={patient}
-        encounters={encountersRes.data}
-        pendingStudies={studiesRes.data}
         appointment={appointment}
       />
     </>

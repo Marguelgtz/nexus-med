@@ -113,7 +113,8 @@ export async function createEncounter(
           encounterId: encounter.id,
           patientId,
           category: study.category,
-          description: study.description,
+          name: study.name,
+          description: study.description?.trim() || null,
         },
       });
     }

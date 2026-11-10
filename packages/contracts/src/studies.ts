@@ -5,7 +5,7 @@
 // defines whether `completed` means performed or result available.
 //
 // `category` is a fixed list (Q-NX-02: to be confirmed with the doctor);
-// `description` carries the specific study (e.g. "Biometría hemática").
+// `name` carries the specific study; `description` is optional additional detail.
 
 import { z } from 'zod';
 
@@ -39,7 +39,10 @@ export const listPatientStudiesQuerySchema = z
 export type ListPatientStudiesQuery = z.infer<typeof listPatientStudiesQuerySchema>;
 
 /** The specific study, in the doctor's words (≤ 200 chars). */
-export const studyDescriptionSchema = z.string().trim().min(2).max(200);
+export const studyNameSchema = z.string().trim().min(2).max(200);
+
+/** Optional additional detail about the requested study (≤ 500 chars). */
+export const studyDetailsSchema = z.string().trim().max(500);
 
 /** The doctor's observation about the result — verbatim, never an
  * interpretation (≤ 1,000 chars). */
@@ -61,7 +64,8 @@ export const studyRequestSchema = z.object({
   patientId: idSchema,
   encounter: studyEncounterSchema.nullable(),
   category: studyCategorySchema,
-  description: studyDescriptionSchema,
+  name: studyNameSchema,
+  description: studyDetailsSchema.nullable(),
   status: studyStatusSchema,
   resultNote: studyResultNoteSchema.nullable(),
   createdAt: isoDateTimeSchema,
@@ -73,7 +77,8 @@ export type StudyRequest = z.infer<typeof studyRequestSchema>;
 export const studyInputSchema = z
   .object({
     category: studyCategorySchema,
-    description: studyDescriptionSchema,
+    name: studyNameSchema,
+    description: studyDetailsSchema.optional(),
   })
   .strict();
 export type StudyInput = z.infer<typeof studyInputSchema>;

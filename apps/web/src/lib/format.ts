@@ -23,6 +23,23 @@ const dateTimeFmt = new Intl.DateTimeFormat('es-MX', {
   timeZone: PRACTICE_TIMEZONE,
 });
 
+const shortDateFmt = new Intl.DateTimeFormat('es-MX', {
+  day: 'numeric',
+  month: 'short',
+  year: 'numeric',
+  timeZone: PRACTICE_TIMEZONE,
+});
+
+const shortDateTimeFmt = new Intl.DateTimeFormat('es-MX', {
+  day: 'numeric',
+  month: 'short',
+  year: 'numeric',
+  hour: '2-digit',
+  minute: '2-digit',
+  hourCycle: 'h23',
+  timeZone: PRACTICE_TIMEZONE,
+});
+
 /**
  * Current calendar date (year/month/day, 1-indexed month) as seen in the
  * practice timezone, so age is computed against the practice's "today",
@@ -57,6 +74,22 @@ export function formatDateTime(value: string | null): string {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
   return dateTimeFmt.format(date);
+}
+
+/** Compact timeline timestamp, e.g. "8 nov 2026, 10:30" in practice time. */
+export function formatShortDateTime(value: string | null): string {
+  if (!value) return 'No registrado';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return shortDateTimeFmt.format(date).replace(/\sde\s/g, ' ');
+}
+
+/** Compact date-only form for timeline hierarchy; full date remains in title. */
+export function formatShortDate(value: string | null): string {
+  if (!value) return 'No registrado';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return shortDateFmt.format(date).replace(/\sde\s/g, ' ');
 }
 
 /** Age in completed years from a `YYYY-MM-DD` birth date (never stored). */

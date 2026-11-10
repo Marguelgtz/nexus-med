@@ -88,7 +88,7 @@ export function BackgroundForm({
     setSaving(true);
     try {
       await updateMedicalBackground(patientId, candidate);
-      router.push(`/patients/${patientId}`);
+      router.push(`/patients/${patientId}#patient-background`);
       router.refresh();
     } catch (err) {
       if (err instanceof ApiError && Object.keys(err.fieldErrors).length > 0) {
@@ -133,7 +133,7 @@ export function BackgroundForm({
         <button type="submit" className="btn btn-primary" disabled={saving}>
           {saving ? 'Guardando…' : 'Guardar antecedentes'}
         </button>
-        <Link href={`/patients/${patientId}`} className="btn btn-ghost">
+        <Link href={`/patients/${patientId}#patient-background`} className="btn btn-ghost">
           Cancelar
         </Link>
       </div>

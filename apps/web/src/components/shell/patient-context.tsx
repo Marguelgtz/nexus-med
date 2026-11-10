@@ -2,8 +2,8 @@ import Link from 'next/link';
 
 import { Badge } from '../primitives';
 
-// Patient context strip (UI_SPEC §2): every patient-specific screen
-// identifies the active patient and offers the back link.
+// Patient identity strip (UI_SPEC §2): patient-specific pages always keep
+// the active patient visible and provide a clear route back.
 export function PatientContext({
   fullName,
   externalIdentifier,

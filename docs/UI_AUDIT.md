@@ -1,8 +1,44 @@
 # O-007 — UI visual audit
 
-**Date:** 2026-11-09. **Baseline:** `feat/o006-clinical-workflows`, `30eafd1` (PR #7 including follow-up `9811192`). **Status:** research handoff; no approved design, implementation specification, or UI v0 implementation.
+**Date:** 2026-11-09. **Baseline:** `feat/o006-clinical-workflows`, `30eafd1` (PR #7 including follow-up `9811192`). **Status at PR #8 research completion:** research handoff; no approved design, implementation specification, or UI v0 implementation.
 
-**Assessment:** The current interface supports the intended clinical workflows, but is not yet a credible visual baseline for Figma. Calendar geometry, overflowing history, and malformed study-entry rows require attention before aesthetic refinement can be judged fairly. The existing shell and O-006 workflow structure are worth preserving.
+**Assessment at PR #8 research completion:** The interface supported the intended clinical workflows, but was not yet a credible visual baseline for Figma. Calendar geometry, overflowing history, and malformed study-entry rows required attention before aesthetic refinement could be judged fairly. The existing shell and O-006 workflow structure were worth preserving.
+
+## UI v0 implementation follow-up — 2026-11-09
+
+The original findings/evidence below remain historical PR #8 research. The owner subsequently authorized implementation on `feat/o007-ui-foundation`. Current presentation rules are in `UI_SPEC.md` §9; final evidence/limits are in [the UI v0 inventory](assets/ui-v0/README.md) and `TESTING.md`.
+
+| Findings | Implementation disposition |
+|---|---|
+| UI-01 / UI-04 / UI-05 | Month header spans seven equal tracks; week uses equal wide columns and chronological full-width mobile days. Measured alignment and reflow pass. |
+| UI-02 | Timeline reasons are block-level wrapping text. Exact fixture pages fit narrow screens. |
+| UI-03 / UI-08 | One shared study row with visible labels and flexible tracks; mobile fields stack at full width. |
+| UI-06 | Darker faint/warning/success tokens and control borders; no opacity-based cancellation/month text. Focused contrast evidence recorded in testing. |
+| UI-07 / UI-10 | Narrow context starts collapsed; context/actions use page scrolling. Embedded document launch focuses the editor and returns focus after save/cancel. |
+| UI-09 / UI-11 | One control styling rule, stable button variants, wrapping actions, named previous/next navigation and current-page cues. |
+| UI-12 | Registry metadata aligns in stable wide columns and stacks at narrow widths; physician scanning study remains unperformed. |
+| UI-13 | Restrained spacing, radius and badge refinement is provisional. Final visual preference and branding remain for later Figma/owner review. |
+
+This is a verified implementation disposition, not a claim of complete accessibility certification or physician validation.
+
+## Owner review refinements — 2026-11-10
+
+The owner then reviewed the running application and requested faster workflow entry, less crowded encounter editing, a dedicated clinical-context page, a clearer `Otro` study name, and a more current visual direction. These refinements extend the initial implementation disposition above.
+
+| Owner observation | Follow-up disposition |
+|---|---|
+| Start consultation directly from a patient; show actions beside pending appointments | Registry rows and patient overview provide direct `Nueva consulta`; pending appointments expose `Ver cita` and `Iniciar consulta`. Patient workflow navigation switches focused views instead of overview anchors (D-042). |
+| Put patient context on a full page and keep four important background fields together | `Antecedentes` (`/patients/[id]/contexto-clinico`) presents allergies, current medication, conditions and prior surgeries in a two-by-two grid; recent notes, studies and scheduling are confined to their owning views after the second owner review. Unknown remains distinct from negative. |
+| Make consultation editing less dense and put study actions with the active consultation | Saved notes expose one labeled field at a time with explicit save/cancel. Study ordering opens from `Acciones de esta consulta`, uses stacked fields in the narrow side panel, and retains the immutable patient/encounter association statement. |
+| Clarify the study request when category is `Otro` | D-041 adds required `name` and optional `description` detail. The migration preserves historical study text and all clinical associations/status fields. |
+| Make timeline entries and mobile month view easier to scan | Timeline cards use short date/time, encounter type and wrapping text. Mobile month cells stay selectable and show that day's appointments in an agenda below. |
+| Replace the grayscale-plus-blue feel and generic demo patient identifiers | Existing CSS tokens now use evergreen actions with warm-neutral surfaces. Synthetic fixture names and identifiers are more natural (`NM-00x`); the persistent fictional-data warning and clinical fiction markers remain for safety. Palette personality remains provisional for later Figma review. |
+
+Follow-up screenshots captured after the desktop layout correction are catalogued in [the owner-review evidence set](assets/ui-v0/owner-review-2026-11-10/README.md). These are implementation decisions based on owner feedback, not physician-study findings.
+
+## Compact-entry follow-up — 2026-11-10
+
+D-043 implements reversible consultation stages, contextual study/follow-up dialogs and one-medication dialogs with compact prescription summaries. Background now belongs to Resumen; its previous read URL redirects. Existing line instructions are preserved/read-only and still print. Screenshot review repaired small study controls, wrapping close buttons and mobile action placement. The final evidence is [25 PNGs](assets/ui-v0/compact-entry-2026-11-10/README.md), including one rendered print page. These are implementation checks, not physician usability or final aesthetic approval.
 
 ## Methodology and coverage
 

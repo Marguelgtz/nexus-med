@@ -13,7 +13,7 @@
 This implementation inventory complements the original architectural target tree below. The topology is unchanged: local Next.js + Hono, one Prisma/SQLite database, no Cloudflare runtime.
 
 - API domains: `apps/api/src/domains/appointments/`, `studies/`, and `documents/`; `encounters/` also performs atomic study creation.
-- Web: `apps/web/src/app/calendar/`, patient appointment/document routes under `apps/web/src/app/patients/[id]/`, workflow components in `apps/web/src/components/appointments/` and `components/documents/`, and study controls under `components/patients/` plus patient overview.
+- Web: `apps/web/src/app/calendar/`, patient appointment/document routes under `apps/web/src/app/patients/[id]/`, workflow components in `apps/web/src/components/appointments/` and `components/documents/`, and study controls under `components/patients/`. Patient navigation selects focused SSR list views (D-042), with shared identity/heading composition in `components/patients/patient-section-header.tsx`.
 - Shared contracts: `packages/contracts/src/appointments.ts`, `studies.ts`, `documents.ts`, `encounters.ts`.
 - Prisma schema models: `Patient`, `Encounter`, `Appointment`, `StudyRequest`, `MedicalDocument`, and `PrescriptionLine`; documents migration exists.
 
@@ -344,14 +344,18 @@ nexus-med/
 │   │   │   │       ├── page.tsx          # /patients (registry)
 │   │   │   │       ├── new/page.tsx      # /patients/new
 │   │   │   │       └── [id]/
-│   │   │   │           ├── page.tsx      # /patients/:id (overview + timeline)
+│   │   │   │           ├── page.tsx      # /patients/:id (demographics + pending work)
 │   │   │   │           ├── editar/page.tsx
-│   │   │   │           ├── antecedentes/page.tsx
+│   │   │   │           ├── antecedentes/page.tsx  # Background edit
+│   │   │   │           ├── contexto-clinico/page.tsx # Compatibility redirect to overview background
+│   │   │   │           ├── estudios/page.tsx
+│   │   │   │           ├── documentos/page.tsx
 │   │   │   │           ├── citas/
 │   │   │   │           │   ├── page.tsx
 │   │   │   │           │   ├── nueva/page.tsx
 │   │   │   │           │   └── [cid]/page.tsx
 │   │   │   │           ├── consultas/
+│   │   │   │           │   ├── page.tsx     # Clinical note history
 │   │   │   │           │   ├── nueva/page.tsx
 │   │   │   │           │   └── [eid]/page.tsx
 │   │   │   │           ├── recetas/
@@ -365,6 +369,7 @@ nexus-med/
 │   │   │   │   ├── appointments/          # Appointment/calendar workflow UI
 │   │   │   │   ├── documents/             # Prescription/report forms and print detail
 │   │   │   │   ├── shell/                # Top bar, demo banner, patient context strip
+│   │   │   │   ├── modal.tsx             # Client native-dialog shell
 │   │   │   │   └── primitives.tsx        # Genuinely shared visual primitives
 │   │   │   └── lib/
 │   │   │       ├── api/
@@ -852,3 +857,10 @@ Keep implementation DRY and organized: one authoritative place for domain rules,
 Keep the frontend and API separate because independent deployment and a reusable backend are intentional product architecture choices. Use Next.js SSR for initial page rendering, but keep all business logic and persistence in Hono. Use Prisma with local SQLite during the prototype and treat D1 transaction compatibility as a future, explicit deployment validation.
 
 Build the smallest complete patient-to-consultation workflow. Do not introduce additional infrastructure or deploy-time tooling until the local product works.
+
+
+### UI v0 component conventions
+
+The existing `apps/web/src/app/globals.css` owns light-theme tokens and component styles; `components/primitives.tsx` stays server-safe. Patient-specific repeated study entry is shared through `components/patients/study-fields.tsx` and uses the contracts' `StudyInput` without owning validation/persistence. Workflow components retain draft/save/error state and call the existing typed Hono client. No new app, package, persistence layer or dependency was added. See `UI_SPEC.md` §9 for responsive composition, control APIs and Figma handoff conventions.
+
+Compact-entry ownership (D-043): `components/modal.tsx` owns only native dialog/focus/viewport behavior. Existing domain forms own drafts, validation, confirmation and API operations. `patients/consultation-sections.ts` shares clinical field labels/order across staged new-note entry and saved-note editing; `patients/staged-study-dialog.tsx` collects a local order for the existing atomic encounter save. `documents/medication-editor.tsx` validates a single local medication draft while the parent document form retains explicit document saving and historical line instructions. No package, API, schema or persistence boundary changes.

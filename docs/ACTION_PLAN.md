@@ -1,24 +1,113 @@
 # Living Action Plan — Medical Platform MVP
 
 **Document type:** Active execution state (living document)  
-**Last updated:** 2026-11-09
+**Last updated:** 2026-11-10
 **Owner:** Project owner  
 **Primary agent:** Hermes Agent  
-**Current implementation state (updated 2026-11-09):** O-001–O-005 remain implemented and verified on `feat/nx-expansion-complete` at `1309b513`. The owner-authorized O-006 implementation is complete and verified on `feat/o006-clinical-workflows`; its patient-study API, canonical behavior docs, and integrated UI are committed as `48304a4`, `e3a3cc1`, and `e27cbf8`. PR #7 is open against `docs/o006-clinical-workflow-ux`, stacked on open, unmerged PR #6. Both await owner review; no merge was performed. The local app is available at `http://127.0.0.1:3000`. Earlier feature PRs #1–#4 remain open in their stack and PR #5 is merged.
+**Current implementation state (updated 2026-11-10):** Compact clinical entry is implemented, verified and pushed on `feat/o007-ui-foundation`: `786533b`, `fd2cf83`, `e39a604`, final corrections `06a4fa8`, evidence `a4434dc`. Three consultation stages, contextual study/follow-up dialogs, compact medication entry and overview background are delivered. The browser-reviewed Figma UI v0 alignment is pushed as `8431d28`; its CSS parser correction is now included on the branch. Web 39/39, typecheck/lint and final production build pass for the previous delivery; this alignment passes web typecheck/lint and local startup smoke checks. The idempotent seed created zero records, migrations were current, `/patients` returned 200 and API health returned `ok`. Isolated persistence/failure/print/restart/seed checks pass; 25 inspected PNGs are inventoried. English authoritative docs are reconciled. PR #9 is updated against PR #8, open and unmerged. Preserve the pre-existing local `apps/web/next-env.d.ts` change.
+
+## Active follow-up — Figma UI v0 foundation alignment (2026-11-10)
+
+**Status:** Implemented and pushed on `feat/o007-ui-foundation`, including the CSS parser correction found during local startup; PR #9 remains open and unmerged. The owner-selected Figma UI v0 system and key workflow artboards were reviewed in the browser; no MCP used. Preserve the pre-existing `apps/web/next-env.d.ts` change.
+
+**Outcome/scope:** Align shared typography, control geometry, content width, navigation density and consultation-stage layout to the reviewed system board. Consolidate conflicting/duplicated CSS rules. Keep clinical behavior, API/schema, existing tokens/colors, and print-specific layout intact.
+
+**Sequence:** (1) Record the reviewed system measurements in `UI_SPEC.md` — complete. (2) Apply shared CSS tokens and remove conflicting overrides — complete. (3) Match compact mobile navigation and consultation steps to the mobile artboard — complete. (4) Run web typecheck/lint, inspect the final diff, commit and push to PR #9 — complete. Leave the PR unmerged.
+
+**Acceptance:** Body/title/section-label scale and 42px/44px control heights follow the UI v0 system; patient screens stay within 1120px; mobile menus do not wrap into crowded rows; the active consultation stage is full-width while other steps stay directly operable; duplicate rules no longer override intended registry/document/nav layout. No clinical or persistence behavior changes.
+
+**Verification:** `npm run typecheck --workspace apps/web` passes. `npm run lint` exits 0 with the existing Pages-directory configuration warning. `git diff --check` passes. On startup, `npm run dev` applied no pending migrations, the idempotent seed created zero rows, Next compiled the corrected stylesheet, `/` returned 307, `/patients` returned 200, and `/health` returned `ok`. No test suite or post-edit visual browser capture was run; the Figma reference itself was reviewed in the browser.
+
+**Next action:** owner review of updated PR #9; leave it open and unmerged.
+
+## Active follow-up — Compact clinical entry and dialogs (2026-11-10)
+
+**Status:** Delivered and published for owner review. Documentation remains in English.
+
+**Outcome/scope:** Make long consultation/prescription entry manageable with reversible in-memory stages and focused native dialogs. Request studies within the current consultation with automatic association; move background from navigation into overview. Preserve explicit saves, clinical fields, API/schema, stored prescription instructions, status meanings, print isolation and patient identity.
+
+**Ordered delivery:** (1) Add the accessible dialog primitive and guarded follow-up scheduling; verify/commit. (2) Stage new consultation entry and contextual study requests; verify/commit. (3) Compact medication entry in a dialog, retain existing per-line instructions, and move background into overview; verify/commit. (4) Reconcile existing English docs, inspect synthetic production screenshots, verify build/workflows, push and update open PR #9 without merging.
+
+**Acceptance:** Dialogs name their purpose/patient, contain keyboard focus, handle Escape/close without discarding dirty text silently, and restore trigger focus. Consultation stages keep all typed fields and route errors to the relevant stage, with a final complete-note review and explicit save. New-note studies save atomically with the note; saved-note requests retain immutable association. Follow-up saves an independent appointment and returns to the mounted workspace. Medications are reviewed as compact summaries and edited individually; general instructions have one capture field and historical per-line instructions survive editing/printing. Background has no navigation item and is visible/editable from Resumen; existing read links remain valid.
+
+**Verification/delivery:** Use focused browser checks plus web tests/typecheck/lint for each code milestone; final production build and isolated exact-fixture mutation/print checks. Keep incremental digestible commits on `feat/o007-ui-foundation`, preserve local `next-env.d.ts`, update ACTION_PLAN throughout. No API/schema change is planned.
+
+**Milestone 1 verified:** Native dialog and new/saved-consultation follow-up modal implemented. Web 39/39, web typecheck and lint pass (existing App Router warning only). Chromium at 390px verifies modal focus containment/return, dirty Escape cancel/accept, and preservation of the unsaved note. Native repeated Escape close requests were prevented at keydown before accepting a close. No clinical write submitted.
+
+**Milestone 1 commit:** `786533b`.
+
+**Milestone 2 verified:** Three presentation stages preserve all seven note fields and explicit final save; contextual new/saved-note study dialogs retain association. Web typecheck/lint and Chromium stage/draft/error/focus/320px checks pass. Stage transitions make zero POST requests. The conditional Continue→Save button reuse regression was fixed with distinct keys; two own synthetic test artifacts from the failed check were strictly scoped, backed up and cleaned with unrelated-row digest/FK preservation.
+
+**Milestone 2 commit:** `fd2cf83`.
+
+**Milestone 3 verified:** Compact medication dialogs/expandable rows, one general-instructions capture field and preserved historical per-line instructions; background moved into overview and old URL redirects. Web 39/39, typecheck/lint and Chromium modal create/edit/dirty-close/focus/payload/failure/background checks pass; all writes intercepted.
+
+**Milestone 3 commit:** `e39a604`. Final production build passes; isolated note/study, follow-up and two-medication persistence/failure recovery pass. Repeat seed preserves the complete mutated DB digest (7/10/10/4/3). Screenshot review led to full-size study controls, non-wrapping close buttons, inline new-note actions and deferred saved-study focus restoration; these final fixes pass the production build, final screenshots and saved-study focus/print checks.
+
+**Final delivery:** Corrections `06a4fa8` and evidence `a4434dc` are pushed; PR #9 includes current behavior, incremental commits, tests, screenshots and limits. Saved-study focus, print/background checks and 320px reflow pass after API restart. Normal dev startup is restored with zero new seeded records.
+
+**Next action:** owner review of the compact entry flows. Leave PR #9 unmerged; final visual/physician/screen-reader validation remains outside this verification claim.
+
+## Previous follow-up — Focused patient views (2026-11-10)
+
+**Status:** Delivered and published as `03be1b8`; PR #9 is updated and remains open/unmerged. The owner-reported combined-page navigation and repeated clinical history are resolved.
+
+**Outcome/scope:** Replace combined overview anchors with focused SSR views for summary, consultations, appointments, studies, documents and background. Clarify scheduling versus clinical notes without merging their entities or changing API/schema/status semantics. Keep the existing shell and domain components.
+
+**Sequence:** (1) Split views and update navigation/legacy anchors. (2) Remove repeated history/studies/appointments from background; preserve encounter safety context. (3) Clarify appointment handoff and verify each navigation destination, empty states, mobile reflow and unsaved form guard. (4) Update authoritative conventions, capture screenshots, commit/push and update PR #9 without merging.
+
+**Acceptance:** Each navigation item renders its own content and active state; overview has demographics/next action rather than full lists; consultation history has one canonical list; background has no copied encounter/study lists. Citas describes scheduling and links to the corresponding clinical note when present. Existing mutations remain domain-owned and explicit.
+
+**Verification:** Web 39/39; final production build including TypeScript validation; ESLint exit 0 with existing warning; 24 route/viewport cases at 1440/1024/390/320px; current navigation/exclusive content, legacy bookmarks, browser history, keyboard/skip focus, dirty-form cancel/accept, linked note, workflow-specific form cancels, empty record and missing patient checks pass. Eighteen production screenshots were inspected and their hashes validated. Isolated fixture counts remain 7/9/9/2/2; no clinical save or owner DB reset. API suite is not rerun for presentation-only changes.
+
+**Branch/delivery:** `feat/o007-ui-foundation` is pushed through `03be1b8`; PR #9 targets PR #8 and includes the focused-view behavior, actual verification and screenshots. No merge. The pre-existing local `next-env.d.ts` modification is preserved. Normal `npm run dev` is restored at 3000/4000; no pending migration and seed created zero records.
+
+**Next action:** owner review of the focused patient views; subsequent visual/interaction refinement remains review-driven. Figma was not accessed.
+
+## Previous follow-up — Owner UI review
+
+**Status:** Delivered and published for owner review. Code, runtime, data-preservation, responsive visual checks, screenshots, and implementation documentation are verified. Code commit `28c00cc` and evidence/documentation commit `b371bbc` are pushed, and PR #9 has the final verification/evidence summary. Preserve the pre-existing `apps/web/next-env.d.ts` modification.
+
+**Outcome:** Make the main clinical workflows easier to start and scan, reduce nested/dense encounter UI, give patient context its own focused page, and improve the visual identity and mobile calendar while preserving O-007 clinical semantics, API ownership, explicit saving, synthetic-only data, the persistent demo warning, and print isolation.
+
+**Ordered sequence:**
+1. **Navigation and entry points — verified:** patient workflow side navigation, registry-level `Nueva consulta`, appointment actions beside pending work, and appointment creation from the full context page. Filtered synthetic registry, patient summary and context routes returned 200 in Chromium at 1440/1024/390px; document width matched viewport.
+2. **Clinical information and actions — verified:** one-field-at-a-time consultation editing; study action beside encounter actions; concise study composition; readable association and status caveat. The contract now stores required study `name` plus optional detail; the new migration preserves existing values and associations. API suite passes 113/113.
+3. **Patient workspace and timeline — verified:** all four background fields shown together, dedicated full context page, inline appointment entry, compact date/time/type timeline. Desktop/tablet/mobile patient and context screenshots were individually inspected; no page overflow at 1440/1024/390px.
+4. **Responsive visual refinement — verified:** evergreen/warm-neutral token refinement and selectable mobile month cells with selected-day agenda. Mobile month, patient summary and focused forms were inspected; focused token contrast checks pass. The side-nav grid and registry action sizing were corrected after inspecting desktop screenshots.
+5. **Reconcile and deliver — complete:** API 113/113, web 39/39, workspace typecheck, lint and final Next.js production build pass. Migration/seed ran against existing local data with no pending migration, zero created records and no data reset. Fourteen owner-review screenshots and testing/documentation updates are committed and pushed; PR #9 contains the final evidence summary and remains open/unmerged.
+
+**Acceptance:** Existing patient, encounter, study, appointment, document, print, and persistence behavior remains intact. The registry can start a consultation for an active patient in one action. Patient-specific screens offer simple navigation and preserve patient identity. Encounter editing shows a single named field at a time with explicit save/cancel and preserved validation/failure recovery. New encounter studies retain the association statement and category, readable status copy, and a specific name when `Otro` is selected; no study status meaning changes. Full clinical context presents allergies, medications, conditions, and prior surgeries together and offers an appointment path. Timeline entries remain bounded on narrow screens and scan through concise date/time and encounter type. Month view works at 320–390px without horizontal page overflow and routes clearly to that day's appointments. The palette maintains readable contrast and visible keyboard focus. Existing local data and the owner change to `next-env.d.ts` are preserved.
+
+**Branch/PR:** `feat/o007-ui-foundation` is pushed through `b371bbc`; PR #9 targets PR #8 and remains open/unmerged for owner review. No independent work was delegated.
+
+**Next action:** owner review of PR #9. Figma exploration remains a separate follow-up; the code palette is explicitly provisional and no Figma file was accessed.
 
 ---
 
-## O-006 follow-up review — 2026-11-09
+## O-006 follow-up review — verification cleared 2026-11-09
 
-**Review branch:** `feat/o006-clinical-workflows`, PR #7 (base `docs/o006-clinical-workflow-ux`). A follow-up commit addresses three code-review gaps: (1) reset the study-review saving flag after a successful status update, (2) protect unsaved patient/encounter study requests from Cancel and in-app navigation, and (3) embed the existing doctor-authored prescription/report form beneath the saved encounter without a route change. The inline document editor retains explicit save, validated encounter association, cancel confirmation, and success feedback.
+PR #7's post-review study saving reset, draft protection and embedded prescription/report changes have now passed the required automated and browser checks during UI v0. The old runtime-verification boundary is cleared; `TESTING.md` records the actual coverage/limits. PR #7 and its PR #6 parent remain unmerged.
 
-**Focused regression coverage:** `apps/web/test/study-draft.test.ts` checks untouched form, typed/whitespace values, category, encounter association, and additional blank rows. This review made **no API, schema, migration, or clinical status changes**.
+**Research dependency:** [PR #8](https://github.com/Marguelgtz/nexus-med/pull/8) remains the documentation/evidence parent; its research-only authorization was superseded by the owner's explicit UI v0 mission.
 
-**Verification boundary:** The GitHub connector was used for a static source review and commit; no local repository checkout, dependency install, compiler, browser, or test runner was available to execute post-change checks. The previously recorded O-006 112 API / 32 web passes predate these follow-up commits. Before merge, run `npm run test -w apps/web`, `npm run test -w apps/api`, `npm run typecheck`, `npm run lint`, `npm run build -w apps/web` and browser scenarios listed in `TESTING.md`. Treat this follow-up as **implemented, awaiting post-change runtime verification**, not newly test-verified.
+## Most recent mission — O-007 UI v0 implementation — COMPLETE
 
----
+Owner-authorized continuation on `feat/o007-ui-foundation`, based on PR #8 (`1a0432f`). Research is complete; UI implementation is now authorized. Preserve the owner modification to `apps/web/next-env.d.ts` uncommitted.
 
-**Current research handoff:** O-007 is complete on `docs/ui-v0-readiness-research`; [PR #8](https://github.com/Marguelgtz/nexus-med/pull/8) is open, documentation/evidence only. UI v0 has not started.
+Outcome: a coherent, responsive clinical UI baseline for later Figma work, with existing clinical behavior and API/schema unchanged.
+
+Completed delivery sequence:
+1. Baseline: run the outstanding O-006 gates and browser follow-ups; preserve working behavior.
+2. Foundation: repair UI-01…UI-11, consolidate existing CSS tokens/control rules and repeatable study input; verify geometry, keyboard and responsive behavior; commit.
+3. Experience: refine shared navigation, registry alignment, context density, feedback and document/form composition; verify critical journeys and print isolation; commit.
+4. Handoff: inspect screenshots against PR #8, run full checks, reconcile authoritative docs/evidence and publish reviewable dependent PR(s); leave unmerged.
+
+Dependencies: sequential implementation and final verification; no delegation. No new packages, Figma, API/schema changes or clinical semantics. P2 visual preferences remain provisional. One focused implementation PR against PR #8 is sufficient if the final diff stays cohesive.
+
+Foundation committed as `6c412c3`. API 112/112, web 36/36, workspace typecheck/lint and production build pass (existing tool warnings retained). Initial sandbox-only failures were resolved by permitting Prisma/Next subprocesses; no app workaround. Geometry: 64 route/viewport combinations at 320/390/639/640/768/900/1024/1440px, no document overflow, equal week tracks, month alignment; skip-link/main focus and 200%-equivalent CSS-width reflow pass. Browser checks across reruns verified consultation/staged-study save/reload, cancelled dirty navigation, standalone/linked study draft protection and create, consecutive completed/reviewed status saves, both embedded document kinds and association/cancel/save feedback, note edit persistence, follow-up return, explicit appointment completion/link, delayed failure retention and print visibility/PDF generation. Patient create/edit/archive, standalone document create/edit, and appointment edit/cancel checks also pass. Browser harness waits for hydration before submitting SSR forms. No existing application DB reset. Final evidence: 89 PNGs inventoried with dimensions/hashes; all contact sheets and key full-resolution/print images inspected. Exact capture fixture counts remain 7/9/9/2/2.
+
+Delivery: foundation `6c412c3`, interaction refinement `99468b3`, evidence/docs `c657334`, plus this publication handoff. [PR #9](https://github.com/Marguelgtz/nexus-med/pull/9) is open against `docs/ui-v0-readiness-research` (PR #8); all implementation commits are pushed. No PR merged. No external blocker or required implementation work remains; owner review and later Figma exploration are next. The only remaining local modification is the preserved `next-env.d.ts` dev-path change.
 
 ## 1. Purpose and operating model
 
@@ -38,7 +127,7 @@ Do not duplicate the entire phase task catalog here. Reference task IDs where us
 
 ### Overall status
 
-**O-001–O-006 implementation complete; O-006 awaits owner review.** The O-005 local MVP and four product expansions remain the verified code baseline. O-006 adds the integrated consultation workspace, patient-level study requests, conservative study review, appointment handoff, contextual documents/follow-up, and focused patient workspace. Synthetic-only data, explicit saving, O-005 behavior, and open clinical-status questions are preserved.
+**O-001–O-007 implementation complete; O-007 is published for owner review.** The O-005 local MVP and four product expansions remain the verified code baseline. O-006 adds the integrated consultation workspace, patient-level study requests, conservative study review, appointment handoff, contextual documents/follow-up, and focused patient workspace. Synthetic-only data, explicit saving, O-005 behavior, and open clinical-status questions are preserved.
 
 ### Confirmed direction
 
@@ -60,7 +149,7 @@ See `DECISIONS.md` and `ARCHITECTURE.md` for details.
 | Product definition | Prepared | `PRODUCT.md`, `WORKFLOWS.md` |
 | Architecture | Implemented per `ARCHITECTURE.md` | Monorepo, Hono API, Prisma 7 + SQLite, SSR shell |
 | Data model | Implemented and migrated | `prisma/schema.prisma`, committed migration |
-| API surface | Patient/encounter/appointment/study/document routes present | O-006 patient-scoped study create supports standalone and validated same-patient encounter requests; full API suite passes 112/112 |
+| API surface | Patient/encounter/appointment/study/document routes present | O-006 patient-scoped study create supports standalone and validated same-patient encounter requests; owner-reviewed study-name contract and migration pass 113/113 API tests |
 | Synthetic fixture | Patient, encounter, appointment, study, prescription and report fixtures present | 7 patients, 9 encounters, 9 appointments, 2 studies, 2 documents (one linked prescription with 2 lines, one unlinked report) |
 | Database and API code | Core and NX-001…NX-004 implemented | Prisma domain modules, migrations, validation, shared DTOs, integration coverage, and seed idempotency pass |
 | UX/UI specification | Complete (O-002) | `docs/UI_SPEC.md` — screens, interactions, states, visual system, story coverage, decisions U-01–U-08 |
@@ -68,7 +157,7 @@ See `DECISIONS.md` and `ARCHITECTURE.md` for details.
 | Expansion (NX-001…NX-004) | Complete on `feat/nx-expansion-complete` | All four vertical slices browser-verified; complete automated quality gate is green; implementation committed through `e2d6590` |
 | O-006 implementation | Complete; owner review pending | PR #7 is open against PR #6's latest documentation head; API/web tests, workspace checks, isolated startup, and Chrome journey checks pass; Q-O006-01…08 remain open where clinical meaning needs validation |
 
-## 3a. Current objective — O-007 UI research and visual investigation — COMPLETE
+## 3a. Previous objective — O-007 UI research and visual investigation — COMPLETE
 
 **Outcome:** Evidence-backed presentation audit and reference research against the latest O-006, before code-first UI v0, later Figma exploration, and eventual implementation of approved Figma designs. This mission authorizes research only.
 
@@ -82,7 +171,7 @@ See `DECISIONS.md` and `ARCHITECTURE.md` for details.
 
 **Branch/commits:** `docs/ui-v0-readiness-research`, directly based on `feat/o006-clinical-workflows` at `30eafd1`. Evidence commit `7c3d61a`; audit/research commit `e5fa1af`; this final handoff records publication. [PR #8](https://github.com/Marguelgtz/nexus-med/pull/8) is open against `feat/o006-clinical-workflows`; branch pushed to origin. No merge performed.
 
-**Next action:** Owner review of PR #8 and its readiness assessment. Research is complete; stop here. UI v0 remains the next separate mission; Figma is later and was not connected.
+**Historical handoff:** PR #8 completed the research-only mission. The subsequent owner UI v0 directive authorizes the current implementation above; Figma remains later and was not connected.
 
 ## 3. Most recent objective — O-006 full clinical workflow and UX implementation — COMPLETE
 
@@ -251,7 +340,7 @@ Do not allow future Cloudflare/D1 transaction constraints, Google authentication
 
 ## 7. Next action
 
-Review the O-007 research handoff in `UI_AUDIT.md` / `UI_RESEARCH.md` and its documentation-only PR. Decide the scope of the separate code-first UI v0 mission before implementation; preserve clinical workflows and keep Figma exploration for after a working v0. PR #7's O-006 review remains independent; PRs #6/#7 and the research PR are not merged by this mission.
+Owner review of [UI v0 PR #9](https://github.com/Marguelgtz/nexus-med/pull/9). Review/merge prerequisites in dependency order: PR #6 → PR #7 → PR #8 → PR #9. All remain subject to owner merge authority. Later Figma exploration should start from the working UI and `UI_SPEC.md` §9, keeping clinical questions Q-O006-01…08 open.
 
 ## 8. Living update rules
 

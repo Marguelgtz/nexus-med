@@ -128,7 +128,9 @@ model StudyRequest {
   // ecg, ecografia, otro.
   category    String
   // The specific study, in the doctor's words (e.g. "Biometría hemática").
-  description String
+  name        String
+  // Optional doctor-authored detail about the requested study.
+  description String?
   // ordered, completed, reviewed (validated at the API); reviewed is final.
   status      String    @default("ordered")
   // The doctor's observation about the result — verbatim, never an

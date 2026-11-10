@@ -1,0 +1,1150 @@
+[
+  {
+    "file": "appointment-desktop.png",
+    "screen": "appointment",
+    "viewport": "desktop",
+    "state": "default",
+    "url": "/patients/demo-patient-001/citas/demo-appt-up-003",
+    "extra": "",
+    "pixels": {
+      "width": 1440,
+      "height": 900
+    },
+    "sha256": "ecd03653672ee9c9edc4250c4e8df610a4956c0276dc9aacfa600fcd88ea2ff0"
+  },
+  {
+    "file": "appointment-mobile-handoff.png",
+    "screen": "appointment",
+    "viewport": "mobile",
+    "state": "handoff",
+    "url": "/patients/demo-patient-001/consultas/nueva?appointmentId=demo-appt-up-003",
+    "pixels": {
+      "width": 390,
+      "height": 2191
+    },
+    "sha256": "ae3bd28f316a6c3082d0f1b9b678500885dea7a14be9b0f75a92516f01a2dfef"
+  },
+  {
+    "file": "appointment-mobile.png",
+    "screen": "appointment",
+    "viewport": "mobile",
+    "state": "default",
+    "url": "/patients/demo-patient-001/citas/demo-appt-up-003",
+    "extra": "",
+    "pixels": {
+      "width": 390,
+      "height": 844
+    },
+    "sha256": "eb94ca8bc16bb470c2d320f4c6b6e622d2372697f18636cd941941651b746315"
+  },
+  {
+    "file": "appointment-tablet.png",
+    "screen": "appointment",
+    "viewport": "tablet",
+    "state": "default",
+    "url": "/patients/demo-patient-001/citas/demo-appt-up-003",
+    "extra": "",
+    "pixels": {
+      "width": 1024,
+      "height": 768
+    },
+    "sha256": "fa2cbea6bc9bc17a8cc506f1702a1c1b9bd1260df6a99dd96092369374e060c7"
+  },
+  {
+    "file": "appointmentform-desktop.png",
+    "screen": "appointmentform",
+    "viewport": "desktop",
+    "state": "default",
+    "url": "/patients/demo-patient-001/citas/nueva",
+    "extra": "",
+    "pixels": {
+      "width": 1440,
+      "height": 900
+    },
+    "sha256": "f3953d1dd31f6032e04de423bbc6048a9ea22f55086c9e9cb7dae8453dc71f56"
+  },
+  {
+    "file": "appointmentform-mobile.png",
+    "screen": "appointmentform",
+    "viewport": "mobile",
+    "state": "default",
+    "url": "/patients/demo-patient-001/citas/nueva",
+    "extra": "",
+    "pixels": {
+      "width": 390,
+      "height": 844
+    },
+    "sha256": "717b5e6bfed6b00a6275f6200fdf48c9cae948e66d769464ff0d298eeaf385c5"
+  },
+  {
+    "file": "appointmentform-tablet.png",
+    "screen": "appointmentform",
+    "viewport": "tablet",
+    "state": "default",
+    "url": "/patients/demo-patient-001/citas/nueva",
+    "extra": "",
+    "pixels": {
+      "width": 1024,
+      "height": 768
+    },
+    "sha256": "8e26adfefb887693b53ceda25ec07f56f91b9fb72db29986632b7800812a3057"
+  },
+  {
+    "file": "background-desktop.png",
+    "screen": "background",
+    "viewport": "desktop",
+    "state": "default",
+    "url": "/patients/demo-patient-001/antecedentes",
+    "extra": "",
+    "pixels": {
+      "width": 1440,
+      "height": 921
+    },
+    "sha256": "91bc3bb39127646e28255ec80a7a94f9a3e29ba17ec0199fd5b096e689fd7034"
+  },
+  {
+    "file": "background-mobile.png",
+    "screen": "background",
+    "viewport": "mobile",
+    "state": "default",
+    "url": "/patients/demo-patient-001/antecedentes",
+    "extra": "",
+    "pixels": {
+      "width": 390,
+      "height": 884
+    },
+    "sha256": "e3d1dd218e5ffe06d3953091c94a34005deda3c7781e639ef608979a5b0c1e03"
+  },
+  {
+    "file": "background-tablet.png",
+    "screen": "background",
+    "viewport": "tablet",
+    "state": "default",
+    "url": "/patients/demo-patient-001/antecedentes",
+    "extra": "",
+    "pixels": {
+      "width": 1024,
+      "height": 921
+    },
+    "sha256": "1c7ee3f47f4bc93e29ea77467781b557e5052a0cc2b17127e9ab9982423dc661"
+  },
+  {
+    "file": "consultation-desktop-two-studies.png",
+    "screen": "consultation",
+    "viewport": "desktop",
+    "state": "two-studies",
+    "url": "/patients/demo-patient-001/consultas/nueva",
+    "extra": "",
+    "pixels": {
+      "width": 1440,
+      "height": 1959
+    },
+    "sha256": "4257e10734010fef91bc2e69e06e2d2c59cc4a8d14923629de9ba596ee30dbce"
+  },
+  {
+    "file": "consultation-desktop.png",
+    "screen": "consultation",
+    "viewport": "desktop",
+    "state": "default",
+    "url": "/patients/demo-patient-001/consultas/nueva",
+    "extra": "",
+    "pixels": {
+      "width": 1440,
+      "height": 1790
+    },
+    "sha256": "0377f623519dae239df16aefbe79cece0bf3f9ccf7981a876f55ea135e1a03b5"
+  },
+  {
+    "file": "consultation-mobile-context-expanded.png",
+    "screen": "consultation",
+    "viewport": "mobile",
+    "state": "keyboard-expanded",
+    "url": "/patients/demo-patient-001/consultas/nueva",
+    "pixels": {
+      "width": 390,
+      "height": 2891
+    },
+    "sha256": "eb851fe9d84d0c4180735143438632f6e6e29de16f8ede068ef6bea07b451480"
+  },
+  {
+    "file": "consultation-mobile-two-studies.png",
+    "screen": "consultation",
+    "viewport": "mobile",
+    "state": "two-studies",
+    "url": "/patients/demo-patient-001/consultas/nueva",
+    "extra": "",
+    "pixels": {
+      "width": 390,
+      "height": 2628
+    },
+    "sha256": "f0e5a06cfd8cd78e635cb6868caef6621beed353ad0ca4d1990df020ca64cb3d"
+  },
+  {
+    "file": "consultation-mobile.png",
+    "screen": "consultation",
+    "viewport": "mobile",
+    "state": "default",
+    "url": "/patients/demo-patient-001/consultas/nueva",
+    "extra": "",
+    "pixels": {
+      "width": 390,
+      "height": 2141
+    },
+    "sha256": "78ea5da1d647094ae87ce258d34673be6c0def0400b63eddf17e8733c338c42e"
+  },
+  {
+    "file": "consultation-tablet-two-studies.png",
+    "screen": "consultation",
+    "viewport": "tablet",
+    "state": "two-studies",
+    "url": "/patients/demo-patient-001/consultas/nueva",
+    "extra": "",
+    "pixels": {
+      "width": 1024,
+      "height": 1959
+    },
+    "sha256": "8adc9087685354ccf6db6f18c3e433a94259887b6fa05f9df2693db3fc885f9d"
+  },
+  {
+    "file": "consultation-tablet.png",
+    "screen": "consultation",
+    "viewport": "tablet",
+    "state": "default",
+    "url": "/patients/demo-patient-001/consultas/nueva",
+    "extra": "",
+    "pixels": {
+      "width": 1024,
+      "height": 1790
+    },
+    "sha256": "dcc0c64515059ea710a9790dde4efa408cb27c2fda1ed8b0f81a442c6498577d"
+  },
+  {
+    "file": "day-desktop-populated.png",
+    "screen": "day",
+    "viewport": "desktop",
+    "state": "populated",
+    "url": "/calendar?vista=dia&fecha=2026-11-10",
+    "pixels": {
+      "width": 1440,
+      "height": 976
+    },
+    "sha256": "c8ad2b8f964fd147582c67ba767a4f903ed69ad74b08ddaee40de4591bb8ea91"
+  },
+  {
+    "file": "day-desktop.png",
+    "screen": "day",
+    "viewport": "desktop",
+    "state": "default",
+    "url": "/calendar?vista=dia&fecha=2026-11-09",
+    "extra": "",
+    "pixels": {
+      "width": 1440,
+      "height": 1000
+    },
+    "sha256": "0d28a4068d7f4a53ee26e568c966ce65f7f59feff06d9640e08082a585cf5f07"
+  },
+  {
+    "file": "day-mobile-populated.png",
+    "screen": "day",
+    "viewport": "mobile",
+    "state": "populated",
+    "url": "/calendar?vista=dia&fecha=2026-11-10",
+    "pixels": {
+      "width": 390,
+      "height": 1040
+    },
+    "sha256": "8be75658365202907a03e1fc1f47279fc7c282faf678841523bf7a05d63d924b"
+  },
+  {
+    "file": "day-mobile.png",
+    "screen": "day",
+    "viewport": "mobile",
+    "state": "default",
+    "url": "/calendar?vista=dia&fecha=2026-11-09",
+    "extra": "",
+    "pixels": {
+      "width": 390,
+      "height": 1032
+    },
+    "sha256": "f2aff1465d982b02e7623b456e43dcdae2e3330954415e61bf546560fff86610"
+  },
+  {
+    "file": "day-tablet-populated.png",
+    "screen": "day",
+    "viewport": "tablet",
+    "state": "populated",
+    "url": "/calendar?vista=dia&fecha=2026-11-10",
+    "pixels": {
+      "width": 1024,
+      "height": 976
+    },
+    "sha256": "9b525a0ce87a3387e107988d8f296982c1c74221e5d5686e14a9660363003ef6"
+  },
+  {
+    "file": "day-tablet.png",
+    "screen": "day",
+    "viewport": "tablet",
+    "state": "default",
+    "url": "/calendar?vista=dia&fecha=2026-11-09",
+    "extra": "",
+    "pixels": {
+      "width": 1024,
+      "height": 1000
+    },
+    "sha256": "940eeeb2026ea36037acac96d39fa9182b3e13f5ebc57865a5692b08dc382af0"
+  },
+  {
+    "file": "empty-desktop.png",
+    "screen": "empty",
+    "viewport": "desktop",
+    "state": "default",
+    "url": "/patients/demo-patient-003",
+    "extra": "",
+    "pixels": {
+      "width": 1440,
+      "height": 1101
+    },
+    "sha256": "282dd3e0f0414d14f5c1b64bb0a19cfc9383426d0976d473097217076cabc950"
+  },
+  {
+    "file": "empty-mobile.png",
+    "screen": "empty",
+    "viewport": "mobile",
+    "state": "default",
+    "url": "/patients/demo-patient-003",
+    "extra": "",
+    "pixels": {
+      "width": 390,
+      "height": 1336
+    },
+    "sha256": "50f16c290c75841bb2db59449a195838b41ebc050d0a77f709a585ee56838567"
+  },
+  {
+    "file": "empty-tablet.png",
+    "screen": "empty",
+    "viewport": "tablet",
+    "state": "default",
+    "url": "/patients/demo-patient-003",
+    "extra": "",
+    "pixels": {
+      "width": 1024,
+      "height": 1101
+    },
+    "sha256": "511da8d65c7c4cd73b28acc69726a1d514999bfa55a4254253ee2c660a85a8d5"
+  },
+  {
+    "file": "month-desktop.png",
+    "screen": "month",
+    "viewport": "desktop",
+    "state": "default",
+    "url": "/calendar?vista=mes&fecha=2026-11-09",
+    "extra": "",
+    "pixels": {
+      "width": 1440,
+      "height": 900
+    },
+    "sha256": "b00887785909318d0e7733d5905ee58302bbe3a1d8754100be5d0e02a4a756a7"
+  },
+  {
+    "file": "month-mobile.png",
+    "screen": "month",
+    "viewport": "mobile",
+    "state": "default",
+    "url": "/calendar?vista=mes&fecha=2026-11-09",
+    "extra": "",
+    "pixels": {
+      "width": 390,
+      "height": 881
+    },
+    "sha256": "cba3b17d12752aaba6133d4be534a93bf5c43a60dacda038f1fb6e7211ca936a"
+  },
+  {
+    "file": "month-tablet.png",
+    "screen": "month",
+    "viewport": "tablet",
+    "state": "default",
+    "url": "/calendar?vista=mes&fecha=2026-11-09",
+    "extra": "",
+    "pixels": {
+      "width": 1024,
+      "height": 777
+    },
+    "sha256": "0742d759c93702347dbfc5ef6e36723590980512af979065732f279b60560392"
+  },
+  {
+    "file": "patient-768px.png",
+    "screen": "patient",
+    "viewport": "768px",
+    "state": "default",
+    "url": "/patients/demo-patient-001",
+    "extra": "",
+    "pixels": {
+      "width": 768,
+      "height": 1368
+    },
+    "sha256": "d22d07d5bbc47ccfbb232f66dc93a4930dcccf5b68aaec9c52deb891e97e1cbe"
+  },
+  {
+    "file": "patient-desktop-expanded.png",
+    "screen": "patient",
+    "viewport": "desktop",
+    "state": "expanded",
+    "url": "/patients/demo-patient-001",
+    "extra": "",
+    "pixels": {
+      "width": 1440,
+      "height": 1349
+    },
+    "sha256": "88b9b549090e3ffe526d93fd961ddf3f0b83dfc66ede4be2a66b0bac520c1276"
+  },
+  {
+    "file": "patient-desktop-text200-text-scaling.png",
+    "screen": "patient",
+    "viewport": "desktop-text200",
+    "state": "text-scaling",
+    "url": "/patients/demo-patient-001",
+    "extra": "Exploratory body text scaling only; not browser zoom or WCAG certification",
+    "pixels": {
+      "width": 1440,
+      "height": 1424
+    },
+    "sha256": "ab21e90e2580701c6bf5fad406c26da836e6cba12f72fc19fc30c2b6726813fd"
+  },
+  {
+    "file": "patient-desktop.png",
+    "screen": "patient",
+    "viewport": "desktop",
+    "state": "default",
+    "url": "/patients/demo-patient-001",
+    "extra": "",
+    "pixels": {
+      "width": 1440,
+      "height": 1249
+    },
+    "sha256": "d40137f2402d4022a7bdc64fc4e8d0d9cdc81a3f04ad52e3a42e1be8c60f2a03"
+  },
+  {
+    "file": "patient-mobile-expanded.png",
+    "screen": "patient",
+    "viewport": "mobile",
+    "state": "expanded",
+    "url": "/patients/demo-patient-001",
+    "extra": "",
+    "pixels": {
+      "width": 390,
+      "height": 1831
+    },
+    "sha256": "635a82c3cb18e01f6a1dab0d81e73f90484cb6ecb806a699c887ae7ac8d47e8d"
+  },
+  {
+    "file": "patient-mobile.png",
+    "screen": "patient",
+    "viewport": "mobile",
+    "state": "default",
+    "url": "/patients/demo-patient-001",
+    "extra": "",
+    "pixels": {
+      "width": 390,
+      "height": 1655
+    },
+    "sha256": "7d49e9914b64af96690fcb76d5fe65308074a5732d21b8b0be0507989c4952b3"
+  },
+  {
+    "file": "patient-tablet-expanded.png",
+    "screen": "patient",
+    "viewport": "tablet",
+    "state": "expanded",
+    "url": "/patients/demo-patient-001",
+    "extra": "",
+    "pixels": {
+      "width": 1024,
+      "height": 1372
+    },
+    "sha256": "9c3872b69053797bc888fa3a659fa3f6d9ed747506582e97f27a93124ba5b788"
+  },
+  {
+    "file": "patient-tablet.png",
+    "screen": "patient",
+    "viewport": "tablet",
+    "state": "default",
+    "url": "/patients/demo-patient-001",
+    "extra": "",
+    "pixels": {
+      "width": 1024,
+      "height": 1249
+    },
+    "sha256": "ab0228d3c457a5a78f0868d9fcb5022823dd2095d3fa8d874fd81aab801ef56d"
+  },
+  {
+    "file": "prescription-desktop.png",
+    "screen": "prescription",
+    "viewport": "desktop",
+    "state": "default",
+    "url": "/patients/demo-patient-002/recetas/demo-document-prescription-001",
+    "extra": "",
+    "pixels": {
+      "width": 1440,
+      "height": 900
+    },
+    "sha256": "88e6aae5a46d11e296c1f9b0f2622b480c0056ee7c21cdbc6d75b02f0a97cd96"
+  },
+  {
+    "file": "prescription-mobile.png",
+    "screen": "prescription",
+    "viewport": "mobile",
+    "state": "default",
+    "url": "/patients/demo-patient-002/recetas/demo-document-prescription-001",
+    "extra": "",
+    "pixels": {
+      "width": 390,
+      "height": 844
+    },
+    "sha256": "9ebd352767ad7c03dd09e22ba8a835918b73004cf4dbd29ee839284102704d57"
+  },
+  {
+    "file": "prescription-tablet.png",
+    "screen": "prescription",
+    "viewport": "tablet",
+    "state": "default",
+    "url": "/patients/demo-patient-002/recetas/demo-document-prescription-001",
+    "extra": "",
+    "pixels": {
+      "width": 1024,
+      "height": 812
+    },
+    "sha256": "0113c608586e217e1b5e5f3f68412b58f5c2856daab83d1372e6083152dc5a77"
+  },
+  {
+    "file": "print-prescription.png",
+    "screen": "print-prescription",
+    "viewport": "A4",
+    "state": "rendered-browser-pdf",
+    "url": "see fixture document routes below",
+    "pixels": {
+      "width": 773,
+      "height": 1000
+    },
+    "sha256": "bb981ba60607c61a51e818f2dd1446189761ffb230514a68ced7f7b6876a0b1f"
+  },
+  {
+    "file": "print-report.png",
+    "screen": "print-report",
+    "viewport": "A4",
+    "state": "rendered-browser-pdf",
+    "url": "see fixture document routes below",
+    "pixels": {
+      "width": 773,
+      "height": 1000
+    },
+    "sha256": "4b7a75d10cf87faabd4556592c7bc9ce9cd9da9ef9b6e70ea550ab055dfa39ce"
+  },
+  {
+    "file": "registry-desktop-no-results.png",
+    "screen": "registry",
+    "viewport": "desktop",
+    "state": "no-results",
+    "url": "/patients?q=NO_MATCH_SYNTHETIC",
+    "extra": "",
+    "pixels": {
+      "width": 1440,
+      "height": 900
+    },
+    "sha256": "41d087723755c00805e4b621a3601d9fa0a036a0649f277971b9786ba461fc30"
+  },
+  {
+    "file": "registry-desktop-search.png",
+    "screen": "registry",
+    "viewport": "desktop",
+    "state": "search",
+    "url": "/patients?q=DEMO-002",
+    "extra": "",
+    "pixels": {
+      "width": 1440,
+      "height": 900
+    },
+    "sha256": "449d01d3526eb03f4fdd9f145a5c2b6b48cc475873041947d2b63a0ec7006820"
+  },
+  {
+    "file": "registry-desktop.png",
+    "screen": "registry",
+    "viewport": "desktop",
+    "state": "default",
+    "url": "/patients",
+    "extra": "",
+    "pixels": {
+      "width": 1440,
+      "height": 900
+    },
+    "sha256": "a4810c2215ddd7606c2418e3c06c9ee6ffe09b16fc3435762a015ae64dfc0747"
+  },
+  {
+    "file": "registry-error.png",
+    "screen": "registry-error",
+    "viewport": "desktop",
+    "state": "controlled-http500",
+    "url": "/patients",
+    "pixels": {
+      "width": 1280,
+      "height": 720
+    },
+    "sha256": "d00cf1a906746dc9f931357ccf7b026d6ce1011f6a3f83eee36201c4807698dc"
+  },
+  {
+    "file": "registry-loading.png",
+    "screen": "registry-loading",
+    "viewport": "desktop",
+    "state": "delayed-loading",
+    "url": "/patients",
+    "pixels": {
+      "width": 1280,
+      "height": 720
+    },
+    "sha256": "90536cb148f9f88d24550cc63449017a00122fecbc8c5f9467e240204396fa13"
+  },
+  {
+    "file": "registry-mobile-no-results.png",
+    "screen": "registry",
+    "viewport": "mobile",
+    "state": "no-results",
+    "url": "/patients?q=NO_MATCH_SYNTHETIC",
+    "extra": "",
+    "pixels": {
+      "width": 390,
+      "height": 844
+    },
+    "sha256": "35023f8b3a46f5f481b8accb8136ca0598bb5342f99f1bef468981db7b8d38ec"
+  },
+  {
+    "file": "registry-mobile-search.png",
+    "screen": "registry",
+    "viewport": "mobile",
+    "state": "search",
+    "url": "/patients?q=DEMO-002",
+    "extra": "",
+    "pixels": {
+      "width": 390,
+      "height": 844
+    },
+    "sha256": "fdcbf86862fe874400d9f13d6a9cfbbd0e3ade90323f49a0ae9f22327b721ea8"
+  },
+  {
+    "file": "registry-mobile.png",
+    "screen": "registry",
+    "viewport": "mobile",
+    "state": "default",
+    "url": "/patients",
+    "extra": "",
+    "pixels": {
+      "width": 390,
+      "height": 962
+    },
+    "sha256": "02093213a16b6eadade66840af0fd75eea73f94e64113d04126cf3c3c711cc2a"
+  },
+  {
+    "file": "registry-tablet-no-results.png",
+    "screen": "registry",
+    "viewport": "tablet",
+    "state": "no-results",
+    "url": "/patients?q=NO_MATCH_SYNTHETIC",
+    "extra": "",
+    "pixels": {
+      "width": 1024,
+      "height": 768
+    },
+    "sha256": "aca8861ce089f0edeabd3b15785b0de1b4db47e6ad06d0283f4f437278e548ae"
+  },
+  {
+    "file": "registry-tablet-search.png",
+    "screen": "registry",
+    "viewport": "tablet",
+    "state": "search",
+    "url": "/patients?q=DEMO-002",
+    "extra": "",
+    "pixels": {
+      "width": 1024,
+      "height": 768
+    },
+    "sha256": "14d9919c6bf485d1964e1255bc33d8b198ac1eb2fbd94228a7bf59d97b85392a"
+  },
+  {
+    "file": "registry-tablet.png",
+    "screen": "registry",
+    "viewport": "tablet",
+    "state": "default",
+    "url": "/patients",
+    "extra": "",
+    "pixels": {
+      "width": 1024,
+      "height": 768
+    },
+    "sha256": "1e6c7925512226372a6c4a310d916f03670e65161618544e6a43cac8026705d7"
+  },
+  {
+    "file": "report-desktop.png",
+    "screen": "report",
+    "viewport": "desktop",
+    "state": "default",
+    "url": "/patients/demo-patient-007/informes/demo-document-report-001",
+    "extra": "",
+    "pixels": {
+      "width": 1440,
+      "height": 900
+    },
+    "sha256": "edb82b7129127a2e7d420176e0fdcec83c9d8ef4c21454a60efddbddf3733ffd"
+  },
+  {
+    "file": "report-mobile.png",
+    "screen": "report",
+    "viewport": "mobile",
+    "state": "default",
+    "url": "/patients/demo-patient-007/informes/demo-document-report-001",
+    "extra": "",
+    "pixels": {
+      "width": 390,
+      "height": 844
+    },
+    "sha256": "fdf6bf1791bdea7b641eaa3d01dfdc7f4dfdd79b35bfbf39fcf96fb34d4e57d8"
+  },
+  {
+    "file": "report-tablet.png",
+    "screen": "report",
+    "viewport": "tablet",
+    "state": "default",
+    "url": "/patients/demo-patient-007/informes/demo-document-report-001",
+    "extra": "",
+    "pixels": {
+      "width": 1024,
+      "height": 812
+    },
+    "sha256": "9bb45576241a632030fc12a954d90db9f718f9b58bf47dbe32c70018430c47b7"
+  },
+  {
+    "file": "saved-desktop-editing.png",
+    "screen": "saved",
+    "viewport": "desktop",
+    "state": "editing",
+    "url": "/patients/demo-patient-002/consultas/demo-encounter-002b",
+    "extra": "",
+    "pixels": {
+      "width": 1440,
+      "height": 1522
+    },
+    "sha256": "1f6caa624e5aa9e4d4882a707c7aa80b02d0ae3f4b4f6db86935b64109e344f4"
+  },
+  {
+    "file": "saved-desktop-embedded-prescription.png",
+    "screen": "saved",
+    "viewport": "desktop",
+    "state": "embedded-prescription",
+    "url": "/patients/demo-patient-002/consultas/demo-encounter-002b",
+    "extra": "",
+    "pixels": {
+      "width": 1440,
+      "height": 2554
+    },
+    "sha256": "565d055f83e06e419f8367cea747497dd590565ac8420ec3040cda7a6075b85c"
+  },
+  {
+    "file": "saved-desktop-embedded-report.png",
+    "screen": "saved",
+    "viewport": "desktop",
+    "state": "embedded-report",
+    "url": "/patients/demo-patient-002/consultas/demo-encounter-002b",
+    "extra": "",
+    "pixels": {
+      "width": 1440,
+      "height": 2341
+    },
+    "sha256": "377bef7d9d2c704caffe228c77e2102deb520b92a65c37b138225eb853c2deee"
+  },
+  {
+    "file": "saved-desktop-linked-study.png",
+    "screen": "saved",
+    "viewport": "desktop",
+    "state": "linked-study",
+    "url": "/patients/demo-patient-002/consultas/demo-encounter-002b",
+    "extra": "",
+    "pixels": {
+      "width": 1440,
+      "height": 1891
+    },
+    "sha256": "d95b7c716a99e06132a47e348c779a71bfef3fc4134b156a490592c08371d5f5"
+  },
+  {
+    "file": "saved-desktop.png",
+    "screen": "saved",
+    "viewport": "desktop",
+    "state": "default",
+    "url": "/patients/demo-patient-002/consultas/demo-encounter-002b",
+    "extra": "",
+    "pixels": {
+      "width": 1440,
+      "height": 1626
+    },
+    "sha256": "4bcf5d48dd8cf9e860b8219f6418d659fbbc7ad8b5974ba4e456eae6acfe1d1f"
+  },
+  {
+    "file": "saved-mobile-editing.png",
+    "screen": "saved",
+    "viewport": "mobile",
+    "state": "editing",
+    "url": "/patients/demo-patient-002/consultas/demo-encounter-002b",
+    "extra": "",
+    "pixels": {
+      "width": 390,
+      "height": 1732
+    },
+    "sha256": "e9c8c2dcdd340e82eb5b2b14cb3b81e5912c8dbd1427efbe066cde4486e17f3b"
+  },
+  {
+    "file": "saved-mobile-embedded-prescription.png",
+    "screen": "saved",
+    "viewport": "mobile",
+    "state": "embedded-prescription",
+    "url": "/patients/demo-patient-002/consultas/demo-encounter-002b",
+    "extra": "",
+    "pixels": {
+      "width": 390,
+      "height": 3519
+    },
+    "sha256": "d3cc5787ba63c638d2a76e3ce222f9b06a1eae23b2927646632449c8b6a7cd5b"
+  },
+  {
+    "file": "saved-mobile-embedded-report.png",
+    "screen": "saved",
+    "viewport": "mobile",
+    "state": "embedded-report",
+    "url": "/patients/demo-patient-002/consultas/demo-encounter-002b",
+    "extra": "",
+    "pixels": {
+      "width": 390,
+      "height": 3036
+    },
+    "sha256": "19bd328096a4031e854c706fe35606616283e5b324992ccb6036ff4cc7e7f4e2"
+  },
+  {
+    "file": "saved-mobile-linked-study.png",
+    "screen": "saved",
+    "viewport": "mobile",
+    "state": "linked-study",
+    "url": "/patients/demo-patient-002/consultas/demo-encounter-002b",
+    "extra": "",
+    "pixels": {
+      "width": 390,
+      "height": 2812
+    },
+    "sha256": "3c75c71284e18903c7eb7fbe5e40bce669cf8381ed944e5df9804c12be9a2e50"
+  },
+  {
+    "file": "saved-mobile.png",
+    "screen": "saved",
+    "viewport": "mobile",
+    "state": "default",
+    "url": "/patients/demo-patient-002/consultas/demo-encounter-002b",
+    "extra": "",
+    "pixels": {
+      "width": 390,
+      "height": 2377
+    },
+    "sha256": "1e6f99a388ed6d3318e04cff6d06640e4cdebe174169cc24833a10b140443ff3"
+  },
+  {
+    "file": "saved-tablet-editing.png",
+    "screen": "saved",
+    "viewport": "tablet",
+    "state": "editing",
+    "url": "/patients/demo-patient-002/consultas/demo-encounter-002b",
+    "extra": "",
+    "pixels": {
+      "width": 1024,
+      "height": 1522
+    },
+    "sha256": "905dace423020b036f205824d23671f9a2053bb86b2b55b1f1593c730594bbf1"
+  },
+  {
+    "file": "saved-tablet-embedded-prescription.png",
+    "screen": "saved",
+    "viewport": "tablet",
+    "state": "embedded-prescription",
+    "url": "/patients/demo-patient-002/consultas/demo-encounter-002b",
+    "extra": "",
+    "pixels": {
+      "width": 1024,
+      "height": 2554
+    },
+    "sha256": "f03ec2a42a851aec5093e24e7dd13d16c2e021b5e0d916f08b764ca05a30eeea"
+  },
+  {
+    "file": "saved-tablet-embedded-report.png",
+    "screen": "saved",
+    "viewport": "tablet",
+    "state": "embedded-report",
+    "url": "/patients/demo-patient-002/consultas/demo-encounter-002b",
+    "extra": "",
+    "pixels": {
+      "width": 1024,
+      "height": 2341
+    },
+    "sha256": "694be139dee52af47806e16db7c7a7281339fdd6814b1b8beaa0eb25e2823ff6"
+  },
+  {
+    "file": "saved-tablet-linked-study.png",
+    "screen": "saved",
+    "viewport": "tablet",
+    "state": "linked-study",
+    "url": "/patients/demo-patient-002/consultas/demo-encounter-002b",
+    "extra": "",
+    "pixels": {
+      "width": 1024,
+      "height": 1891
+    },
+    "sha256": "926ee997007d0e90aa655f7819f46ab258a41d4de748b0944d8b0f00f62cd7c2"
+  },
+  {
+    "file": "saved-tablet.png",
+    "screen": "saved",
+    "viewport": "tablet",
+    "state": "default",
+    "url": "/patients/demo-patient-002/consultas/demo-encounter-002b",
+    "extra": "",
+    "pixels": {
+      "width": 1024,
+      "height": 1626
+    },
+    "sha256": "831ba1e5295c41c7acf59de147df3c655ffffdc6ed7713613075a1b31755b497"
+  },
+  {
+    "file": "studies-desktop-ordering.png",
+    "screen": "studies",
+    "viewport": "desktop",
+    "state": "ordering",
+    "url": "/patients/demo-patient-002",
+    "extra": "",
+    "pixels": {
+      "width": 1440,
+      "height": 1967
+    },
+    "sha256": "bbe760b988e68a71b73c513c043d3f12a6358e9936304f8610e7ba088151a38f"
+  },
+  {
+    "file": "studies-desktop-review.png",
+    "screen": "studies",
+    "viewport": "desktop",
+    "state": "review",
+    "url": "/patients/demo-patient-002",
+    "extra": "",
+    "pixels": {
+      "width": 1440,
+      "height": 1861
+    },
+    "sha256": "4db291770e499cb42a0368ec400c53164d2c6a8b8982ec71e7be125d9f9aae8f"
+  },
+  {
+    "file": "studies-desktop-validation.png",
+    "screen": "studies",
+    "viewport": "desktop",
+    "state": "validation",
+    "url": "/patients/demo-patient-002",
+    "extra": "",
+    "pixels": {
+      "width": 1440,
+      "height": 1988
+    },
+    "sha256": "c09a614a1c268b6e817b6f19fb09cecc797a680c26aab65ec8785995a2a8b67b"
+  },
+  {
+    "file": "studies-desktop.png",
+    "screen": "studies",
+    "viewport": "desktop",
+    "state": "default",
+    "url": "/patients/demo-patient-002",
+    "extra": "",
+    "pixels": {
+      "width": 1440,
+      "height": 1627
+    },
+    "sha256": "58e9e7e1f4d4a2fc901e250cceb547e762d907659f41893787084558b63544ad"
+  },
+  {
+    "file": "studies-mobile-ordering.png",
+    "screen": "studies",
+    "viewport": "mobile",
+    "state": "ordering",
+    "url": "/patients/demo-patient-002",
+    "extra": "",
+    "pixels": {
+      "width": 390,
+      "height": 2841
+    },
+    "sha256": "d5fb1879cb28bbe9fefd213e1c8d3975d6c0e56e2dcd2ef15cd7ad4bf7851554"
+  },
+  {
+    "file": "studies-mobile-review.png",
+    "screen": "studies",
+    "viewport": "mobile",
+    "state": "review",
+    "url": "/patients/demo-patient-002",
+    "extra": "",
+    "pixels": {
+      "width": 390,
+      "height": 2572
+    },
+    "sha256": "8c9ac599333e2b4dca3186f766bcd5178560a9f66d9399072963ae09d3ac9a9a"
+  },
+  {
+    "file": "studies-mobile-save-error.png",
+    "screen": "studies",
+    "viewport": "mobile",
+    "state": "save-error",
+    "url": "/patients/demo-patient-002",
+    "extra": "Simulated HTTP 500; no write",
+    "pixels": {
+      "width": 390,
+      "height": 2925
+    },
+    "sha256": "e35343e88aa4b3201f1404a6bf427cf6795aa67b55306e6db4ad0d617de41aee"
+  },
+  {
+    "file": "studies-mobile-saving.png",
+    "screen": "studies",
+    "viewport": "mobile",
+    "state": "saving",
+    "url": "/patients/demo-patient-002",
+    "extra": "Simulated delayed failed response; no write",
+    "pixels": {
+      "width": 390,
+      "height": 2841
+    },
+    "sha256": "ebd540e4bdad06bcc21d335c9002225d5fcf9db8079ecdb5159fb1a7e428fefc"
+  },
+  {
+    "file": "studies-mobile-validation.png",
+    "screen": "studies",
+    "viewport": "mobile",
+    "state": "validation",
+    "url": "/patients/demo-patient-002",
+    "extra": "",
+    "pixels": {
+      "width": 390,
+      "height": 2862
+    },
+    "sha256": "54f09b63521632ddf3499d726c9aebeeaa11afaacf2d9e83a808c705d4b64e47"
+  },
+  {
+    "file": "studies-mobile.png",
+    "screen": "studies",
+    "viewport": "mobile",
+    "state": "default",
+    "url": "/patients/demo-patient-002",
+    "extra": "",
+    "pixels": {
+      "width": 390,
+      "height": 2334
+    },
+    "sha256": "9c8b6d5429f6062074f82b986d3861dc6c62ff3904d41e15a75bf7ed019ca847"
+  },
+  {
+    "file": "studies-tablet-ordering.png",
+    "screen": "studies",
+    "viewport": "tablet",
+    "state": "ordering",
+    "url": "/patients/demo-patient-002",
+    "extra": "",
+    "pixels": {
+      "width": 1024,
+      "height": 1980
+    },
+    "sha256": "8b03079bcc1ea96571aa713096eab334c18edab213b221470413d136a7d997a0"
+  },
+  {
+    "file": "studies-tablet-review.png",
+    "screen": "studies",
+    "viewport": "tablet",
+    "state": "review",
+    "url": "/patients/demo-patient-002",
+    "extra": "",
+    "pixels": {
+      "width": 1024,
+      "height": 1874
+    },
+    "sha256": "554da09620a788c7f5a4c86ae79565972aeeccd23d2f5061a306307f7e238baa"
+  },
+  {
+    "file": "studies-tablet-validation.png",
+    "screen": "studies",
+    "viewport": "tablet",
+    "state": "validation",
+    "url": "/patients/demo-patient-002",
+    "extra": "",
+    "pixels": {
+      "width": 1024,
+      "height": 2000
+    },
+    "sha256": "27b6569b1f003c874f3674a0d39f6d2a94b10471e59be7ecc99909f4fc5db03d"
+  },
+  {
+    "file": "studies-tablet.png",
+    "screen": "studies",
+    "viewport": "tablet",
+    "state": "default",
+    "url": "/patients/demo-patient-002",
+    "extra": "",
+    "pixels": {
+      "width": 1024,
+      "height": 1640
+    },
+    "sha256": "4cf9eebf7945a91fba254e7f937388ac784267b28aeb83ecf77163301ffc5d81"
+  },
+  {
+    "file": "week-768px.png",
+    "screen": "week",
+    "viewport": "768px",
+    "state": "default",
+    "url": "/calendar?vista=semana&fecha=2026-11-09",
+    "extra": "",
+    "pixels": {
+      "width": 768,
+      "height": 900
+    },
+    "sha256": "546c7b8a119fe04d2b0fac6c9c627f66cee863c29525ef0fc49475b67ebd001c"
+  },
+  {
+    "file": "week-desktop.png",
+    "screen": "week",
+    "viewport": "desktop",
+    "state": "default",
+    "url": "/calendar?vista=semana&fecha=2026-11-09",
+    "extra": "",
+    "pixels": {
+      "width": 1440,
+      "height": 900
+    },
+    "sha256": "e25216c14c3214c285a135e2c5fa0f20492938d3be500879d2d1ee70337e26a5"
+  },
+  {
+    "file": "week-mobile.png",
+    "screen": "week",
+    "viewport": "mobile",
+    "state": "default",
+    "url": "/calendar?vista=semana&fecha=2026-11-09",
+    "extra": "",
+    "pixels": {
+      "width": 390,
+      "height": 877
+    },
+    "sha256": "9c946921ac642fa67ae6d33486aa5d64db843eb5085840520a8f4981c51bc23e"
+  },
+  {
+    "file": "week-tablet.png",
+    "screen": "week",
+    "viewport": "tablet",
+    "state": "default",
+    "url": "/calendar?vista=semana&fecha=2026-11-09",
+    "extra": "",
+    "pixels": {
+      "width": 1024,
+      "height": 768
+    },
+    "sha256": "7aa5e68f0a655b72927ed63470ce70a9f02dc6e7438f60655b18f41a2fc3c0c4"
+  }
+]

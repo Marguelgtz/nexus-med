@@ -19,6 +19,8 @@ import {
   localDateOfInstant,
 } from '../../lib/format';
 import { overlappingScheduledAppointments } from '../../lib/calendar';
+import { Modal } from '../modal';
+import { useBeforeUnloadGuard } from '../../lib/use-before-unload-guard';
 import { createAppointment, listAppointmentsInRange, updateAppointment } from '../../lib/api/client';
 
 const DURATIONS = [15, 20, 30, 45, 60, 90, 120];
@@ -33,6 +35,8 @@ type Props = {
   onCreated?: (appointment: Appointment) => void;
   /** Return here after a standalone follow-up appointment is saved. */
   returnTo?: string;
+  onCancel?: () => void;
+  dialogTitle?: string;
 };
 
 function toIso(dateStr: string, timeStr: string): string {
@@ -42,17 +46,25 @@ function toIso(dateStr: string, timeStr: string): string {
   return instantAtLocalTime(dateStr, h, m).toISOString();
 }
 
-export function AppointmentForm({ patientId, initial, onSaved, onCreated, returnTo }: Props) {
+export function AppointmentForm({ patientId, initial, onSaved, onCreated, returnTo, onCancel, dialogTitle }: Props) {
   const router = useRouter();
-  const [date, setDate] = useState(() =>
-    initial ? localDateOfInstant(initial.startAt) : localDateOfInstant(new Date().toISOString()),
-  );
-  const [time, setTime] = useState(() => (initial ? formatTime(initial.startAt) : '09:00'));
+  const [initialDate] = useState(() => initial ? localDateOfInstant(initial.startAt) : localDateOfInstant(new Date().toISOString()));
+  const [initialTime] = useState(() => initial ? formatTime(initial.startAt) : '09:00');
+  const [date, setDate] = useState(initialDate);
+  const [time, setTime] = useState(initialTime);
   const [duration, setDuration] = useState(initial?.durationMinutes ?? 30);
   const [type, setType] = useState<AppointmentType>(initial?.type ?? 'consulta');
   const [error, setError] = useState<string | null>(null);
   const [overlap, setOverlap] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
+
+  const dirty = date !== initialDate || time !== initialTime ||
+    duration !== (initial?.durationMinutes ?? 30) || type !== (initial?.type ?? 'consulta');
+  useBeforeUnloadGuard(dirty && !busy);
+  function cancel() {
+    if (busy || (dirty && !window.confirm('Hay una cita sin guardar. ¿Descartar los cambios?'))) return;
+    (onCancel ?? onSaved)?.();
+  }
 
   // Non-blocking overlap check, debounced: candidate [start, start+duration)
   // against that patient's appointments that day.
@@ -112,13 +124,14 @@ export function AppointmentForm({ patientId, initial, onSaved, onCreated, return
     }
   }
 
-  return (
-    <form className="appt-form" onSubmit={handleSubmit}>
+  const form = (
+    <form className="appt-form" onSubmit={handleSubmit} aria-busy={busy}>
       <div className="form-row">
         <label>
           Fecha
           <input
             type="date"
+            disabled={busy}
             value={date}
             onChange={(e) => setDate(e.target.value)}
             required
@@ -129,6 +142,7 @@ export function AppointmentForm({ patientId, initial, onSaved, onCreated, return
           Hora
           <input
             type="time"
+            disabled={busy}
             value={time}
             onChange={(e) => setTime(e.target.value)}
             required
@@ -137,7 +151,7 @@ export function AppointmentForm({ patientId, initial, onSaved, onCreated, return
         </label>
         <label>
           Duración (min)
-          <select value={duration} onChange={(e) => setDuration(Number(e.target.value))}>
+          <select disabled={busy} value={duration} onChange={(e) => setDuration(Number(e.target.value))}>
             {DURATIONS.map((d) => (
               <option key={d} value={d}>
                 {d}
@@ -147,7 +161,7 @@ export function AppointmentForm({ patientId, initial, onSaved, onCreated, return
         </label>
         <label>
           Tipo
-          <select value={type} onChange={(e) => setType(e.target.value as AppointmentType)}>
+          <select disabled={busy} value={type} onChange={(e) => setType(e.target.value as AppointmentType)}>
             {TYPES.map((t) => (
               <option key={t} value={t}>
                 {APPOINTMENT_TYPE_LABELS[t]}
@@ -162,7 +176,7 @@ export function AppointmentForm({ patientId, initial, onSaved, onCreated, return
           Se superpone con: {overlap.join(', ')}. Puedes guardar igualmente.
         </p>
       ) : null}
-      {error ? <p className="error">{error}</p> : null}
+      {error ? <p className="error" role="alert">{error}</p> : null}
 
       <div className="form-actions">
         <button type="submit" className="btn btn-primary" disabled={busy || !date || !time}>
@@ -174,12 +188,17 @@ export function AppointmentForm({ patientId, initial, onSaved, onCreated, return
                 ? 'Guardar cambios'
                 : 'Crear cita'}
         </button>
-        {initial && onSaved ? (
-          <button type="button" className="btn btn-ghost" onClick={onSaved}>
+        {onCancel || (initial && onSaved) ? (
+          <button type="button" className="btn btn-ghost" onClick={cancel} disabled={busy}>
             Cancelar
           </button>
         ) : null}
       </div>
     </form>
   );
+  return dialogTitle ? (
+    <Modal title={dialogTitle} description="La cita se guarda como un registro independiente; no completa ni enlaza la consulta." onClose={cancel} closeDisabled={busy}>
+      {form}
+    </Modal>
+  ) : form;
 }
