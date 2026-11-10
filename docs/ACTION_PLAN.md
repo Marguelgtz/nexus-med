@@ -28,7 +28,9 @@
 
 **Milestone 3 verified:** Compact medication dialogs/expandable rows, one general-instructions capture field and preserved historical per-line instructions; background moved into overview and old URL redirects. Web 39/39, typecheck/lint and Chromium modal create/edit/dirty-close/focus/payload/failure/background checks pass; all writes intercepted.
 
-**Next action:** commit milestone 3, then run final isolated production workflows/screenshots and reconcile publication state.
+**Milestone 3 commit:** `e39a604`. Final production build passes; isolated note/study, follow-up and two-medication persistence/failure recovery pass. Repeat seed preserves the complete mutated DB digest (7/10/10/4/3). Screenshot review led to full-size study controls, non-wrapping close buttons, inline new-note actions and deferred saved-study focus restoration; these final fixes pass the production build, final screenshots and saved-study focus/print checks.
+
+**Next action:** commit verified final fixes and English evidence, restore normal startup, push and update PR #9.
 
 ## Previous follow-up — Focused patient views (2026-11-10)
 

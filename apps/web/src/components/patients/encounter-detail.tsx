@@ -86,8 +86,8 @@ function EncounterContextActions({
                 patientName={patient.fullName}
                 encounterId={encounter.id}
                 encounters={encounters}
-                onSaved={() => { setSavedStudyMessage(true); actionsHeading.current?.focus(); }}
-                onClose={() => { setStudyRequestOpen(false); actionsHeading.current?.focus(); }}
+                onSaved={() => { setSavedStudyMessage(true); }}
+                onClose={() => { setStudyRequestOpen(false); requestAnimationFrame(() => actionsHeading.current?.focus()); }}
               />
             </>
           ) : (

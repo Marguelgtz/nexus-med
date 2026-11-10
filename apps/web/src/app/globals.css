@@ -436,6 +436,8 @@ a.timeline-item:hover {
 .field input,
 .field textarea,
 .field select,
+.study-field input,
+.study-field select,
 .form-row input,
 .form-row select,
 .form-row textarea,
@@ -459,14 +461,17 @@ a.timeline-item:hover {
 
 .field input:focus,
 .field textarea:focus,
-.field select:focus {
+.field select:focus,
+.study-field input:focus,
+.study-field select:focus {
   outline: 2px solid var(--primary);
   outline-offset: 1px;
   border-color: var(--primary);
 }
 
 .field input[aria-invalid='true'],
-.field textarea[aria-invalid='true'] {
+.field textarea[aria-invalid='true'],
+.study-field input[aria-invalid='true'] {
   border-color: var(--danger);
 }
 
@@ -2550,7 +2555,8 @@ body:has(.app-dialog[open]) { overflow: hidden; }
 }
 .app-dialog::backdrop { background: rgb(15 30 28 / 48%); }
 .app-dialog-header { display: flex; align-items: center; justify-content: space-between; gap: var(--s-3); padding: var(--s-4); border-bottom: 1px solid var(--border); }
-.app-dialog-header h2 { margin: 0; font-size: 20px; }
+.app-dialog-header h2 { min-width: 0; margin: 0; font-size: 20px; overflow-wrap: anywhere; }
+.app-dialog-header > button { flex-shrink: 0; white-space: nowrap; }
 .app-dialog-content { padding: var(--s-4); }
 .app-dialog-content > .field-hint:first-child { margin-top: 0; }
 @media print { .app-dialog { display: none !important; } }

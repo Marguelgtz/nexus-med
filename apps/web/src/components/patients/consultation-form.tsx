@@ -254,9 +254,12 @@ export function ConsultationForm({
         </nav>
         <div className="consultation-stage-tools">
           <h2 ref={stageHeading} tabIndex={-1}>{CONSULTATION_STAGES[stage]}</h2>
-          <button type="button" className="btn btn-secondary btn-sm" disabled={saving} onClick={() => setStudyEditor('new')}>
+          <div className="actions">
+          <button type="button" className="btn btn-secondary btn-sm" aria-haspopup="dialog" disabled={saving} onClick={() => setStudyEditor('new')}>
             Solicitar estudio{studies.length > 0 ? ` (${studies.length})` : ''}
           </button>
+          <button type="button" className="btn btn-ghost btn-sm" aria-haspopup="dialog" disabled={saving} onClick={() => setShowFollowUp(true)}>Programar seguimiento</button>
+          </div>
         </div>
         <div className="card consultation-note-card">
         {stage === 0 ? <div className="consultation-meta-grid">
@@ -359,26 +362,7 @@ export function ConsultationForm({
 
       <aside className="consultation-context-column">
         <ClinicalContext patient={patient} />
-        <section className="card consultation-actions-card" aria-labelledby="consult-actions-title">
-          <h2 id="consult-actions-title">Acciones relacionadas</h2>
-          <button
-            type="button"
-            className="btn btn-secondary"
-            onClick={() => setShowFollowUp(true)}
-            aria-expanded={showFollowUp}
-          >
-            Programar seguimiento
-          </button>
-          <p className="field-hint">
-            Para crear una receta o un informe vinculados, guarda primero esta consulta. Tu texto seguirá aquí.
-          </p>
-          {createdFollowUp ? (
-            <p className="notice" role="status">
-              Cita creada para {formatDateTime(createdFollowUp.startAt)}.{' '}
-              <Link href={`/patients/${patient.id}/citas/${createdFollowUp.id}`}>Ver cita</Link>
-            </p>
-          ) : null}
-        </section>
+        {createdFollowUp ? <p className="notice" role="status">Cita creada para {formatDateTime(createdFollowUp.startAt)}. <Link href={`/patients/${patient.id}/citas/${createdFollowUp.id}`}>Ver cita</Link></p> : null}
       </aside>
 
       {studyEditor !== null ? <StagedStudyDialog patientName={patient.fullName}
