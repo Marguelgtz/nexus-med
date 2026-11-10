@@ -4,11 +4,11 @@
 **Last updated:** 2026-11-10
 **Owner:** Project owner  
 **Primary agent:** Hermes Agent  
-**Current implementation state (updated 2026-11-10):** O-001–O-007 remain implemented on `feat/o007-ui-foundation`. The second owner-review iteration now separates patient views and removes repeated histories; it is implemented and locally verified, pending commit/push/PR #9 update. Web 39/39, production build with TypeScript validation, lint and 24 Chromium route/viewport checks pass. Eighteen inspected production screenshots use an isolated exact synthetic fixture DB. No API/schema/domain change or clinical write was made. PR #9 remains open against PR #8. Preserve the pre-existing local `apps/web/next-env.d.ts` change.
+**Current implementation state (updated 2026-11-10):** O-001–O-007 remain implemented on `feat/o007-ui-foundation`. The second owner-review iteration now separates patient views and removes repeated histories; it is implemented, verified and pushed as `03be1b8`, with PR #9 updated. Web 39/39, production build with TypeScript validation, lint and 24 Chromium route/viewport checks pass. Eighteen inspected production screenshots use an isolated exact synthetic fixture DB. No API/schema/domain change or clinical write was made. PR #9 remains open against PR #8. Preserve the pre-existing local `apps/web/next-env.d.ts` change.
 
 ## Active follow-up — Focused patient views (2026-11-10)
 
-**Status:** Implemented and verified, ready to publish. The owner-reported combined-page navigation and repeated clinical history are resolved.
+**Status:** Delivered and published as `03be1b8`; PR #9 is updated and remains open/unmerged. The owner-reported combined-page navigation and repeated clinical history are resolved.
 
 **Outcome/scope:** Replace combined overview anchors with focused SSR views for summary, consultations, appointments, studies, documents and background. Clarify scheduling versus clinical notes without merging their entities or changing API/schema/status semantics. Keep the existing shell and domain components.
 
@@ -18,9 +18,9 @@
 
 **Verification:** Web 39/39; final production build including TypeScript validation; ESLint exit 0 with existing warning; 24 route/viewport cases at 1440/1024/390/320px; current navigation/exclusive content, legacy bookmarks, browser history, keyboard/skip focus, dirty-form cancel/accept, linked note, workflow-specific form cancels, empty record and missing patient checks pass. Eighteen production screenshots were inspected and their hashes validated. Isolated fixture counts remain 7/9/9/2/2; no clinical save or owner DB reset. API suite is not rerun for presentation-only changes.
 
-**Branch/delivery:** Continue `feat/o007-ui-foundation`; preserve local `next-env.d.ts`; commit the code/docs/evidence, push and update PR #9 without merging.
+**Branch/delivery:** `feat/o007-ui-foundation` is pushed through `03be1b8`; PR #9 targets PR #8 and includes the focused-view behavior, actual verification and screenshots. No merge. The pre-existing local `next-env.d.ts` modification is preserved. Normal `npm run dev` is restored at 3000/4000; no pending migration and seed created zero records.
 
-**Next action:** publish the verified iteration and restore the normal local app URL.
+**Next action:** owner review of the focused patient views; subsequent visual/interaction refinement remains review-driven. Figma was not accessed.
 
 ## Previous follow-up — Owner UI review
 
