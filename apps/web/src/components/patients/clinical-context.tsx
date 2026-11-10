@@ -7,7 +7,7 @@ export function ClinicalContext({ patient }: { patient: PatientDetail }) {
   return (
     <section className="card clinical-context-summary" aria-labelledby="clinical-context-title">
       <div className="card-header">
-        <h2 id="clinical-context-title">Contexto clínico</h2>
+        <h2 id="clinical-context-title">Antecedentes del paciente</h2>
       </div>
       <div className="clinical-context-safety">
         <div>
@@ -20,7 +20,7 @@ export function ClinicalContext({ patient }: { patient: PatientDetail }) {
         </div>
       </div>
       <Link href={`/patients/${patient.id}/contexto-clinico`} className="text-link">
-        Ver contexto completo
+        Ver antecedentes
       </Link>
     </section>
   );

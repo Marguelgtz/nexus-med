@@ -98,7 +98,8 @@ export default async function EncounterPage({
         fullName={patient.fullName}
         externalIdentifier={patient.externalIdentifier}
         isArchived={patient.isArchived}
-        backHref={`/patients/${patient.id}`}
+        backHref={`/patients/${patient.id}/consultas`}
+        backLabel="Consultas"
       />
       <Detail
         encounter={encounter}

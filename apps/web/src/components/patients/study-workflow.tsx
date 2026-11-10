@@ -282,12 +282,14 @@ export function PatientStudyWorkflow({
   patientId,
   studies,
   encounters,
+  initiallyCreating = false,
 }: {
   patientId: string;
   studies: StudyRequest[];
   encounters: EncounterSummary[];
+  initiallyCreating?: boolean;
 }) {
-  const [showCreate, setShowCreate] = useState(false);
+  const [showCreate, setShowCreate] = useState(initiallyCreating);
   return (
     <section className="card" id="patient-studies" aria-labelledby="patient-studies-title">
       <div className="card-header">

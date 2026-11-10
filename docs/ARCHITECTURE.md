@@ -13,7 +13,7 @@
 This implementation inventory complements the original architectural target tree below. The topology is unchanged: local Next.js + Hono, one Prisma/SQLite database, no Cloudflare runtime.
 
 - API domains: `apps/api/src/domains/appointments/`, `studies/`, and `documents/`; `encounters/` also performs atomic study creation.
-- Web: `apps/web/src/app/calendar/`, patient appointment/document routes under `apps/web/src/app/patients/[id]/`, workflow components in `apps/web/src/components/appointments/` and `components/documents/`, and study controls under `components/patients/` plus patient overview.
+- Web: `apps/web/src/app/calendar/`, patient appointment/document routes under `apps/web/src/app/patients/[id]/`, workflow components in `apps/web/src/components/appointments/` and `components/documents/`, and study controls under `components/patients/`. Patient navigation selects focused SSR list views (D-042), with shared identity/heading composition in `components/patients/patient-section-header.tsx`.
 - Shared contracts: `packages/contracts/src/appointments.ts`, `studies.ts`, `documents.ts`, `encounters.ts`.
 - Prisma schema models: `Patient`, `Encounter`, `Appointment`, `StudyRequest`, `MedicalDocument`, and `PrescriptionLine`; documents migration exists.
 
@@ -344,14 +344,18 @@ nexus-med/
 │   │   │   │       ├── page.tsx          # /patients (registry)
 │   │   │   │       ├── new/page.tsx      # /patients/new
 │   │   │   │       └── [id]/
-│   │   │   │           ├── page.tsx      # /patients/:id (overview + timeline)
+│   │   │   │           ├── page.tsx      # /patients/:id (demographics + pending work)
 │   │   │   │           ├── editar/page.tsx
-│   │   │   │           ├── antecedentes/page.tsx
+│   │   │   │           ├── antecedentes/page.tsx  # Background edit
+│   │   │   │           ├── contexto-clinico/page.tsx # Background read view
+│   │   │   │           ├── estudios/page.tsx
+│   │   │   │           ├── documentos/page.tsx
 │   │   │   │           ├── citas/
 │   │   │   │           │   ├── page.tsx
 │   │   │   │           │   ├── nueva/page.tsx
 │   │   │   │           │   └── [cid]/page.tsx
 │   │   │   │           ├── consultas/
+│   │   │   │           │   ├── page.tsx     # Clinical note history
 │   │   │   │           │   ├── nueva/page.tsx
 │   │   │   │           │   └── [eid]/page.tsx
 │   │   │   │           ├── recetas/

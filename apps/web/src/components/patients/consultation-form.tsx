@@ -349,7 +349,7 @@ export function ConsultationForm({
           <button type="submit" className="btn btn-primary" disabled={saving}>
             {saving ? 'Guardando…' : 'Guardar consulta'}
           </button>
-          <Link href={`/patients/${patient.id}`} className="btn btn-ghost">
+          <Link href={appointment ? `/patients/${patient.id}/citas/${appointment.id}` : `/patients/${patient.id}/consultas`} className="btn btn-ghost">
             Cancelar
           </Link>
         </div>

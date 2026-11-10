@@ -306,7 +306,7 @@ export function MedicalDocumentForm({
               Cancelar
             </button>
           ) : (
-            <Link href={returnTo ?? `/patients/${patientId}`} className="btn btn-ghost">Cancelar</Link>
+            <Link href={returnTo ?? `/patients/${patientId}/documentos`} className="btn btn-ghost">Cancelar</Link>
           )}
         </div>
       </section>

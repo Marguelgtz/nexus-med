@@ -382,3 +382,11 @@ Verification passed: API 113/113, web 39/39, workspace typecheck, ESLint exit 0 
 **Publication:** code commit `28c00cc` and evidence/documentation commit `b371bbc` are pushed on the existing branch. PR #9 has the verification/evidence summary, remains open against PR #8, and is not merged. No Figma file was accessed; the refined palette is a working foundation for later Figma review.
 
 **References:** PR #9; `UI_AUDIT.md`; `UI_SPEC.md`; `TESTING.md`; `docs/assets/ui-v0/owner-review-2026-11-10/README.md`; `ACTION_PLAN.md`.
+
+## 2026-11-10 — Patient workspace split into focused views
+
+The owner reported that the new patient navigation still mostly scrolled a combined overview and that clinical context repeated recent consultations. D-042 replaces that layout with focused SSR destinations for summary, consultations, appointments, studies, documents and background. The overview is now demographics plus compact pending work; the background view retains its existing URL but only displays the four background fields. Existing overview hashes redirect to the owning destination. A shared patient-section header reuses identity/title composition; existing domain components retain clinical saves, validation and status semantics. The unused context appointment component and obsolete context-list styles were removed.
+
+Citas now explains scheduling, keeps past still-scheduled appointments visible, labels planned types and links to either consultation entry or the stored linked note. Consultation/documents/background returns stay within their workflow. There is no API, schema, dependency, clinical-status or automatic appointment-linking change.
+
+Verification: web 39/39; final production build with TypeScript validation; ESLint exit 0 (existing warning); 24 Chromium route/viewport checks at 1440/1024/390/320px; history/bookmark, exclusive-content, dirty-navigation, linked-note, empty-record and missing-record checks. Eighteen production screenshots use a separate exact-fixture DB; no clinical write was submitted. Publication state is maintained in `ACTION_PLAN.md`; PR #9 remains open against PR #8 and no merge is authorized.

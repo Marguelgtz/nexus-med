@@ -810,7 +810,6 @@ a.timeline-item:hover {
 }
 
 .context-background > summary,
-.patient-background-details > summary,
 .older-timeline > summary,
 .context-older-encounters > summary {
   color: var(--primary);
@@ -895,7 +894,7 @@ a.timeline-item:hover {
   grid-column: 1 / -1;
 }
 
-.patient-workspace-head .actions {
+.patient-section-head .actions {
   flex-wrap: wrap;
   justify-content: flex-end;
 }
@@ -934,33 +933,6 @@ a.timeline-item:hover {
   text-align: left;
   padding: var(--s-2);
   border-radius: var(--radius-sm);
-}
-
-.patient-safety-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--s-3);
-}
-
-.patient-safety-item {
-  display: grid;
-  align-content: start;
-  gap: var(--s-2);
-  min-height: 88px;
-  padding: var(--s-3);
-  background: var(--bg);
-  border-radius: var(--radius-sm);
-  overflow-wrap: anywhere;
-}
-
-.patient-safety-item strong {
-  color: var(--text-muted);
-  font-size: 13px;
-}
-
-.patient-background-details {
-  margin-top: var(--s-3);
-  border-top: 1px solid var(--border);
 }
 
 .pending-kind {
@@ -1026,8 +998,7 @@ a.timeline-item:hover {
   gap: var(--s-2);
 }
 
-.study-item-title > strong,
-.context-history-meta > strong {
+.study-item-title > strong {
   min-width: 0;
   font-size: 15px;
   overflow-wrap: anywhere;
@@ -1107,11 +1078,7 @@ a.timeline-item:hover {
     white-space: nowrap;
   }
 
-  .patient-safety-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .patient-workspace-head .actions {
+  .patient-section-head .actions {
     justify-content: flex-start;
   }
 
@@ -2166,17 +2133,6 @@ a.timeline-item:hover {
   justify-content: flex-end;
 }
 
-.patient-safety-grid {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-
-.patient-safety-item {
-  min-width: 0;
-  min-height: 96px;
-  border: 1px solid var(--border);
-  background: var(--surface);
-}
-
 .text-link {
   display: inline-flex;
   align-items: center;
@@ -2299,53 +2255,64 @@ a.timeline-item:hover {
   background: var(--surface);
 }
 
-.clinical-context-page-head {
-  align-items: center;
+/* Patient views share an identity/title, then show only their own workflow. */
+.patient-section-head .field-hint {
+  max-width: 64ch;
 }
 
-.clinical-context-page-head h1 {
-  margin-bottom: var(--s-1);
-}
-
-.clinical-context-page-head .field-hint {
-  margin-bottom: 0;
-}
-
-.context-history-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
-.context-history-list li {
+.patient-demographics .subline {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: center;
-  gap: var(--s-3);
-  padding: var(--s-3) 0;
-  border-top: 1px solid var(--border);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--s-4);
+  margin: 0;
 }
 
-.context-history-main {
-  min-width: 0;
-}
-
-.context-history-main p {
-  margin: var(--s-1) 0 0;
+.patient-demographics .subline-item {
+  display: grid;
+  gap: var(--s-1);
   overflow-wrap: anywhere;
 }
 
-.context-history-meta {
+.patient-background-view h2 {
+  margin: 0;
+  font-size: 16px;
+}
+
+.patient-appointment-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--s-3);
+}
+
+.patient-appointment-info {
+  display: grid;
+  gap: var(--s-2);
+  min-width: 0;
+}
+
+.patient-appointment-meta {
   display: flex;
-  align-items: center;
   flex-wrap: wrap;
   gap: var(--s-2);
 }
 
-.context-history-meta time {
-  font-size: 14px;
-  font-weight: 600;
-  font-variant-numeric: tabular-nums;
+@media (max-width: 639px) {
+  .patient-demographics .subline,
+  .patient-appointment-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.patient-section-head {
+  align-items: center;
+}
+
+.patient-section-head h1 {
+  margin-bottom: var(--s-1);
+}
+
+.patient-section-head .field-hint {
+  margin-bottom: 0;
 }
 
 .study-status-caveat {
@@ -2576,26 +2543,14 @@ a.timeline-item:hover {
     justify-content: flex-start;
   }
 
-  .patient-safety-grid,
   .clinical-context-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: var(--s-2);
   }
 
-  .patient-safety-item,
   .clinical-context-item {
     min-height: 112px;
     padding: var(--s-3);
-  }
-
-  .context-history-list li {
-    grid-template-columns: minmax(0, 1fr);
-    align-items: start;
-    gap: var(--s-2);
-  }
-
-  .context-history-list li > .btn {
-    justify-self: start;
   }
 
   .study-form-row {

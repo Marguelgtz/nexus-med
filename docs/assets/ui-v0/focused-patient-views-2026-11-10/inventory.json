@@ -1,0 +1,236 @@
+[
+  {
+    "file": "summary-desktop.png",
+    "route": "/patients/demo-patient-002",
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "sha256": "a4caf6f47d47351c5ebe33fc79f90938d727c618afe5fa353bd96fa7f12ffcb8",
+    "dimensions": {
+      "width": 1440,
+      "height": 900
+    }
+  },
+  {
+    "file": "consultations-desktop.png",
+    "route": "/patients/demo-patient-002/consultas",
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "sha256": "779ed7a7a234b6848c564328a004c0da381cd6cd59ddb983d1589d11b976d3ab",
+    "dimensions": {
+      "width": 1440,
+      "height": 900
+    }
+  },
+  {
+    "file": "appointments-desktop.png",
+    "route": "/patients/demo-patient-002/citas",
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "sha256": "acad80c620e6fbad9529f161ca9ce21633b9c396ba0e33caaf5fbbf327ff38d0",
+    "dimensions": {
+      "width": 1440,
+      "height": 900
+    }
+  },
+  {
+    "file": "studies-desktop.png",
+    "route": "/patients/demo-patient-002/estudios",
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "sha256": "e106ad7102c5c70bedd72837b7c574363b0810b222549da5b0ee702be65d27c3",
+    "dimensions": {
+      "width": 1440,
+      "height": 900
+    }
+  },
+  {
+    "file": "documents-desktop.png",
+    "route": "/patients/demo-patient-002/documentos",
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "sha256": "99437f89abbc3eec1777bac1a058ecabb27e2247aba2b1a78a0263c18794db8b",
+    "dimensions": {
+      "width": 1440,
+      "height": 900
+    }
+  },
+  {
+    "file": "background-desktop.png",
+    "route": "/patients/demo-patient-002/contexto-clinico",
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "sha256": "716ff5d2801f5b2b72c9bab44a0fd5f224d139469ee5af0726f458e655311080",
+    "dimensions": {
+      "width": 1440,
+      "height": 900
+    }
+  },
+  {
+    "file": "summary-tablet.png",
+    "route": "/patients/demo-patient-002",
+    "viewport": {
+      "width": 1024,
+      "height": 768
+    },
+    "sha256": "e73cdacbb4663b9a1558ef825bf787092b409f8fb66a711188a0117256d1225b",
+    "dimensions": {
+      "width": 1024,
+      "height": 768
+    }
+  },
+  {
+    "file": "consultations-tablet.png",
+    "route": "/patients/demo-patient-002/consultas",
+    "viewport": {
+      "width": 1024,
+      "height": 768
+    },
+    "sha256": "82385cbbd9da1667a2d7fb7ea6c4500a21985f342580074ec231963fe3d52a7c",
+    "dimensions": {
+      "width": 1024,
+      "height": 768
+    }
+  },
+  {
+    "file": "appointments-tablet.png",
+    "route": "/patients/demo-patient-002/citas",
+    "viewport": {
+      "width": 1024,
+      "height": 768
+    },
+    "sha256": "313c1a66b5be94bf62a0cc7ed7ee4b7e22322c7f5022a6bc31d87667732b2a0e",
+    "dimensions": {
+      "width": 1024,
+      "height": 768
+    }
+  },
+  {
+    "file": "studies-tablet.png",
+    "route": "/patients/demo-patient-002/estudios",
+    "viewport": {
+      "width": 1024,
+      "height": 768
+    },
+    "sha256": "36584771ac6a358cda381a7899d2a35c499cb17eff3a836d4cec424cd0e9787d",
+    "dimensions": {
+      "width": 1024,
+      "height": 780
+    }
+  },
+  {
+    "file": "documents-tablet.png",
+    "route": "/patients/demo-patient-002/documentos",
+    "viewport": {
+      "width": 1024,
+      "height": 768
+    },
+    "sha256": "f76c012d1b713ce80d651606a0eb1b4e322387ae473ef05529706d13b58eeff6",
+    "dimensions": {
+      "width": 1024,
+      "height": 768
+    }
+  },
+  {
+    "file": "background-tablet.png",
+    "route": "/patients/demo-patient-002/contexto-clinico",
+    "viewport": {
+      "width": 1024,
+      "height": 768
+    },
+    "sha256": "afdae89248becbecfd99f6081f3ffd016cef0066291c54620c29dd457719875e",
+    "dimensions": {
+      "width": 1024,
+      "height": 768
+    }
+  },
+  {
+    "file": "summary-mobile.png",
+    "route": "/patients/demo-patient-002",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "sha256": "72ffd2da27b17592bb0bc6442b2ba34c0c828a7d86b3daa2c8364cd3521abb62",
+    "dimensions": {
+      "width": 390,
+      "height": 1085
+    }
+  },
+  {
+    "file": "consultations-mobile.png",
+    "route": "/patients/demo-patient-002/consultas",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "sha256": "feef265d4807118765bca985e14cac35a0c5d043dc6fdac1c31b7635b0e0fe66",
+    "dimensions": {
+      "width": 390,
+      "height": 844
+    }
+  },
+  {
+    "file": "appointments-mobile.png",
+    "route": "/patients/demo-patient-002/citas",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "sha256": "e2729a8009d2b142ac156363875c720441d6dab09695eb12438d1f2456549e88",
+    "dimensions": {
+      "width": 390,
+      "height": 939
+    }
+  },
+  {
+    "file": "studies-mobile.png",
+    "route": "/patients/demo-patient-002/estudios",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "sha256": "34cee7eff5f9fd7db59ee3b5a7954cb2776dbb3a23e44458962fcee1c92bc34d",
+    "dimensions": {
+      "width": 390,
+      "height": 1231
+    }
+  },
+  {
+    "file": "documents-mobile.png",
+    "route": "/patients/demo-patient-002/documentos",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "sha256": "430a7a61c167fc36d113015e4d1c48cd76308ed410a8e22d0451516cd9a0e32f",
+    "dimensions": {
+      "width": 390,
+      "height": 844
+    }
+  },
+  {
+    "file": "background-mobile.png",
+    "route": "/patients/demo-patient-002/contexto-clinico",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "sha256": "5f6abd9578a74a38b3318bf761fee31d0c03b1c8a49720d752df3b8dacc1ccf9",
+    "dimensions": {
+      "width": 390,
+      "height": 844
+    }
+  }
+]

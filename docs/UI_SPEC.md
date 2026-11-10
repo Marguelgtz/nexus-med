@@ -620,14 +620,20 @@ This section is normative for O-006 and supersedes conflicting O-005 layout/inte
 
 ### 8.1 Patient workspace — `/patients/[id]`
 
-Keep the current patient route and server-render fresh patient, appointment, encounter, study, and document data. Organize the page in this order:
+The patient workspace has focused URL-driven views (D-042), with one persistent navigation and current-page state. Each route server-renders fresh Hono data using the existing no-store transport; it does not fetch unrelated lists.
 
-1. Patient identity, archive state, and direct actions: `Nueva consulta`, `Nueva cita`, `Solicitar estudio`, `Nueva receta`, `Nuevo informe`, demographics/background edit, and existing archive action.
-2. Safety context: show `Alergias` and `Medicamentos actuales` first and at full value; unknown fields say `No registrado`. Show conditions and prior surgery in a compact disclosure. Do not make an empty allergy field look like a negative finding.
-3. `Pendiente de atención`, only when it has entries: next scheduled appointment and studies still pending doctor review (`ordered` and `completed`, per D-032). Each entry opens its existing patient/encounter context. Do not infer a task priority or add a cross-patient queue.
-4. Recent encounters and compact links to the full chronological history, appointments, studies, prescriptions, and reports. Older detail remains available without dominating the first view.
+| View | Route under `/patients/[id]` | Responsibility |
+|---|---|---|
+| Resumen | `/` | Identity, demographics, direct entry actions, the earliest still-scheduled appointment and count of studies pending review. No complete history, background grid, study list or document list. |
+| Consultas | `/consultas` | One chronological list of clinical notes; create/open consultation. |
+| Citas | `/citas` | Scheduling records and explicit handoff to a new consultation, or to the existing linked note. All still-scheduled records remain visible, even after their scheduled date; a past date never implies completion/cancellation. |
+| Estudios | `/estudios` | Canonical patient-level request/review workflow, including standalone and linked studies. Summary `Solicitar estudio` opens `/estudios?solicitar=1`. |
+| Recetas e informes | `/documentos` | Patient document list and creation entry points; existing individual document and print routes remain. |
+| Antecedentes | `/contexto-clinico` | The four medical-background fields in a 2×2 grid, with edit entry to `/antecedentes`. The historical read URL is retained; no copied recent notes, studies or appointment form. |
 
-The patient studies section lists both linked and standalone requests, their doctor-entered association (or `Sin consulta asociada`), current stored status, record-entry timestamp, and result note if present. A standalone request's `createdAt` is its record-entry time only. O-005 statuses retain their labels and transitions; show this explanation beside study review controls: `El estado Completada no registra por separado si el estudio se realizó o cuándo llegó el resultado.` Do not infer a performance or result-arrival event.
+The stored appointment is a scheduling record; a consultation is a clinical note and may exist without an appointment. Navigation copy makes that distinction without merging these entities. Legacy overview hashes (`patient-history`, `patient-studies`, `patient-documents`, `patient-background`, individual `study-*`) navigate to the corresponding focused view. Browser back/forward and direct links preserve the selected view. The patient header is composed by `patients/patient-section-header.tsx`; domain components remain the owners of forms, saves and validation.
+
+Patient-level study review shows the stored status, doctor-entered association (or `Sin consulta asociada`), record-entry time and result notes. Unknown background remains `No registrado`. Allergies/current medication remain visible in consultation safety context because they inform the active note; this contextual summary is not another history list. Clinical state semantics and explicit saving stay as defined in §8.3.
 
 ### 8.2 Consultation workspace — new and saved encounter
 
@@ -656,7 +662,7 @@ Retain the O-005 typography, color tokens, Spanish (Mexico), system font stack, 
 
 ## 9. O-007 UI v0 conventions (owner-authorized implementation)
 
-This section supersedes conflicting presentation rules in §§5/7/8; clinical behavior remains governed by §8 except for the explicitly documented study-name/detail contract refinement below. The existing information architecture is retained: registry/calendar navigation → patient identity/safety/pending work/history → consultation → contextual studies/documents/follow-up. No new dashboard or clinical interpretation is introduced.
+This section supersedes conflicting presentation rules in §§5/7/8; clinical behavior remains governed by §8 except for the explicitly documented study-name/detail contract refinement below. Information architecture is registry/calendar → patient workspace with focused views → consultation → contextual studies/documents/follow-up (D-042). No new dashboard or clinical interpretation is introduced.
 
 ### Foundation and composition
 
@@ -672,10 +678,10 @@ This section supersedes conflicting presentation rules in §§5/7/8; clinical be
 - Global `:focus-visible`, skip-to-main navigation, current-page navigation cues, pressed filter buttons, reduced-motion handling and `.sr-only` are shared rules. Do not give independent filter buttons incomplete ARIA tab semantics.
 - Forms expose busy state and preserve explicit save/disabled/error behavior. Appointment failures announce an alert. Embedded document opening focuses its title field; successful save or cancellation returns focus to the encounter action heading. Saved feedback uses success tokens and a polite status. Unknown data and study-state caveats remain explicit.
 
-### Owner-review refinements — 2026-11-09
+### Owner-review refinements — 2026-11-10
 
 - Patient pages share a compact workflow navigation. The active-patient registry exposes `Nueva consulta` directly; a scheduled appointment also exposes `Ver cita` and `Iniciar consulta` at the point of pending work.
-- The patient overview keeps all four background fields visible in a 2×2 grid. Full details and scheduling live on `/patients/[id]/contexto-clinico`; unknown values remain explicitly `No registrado`. Timeline entries show a short date, time, encounter-type chip and wrapping reason.
+- Focused patient views follow §8.1. `Antecedentes` owns the four-field background grid; `Consultas` owns the timeline with short date, time, encounter-type chip and wrapping reason. The overview shows only demographics and compact pending work. Citas explains its scheduling role and offers direct handoff/note links. Section navigation replaces the visible content instead of scrolling a combined page.
 - Saved consultation edits expose one named field at a time with explicit save/cancel. Study entry opens from `Acciones de esta consulta`, uses one unboxed single-level form with stacked fields in the side column, and states the patient/consultation association before save. Focus returns to the action heading after save/cancel. For `Otro`, doctors enter a required study name and can add optional detail.
 - Mobile month view reduces each date to a compact, selectable cell and presents the selected day's appointments in a readable agenda below the grid. The shared visual tokens use a restrained evergreen and warm-neutral clinical palette; this is provisional, not a final brand decision.
 - The study transport/database contract now separates `name` (2–200 characters) and nullable optional `description` (≤500 characters). A data-preserving SQLite migration maps every prior description into name while retaining identifiers, patient/encounter association, status, result note and timestamps.

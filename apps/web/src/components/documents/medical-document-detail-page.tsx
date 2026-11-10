@@ -56,7 +56,8 @@ export async function MedicalDocumentDetailPage({
         fullName={patient.fullName}
         externalIdentifier={patient.externalIdentifier}
         isArchived={patient.isArchived}
-        backHref={`/patients/${patient.id}`}
+        backHref={`/patients/${patient.id}/documentos`}
+        backLabel="Recetas e informes"
       />
       {encountersError ? <ErrorBanner message={encountersError} retryHref={`/patients/${patient.id}`} /> : null}
       <MedicalDocumentDetail

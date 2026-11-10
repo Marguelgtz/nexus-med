@@ -4,9 +4,25 @@
 **Last updated:** 2026-11-10
 **Owner:** Project owner  
 **Primary agent:** Hermes Agent  
-**Current implementation state (updated 2026-11-10):** O-001–O-006 remain implemented. O-007 plus the owner-review refinements are implemented on `feat/o007-ui-foundation`, based on PR #8 at `1a0432f`; this follow-up adds direct consultation entry, patient workflow navigation, focused clinical context, individual-field note editing, study ordering inside consultation actions, the `Otro` study name/detail contract, and a data-preserving migration. Code commit `28c00cc` and evidence/docs commit `b371bbc` are verified and pushed. API 113/113, web 39/39, workspace typecheck, lint and final Next.js production build pass. Chromium screenshots were inspected at 1440, 1024 and 390 CSS px; key routes report no horizontal overflow. The original 89-image inventory remains unchanged; 14 current owner-review captures are separately inventoried. Local startup applied no new migration and seed created zero records. [PR #9](https://github.com/Marguelgtz/nexus-med/pull/9) has its verification/evidence summary updated, remains open against PR #8, and is unmerged. The pre-existing `apps/web/next-env.d.ts` dev-path modification remains uncommitted.
+**Current implementation state (updated 2026-11-10):** O-001–O-007 remain implemented on `feat/o007-ui-foundation`. The second owner-review iteration now separates patient views and removes repeated histories; it is implemented and locally verified, pending commit/push/PR #9 update. Web 39/39, production build with TypeScript validation, lint and 24 Chromium route/viewport checks pass. Eighteen inspected production screenshots use an isolated exact synthetic fixture DB. No API/schema/domain change or clinical write was made. PR #9 remains open against PR #8. Preserve the pre-existing local `apps/web/next-env.d.ts` change.
 
-## Active follow-up — Owner UI review
+## Active follow-up — Focused patient views (2026-11-10)
+
+**Status:** Implemented and verified, ready to publish. The owner-reported combined-page navigation and repeated clinical history are resolved.
+
+**Outcome/scope:** Replace combined overview anchors with focused SSR views for summary, consultations, appointments, studies, documents and background. Clarify scheduling versus clinical notes without merging their entities or changing API/schema/status semantics. Keep the existing shell and domain components.
+
+**Sequence:** (1) Split views and update navigation/legacy anchors. (2) Remove repeated history/studies/appointments from background; preserve encounter safety context. (3) Clarify appointment handoff and verify each navigation destination, empty states, mobile reflow and unsaved form guard. (4) Update authoritative conventions, capture screenshots, commit/push and update PR #9 without merging.
+
+**Acceptance:** Each navigation item renders its own content and active state; overview has demographics/next action rather than full lists; consultation history has one canonical list; background has no copied encounter/study lists. Citas describes scheduling and links to the corresponding clinical note when present. Existing mutations remain domain-owned and explicit.
+
+**Verification:** Web 39/39; final production build including TypeScript validation; ESLint exit 0 with existing warning; 24 route/viewport cases at 1440/1024/390/320px; current navigation/exclusive content, legacy bookmarks, browser history, keyboard/skip focus, dirty-form cancel/accept, linked note, workflow-specific form cancels, empty record and missing patient checks pass. Eighteen production screenshots were inspected and their hashes validated. Isolated fixture counts remain 7/9/9/2/2; no clinical save or owner DB reset. API suite is not rerun for presentation-only changes.
+
+**Branch/delivery:** Continue `feat/o007-ui-foundation`; preserve local `next-env.d.ts`; commit the code/docs/evidence, push and update PR #9 without merging.
+
+**Next action:** publish the verified iteration and restore the normal local app URL.
+
+## Previous follow-up — Owner UI review
 
 **Status:** Delivered and published for owner review. Code, runtime, data-preservation, responsive visual checks, screenshots, and implementation documentation are verified. Code commit `28c00cc` and evidence/documentation commit `b371bbc` are pushed, and PR #9 has the final verification/evidence summary. Preserve the pre-existing `apps/web/next-env.d.ts` modification.
 

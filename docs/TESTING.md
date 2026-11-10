@@ -1,5 +1,20 @@
 # Testing and Verification
 
+## Focused patient views — 2026-11-10
+
+The second owner review replaces overview anchor navigation with separate SSR views (D-042). Web tests pass **39/39**; the final Next.js production build, including TypeScript validation, passes; ESLint exits 0 with its existing App Router `pages/` warning. No API/schema/domain code changed, so the historical 113-test API result is not presented as a fresh run.
+
+Chromium checks use the production build and a separately migrated/seeded exact fixture DB (7/9/9/2/2) on loopback 3105/4105. No clinical write was submitted. Checks cover:
+
+- Six view destinations and exclusive content/current-page navigation at 1440, 1024, 390 and 320px: **24 route/viewport checks**, all without horizontal page overflow.
+- Legacy overview bookmarks (including the owner's patient-005 history bookmark), back/forward navigation, direct linked-note entry and active consultation navigation.
+- Summary-to-study request entry, dirty study text preserved when navigation is cancelled, and successful navigation when discarding is confirmed.
+- Keyboard Enter activates section navigation; the skip link focuses main content. Prescription, standalone consultation and appointment-origin consultation cancellation return to their owning destinations. Background edit/cancel return, six routes on an empty patient record and a genuine 404 for a missing synthetic patient also pass.
+
+Eighteen production screenshots are inventoried and inspected in [focused patient views](assets/ui-v0/focused-patient-views-2026-11-10/README.md). Summary carries only demographics and compact pending work; the background view no longer repeats consultations/studies/scheduling. Scheduled past dates remain visible without inferred completion. The short appointment date plus time range no longer repeats the start time, and `Tipo de cita` distinguishes the planned classification from a clinical note.
+
+Limits: Chromium only, no screen-reader or physician task study; no renewed claim of final visual/brand approval. Previous full workflow/print/API checks remain historical baseline evidence.
+
 ## O-007 owner-review follow-up — 2026-11-10
 
 - Automated checks on the owner-review code: API **113/113** (7 files; 1 intentionally skipped), web **39/39**, workspace typecheck, and ESLint exit 0. The first API attempt hit sandbox `EPERM` when the rollback test spawned `npx`; the permitted rerun passed all 113 tests. ESLint prints the existing non-failing warning that this App Router repository has no `pages/` directory.

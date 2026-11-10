@@ -246,4 +246,8 @@ From a saved encounter, open the existing prescription, report, or new-appointme
 
 ### 15.4 Focus the patient workspace
 
-Order the patient workspace as identity and direct actions, safety context, compact next appointment/study-review work, recent clinical activity, then full encounter/appointment/study/document history. Show the next scheduled visit and unreviewed studies only when present. Keep the existing registry, calendar, document, print, and chronological history routes available. Do not add a global task dashboard or staff-role behavior.
+Use one patient navigation with focused views: Resumen, Consultas, Citas, Estudios, Recetas e informes and Antecedentes (D-042; route responsibilities in `UI_SPEC.md` §8.1). Selecting one replaces the visible workflow. Resumen contains demographics and compact pending attention, rather than full histories or copies of other sections.
+
+A cita reserves/plans attention and carries its scheduling state; a consulta documents clinical attention and may exist without a cita. In Citas, start a note from an unlinked scheduled appointment or open the linked note. A scheduled date in the past stays visible as still scheduled, without inferred attendance/cancellation. Opening or saving a note never completes/links the cita automatically.
+
+Consultas owns the chronological note list; Antecedentes owns the four background values and edit entry, with no repeated recent notes/studies/scheduling form. Consultation safety context still shows allergies/current medication while documenting care. Default form/detail returns stay in their owning section; explicit return-to-consultation paths remain intact. Legacy overview bookmarks route to the corresponding focused view. Navigation keeps the existing unsaved-change confirmation and preserves entered text when the doctor cancels leaving.
