@@ -6,7 +6,23 @@
 **Primary agent:** Hermes Agent  
 **Current implementation state (updated 2026-11-10):** O-001–O-007 remain implemented on `feat/o007-ui-foundation`. The second owner-review iteration now separates patient views and removes repeated histories; it is implemented, verified and pushed as `03be1b8`, with PR #9 updated. Web 39/39, production build with TypeScript validation, lint and 24 Chromium route/viewport checks pass. Eighteen inspected production screenshots use an isolated exact synthetic fixture DB. No API/schema/domain change or clinical write was made. PR #9 remains open against PR #8. Preserve the pre-existing local `apps/web/next-env.d.ts` change.
 
-## Active follow-up — Focused patient views (2026-11-10)
+## Active follow-up — Compact clinical entry and dialogs (2026-11-10)
+
+**Status:** In progress, owner-authorized. Documentation remains in English.
+
+**Outcome/scope:** Make long consultation/prescription entry manageable with reversible in-memory stages and focused native dialogs. Request studies within the current consultation with automatic association; move background from navigation into overview. Preserve explicit saves, clinical fields, API/schema, stored prescription instructions, status meanings, print isolation and patient identity.
+
+**Ordered delivery:** (1) Add the accessible dialog primitive and guarded follow-up scheduling; verify/commit. (2) Stage new consultation entry and contextual study requests; verify/commit. (3) Compact medication entry in a dialog, retain existing per-line instructions, and move background into overview; verify/commit. (4) Reconcile existing English docs, inspect synthetic production screenshots, verify build/workflows, push and update open PR #9 without merging.
+
+**Acceptance:** Dialogs name their purpose/patient, contain keyboard focus, handle Escape/close without discarding dirty text silently, and restore trigger focus. Consultation stages keep all typed fields and route errors to the relevant stage, with a final complete-note review and explicit save. New-note studies save atomically with the note; saved-note requests retain immutable association. Follow-up saves an independent appointment and returns to the mounted workspace. Medications are reviewed as compact summaries and edited individually; general instructions have one capture field and historical per-line instructions survive editing/printing. Background has no navigation item and is visible/editable from Resumen; existing read links remain valid.
+
+**Verification/delivery:** Use focused browser checks plus web tests/typecheck/lint for each code milestone; final production build and isolated exact-fixture mutation/print checks. Keep incremental digestible commits on `feat/o007-ui-foundation`, preserve local `next-env.d.ts`, update ACTION_PLAN throughout. No API/schema change is planned.
+
+**Milestone 1 verified:** Native dialog and new/saved-consultation follow-up modal implemented. Web 39/39, web typecheck and lint pass (existing App Router warning only). Chromium at 390px verifies modal focus containment/return, dirty Escape cancel/accept, and preservation of the unsaved note. Native repeated Escape close requests were prevented at keydown before accepting a close. No clinical write submitted.
+
+**Next action:** commit the verified dialog/follow-up milestone, then implement staged consultation and contextual study requests.
+
+## Previous follow-up — Focused patient views (2026-11-10)
 
 **Status:** Delivered and published as `03be1b8`; PR #9 is updated and remains open/unmerged. The owner-reported combined-page navigation and repeated clinical history are resolved.
 

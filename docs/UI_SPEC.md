@@ -686,6 +686,12 @@ This section supersedes conflicting presentation rules in §§5/7/8; clinical be
 - Mobile month view reduces each date to a compact, selectable cell and presents the selected day's appointments in a readable agenda below the grid. The shared visual tokens use a restrained evergreen and warm-neutral clinical palette; this is provisional, not a final brand decision.
 - The study transport/database contract now separates `name` (2–200 characters) and nullable optional `description` (≤500 characters). A data-preserving SQLite migration maps every prior description into name while retaining identifiers, patient/encounter association, status, result note and timestamps.
 
+### Focused dialogs — 2026-11-10
+
+`components/modal.tsx` is the client-only native-dialog shell: named heading/description, inert background, explicit Tab/Shift+Tab boundaries, guarded Escape/close, viewport-bounded scrolling and trigger-focus restoration. Domain forms own dirty confirmation, validation, persistence and busy state. It is excluded from print; no dialog framework is added.
+
+Follow-up scheduling opens the existing appointment form in this dialog from a new or saved consultation. The new note stays mounted. Saving creates only an independent appointment; it neither saves the unsaved note nor completes/links an appointment. Changed appointment fields require confirmation before dismissing. Save failures keep fields in the open modal; saving disables close.
+
 ### Figma handoff boundary
 
 UI v0 is a working baseline, not a final brand approval. Preserve the workflow hierarchy, component ownership, states, tokens, labels, keyboard behavior and print isolation during later design work. Palette personality, iconography, typeface branding, density preferences and decorative treatment remain for later Figma exploration/owner review. No Figma access occurred. Evidence and verification limits live in `TESTING.md` and `assets/ui-v0/README.md`; PR #8's audit remains the historical comparison.

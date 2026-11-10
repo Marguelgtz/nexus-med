@@ -1,5 +1,9 @@
 # Testing and Verification
 
+## Compact entry — incremental verification (2026-11-10)
+
+Dialog/follow-up milestone: web 39/39, web typecheck and ESLint pass (existing warning only). Local Chromium at 390px checks new/saved consultation follow-up dialogs, initial field focus, Tab containment, trigger focus return, dirty Escape cancel/accept and note retention. No clinical write was submitted. A repeated native Escape close-request behavior was found and fixed by handling/preventing Escape at keydown before the guarded close.
+
 ## Focused patient views — 2026-11-10
 
 The second owner review replaces overview anchor navigation with separate SSR views (D-042). Web tests pass **39/39**; the final Next.js production build, including TypeScript validation, passes; ESLint exits 0 with its existing App Router `pages/` warning. No API/schema/domain code changed, so the historical 113-test API result is not presented as a fresh run.

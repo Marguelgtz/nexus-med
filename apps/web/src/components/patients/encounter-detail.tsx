@@ -4,7 +4,6 @@
 // only the selected section becomes a form, and each change is explicitly saved.
 
 import { useRef, useState } from 'react';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
 import {
@@ -30,6 +29,7 @@ import { useBeforeUnloadGuard } from '../../lib/use-before-unload-guard';
 import { ClinicalContext } from './clinical-context';
 import { EncounterStudyRequestForm, EncounterStudyWorkflow } from './study-workflow';
 import { EncounterAppointmentHandoff } from '../appointments/encounter-handoff';
+import { AppointmentForm } from '../appointments/appointment-form';
 import { MedicalDocumentForm } from '../documents/document-form';
 
 const SECTIONS: { key: keyof SectionValues; label: string; rows: number }[] = [
@@ -79,9 +79,9 @@ function EncounterContextActions({
   const [savedDocumentMessage, setSavedDocumentMessage] = useState<string | null>(null);
   const [savedStudyMessage, setSavedStudyMessage] = useState(false);
   const [studyRequestOpen, setStudyRequestOpen] = useState(false);
+  const [followUpOpen, setFollowUpOpen] = useState(false);
+  const [followUpMessage, setFollowUpMessage] = useState<string | null>(null);
   const actionsHeading = useRef<HTMLHeadingElement>(null);
-  const returnTo = `/patients/${patient.id}/consultas/${encounter.id}`;
-  const followUpQuery = new URLSearchParams({ returnTo }).toString();
 
   return (
     <>
@@ -91,6 +91,7 @@ function EncounterContextActions({
         <section className="card consultation-actions-card" aria-labelledby="encounter-actions-title">
           <h2 id="encounter-actions-title" tabIndex={-1} ref={actionsHeading}>Acciones de esta consulta</h2>
           {savedDocumentMessage ? <p className="notice" role="status">{savedDocumentMessage}</p> : null}
+          {followUpMessage ? <p className="notice" role="status">{followUpMessage}</p> : null}
           {savedStudyMessage ? <p className="notice" role="status">Estudio guardado en esta consulta.</p> : null}
           {editing ? (
             <p className="field-hint">Guarda o cancela la edición antes de iniciar otra acción de esta consulta.</p>
@@ -117,15 +118,18 @@ function EncounterContextActions({
                 Nuevo informe
               </button>
               {documentKind === null ? (
-                <Link className="btn btn-ghost" href={`/patients/${patient.id}/citas/nueva?${followUpQuery}`}>
+                <button type="button" className="btn btn-ghost" onClick={() => setFollowUpOpen(true)}>
                   Programar seguimiento
-                </Link>
+                </button>
               ) : null}
             </>
           )}
         </section>
         <EncounterStudyWorkflow patientId={patient.id} studies={studies} />
       </aside>
+      {followUpOpen ? <AppointmentForm patientId={patient.id} dialogTitle={`Programar seguimiento · ${patient.fullName}`}
+        onCancel={() => setFollowUpOpen(false)}
+        onCreated={(created) => { setFollowUpMessage(`Cita creada para ${formatDateTime(created.startAt)}.`); setFollowUpOpen(false); router.refresh(); }} /> : null}
       {!editing && documentKind ? (
         <section className="consultation-related-form" aria-labelledby="related-document-title">
           <div className="page-head">

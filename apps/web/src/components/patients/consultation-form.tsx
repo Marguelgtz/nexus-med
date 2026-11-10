@@ -362,7 +362,7 @@ export function ConsultationForm({
           <button
             type="button"
             className="btn btn-secondary"
-            onClick={() => setShowFollowUp((show) => !show)}
+            onClick={() => setShowFollowUp(true)}
             aria-expanded={showFollowUp}
           >
             Programar seguimiento
@@ -380,22 +380,9 @@ export function ConsultationForm({
       </aside>
 
       {showFollowUp ? (
-        <section className="card follow-up-panel" aria-labelledby="follow-up-title">
-          <div className="card-header">
-            <h2 id="follow-up-title">Programar seguimiento — {patient.fullName}</h2>
-            <button type="button" className="btn btn-ghost btn-sm" onClick={() => setShowFollowUp(false)}>
-              Cerrar
-            </button>
-          </div>
-          <p className="field-hint">La cita se guarda como un registro independiente. Esta consulta permanece sin guardar.</p>
-          <AppointmentForm
-            patientId={patient.id}
-            onCreated={(created) => {
-              setCreatedFollowUp(created);
-              setShowFollowUp(false);
-            }}
-          />
-        </section>
+        <AppointmentForm patientId={patient.id} dialogTitle={`Programar seguimiento · ${patient.fullName}`}
+          onCancel={() => setShowFollowUp(false)}
+          onCreated={(created) => { setCreatedFollowUp(created); setShowFollowUp(false); }} />
       ) : null}
     </div>
   );
