@@ -6,6 +6,20 @@
 **Primary agent:** Hermes Agent  
 **Current implementation state (updated 2026-11-10):** Compact clinical entry is implemented, verified and pushed on `feat/o007-ui-foundation`: `786533b`, `fd2cf83`, `e39a604`, final corrections `06a4fa8`, evidence `a4434dc`. Three consultation stages, contextual study/follow-up dialogs, compact medication entry and overview background are delivered. Web 39/39, typecheck/lint and final production build pass. Isolated persistence/failure/print/restart/seed checks pass; 25 inspected PNGs are inventoried. English authoritative docs are reconciled. PR #9 is updated against PR #8, open and unmerged. Normal startup at 3000/4000 has no pending migration and creates zero records. Preserve the pre-existing local `apps/web/next-env.d.ts` change.
 
+## Active follow-up — Figma UI v0 foundation alignment (2026-11-10)
+
+**Status:** Implemented on `feat/o007-ui-foundation`; static checks pass. The owner-selected Figma UI v0 system and key workflow artboards were reviewed in the browser; no MCP used. Preserve the pre-existing `apps/web/next-env.d.ts` change.
+
+**Outcome/scope:** Align shared typography, control geometry, content width, navigation density and consultation-stage layout to the reviewed system board. Consolidate conflicting/duplicated CSS rules. Keep clinical behavior, API/schema, existing tokens/colors, and print-specific layout intact.
+
+**Sequence:** (1) Record the reviewed system measurements in `UI_SPEC.md` — complete. (2) Apply shared CSS tokens and remove conflicting overrides — complete. (3) Match compact mobile navigation and consultation steps to the mobile artboard — complete. (4) Run web typecheck/lint and inspect the final diff — complete. Commit the focused change and keep PR #9 unmerged.
+
+**Acceptance:** Body/title/section-label scale and 42px/44px control heights follow the UI v0 system; patient screens stay within 1120px; mobile menus do not wrap into crowded rows; the active consultation stage is full-width while other steps stay directly operable; duplicate rules no longer override intended registry/document/nav layout. No clinical or persistence behavior changes.
+
+**Verification:** `npm run typecheck --workspace apps/web` passes. `npm run lint` exits 0 with the existing Pages-directory configuration warning. `git diff --check` passes. No tests or post-edit local browser capture were run in this pass; the Figma reference itself was reviewed in the browser.
+
+**Next action:** commit the reviewed alignment on this branch; leave PR #9 open for owner review.
+
 ## Active follow-up — Compact clinical entry and dialogs (2026-11-10)
 
 **Status:** Delivered and published for owner review. Documentation remains in English.

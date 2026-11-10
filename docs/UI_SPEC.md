@@ -44,7 +44,7 @@ Gaps and decisions recorded here (no API/data changes required; per D-017 the AP
 / ──────────────── 307 redirect ────────────────▶ /patients
                                                         │
 ┌───────────────────────────────────────────────────────┤
-│  Top bar (all screens):  [Nexus Med]  Pacientes · Calendario │
+│  Top bar (all screens):  [Nexus Med]  [Pacientes · Calendario desktop / menu mobile] │
 │  Demo banner: MODO DEMOSTRACIÓN — DATOS FICTICIOS     │
 └───────────────────────────────────────────────────────┘
 
@@ -669,8 +669,9 @@ This section supersedes conflicting presentation rules in §§5/7/8; clinical be
 
 ### Foundation and composition
 
-- `globals.css` remains the single light-theme token and visual-rule owner. Extend the existing spacing, semantic colors, surfaces and component classes; do not introduce a parallel framework or token vocabulary. System fonts and local assets preserve offline use. `--success-bg` and `--procedure-accent` name existing colors. Print paper retains its deliberate document-specific styling.
-- `primitives.tsx` remains server-safe for shared display/link/feedback primitives. Interactive state and explicit saves stay in domain components. Existing `.btn` variants (`primary`, `secondary`, `ghost`, `ghost-danger`, `danger`) and `.btn-sm` cover actions; wrapping action containers must not override variant sizing. Mobile buttons have a 44px minimum height. Use links for navigation and buttons for state changes.
+- `globals.css` remains the single light-theme token and visual-rule owner. The owner-reviewed [Nexus Med — UI v0 Figma file](https://www.figma.com/design/UZFFtBUHWGOAkrVLvHsujJ/Nexus-Med-%E2%80%94-UI-v0) system board is the current visual reference: system fonts, 4px-multiple spacing, 8/12px radii, 1120px content width, and evergreen/warm-neutral colors. Keep the existing spacing and semantic color vocabulary; do not introduce a parallel framework. `--success-bg` and `--procedure-accent` name existing colors. Print paper retains its deliberate document-specific styling.
+- The shared type scale is body 14/22px, page title 28/36px on desktop (24/32px on narrow screens), section title 18/26px, and section label 11/16px. Use the system font stack and local assets so the application remains usable offline.
+- Standard `.btn` controls have a 42px desktop minimum height; compact `.btn-sm` controls may use 32px on desktop. Both use at least 44px on narrow screens. The `primary`, `secondary`, `ghost`, `ghost-danger`, and `danger` variants cover actions; wrapping action containers must not override variant sizing. Use links for navigation and buttons for state changes.
 - `.field` stacks labels and controls; `.form-row` composes wrapping appointment fields. Both and search use one control rule: inherited system typography, 16px input text, 44px minimum height, semantic border, visible focus. Keep validation with the owning form/Hono. `patients/study-fields.tsx` renders the shared typed category/name/optional-detail/removal row for staged, standalone and saved-encounter study entry; it owns no persistence or draft behavior. Visible nested labels accompany every repeated field.
 - Page headings and card headings wrap with contextual actions. Registry rows align name, age, identifier and archive state at wide widths and stack metadata at narrow widths. Timeline reasons wrap completely without altering saved text. Badges retain readable width and text status; color is supplementary.
 
@@ -679,6 +680,7 @@ This section supersedes conflicting presentation rules in §§5/7/8; clinical be
 - Month header spans all seven equal date tracks. Neighboring-month dates are muted without reducing text opacity. Month chips may truncate visually at narrow widths; their full accessible names and day/detail links remain available. Week uses equal columns above 639px and seven chronological full-width day rows below it. No horizontal-scroll calendar is required.
 - Consultation remains note-first in its wide two-column workspace. Context/actions use ordinary page scrolling, with no nested rail scroll. At ≤900px the context starts collapsed and can be expanded with native summary keyboard activation; identity remains in the note header. The responsive subscription supplies a stable collapsed SSR snapshot and expands desktop context after hydration. Complete background is linked to its overview section.
 - Global `:focus-visible`, skip-to-main navigation, current-page navigation cues, pressed filter buttons, reduced-motion handling and `.sr-only` are shared rules. Do not give independent filter buttons incomplete ARIA tab semantics.
+- On narrow screens, global navigation and patient-section navigation use native disclosures with the current section named; desktop keeps the direct links. In the staged consultation, the active step spans the row and inactive steps remain compact, visible controls.
 - Forms expose busy state and preserve explicit save/disabled/error behavior. Appointment failures announce an alert. Embedded document opening focuses its title field; successful save or cancellation returns focus to the encounter action heading. Saved feedback uses success tokens and a polite status. Unknown data and study-state caveats remain explicit.
 
 ### Owner-review refinements — 2026-11-10
@@ -703,4 +705,4 @@ Medication entry uses `documents/medication-editor.tsx`, the same dialog shell a
 
 ### Figma handoff boundary
 
-UI v0 is a working baseline, not a final brand approval. Preserve the workflow hierarchy, component ownership, states, tokens, labels, keyboard behavior and print isolation during later design work. Palette personality, iconography, typeface branding, density preferences and decorative treatment remain for later Figma exploration/owner review. No Figma access occurred. Evidence and verification limits live in `TESTING.md` and `assets/ui-v0/README.md`; PR #8's audit remains the historical comparison.
+UI v0 is a working baseline, not a final brand approval. The system board and key registry, patient overview, and consultation artboards were reviewed in the browser on 2026-11-10. This pass did not use Figma MCP or import component metadata; measurements above are the browser-reviewed implementation target. Preserve the workflow hierarchy, component ownership, states, tokens, labels, keyboard behavior and print isolation during later design work. Brand approval and any remaining screen-specific density or decorative decisions remain for owner review. Evidence and verification limits live in `TESTING.md` and `assets/ui-v0/README.md`; PR #8's audit remains the historical comparison.

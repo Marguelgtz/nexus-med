@@ -53,6 +53,14 @@
   /* Layout */
   --container: 1120px;
   --topbar-h: 56px;
+
+  /* UI v0 typography and control geometry */
+  --font-size-body: 14px;
+  --line-height-body: 22px;
+  --font-size-page-title: 28px;
+  --line-height-page-title: 36px;
+  --button-height: 42px;
+  --control-height: 44px;
 }
 
 * {
@@ -69,14 +77,14 @@ body {
   background: var(--bg);
   color: var(--text);
   font-family: var(--font-sans);
-  font-size: 15px;
-  line-height: 1.6;
+  font-size: var(--font-size-body);
+  line-height: var(--line-height-body);
   overflow-wrap: anywhere;
 }
 
 h1 {
-  font-size: 24px;
-  line-height: 32px;
+  font-size: var(--font-size-page-title);
+  line-height: var(--line-height-page-title);
   font-weight: 600;
   margin: 0 0 var(--s-3);
 }
@@ -86,6 +94,15 @@ h2 {
   line-height: 26px;
   font-weight: 500;
   margin: 0 0 var(--s-3);
+}
+
+.section-label {
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.6px;
+  line-height: 16px;
+  text-transform: uppercase;
 }
 
 p {
@@ -117,6 +134,8 @@ a:hover {
 /* ── App frame ─────────────────────────────────────────────────────────── */
 
 .topbar {
+  position: relative;
+  z-index: 2;
   height: var(--topbar-h);
   background: var(--surface);
   border-bottom: 1px solid var(--border);
@@ -151,10 +170,17 @@ a:hover {
 }
 
 .topbar-nav a {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--control-height);
   color: var(--text-muted);
   font-size: 14px;
   font-weight: 500;
   padding: 4px 2px;
+}
+
+.topbar-mobile-menu {
+  display: none;
 }
 
 .topbar-nav a:hover {
@@ -210,7 +236,7 @@ a:hover {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 40px;
+  min-height: var(--button-height);
   padding: 8px 16px;
   border-radius: var(--radius-sm);
   border: 1px solid transparent;
@@ -270,7 +296,7 @@ a:hover {
 
 .btn-danger {
   background: var(--danger);
-  color: #ffffff;
+  color: var(--primary-contrast);
 }
 
 .btn-danger:hover:not(:disabled) {
@@ -444,7 +470,7 @@ a.timeline-item:hover {
 .search-input {
   width: 100%;
   min-width: 0;
-  min-height: 44px;
+  min-height: var(--control-height);
   padding: 10px 12px;
   border: 1px solid var(--border-strong);
   border-radius: var(--radius-sm);
@@ -1112,11 +1138,6 @@ a.timeline-item:hover {
 }
 
 .note-section .section-label {
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.6px;
-  text-transform: uppercase;
-  color: var(--text-muted);
   margin-bottom: var(--s-1);
 }
 
@@ -1782,9 +1803,6 @@ a.timeline-item:hover {
 .document-screen-note {
   color: var(--text-faint);
   font-size: 13px;
-}
-
-.document-screen-note {
   max-width: 850px;
   margin: 0 auto;
 }
@@ -1925,21 +1943,8 @@ a.timeline-item:hover {
   min-width: 0;
   flex: 1 1 180px;
 }
-.row.registry-row {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) max-content;
-  padding: 16px;
-}
-.registry-row .main {
-  min-width: 0;
-}
 .registry-state {
   text-align: right;
-}
-.topbar-nav a {
-  min-height: 44px;
-  display: inline-flex;
-  align-items: center;
 }
 .study-field {
   min-width: 0;
@@ -1951,22 +1956,11 @@ a.timeline-item:hover {
   margin-bottom: 4px;
 }
 @media (max-width: 639px) {
-  .row.registry-row {
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 4px 12px;
-}
-  .registry-row .main {
-  grid-column: 1 / -1;
-}
-  .registry-state {
-  grid-column: 2;
-  grid-row: 2 / 4;
-}
   .card {
   padding: var(--s-4);
 }
   .btn, .btn-sm {
-  min-height: 44px;
+  min-height: var(--control-height);
 }
   .card-header .actions {
   width: 100%;
@@ -1975,7 +1969,75 @@ a.timeline-item:hover {
   gap: var(--s-4);
 }
   .topbar-nav {
-  gap: var(--s-3);
+  display: none;
+}
+  .topbar-mobile-menu {
+    display: block;
+    position: relative;
+    margin-left: auto;
+  }
+  .topbar-mobile-menu > summary {
+    display: flex;
+    width: var(--control-height);
+    height: var(--control-height);
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    list-style: none;
+  }
+  .topbar-mobile-menu > summary::-webkit-details-marker {
+    display: none;
+  }
+  .topbar-menu-icon {
+    display: grid;
+    width: 18px;
+    height: 14px;
+    align-content: space-between;
+  }
+  .topbar-menu-icon span {
+    height: 2px;
+    border-radius: 2px;
+    background: var(--text);
+  }
+  .topbar-mobile-panel {
+    position: absolute;
+    top: calc(100% + var(--s-2));
+    right: 0;
+    z-index: 3;
+    display: grid;
+    min-width: 192px;
+    gap: var(--s-1);
+    padding: var(--s-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    background: var(--surface);
+    box-shadow: 0 12px 32px rgb(0 0 0 / 14%);
+  }
+  .topbar-mobile-panel a {
+    display: flex;
+    min-height: var(--control-height);
+    align-items: center;
+    padding: var(--s-2) var(--s-3);
+    border-radius: var(--radius-sm);
+    color: var(--text-muted);
+    font-size: 14px;
+    font-weight: 500;
+  }
+  .topbar-mobile-panel a:hover,
+  .topbar-mobile-panel a.active {
+    background: var(--info-bg);
+    color: var(--primary-hover);
+    text-decoration: none;
+  }
+  .topbar-mobile-panel a.active {
+    font-weight: 600;
+  }
+  h1 {
+    font-size: 24px;
+    line-height: 32px;
+  }
 }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -1988,7 +2050,7 @@ a.timeline-item:hover {
 /* ── Owner review refinements ──────────────────────────────────────────── */
 
 .container:has(.patient-workflow-nav) {
-  max-width: 1380px;
+  max-width: var(--container);
 }
 
 .patient-workspace-shell,
@@ -2041,6 +2103,10 @@ a.timeline-item:hover {
   color: var(--text-muted);
   font-size: 14px;
   font-weight: 500;
+}
+
+.patient-nav-disclosure {
+  display: none;
 }
 
 .patient-nav-links a:hover {
@@ -2340,10 +2406,6 @@ a.timeline-item:hover {
 }
 
 @media (max-width: 900px) {
-  .container:has(.patient-workflow-nav) {
-    max-width: var(--container);
-  }
-
   .patient-workspace-shell:has(.patient-workflow-nav) {
     display: block;
   }
@@ -2367,7 +2429,7 @@ a.timeline-item:hover {
   }
 
   .patient-nav-links a {
-    min-height: 40px;
+    min-height: var(--control-height);
   }
 }
 
@@ -2483,6 +2545,51 @@ a.timeline-item:hover {
 }
 
 @media (max-width: 639px) {
+  .patient-nav-links-wide {
+    display: none;
+  }
+
+  .patient-nav-disclosure {
+    display: block;
+  }
+
+  .patient-nav-disclosure > summary {
+    display: flex;
+    min-height: var(--control-height);
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--s-2);
+    padding: var(--s-2) var(--s-3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    list-style: none;
+  }
+
+  .patient-nav-current {
+    margin-left: auto;
+    color: var(--primary-hover);
+  }
+
+  .patient-nav-disclosure > summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .patient-nav-disclosure .patient-nav-links {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--s-1);
+    margin-top: var(--s-2);
+  }
+
+  .patient-nav-disclosure .patient-nav-links a {
+    min-height: var(--control-height);
+    padding: var(--s-2);
+  }
+
   .registry-row {
     grid-template-columns: minmax(0, 1fr);
     gap: var(--s-2);
@@ -2579,7 +2686,19 @@ body:has(.app-dialog[open]) { overflow: hidden; }
 .compact-record-list .field-hint { display: block; }
 .app-dialog .study-form-row { grid-template-columns: minmax(0, 1fr); }
 @media (max-width: 639px) {
-  .consultation-step-nav button { flex-direction: column; align-items: start; padding: var(--s-2); font-size: 13px; min-height: 64px; }
+  .consultation-step-nav {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .consultation-step-nav button {
+    min-height: var(--control-height);
+    padding: var(--s-2) var(--s-3);
+    font-size: 13px;
+  }
+  .consultation-step-nav button[aria-current] {
+    grid-column: 1 / -1;
+    grid-row: 1;
+    min-height: 48px;
+  }
   .consultation-meta-grid { grid-template-columns: minmax(0, 1fr); gap: 0; }
   .compact-record-list > li { flex-direction: column; }
 }

@@ -11,6 +11,15 @@ export function TopBar() {
   const pathname = usePathname();
   const patientsActive = pathname === '/patients' || pathname.startsWith('/patients/');
   const calendarActive = pathname === '/calendar' || pathname.startsWith('/calendar');
+  const links = [
+    { href: '/patients', label: 'Pacientes', active: patientsActive },
+    { href: '/calendar', label: 'Calendario', active: calendarActive },
+  ];
+  const renderLinks = () => links.map(({ href, label, active }) => (
+    <Link key={href} href={href} aria-current={active ? 'page' : undefined} className={active ? 'active' : undefined}>
+      {label}
+    </Link>
+  ));
 
   return (
     <header className="topbar">
@@ -19,13 +28,20 @@ export function TopBar() {
           Nexus Med
         </Link>
         <nav className="topbar-nav" aria-label="Navegación principal">
-          <Link href="/patients" aria-current={patientsActive ? 'page' : undefined} className={patientsActive ? 'active' : undefined}>
-            Pacientes
-          </Link>
-          <Link href="/calendar" aria-current={calendarActive ? 'page' : undefined} className={calendarActive ? 'active' : undefined}>
-            Calendario
-          </Link>
+          {renderLinks()}
         </nav>
+        <details className="topbar-mobile-menu">
+          <summary aria-label="Navegación principal">
+            <span className="topbar-menu-icon" aria-hidden="true">
+              <span />
+              <span />
+              <span />
+            </span>
+          </summary>
+          <nav className="topbar-mobile-panel" aria-label="Navegación principal">
+            {renderLinks()}
+          </nav>
+        </details>
       </div>
     </header>
   );

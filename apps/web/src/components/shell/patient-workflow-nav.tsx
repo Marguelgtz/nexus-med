@@ -38,6 +38,17 @@ export function PatientWorkflowNav() {
     { href: `${patientHref}/estudios`, label: 'Estudios', active: pathname === `${patientHref}/estudios` },
     { href: `${patientHref}/documentos`, label: 'Recetas e informes', active: onDocument },
   ];
+  const renderLinks = () => links.map((item) => (
+    <Link
+      key={item.label}
+      href={item.href}
+      aria-current={item.active ? 'page' : undefined}
+      className={item.active ? 'active' : undefined}
+    >
+      {item.label}
+    </Link>
+  ));
+  const activeSection = links.find((item) => item.active)?.label ?? 'Paciente';
 
   return (
     <nav className="patient-workflow-nav" aria-label="Flujos del paciente">
@@ -46,18 +57,15 @@ export function PatientWorkflowNav() {
           Nueva consulta
         </Link>
       ) : null}
-      <div className="patient-nav-links">
-        {links.map((item) => (
-          <Link
-            key={item.label}
-            href={item.href}
-            aria-current={item.active ? 'page' : undefined}
-            className={item.active ? 'active' : undefined}
-          >
-            {item.label}
-          </Link>
-        ))}
-      </div>
+      <div className="patient-nav-links patient-nav-links-wide">{renderLinks()}</div>
+      <details className="patient-nav-disclosure">
+        <summary>
+          <span>Secciones</span>
+          <span className="patient-nav-current">{activeSection}</span>
+          <span aria-hidden="true">⌄</span>
+        </summary>
+        <div className="patient-nav-links">{renderLinks()}</div>
+      </details>
     </nav>
   );
 }
