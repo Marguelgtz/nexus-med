@@ -4,11 +4,11 @@
 **Last updated:** 2026-11-10
 **Owner:** Project owner  
 **Primary agent:** Hermes Agent  
-**Current implementation state (updated 2026-11-10):** O-001–O-007 remain implemented on `feat/o007-ui-foundation`. The second owner-review iteration now separates patient views and removes repeated histories; it is implemented, verified and pushed as `03be1b8`, with PR #9 updated. Web 39/39, production build with TypeScript validation, lint and 24 Chromium route/viewport checks pass. Eighteen inspected production screenshots use an isolated exact synthetic fixture DB. No API/schema/domain change or clinical write was made. PR #9 remains open against PR #8. Preserve the pre-existing local `apps/web/next-env.d.ts` change.
+**Current implementation state (updated 2026-11-10):** Compact clinical entry is implemented, verified and pushed on `feat/o007-ui-foundation`: `786533b`, `fd2cf83`, `e39a604`, final corrections `06a4fa8`, evidence `a4434dc`. Three consultation stages, contextual study/follow-up dialogs, compact medication entry and overview background are delivered. Web 39/39, typecheck/lint and final production build pass. Isolated persistence/failure/print/restart/seed checks pass; 25 inspected PNGs are inventoried. English authoritative docs are reconciled. PR #9 is updated against PR #8, open and unmerged. Normal startup at 3000/4000 has no pending migration and creates zero records. Preserve the pre-existing local `apps/web/next-env.d.ts` change.
 
 ## Active follow-up — Compact clinical entry and dialogs (2026-11-10)
 
-**Status:** In progress, owner-authorized. Documentation remains in English.
+**Status:** Delivered and published for owner review. Documentation remains in English.
 
 **Outcome/scope:** Make long consultation/prescription entry manageable with reversible in-memory stages and focused native dialogs. Request studies within the current consultation with automatic association; move background from navigation into overview. Preserve explicit saves, clinical fields, API/schema, stored prescription instructions, status meanings, print isolation and patient identity.
 
@@ -30,7 +30,9 @@
 
 **Milestone 3 commit:** `e39a604`. Final production build passes; isolated note/study, follow-up and two-medication persistence/failure recovery pass. Repeat seed preserves the complete mutated DB digest (7/10/10/4/3). Screenshot review led to full-size study controls, non-wrapping close buttons, inline new-note actions and deferred saved-study focus restoration; these final fixes pass the production build, final screenshots and saved-study focus/print checks.
 
-**Next action:** commit verified final fixes and English evidence, restore normal startup, push and update PR #9.
+**Final delivery:** Corrections `06a4fa8` and evidence `a4434dc` are pushed; PR #9 includes current behavior, incremental commits, tests, screenshots and limits. Saved-study focus, print/background checks and 320px reflow pass after API restart. Normal dev startup is restored with zero new seeded records.
+
+**Next action:** owner review of the compact entry flows. Leave PR #9 unmerged; final visual/physician/screen-reader validation remains outside this verification claim.
 
 ## Previous follow-up — Focused patient views (2026-11-10)
 
