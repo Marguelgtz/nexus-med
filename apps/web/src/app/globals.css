@@ -2039,7 +2039,6 @@ a.timeline-item:hover {
     line-height: 32px;
   }
 }
-}
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
   animation: none !important;

@@ -4,11 +4,11 @@
 **Last updated:** 2026-11-10
 **Owner:** Project owner  
 **Primary agent:** Hermes Agent  
-**Current implementation state (updated 2026-11-10):** Compact clinical entry is implemented, verified and pushed on `feat/o007-ui-foundation`: `786533b`, `fd2cf83`, `e39a604`, final corrections `06a4fa8`, evidence `a4434dc`. Three consultation stages, contextual study/follow-up dialogs, compact medication entry and overview background are delivered. The browser-reviewed Figma UI v0 alignment is pushed as `8431d28`. Web 39/39, typecheck/lint and final production build pass for the previous delivery; this alignment passes web typecheck/lint. Isolated persistence/failure/print/restart/seed checks pass; 25 inspected PNGs are inventoried. English authoritative docs are reconciled. PR #9 is updated against PR #8, open and unmerged. Normal startup at 3000/4000 has no pending migration and creates zero records. Preserve the pre-existing local `apps/web/next-env.d.ts` change.
+**Current implementation state (updated 2026-11-10):** Compact clinical entry is implemented, verified and pushed on `feat/o007-ui-foundation`: `786533b`, `fd2cf83`, `e39a604`, final corrections `06a4fa8`, evidence `a4434dc`. Three consultation stages, contextual study/follow-up dialogs, compact medication entry and overview background are delivered. The browser-reviewed Figma UI v0 alignment is pushed as `8431d28`; its CSS parser correction is now included on the branch. Web 39/39, typecheck/lint and final production build pass for the previous delivery; this alignment passes web typecheck/lint and local startup smoke checks. The idempotent seed created zero records, migrations were current, `/patients` returned 200 and API health returned `ok`. Isolated persistence/failure/print/restart/seed checks pass; 25 inspected PNGs are inventoried. English authoritative docs are reconciled. PR #9 is updated against PR #8, open and unmerged. Preserve the pre-existing local `apps/web/next-env.d.ts` change.
 
 ## Active follow-up — Figma UI v0 foundation alignment (2026-11-10)
 
-**Status:** Implemented and pushed as `8431d28` on `feat/o007-ui-foundation`; PR #9 remains open and unmerged. The owner-selected Figma UI v0 system and key workflow artboards were reviewed in the browser; no MCP used. Preserve the pre-existing `apps/web/next-env.d.ts` change.
+**Status:** Implemented and pushed on `feat/o007-ui-foundation`, including the CSS parser correction found during local startup; PR #9 remains open and unmerged. The owner-selected Figma UI v0 system and key workflow artboards were reviewed in the browser; no MCP used. Preserve the pre-existing `apps/web/next-env.d.ts` change.
 
 **Outcome/scope:** Align shared typography, control geometry, content width, navigation density and consultation-stage layout to the reviewed system board. Consolidate conflicting/duplicated CSS rules. Keep clinical behavior, API/schema, existing tokens/colors, and print-specific layout intact.
 
@@ -16,7 +16,7 @@
 
 **Acceptance:** Body/title/section-label scale and 42px/44px control heights follow the UI v0 system; patient screens stay within 1120px; mobile menus do not wrap into crowded rows; the active consultation stage is full-width while other steps stay directly operable; duplicate rules no longer override intended registry/document/nav layout. No clinical or persistence behavior changes.
 
-**Verification:** `npm run typecheck --workspace apps/web` passes. `npm run lint` exits 0 with the existing Pages-directory configuration warning. `git diff --check` passes. No tests or post-edit local browser capture were run in this pass; the Figma reference itself was reviewed in the browser.
+**Verification:** `npm run typecheck --workspace apps/web` passes. `npm run lint` exits 0 with the existing Pages-directory configuration warning. `git diff --check` passes. On startup, `npm run dev` applied no pending migrations, the idempotent seed created zero rows, Next compiled the corrected stylesheet, `/` returned 307, `/patients` returned 200, and `/health` returned `ok`. No test suite or post-edit visual browser capture was run; the Figma reference itself was reviewed in the browser.
 
 **Next action:** owner review of updated PR #9; leave it open and unmerged.
 
