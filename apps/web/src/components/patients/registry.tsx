@@ -25,11 +25,11 @@ const TABS: { value: 'active' | 'archived' | 'all'; label: string }[] = [
 function PatientRow({ patient }: { patient: PatientSummary }) {
   const age = formatAge(patient.dateOfBirth);
   return (
-    <Link href={`/patients/${patient.id}`} className="row">
+    <Link href={`/patients/${patient.id}`} className="row registry-row">
       <span className="main">{patient.fullName}</span>
       <span className="cell">{age !== null ? `${age} años` : '—'}</span>
       <span className="cell mono">{patient.externalIdentifier ?? '—'}</span>
-      <span style={{ marginLeft: 'auto' }}>
+      <span className="registry-state">
         {patient.isArchived ? (
           <span className="badge badge-archived">Archivado</span>
         ) : null}
@@ -140,12 +140,11 @@ export function PatientRegistry({ initialPatients }: { initialPatients: PatientS
         />
       </div>
 
-      <div className="segmented" role="tablist" aria-label="Filtrar por estado">
+      <div className="segmented" role="group" aria-label="Filtrar por estado">
         {TABS.map((tab) => (
           <button
             key={tab.value}
-            role="tab"
-            aria-selected={status === tab.value}
+            aria-pressed={status === tab.value}
             className={status === tab.value ? 'active' : undefined}
             onClick={() => onTab(tab.value)}
           >

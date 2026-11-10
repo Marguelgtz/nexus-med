@@ -18,18 +18,17 @@ import {
   type StudyCategory,
   createEncounterInputSchema,
   encounterTypeSchema,
-  studyCategorySchema,
 } from '@nexus-med/contracts';
 
 import { ApiError, createEncounter } from '../../lib/api/client';
 import {
   APPOINTMENT_TYPE_LABELS,
   ENCOUNTER_TYPE_LABELS,
-  STUDY_CATEGORY_LABELS,
   formatDateTime,
 } from '../../lib/format';
 import { Badge, ErrorBanner } from '../primitives';
 import { ClinicalContext } from './clinical-context';
+import { StudyFields } from './study-fields';
 import { AppointmentForm } from '../appointments/appointment-form';
 import { useBeforeUnloadGuard } from '../../lib/use-before-unload-guard';
 
@@ -319,53 +318,18 @@ export function ConsultationForm({
           {studies.length > 0 ? (
             <div className="study-form-rows">
               {studies.map((row, i) => (
-                <div className="study-form-row" key={i}>
-                  <select
-                    aria-label={`Categoría del estudio ${i + 1}`}
-                    value={row.category}
-                    onChange={(e) =>
-                      setStudies((rows) =>
-                        rows.map((r, j) =>
-                          j === i ? { ...r, category: e.target.value as StudyCategory } : r,
-                        ),
-                      )
-                    }
-                  >
-                    {studyCategorySchema.options.map((c) => (
-                      <option key={c} value={c}>
-                        {STUDY_CATEGORY_LABELS[c]}
-                      </option>
-                    ))}
-                  </select>
-                  <input
-                    type="text"
-                    aria-label={`Descripción del estudio ${i + 1}`}
-                    placeholder="Ej. Biometría hemática"
-                    maxLength={200}
-                    value={row.description}
-                    onChange={(e) => {
-                      const value = e.target.value;
-                      setStudies((rows) => rows.map((r, j) => (j === i ? { ...r, description: value } : r)));
-                      setFieldErrors((fe) => {
-                        const key = `studies.${i}.description`;
-                        if (!fe[key]) return fe;
-                        const next = { ...fe };
-                        delete next[key];
-                        return next;
-                      });
-                    }}
-                    aria-invalid={errorFor(`studies.${i}.description`) ? 'true' : undefined}
-                  />
-                  {studies.length > 1 ? (
-                    <button
-                      type="button"
-                      className="btn btn-ghost btn-sm"
-                      onClick={() => setStudies((rows) => rows.filter((_, j) => j !== i))}
-                    >
-                      Quitar
-                    </button>
-                  ) : null}
-                </div>
+                <StudyFields key={i} value={row} index={i}
+                  invalid={Boolean(errorFor(`studies.${i}.description`))}
+                  onChange={(value) => {
+                    setStudies((rows) => rows.map((item, j) => j === i ? value : item));
+                    setFieldErrors((current) => {
+                      const next = { ...current };
+                      delete next[`studies.${i}.description`];
+                      return next;
+                    });
+                  }}
+                  onRemove={studies.length > 1 ? () => setStudies((rows) => rows.filter((_, j) => j !== i)) : undefined}
+                />
               ))}
               {studies.map((_, i) =>
                 errorFor(`studies.${i}.description`) ? (

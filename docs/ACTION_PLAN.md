@@ -20,6 +20,24 @@
 
 **Current research handoff:** O-007 is complete on `docs/ui-v0-readiness-research`; [PR #8](https://github.com/Marguelgtz/nexus-med/pull/8) is open, documentation/evidence only. UI v0 has not started.
 
+## Active mission — O-007 UI v0 implementation
+
+Owner-authorized continuation on `feat/o007-ui-foundation`, based on PR #8 (`1a0432f`). Research is complete; UI implementation is now authorized. Preserve the owner modification to `apps/web/next-env.d.ts` uncommitted.
+
+Outcome: a coherent, responsive clinical UI baseline for later Figma work, with existing clinical behavior and API/schema unchanged.
+
+Ordered delivery:
+1. Baseline: run the outstanding O-006 gates and browser follow-ups; preserve working behavior.
+2. Foundation: repair UI-01…UI-11, consolidate existing CSS tokens/control rules and repeatable study input; verify geometry, keyboard and responsive behavior; commit.
+3. Experience: refine shared navigation, registry alignment, context density, feedback and document/form composition; verify critical journeys and print isolation; commit.
+4. Handoff: inspect screenshots against PR #8, run full checks, reconcile authoritative docs/evidence and publish reviewable dependent PR(s); leave unmerged.
+
+Dependencies: sequential implementation and final verification; no delegation. No new packages, Figma, API/schema changes or clinical semantics. P2 visual preferences remain provisional. One focused implementation PR against PR #8 is sufficient if the final diff stays cohesive.
+
+Verification in progress: web baseline 36/36. Initial sandbox API run passed 111 tests but blocked Prisma subprocess (`EPERM`); rerunning with subprocess permission. Typecheck/lint/build running. Browser verification will use a separate synthetic database, never reset the existing one.
+
+Next action: implement layout/control foundation, then execute browser regression and evidence capture.
+
 ## 1. Purpose and operating model
 
 This is the active execution plan. Update it continuously as work progresses: current objective, ordered sub-objectives, actual progress, dependencies, blockers, verification evidence, branch/PR state, and the next action.

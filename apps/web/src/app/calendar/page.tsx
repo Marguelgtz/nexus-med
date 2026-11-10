@@ -118,6 +118,7 @@ export default async function CalendarPage({
               <Link
                 key={v}
                 href={`/calendar?vista=${v}&fecha=${fecha}`}
+                aria-current={v === vista ? 'page' : undefined}
                 className={`btn btn-sm ${v === vista ? 'btn-secondary active-toggle' : 'btn-ghost'}`}
               >
                 {v === 'dia' ? 'Día' : v === 'semana' ? 'Semana' : 'Mes'}
@@ -125,13 +126,13 @@ export default async function CalendarPage({
             ))}
           </div>
           <div className="cal-nav">
-            <Link href={`/calendar?vista=${vista}&fecha=${stepDate(vista, fecha, -1)}`} className="btn btn-ghost btn-sm">
+            <Link href={`/calendar?vista=${vista}&fecha=${stepDate(vista, fecha, -1)}`} aria-label="Periodo anterior" className="btn btn-ghost btn-sm">
               ‹
             </Link>
             <Link href={hoyHref} className="btn btn-ghost btn-sm">
               Hoy
             </Link>
-            <Link href={`/calendar?vista=${vista}&fecha=${stepDate(vista, fecha, 1)}`} className="btn btn-ghost btn-sm">
+            <Link href={`/calendar?vista=${vista}&fecha=${stepDate(vista, fecha, 1)}`} aria-label="Periodo siguiente" className="btn btn-ghost btn-sm">
               ›
             </Link>
           </div>

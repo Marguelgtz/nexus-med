@@ -17,10 +17,11 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="es">
       <body>
+        <a href="#main-content" className="skip-link">Ir al contenido</a>
         <TopBar />
         <DemoBanner />
         <div className="container">
-          <main>{children}</main>
+          <main id="main-content" tabIndex={-1}>{children}</main>
         </div>
       </body>
     </html>

@@ -1,6 +1,15 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useSyncExternalStore } from 'react';
+
+const desktopQuery = '(min-width: 901px)';
+function subscribeLayout(callback: () => void) {
+  const media = window.matchMedia(desktopQuery);
+  media.addEventListener('change', callback);
+  return () => media.removeEventListener('change', callback);
+}
+function isDesktop() { return window.matchMedia(desktopQuery).matches; }
+function serverLayout() { return false; }
 
 import type {
   EncounterDetail,
@@ -41,6 +50,8 @@ export function ClinicalContext({
   encounters: EncounterSummary[];
   studies: StudyRequest[];
 }) {
+  const wide = useSyncExternalStore(subscribeLayout, isDesktop, serverLayout);
+  const [expanded, setExpanded] = useState(false);
   const [selected, setSelected] = useState<EncounterDetail | null>(null);
   const [loadingId, setLoadingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -63,8 +74,8 @@ export function ClinicalContext({
   }
 
   return (
-    <details className="consultation-context" open>
-      <summary>Contexto clínico de {patient.fullName}</summary>
+    <details className="consultation-context" open={wide || expanded}>
+      <summary onClick={(event) => { event.preventDefault(); setExpanded((value) => !value); }}>Contexto clínico de {patient.fullName}</summary>
       <div className="consultation-context-body">
         <section aria-labelledby="context-safety-title">
           <h2 id="context-safety-title">Datos de seguridad</h2>

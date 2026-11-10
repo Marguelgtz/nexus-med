@@ -7,10 +7,8 @@ import { useRouter } from 'next/navigation';
 import {
   type CreatePatientStudiesInput,
   type EncounterSummary,
-  type StudyCategory,
   type StudyInput,
   type StudyRequest,
-  studyCategorySchema,
 } from '@nexus-med/contracts';
 
 import {
@@ -22,6 +20,7 @@ import {
 import { formatDateTime, STUDY_CATEGORY_LABELS } from '../../lib/format';
 import { StudyStatusBadge } from '../appointments/badges';
 import { ErrorBanner } from '../primitives';
+import { StudyFields } from './study-fields';
 import { useBeforeUnloadGuard } from '../../lib/use-before-unload-guard';
 import { hasUnsavedStudyRequest } from '../../lib/study-draft';
 
@@ -108,43 +107,10 @@ function StudyCreatePanel({
         <span className="section-label">Estudios</span>
         <div className="study-form-rows">
           {rows.map((row, index) => (
-            <div className="study-form-row" key={index}>
-              <label className="sr-only" htmlFor={`patient-study-category-${index}`}>Categoría</label>
-              <select
-                id={`patient-study-category-${index}`}
-                value={row.category}
-                onChange={(event) =>
-                  setRows((current) => current.map((item, rowIndex) =>
-                    rowIndex === index ? { ...item, category: event.target.value as StudyCategory } : item,
-                  ))
-                }
-              >
-                {studyCategorySchema.options.map((category) => (
-                  <option key={category} value={category}>{STUDY_CATEGORY_LABELS[category]}</option>
-                ))}
-              </select>
-              <label className="sr-only" htmlFor={`patient-study-description-${index}`}>Descripción del estudio</label>
-              <input
-                id={`patient-study-description-${index}`}
-                value={row.description}
-                maxLength={200}
-                placeholder="Ej. Biometría hemática"
-                onChange={(event) =>
-                  setRows((current) => current.map((item, rowIndex) =>
-                    rowIndex === index ? { ...item, description: event.target.value } : item,
-                  ))
-                }
-              />
-              {rows.length > 1 ? (
-                <button
-                  type="button"
-                  className="btn btn-ghost btn-sm"
-                  onClick={() => setRows((current) => current.filter((_, rowIndex) => rowIndex !== index))}
-                >
-                  Quitar
-                </button>
-              ) : null}
-            </div>
+            <StudyFields key={index} value={row} index={index}
+              onChange={(value) => setRows((current) => current.map((item, rowIndex) => rowIndex === index ? value : item))}
+              onRemove={rows.length > 1 ? () => setRows((current) => current.filter((_, rowIndex) => rowIndex !== index)) : undefined}
+            />
           ))}
         </div>
         {fieldError ? <div className="field-error" role="alert">{fieldError}</div> : null}

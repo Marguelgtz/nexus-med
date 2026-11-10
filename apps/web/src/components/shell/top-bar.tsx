@@ -19,10 +19,10 @@ export function TopBar() {
           Nexus Med
         </Link>
         <nav className="topbar-nav" aria-label="Navegación principal">
-          <Link href="/patients" className={patientsActive ? 'active' : undefined}>
+          <Link href="/patients" aria-current={patientsActive ? 'page' : undefined} className={patientsActive ? 'active' : undefined}>
             Pacientes
           </Link>
-          <Link href="/calendar" className={calendarActive ? 'active' : undefined}>
+          <Link href="/calendar" aria-current={calendarActive ? 'page' : undefined} className={calendarActive ? 'active' : undefined}>
             Calendario
           </Link>
         </nav>

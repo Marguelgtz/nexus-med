@@ -10,13 +10,13 @@
   --bg: #f6f7f8;
   --surface: #ffffff;
   --surface-hover: #eef1f4;
-  --border: #d8dee4;
-  --border-strong: #b9c2cb;
+  --border: #d3dbe3;
+  --border-strong: #8493a2;
 
   /* Text */
   --text: #1c2430;
   --text-muted: #5c6875;
-  --text-faint: #8b96a2;
+  --text-faint: #626f7c;
 
   /* Brand / action */
   --primary: #155eab;
@@ -25,12 +25,14 @@
 
   /* Semantic */
   --success: #1e7e44;
-  --warning: #9a6b00;
+  --warning: #805800;
   --warning-bg: #fdf3d7;
   --danger: #c23b3b;
   --danger-hover: #a52f2f;
   --error-bg: #fbe9e9;
   --info-bg: #e8f1fb;
+  --success-bg: #e4f3ea;
+  --procedure-accent: #6b3fa0;
 
   /* Type */
   --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
@@ -47,11 +49,11 @@
   --s-7: 48px;
 
   /* Radii */
-  --radius-sm: 4px;
+  --radius-sm: 6px;
   --radius-md: 8px;
 
   /* Layout */
-  --container: 1040px;
+  --container: 1120px;
   --topbar-h: 56px;
 }
 
@@ -71,6 +73,7 @@ body {
   font-family: var(--font-sans);
   font-size: 15px;
   line-height: 1.6;
+  overflow-wrap: anywhere;
 }
 
 h1 {
@@ -278,6 +281,7 @@ a:hover {
 
 .btn-row {
   display: flex;
+  flex-wrap: wrap;
   gap: var(--s-2);
   margin-top: var(--s-4);
 }
@@ -375,11 +379,11 @@ a.timeline-item:hover {
 }
 
 .timeline-item .reason {
+  display: block;
+  min-width: 0;
   color: var(--text-muted);
   font-size: 14px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  white-space: normal;
 }
 
 .timeline-item .edited {
@@ -392,12 +396,14 @@ a.timeline-item:hover {
 
 .badge {
   display: inline-block;
+  flex-shrink: 0;
+  white-space: nowrap;
   border-radius: 999px;
   padding: 1px 10px;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
-  letter-spacing: 0.4px;
-  text-transform: uppercase;
+  letter-spacing: 0;
+  text-transform: none;
 }
 
 .badge-archived {
@@ -427,18 +433,24 @@ a.timeline-item:hover {
   color: var(--danger);
 }
 
+/* Shared controls: .field stacks a label; .form-row composes wrapped fields. */
 .field input,
 .field textarea,
-.field select {
+.field select,
+.form-row input,
+.form-row select,
+.form-row textarea,
+.search-input {
   width: 100%;
-  min-height: 40px;
-  padding: 8px 12px;
-  border: 1px solid var(--border);
+  min-width: 0;
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 1px solid var(--border-strong);
   border-radius: var(--radius-sm);
   background: var(--surface);
   color: var(--text);
-  font-family: var(--font-sans);
-  font-size: 15px;
+  font: inherit;
+  font-size: 16px;
 }
 
 .field textarea {
@@ -469,23 +481,6 @@ a.timeline-item:hover {
   color: var(--text-faint);
   font-size: 13px;
   margin-top: var(--s-1);
-}
-
-.search-input {
-  width: 100%;
-  min-height: 44px;
-  padding: 10px 14px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--surface);
-  color: var(--text);
-  font-size: 15px;
-}
-
-.search-input:focus {
-  outline: 2px solid var(--primary);
-  outline-offset: 1px;
-  border-color: var(--primary);
 }
 
 /* Segmented control (registry tabs) */
@@ -640,16 +635,6 @@ a.timeline-item:hover {
   flex-wrap: wrap;
 }
 
-.actions .btn {
-  min-height: 36px;
-  padding: 6px 12px;
-}
-
-.actions .btn-primary {
-  min-height: 40px;
-  padding: 8px 16px;
-}
-
 .actions .inline-confirm {
   flex-basis: 100%;
   margin-top: var(--s-2);
@@ -678,7 +663,7 @@ a.timeline-item:hover {
 /* Antecedentes card rows: label 60% / value 40% on desktop */
 .bg-row {
   display: grid;
-  grid-template-columns: minmax(120px, 60%) 40%;
+  grid-template-columns: minmax(120px, 3fr) minmax(0, 2fr);
   gap: var(--s-4);
   padding: var(--s-2) 0;
   border-bottom: 1px solid var(--border);
@@ -726,12 +711,8 @@ a.timeline-item:hover {
 }
 
 .consultation-context-column {
-  position: sticky;
-  top: var(--s-4);
   display: grid;
   gap: var(--s-4);
-  max-height: calc(100vh - 32px);
-  overflow-y: auto;
 }
 
 .consultation-note-header {
@@ -795,8 +776,6 @@ a.timeline-item:hover {
 .consultation-context-body {
   display: grid;
   gap: var(--s-4);
-  max-height: calc(100vh - 96px);
-  overflow-y: auto;
   padding: 0 var(--s-4) var(--s-4);
 }
 
@@ -848,6 +827,9 @@ a.timeline-item:hover {
   padding: 0;
   margin: 0;
 }
+
+.context-list li > div { min-width: 0; }
+.context-list li > .btn { flex-shrink: 0; }
 
 .context-list li {
   display: flex;
@@ -1170,7 +1152,7 @@ a.timeline-item:hover {
 }
 
 .badge-status-completed {
-  background: #e4f3ea;
+  background: var(--success-bg);
   color: var(--success);
 }
 
@@ -1239,9 +1221,9 @@ a.timeline-item:hover {
 
 .study-form-row {
   display: grid;
-  grid-template-columns: 190px 1fr auto;
+  grid-template-columns: minmax(140px, 0.8fr) minmax(0, 1.8fr) auto;
   gap: var(--s-2);
-  align-items: center;
+  align-items: end;
 }
 
 /* Appointment rows (overview card, list pages) */
@@ -1295,6 +1277,7 @@ a.timeline-item:hover {
 
 .appt-actions {
   display: flex;
+  flex-wrap: wrap;
   gap: var(--s-2);
   margin-top: var(--s-4);
   padding-top: var(--s-4);
@@ -1334,19 +1317,9 @@ a.timeline-item:hover {
   font-weight: 500;
 }
 
-.form-row input,
-.form-row select {
-  min-height: 40px;
-  padding: 8px 12px;
-  border: 1px solid var(--border-strong);
-  border-radius: var(--radius-sm);
-  font-size: 15px;
-  background: var(--surface);
-  color: var(--text);
-}
-
 .form-actions {
   display: flex;
+  flex-wrap: wrap;
   gap: var(--s-2);
   margin-top: var(--s-3);
 }
@@ -1372,7 +1345,8 @@ a.timeline-item:hover {
 /* ── Calendar views ────────────────────────────────────────────────────── */
 
 .dimmed {
-  opacity: 0.55;
+  color: var(--text-muted);
+  background: var(--bg);
 }
 
 /* Day view: real time grid */
@@ -1483,11 +1457,12 @@ a.timeline-item:hover {
 /* Week view */
 .week-grid {
   display: grid;
-  grid-template-columns: repeat(7, 1fr);
+  grid-template-columns: repeat(7, minmax(0, 1fr));
   gap: var(--s-2);
 }
 
 .cal-week-col {
+  min-width: 0;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
@@ -1521,7 +1496,7 @@ a.timeline-item:hover {
 /* Month view */
 .month-grid {
   display: grid;
-  grid-template-columns: repeat(7, 1fr);
+  grid-template-columns: repeat(7, minmax(0, 1fr));
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
@@ -1529,8 +1504,9 @@ a.timeline-item:hover {
 }
 
 .month-head {
+  grid-column: 1 / -1;
   display: grid;
-  grid-template-columns: repeat(7, 1fr);
+  grid-template-columns: repeat(7, minmax(0, 1fr));
   border-bottom: 1px solid var(--border);
 }
 
@@ -1541,6 +1517,7 @@ a.timeline-item:hover {
 }
 
 .cal-month-wrap {
+  min-width: 0;
   border-top: 1px solid var(--border);
   border-left: 1px solid var(--border);
 }
@@ -1598,7 +1575,7 @@ a.timeline-item:hover {
 }
 
 .cal-type-procedimiento {
-  border-left-color: #6b3fa0;
+  border-left-color: var(--procedure-accent);
 }
 
 .cal-type-visita_domicilio {
@@ -1614,7 +1591,7 @@ a.timeline-item:hover {
 }
 
 .cal-block.cal-type-procedimiento {
-  border-left: 3px solid #6b3fa0;
+  border-left: 3px solid var(--procedure-accent);
 }
 
 .cal-block.cal-type-visita_domicilio {
@@ -1626,7 +1603,7 @@ a.timeline-item:hover {
 }
 
 .cal-cancelled {
-  opacity: 0.5;
+  color: var(--text-muted);
   text-decoration: line-through;
 }
 
@@ -1854,17 +1831,16 @@ a.timeline-item:hover {
     min-height: 44px;
   }
 
-  /* Calendar: the week grid scrolls horizontally; hourly scale stays fixed. */
-  .week-grid {
-    display: block;
-    overflow-x: auto;
-  }
-
-  .week-grid > .cal-week-col {
-    display: inline-block;
-    width: 140px;
-    margin-right: var(--s-2);
-  }
+  /* A narrow week remains chronological: one complete day per row. */
+  .week-grid { grid-template-columns: minmax(0, 1fr); }
+  .cal-week-col { min-height: 0; }
+  .cal-col-head { text-align: left; }
+  .cal-chip { white-space: normal; }
+  .cal-month-cell { padding: 4px; min-height: 100px; }
+  .cal-month-items .cal-chip { font-size: 11px; padding: 2px; white-space: nowrap; }
+  .month-head span { padding: 8px 2px; }
+  .study-form-row { grid-template-columns: minmax(0, 1fr); padding: var(--s-3); border: 1px solid var(--border); border-radius: var(--radius-sm); }
+  .study-form-row .btn { justify-self: start; }
 
   .document-row {
     align-items: flex-start;
@@ -1884,4 +1860,44 @@ a.timeline-item:hover {
     grid-template-columns: 1fr;
   }
 
+}
+
+/* Shared accessibility and composition rules. */
+:where(a, button, input, select, textarea, summary):focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 3px;
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+.skip-link { position: absolute; top: -100px; left: 12px; z-index: 10; background: var(--surface); padding: 12px; }
+.skip-link:focus { top: 8px; }
+.card-header { flex-wrap: wrap; }
+.form-row > label { min-width: 0; flex: 1 1 180px; }
+.row.registry-row { display: grid; grid-template-columns: minmax(0, 1fr) 80px 150px 100px; padding: 16px; }
+.registry-row .main { min-width: 0; }
+.registry-state { text-align: right; }
+.topbar-nav a { min-height: 44px; display: inline-flex; align-items: center; }
+.study-field { min-width: 0; }
+.study-field > span { display: block; font-size: 13px; color: var(--text-muted); margin-bottom: 4px; }
+@media (max-width: 639px) {
+  .row.registry-row { grid-template-columns: minmax(0, 1fr) auto; gap: 4px 12px; }
+  .registry-row .main { grid-column: 1 / -1; }
+  .registry-state { grid-column: 2; grid-row: 2 / 4; }
+  .card { padding: var(--s-4); }
+  .btn, .btn-sm { min-height: 44px; }
+  .card-header .actions { width: 100%; }
+  .topbar-inner { gap: var(--s-4); }
+  .topbar-nav { gap: var(--s-3); }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
 }

@@ -164,7 +164,7 @@ function WeekColumn({ day, appointments }: { day: string; appointments: Appointm
       </Link>
       <div className="cal-col-items">
         {visible.map((appt) => (
-          <Link key={appt.id} href={apptHref(appt)} className={chipClasses(appt, today)}>
+          <Link key={appt.id} href={apptHref(appt)} title={`${formatTime(appt.startAt)} ${appt.patient.fullName}`} className={chipClasses(appt, today)}>
             {formatTime(appt.startAt)} {appt.patient.fullName}
           </Link>
         ))}
@@ -195,12 +195,12 @@ function MonthCell({ day, appointments }: { day: string; appointments: Appointme
   const { visible, remaining } = visibleAppointmentSlice(items);
   return (
     <div className={`cal-month-cell${day === today ? ' cal-today-col' : ''}`}>
-      <Link href={`/calendar?vista=dia&fecha=${day}`} className="cal-month-daynum">
+      <Link href={`/calendar?vista=dia&fecha=${day}`} aria-label={`Ver citas del ${day}`} className="cal-month-daynum">
         {Number(day.slice(8, 10))}
       </Link>
       <div className="cal-month-items">
         {visible.map((appt) => (
-          <Link key={appt.id} href={apptHref(appt)} className={chipClasses(appt, today)}>
+          <Link key={appt.id} href={apptHref(appt)} title={`${formatTime(appt.startAt)} ${appt.patient.fullName}`} className={chipClasses(appt, today)}>
             {formatTime(appt.startAt)} {appt.patient.fullName}
           </Link>
         ))}
