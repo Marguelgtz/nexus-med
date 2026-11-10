@@ -4,7 +4,7 @@
 **Last updated:** 2026-11-09
 **Owner:** Project owner  
 **Primary agent:** Hermes Agent  
-**Current implementation state (updated 2026-11-09):** O-001–O-006 remain implemented. O-007 UI v0 is implemented and locally verified on `feat/o007-ui-foundation`, based on PR #8 at `1a0432f`; foundation `6c412c3`, interaction refinement `99468b3`. API 112/112, web 36/36, typecheck/lint/build and synthetic browser checks pass. Final evidence contains 89 inspected PNGs. Publication is the remaining delivery step. No UI PR has been merged. The pre-existing `apps/web/next-env.d.ts` dev-path modification remains uncommitted.
+**Current implementation state (updated 2026-11-09):** O-001–O-006 remain implemented. O-007 UI v0 is implemented and locally verified on `feat/o007-ui-foundation`, based on PR #8 at `1a0432f`; foundation `6c412c3`, interaction refinement `99468b3`. API 112/112, web 36/36, typecheck/lint/build and synthetic browser checks pass. Final evidence contains 89 inspected PNGs. Published as [PR #9](https://github.com/Marguelgtz/nexus-med/pull/9) against PR #8; branch pushed to origin. No UI PR has been merged. The pre-existing `apps/web/next-env.d.ts` dev-path modification remains uncommitted.
 
 ---
 
@@ -14,13 +14,13 @@ PR #7's post-review study saving reset, draft protection and embedded prescripti
 
 **Research dependency:** [PR #8](https://github.com/Marguelgtz/nexus-med/pull/8) remains the documentation/evidence parent; its research-only authorization was superseded by the owner's explicit UI v0 mission.
 
-## Active mission — O-007 UI v0 implementation
+## Most recent mission — O-007 UI v0 implementation — COMPLETE
 
 Owner-authorized continuation on `feat/o007-ui-foundation`, based on PR #8 (`1a0432f`). Research is complete; UI implementation is now authorized. Preserve the owner modification to `apps/web/next-env.d.ts` uncommitted.
 
 Outcome: a coherent, responsive clinical UI baseline for later Figma work, with existing clinical behavior and API/schema unchanged.
 
-Ordered delivery:
+Completed delivery sequence:
 1. Baseline: run the outstanding O-006 gates and browser follow-ups; preserve working behavior.
 2. Foundation: repair UI-01…UI-11, consolidate existing CSS tokens/control rules and repeatable study input; verify geometry, keyboard and responsive behavior; commit.
 3. Experience: refine shared navigation, registry alignment, context density, feedback and document/form composition; verify critical journeys and print isolation; commit.
@@ -30,7 +30,7 @@ Dependencies: sequential implementation and final verification; no delegation. N
 
 Foundation committed as `6c412c3`. API 112/112, web 36/36, workspace typecheck/lint and production build pass (existing tool warnings retained). Initial sandbox-only failures were resolved by permitting Prisma/Next subprocesses; no app workaround. Geometry: 64 route/viewport combinations at 320/390/639/640/768/900/1024/1440px, no document overflow, equal week tracks, month alignment; skip-link/main focus and 200%-equivalent CSS-width reflow pass. Browser checks across reruns verified consultation/staged-study save/reload, cancelled dirty navigation, standalone/linked study draft protection and create, consecutive completed/reviewed status saves, both embedded document kinds and association/cancel/save feedback, note edit persistence, follow-up return, explicit appointment completion/link, delayed failure retention and print visibility/PDF generation. Patient create/edit/archive, standalone document create/edit, and appointment edit/cancel checks also pass. Browser harness waits for hydration before submitting SSR forms. No existing application DB reset. Final evidence: 89 PNGs inventoried with dimensions/hashes; all contact sheets and key full-resolution/print images inspected. Exact capture fixture counts remain 7/9/9/2/2.
 
-Next action: commit final evidence/documentation, push this branch and open its implementation PR against PR #8. No merge authorized. Later Figma work remains a separate mission.
+Delivery: foundation `6c412c3`, interaction refinement `99468b3`, evidence/docs `c657334`, plus this publication handoff. [PR #9](https://github.com/Marguelgtz/nexus-med/pull/9) is open against `docs/ui-v0-readiness-research` (PR #8); all implementation commits are pushed. No PR merged. No external blocker or required implementation work remains; owner review and later Figma exploration are next. The only remaining local modification is the preserved `next-env.d.ts` dev-path change.
 
 ## 1. Purpose and operating model
 
@@ -263,7 +263,7 @@ Do not allow future Cloudflare/D1 transaction constraints, Google authentication
 
 ## 7. Next action
 
-Publish the verified UI v0 branch and focused implementation PR against `docs/ui-v0-readiness-research` (PR #8). Review/merge prerequisites in dependency order: PR #6 → PR #7 → PR #8 → UI v0. All remain subject to owner merge authority. Later Figma exploration should start from the working UI and `UI_SPEC.md` §9, keeping clinical questions Q-O006-01…08 open.
+Owner review of [UI v0 PR #9](https://github.com/Marguelgtz/nexus-med/pull/9). Review/merge prerequisites in dependency order: PR #6 → PR #7 → PR #8 → PR #9. All remain subject to owner merge authority. Later Figma exploration should start from the working UI and `UI_SPEC.md` §9, keeping clinical questions Q-O006-01…08 open.
 
 ## 8. Living update rules
 

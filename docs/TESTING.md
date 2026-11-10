@@ -28,12 +28,12 @@ Limits: Chromium only, no Safari/Firefox or physical tablet, no physician task s
 
 ## Current verification setup
 
-Latest integrated O-006 verification (2026-11-09): API 112/112; web 32/32; workspace TypeScript typecheck; ESLint; production build; fresh and repeated local startup; and headless Chrome checks of the primary O-006 journeys. A seeded temporary SQLite database preserved both existing study rows, including patient/encounter associations, statuses, result notes, IDs, and timestamps through the table rebuild; foreign-key and index checks passed. The regular local database then applied the new migration and seed created no records; `/health` and `/patients` returned 200. PR #7 is open on `feat/o006-clinical-workflows`, stacked on PR #6.
+Original integrated O-006 verification (2026-11-09, before the post-review gate above): API 112/112; web 32/32; workspace TypeScript typecheck; ESLint; production build; fresh and repeated local startup; and headless Chrome checks of the primary O-006 journeys. A seeded temporary SQLite database preserved both existing study rows, including patient/encounter associations, statuses, result notes, IDs, and timestamps through the table rebuild; foreign-key and index checks passed. The regular local database then applied the new migration and seed created no records; `/health` and `/patients` returned 200. PR #7 is open on `feat/o006-clinical-workflows`, stacked on PR #6.
 
 | Command | Scope |
 |---|---|
 | `npm run test -w apps/api` | 112 integration tests, including standalone and linked study requests, same-patient validation, study creation/filtering/status transitions, patients, encounters, appointments, documents, seed preservation and transaction behavior. Vitest applies the real committed migrations to isolated SQLite databases under `.local/test/`. |
-| `npm run test -w apps/web` | 32 presentation-layer tests (vitest, node): es-MX date formatting, age, `wasEdited`, default encounter-type badge visibility, calendar date math, appointment overlap handling, and calendar layout helpers. No app boot or database needed. |
+| `npm run test -w apps/web` | 36 presentation/helper tests (vitest, node): es-MX date formatting, age, `wasEdited`, default encounter-type badge visibility, calendar date math, appointment overlap handling, and calendar layout helpers, and study-draft detection. No app boot or database needed. |
 | `npm run typecheck` | `tsc --noEmit` across all workspaces (contracts, api, web). |
 | `npm run lint` | ESLint 9 flat config (`eslint.config.mjs`) with `eslint-config-next` 16 (flat-native): exit 0; emits a warning because the App Router repo has no `pages/` directory. Generated artifacts and `.local/` are ignored. |
 | `npm run build -w apps/web` | Next.js 16 production build. |
