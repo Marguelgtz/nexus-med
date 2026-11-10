@@ -1,6 +1,6 @@
 # UI Specification — Medical Platform MVP
 
-**Status:** O-002/O-005 baseline plus owner-authorized O-006 implementation contract (§8); O-006 is implemented and integrated-verified on `feat/o006-clinical-workflows` (PR #7 open for owner review).
+**Status:** O-002/O-005 baseline, owner-authorized O-006 implementation contract (§8), and verified O-007 UI v0 presentation conventions (§9). Implementation PRs remain unmerged for owner review.
 **Owner:** `apps/web` (Next.js App Router)  
 **Interface language:** Spanish (Mexico) — all UI strings below are the canonical copy; technical prose stays in English.  
 **Data:** Synthetic demo records only. A persistent demo banner is part of every screen.
@@ -331,7 +331,7 @@ Persistent, directly under the top bar on every screen:
 
 ### 5.6 Responsive
 
-- ≥ 1040 px: full container, background label/value rows side by side.
+- ≥ 1120 px: full container, background label/value rows side by side.
 - 640–1039 px (tablet): container with `--s-4` gutters; registry rows keep all columns; background rows stack (label above value).
 - < 640 px (phone, secondary): single column; action rows wrap; context strip compresses to back-link + name (identifier moves below). Touch targets ≥ 44 px. The prototype's primary target is a desktop/tablet at the practice; phone is readable, not optimized.
 

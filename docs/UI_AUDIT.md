@@ -4,6 +4,23 @@
 
 **Assessment:** The current interface supports the intended clinical workflows, but is not yet a credible visual baseline for Figma. Calendar geometry, overflowing history, and malformed study-entry rows require attention before aesthetic refinement can be judged fairly. The existing shell and O-006 workflow structure are worth preserving.
 
+## UI v0 implementation follow-up — 2026-11-09
+
+The original findings/evidence below remain historical PR #8 research. The owner subsequently authorized implementation on `feat/o007-ui-foundation`. Current presentation rules are in `UI_SPEC.md` §9; final evidence/limits are in [the UI v0 inventory](assets/ui-v0/README.md) and `TESTING.md`.
+
+| Findings | Implementation disposition |
+|---|---|
+| UI-01 / UI-04 / UI-05 | Month header spans seven equal tracks; week uses equal wide columns and chronological full-width mobile days. Measured alignment and reflow pass. |
+| UI-02 | Timeline reasons are block-level wrapping text. Exact fixture pages fit narrow screens. |
+| UI-03 / UI-08 | One shared study row with visible labels and flexible tracks; mobile fields stack at full width. |
+| UI-06 | Darker faint/warning/success tokens and control borders; no opacity-based cancellation/month text. Focused contrast evidence recorded in testing. |
+| UI-07 / UI-10 | Narrow context starts collapsed; context/actions use page scrolling. Embedded document launch focuses the editor and returns focus after save/cancel. |
+| UI-09 / UI-11 | One control styling rule, stable button variants, wrapping actions, named previous/next navigation and current-page cues. |
+| UI-12 | Registry metadata aligns in stable wide columns and stacks at narrow widths; physician scanning study remains unperformed. |
+| UI-13 | Restrained spacing, radius and badge refinement is provisional. Final visual preference and branding remain for later Figma/owner review. |
+
+This is a verified implementation disposition, not a claim of complete accessibility certification or physician validation.
+
 ## Methodology and coverage
 
 Read project instructions, product/workflow/UI specifications, architecture, current decisions, previous UX audit/redesign, testing notes, and active execution state. Inspected routes, shared primitives, domain components, browser API configuration, and `globals.css`. The earlier `UX_AUDIT.md` concerns O-005 workflow research; this audit assesses the latest O-006 presentation without reopening accepted workflows.

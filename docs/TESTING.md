@@ -1,6 +1,6 @@
 # Testing and Verification
 
-## O-006 follow-up acceptance checks (post-review commits, not yet rerun)
+## O-006 follow-up acceptance checks — cleared by UI v0 verification (2026-11-09)
 
 The following are required before merging PR #7. They were added after the original 112/112 API and 32/32 web test report; do not treat those earlier results as verification of this follow-up.
 
@@ -11,7 +11,20 @@ The following are required before merging PR #7. They were added after the origi
 5. From a saved encounter, create a prescription and a report in the **embedded** form. Verify patient and encounter association, saved-success message, cancellation with unsaved text, repeated prescription lines, and that the encounter remains visible. Check mobile viewport at 390px.
 6. Regression-check the existing standalone prescription/report routes, browser print output, in-place encounter editing, follow-up return navigation, and study creation/review flows. Do not use real patient data.
 
-**Status:** Source changes are committed to PR #7. No post-change test or browser execution was possible through the available GitHub connection; the above is the remaining verification gate.
+**Status:** The post-change automated gate and all six follow-up groups above were executed during UI v0. See the current evidence below; the earlier inability to execute through the GitHub connector is historical. PR #7 remains unmerged.
+
+## O-007 UI v0 verification — 2026-11-09
+
+- Automated: API **112/112**, web **36/36**, workspace typecheck, ESLint and Next.js production build pass. Initial sandbox runs blocked Prisma/TypeScript subprocesses; permitted reruns passed. Existing lint missing-`pages/` and Vitest config-loader warnings remain non-failing.
+- Runtime: separate copied frontend (same source) on loopback 3102 and API on 4102. A new SQLite DB applied all five committed migrations and seeded exactly 7 patients / 9 encounters / 9 appointments / 2 studies / 2 documents. Browser writes used a different isolated verification DB. Re-seeding that DB created zero records; a full SQL-dump digest was unchanged, preserving edited fixtures and new synthetic records. The existing owner DB was untouched.
+- Browser mutations across reruns: patient required-name validation/create, demographics update, medical-background update, archive with retained history; consultation with staged study save/reload, dirty navigation cancellation, in-place note edit/reload; patient/encounter study creation and cancel/navigation protection; consecutive completed→reviewed saves without leaving the page; both embedded document kinds with same-patient encounter association, repeated medication rows, cancellation protection, explicit save/status; standalone prescription/report create/edit/reload; appointment create/edit/cancel, follow-up return, appointment entry and explicit completion/link with duration. Harness selectors and navigation/hydration waits were corrected before recording passes; failed harness runs are not counted as successful whole-suite runs.
+- Responsive: 64 route/viewport combinations at 1440, 1024, 900, 768, 640, 639, 390 and 320 CSS px. No document-level overflow. Month first/seventh cells align and the eighth starts the next row; week tracks equal above 639px and form seven separate full-width rows below it. 640px at half-height models a 1280px viewport at 200% zoom; 320px covers narrow reflow. Body-text scaling is exploratory only, not native zoom certification.
+- Keyboard/accessibility: skip link focuses main; mobile context opens with Space and closes with Enter; repeated study controls have visible accessible labels; removal is named by row; focus outlines visible; navigation/filter state conveyed programmatically. Busy states, inline validation, loading skeleton, empty results, failure alerts and preserved values inspected. No screen-reader or full WCAG conformance claim.
+- Contrast (WCAG relative luminance): faint `#626f7c` is **5.14:1** on white, **4.79:1** on page background and **4.54:1** on hover surface; demo text `#805800` on `#fdf3d7` is **5.73:1**; control border `#8493a2` on white is **3.15:1**. Success `#186d3b` on `#e4f3ea` is **5.57:1**, corrected from the earlier 4.44:1 pair. This is a focused semantic-pair check, not an exhaustive rendered color audit.
+- Print: Chromium generated both fixture document PDFs; text and rendered pages were inspected. Paper contains authored content and the fictional-data marker, with no shell/actions/screen-only copy. No physical printer test.
+- Evidence: [final screenshot inventory](assets/ui-v0/README.md), compared with PR #8's [original audit](UI_AUDIT.md). All captures are synthetic. Saving/error screenshots use controlled delayed HTTP 500 without writes. Alternative-port browser API forwarding compensates for the unchanged port-3000 CORS allowlist; this does not validate an alternate-port deployment.
+
+Limits: Chromium only, no Safari/Firefox or physical tablet, no physician task study, no final branding approval. Figma work has not started. Browser harnesses and DBs remain in ignored `.local/ui-v0/`; the committed screenshots/inventory are review evidence, not a newly installed browser-test framework.
 
 ## Current verification setup
 

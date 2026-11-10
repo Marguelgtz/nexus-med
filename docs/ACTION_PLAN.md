@@ -4,21 +4,15 @@
 **Last updated:** 2026-11-09
 **Owner:** Project owner  
 **Primary agent:** Hermes Agent  
-**Current implementation state (updated 2026-11-09):** O-001–O-005 remain implemented and verified on `feat/nx-expansion-complete` at `1309b513`. The owner-authorized O-006 implementation is complete and verified on `feat/o006-clinical-workflows`; its patient-study API, canonical behavior docs, and integrated UI are committed as `48304a4`, `e3a3cc1`, and `e27cbf8`. PR #7 is open against `docs/o006-clinical-workflow-ux`, stacked on open, unmerged PR #6. Both await owner review; no merge was performed. The local app is available at `http://127.0.0.1:3000`. Earlier feature PRs #1–#4 remain open in their stack and PR #5 is merged.
+**Current implementation state (updated 2026-11-09):** O-001–O-006 remain implemented. O-007 UI v0 is implemented and locally verified on `feat/o007-ui-foundation`, based on PR #8 at `1a0432f`; foundation `6c412c3`, interaction refinement `99468b3`. API 112/112, web 36/36, typecheck/lint/build and synthetic browser checks pass. Final evidence contains 89 inspected PNGs. Publication is the remaining delivery step. No UI PR has been merged. The pre-existing `apps/web/next-env.d.ts` dev-path modification remains uncommitted.
 
 ---
 
-## O-006 follow-up review — 2026-11-09
+## O-006 follow-up review — verification cleared 2026-11-09
 
-**Review branch:** `feat/o006-clinical-workflows`, PR #7 (base `docs/o006-clinical-workflow-ux`). A follow-up commit addresses three code-review gaps: (1) reset the study-review saving flag after a successful status update, (2) protect unsaved patient/encounter study requests from Cancel and in-app navigation, and (3) embed the existing doctor-authored prescription/report form beneath the saved encounter without a route change. The inline document editor retains explicit save, validated encounter association, cancel confirmation, and success feedback.
+PR #7's post-review study saving reset, draft protection and embedded prescription/report changes have now passed the required automated and browser checks during UI v0. The old runtime-verification boundary is cleared; `TESTING.md` records the actual coverage/limits. PR #7 and its PR #6 parent remain unmerged.
 
-**Focused regression coverage:** `apps/web/test/study-draft.test.ts` checks untouched form, typed/whitespace values, category, encounter association, and additional blank rows. This review made **no API, schema, migration, or clinical status changes**.
-
-**Verification boundary:** The GitHub connector was used for a static source review and commit; no local repository checkout, dependency install, compiler, browser, or test runner was available to execute post-change checks. The previously recorded O-006 112 API / 32 web passes predate these follow-up commits. Before merge, run `npm run test -w apps/web`, `npm run test -w apps/api`, `npm run typecheck`, `npm run lint`, `npm run build -w apps/web` and browser scenarios listed in `TESTING.md`. Treat this follow-up as **implemented, awaiting post-change runtime verification**, not newly test-verified.
-
----
-
-**Current research handoff:** O-007 is complete on `docs/ui-v0-readiness-research`; [PR #8](https://github.com/Marguelgtz/nexus-med/pull/8) is open, documentation/evidence only. UI v0 has not started.
+**Research dependency:** [PR #8](https://github.com/Marguelgtz/nexus-med/pull/8) remains the documentation/evidence parent; its research-only authorization was superseded by the owner's explicit UI v0 mission.
 
 ## Active mission — O-007 UI v0 implementation
 
@@ -34,9 +28,9 @@ Ordered delivery:
 
 Dependencies: sequential implementation and final verification; no delegation. No new packages, Figma, API/schema changes or clinical semantics. P2 visual preferences remain provisional. One focused implementation PR against PR #8 is sufficient if the final diff stays cohesive.
 
-Foundation committed as `6c412c3`. API 112/112, web 36/36, workspace typecheck/lint and production build pass (existing tool warnings retained). Initial sandbox-only failures were resolved by permitting Prisma/Next subprocesses; no app workaround. Geometry: 64 route/viewport combinations at 320/390/639/640/768/900/1024/1440px, no document overflow, equal week tracks, month alignment; skip-link/main focus and 200%-equivalent CSS-width reflow pass. Browser checks across reruns verified consultation/staged-study save/reload, cancelled dirty navigation, standalone/linked study draft protection and create, consecutive completed/reviewed status saves, both embedded document kinds and association/cancel/save feedback, note edit persistence, follow-up return, explicit appointment completion/link, delayed failure retention and print visibility/PDF generation. Final patient/standalone regressions and clean-fixture final screenshots are in progress. Browser harness waits for hydration before submitting SSR forms. No existing application DB reset.
+Foundation committed as `6c412c3`. API 112/112, web 36/36, workspace typecheck/lint and production build pass (existing tool warnings retained). Initial sandbox-only failures were resolved by permitting Prisma/Next subprocesses; no app workaround. Geometry: 64 route/viewport combinations at 320/390/639/640/768/900/1024/1440px, no document overflow, equal week tracks, month alignment; skip-link/main focus and 200%-equivalent CSS-width reflow pass. Browser checks across reruns verified consultation/staged-study save/reload, cancelled dirty navigation, standalone/linked study draft protection and create, consecutive completed/reviewed status saves, both embedded document kinds and association/cancel/save feedback, note edit persistence, follow-up return, explicit appointment completion/link, delayed failure retention and print visibility/PDF generation. Patient create/edit/archive, standalone document create/edit, and appointment edit/cancel checks also pass. Browser harness waits for hydration before submitting SSR forms. No existing application DB reset. Final evidence: 89 PNGs inventoried with dimensions/hashes; all contact sheets and key full-resolution/print images inspected. Exact capture fixture counts remain 7/9/9/2/2.
 
-Next action: complete remaining patient/standalone checks, refresh final screenshots, inspect print pages and reconcile evidence; commit refinements/documentation and publish PR against PR #8.
+Next action: commit final evidence/documentation, push this branch and open its implementation PR against PR #8. No merge authorized. Later Figma work remains a separate mission.
 
 ## 1. Purpose and operating model
 
@@ -86,7 +80,7 @@ See `DECISIONS.md` and `ARCHITECTURE.md` for details.
 | Expansion (NX-001…NX-004) | Complete on `feat/nx-expansion-complete` | All four vertical slices browser-verified; complete automated quality gate is green; implementation committed through `e2d6590` |
 | O-006 implementation | Complete; owner review pending | PR #7 is open against PR #6's latest documentation head; API/web tests, workspace checks, isolated startup, and Chrome journey checks pass; Q-O006-01…08 remain open where clinical meaning needs validation |
 
-## 3a. Current objective — O-007 UI research and visual investigation — COMPLETE
+## 3a. Previous objective — O-007 UI research and visual investigation — COMPLETE
 
 **Outcome:** Evidence-backed presentation audit and reference research against the latest O-006, before code-first UI v0, later Figma exploration, and eventual implementation of approved Figma designs. This mission authorizes research only.
 
@@ -100,7 +94,7 @@ See `DECISIONS.md` and `ARCHITECTURE.md` for details.
 
 **Branch/commits:** `docs/ui-v0-readiness-research`, directly based on `feat/o006-clinical-workflows` at `30eafd1`. Evidence commit `7c3d61a`; audit/research commit `e5fa1af`; this final handoff records publication. [PR #8](https://github.com/Marguelgtz/nexus-med/pull/8) is open against `feat/o006-clinical-workflows`; branch pushed to origin. No merge performed.
 
-**Next action:** Owner review of PR #8 and its readiness assessment. Research is complete; stop here. UI v0 remains the next separate mission; Figma is later and was not connected.
+**Historical handoff:** PR #8 completed the research-only mission. The subsequent owner UI v0 directive authorizes the current implementation above; Figma remains later and was not connected.
 
 ## 3. Most recent objective — O-006 full clinical workflow and UX implementation — COMPLETE
 
@@ -269,7 +263,7 @@ Do not allow future Cloudflare/D1 transaction constraints, Google authentication
 
 ## 7. Next action
 
-Review the O-007 research handoff in `UI_AUDIT.md` / `UI_RESEARCH.md` and its documentation-only PR. Decide the scope of the separate code-first UI v0 mission before implementation; preserve clinical workflows and keep Figma exploration for after a working v0. PR #7's O-006 review remains independent; PRs #6/#7 and the research PR are not merged by this mission.
+Publish the verified UI v0 branch and focused implementation PR against `docs/ui-v0-readiness-research` (PR #8). Review/merge prerequisites in dependency order: PR #6 → PR #7 → PR #8 → UI v0. All remain subject to owner merge authority. Later Figma exploration should start from the working UI and `UI_SPEC.md` §9, keeping clinical questions Q-O006-01…08 open.
 
 ## 8. Living update rules
 

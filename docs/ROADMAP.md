@@ -78,3 +78,10 @@ Only after the local MVP works:
 6. Revisit file storage only if approved product scope requires it.
 
 No remote Cloudflare resources are part of O-001 through O-005.
+
+
+## O-007 — Working UI baseline before Figma
+
+**Outcome:** After O-006, use the completed PR #8 audit to repair high-impact presentation defects and consolidate the existing UI foundation. Verify responsive, keyboard and clinical workflows, document conventions and provide an unmerged reviewable UI v0 implementation. No clinical/API expansion.
+
+**Sequence:** evidence-backed research → code-first UI v0 → later Figma exploration/owner review → implementation of approved designs. Figma and final branding are outside this implementation mission. See `TASKS.md` §8 for stable work packages and `ACTION_PLAN.md` for current execution.
