@@ -370,3 +370,15 @@ Automated verification: API 112/112, web 36/36, workspace typecheck, lint and pr
 `UI_SPEC.md` §9 defines the actual conventions and Figma boundary; `TESTING.md` and the evidence inventory preserve limits (Chromium only, no physician/screen-reader/physical-printer validation, CSS-width zoom equivalence). P2 branding/density preference remains provisional. Research and UI PRs remain unmerged; publication metadata is maintained in `ACTION_PLAN.md`.
 
 **Publication:** [UI v0 PR #9](https://github.com/Marguelgtz/nexus-med/pull/9), base PR #8; branch pushed, no merge. Implementation `6c412c3` / `99468b3`, final evidence/docs `c657334`.
+
+## 2026-11-10 — O-007 owner review refinements verified
+
+The owner reviewed the running application and requested faster entry into consultations, simpler patient navigation, a full clinical-context page, less crowded consultation editing, study ordering beside consultation actions, a clearer custom study name, and a more modern restrained palette. These refinements were implemented on `feat/o007-ui-foundation` without changing approved clinical status semantics or patient/encounter ownership.
+
+The study contract now uses a required name and optional description; the SQLite migration preserves the existing study rows and associations while carrying historical descriptions into the new name field. The local database was migrated in place, `foreign_key_check` returned no violations, and startup seeding created no records. Synthetic registry names/identifiers, persistent demo warnings, explicit saves and print isolation remain intact.
+
+Verification passed: API 113/113, web 39/39, workspace typecheck, ESLint exit 0 with its existing App Router warning, and the final Next.js production build. Fourteen owner-review screenshots were inspected at desktop, tablet and mobile sizes and their SHA-256 inventory was checked. This is Chromium visual evidence, not screen-reader, physician usability, Safari/Firefox, or final brand approval. The pre-existing local `apps/web/next-env.d.ts` edit remains uncommitted.
+
+**Publication:** code commit `28c00cc` plus a separate evidence/documentation commit on the existing branch. PR #9 remains open against PR #8 and is not merged. No Figma file was accessed; the refined palette is a working foundation for later Figma review.
+
+**References:** PR #9; `UI_AUDIT.md`; `UI_SPEC.md`; `TESTING.md`; `docs/assets/ui-v0/owner-review-2026-11-10/README.md`; `ACTION_PLAN.md`.

@@ -2,6 +2,8 @@
 
 Captured 2026-11-09 against implementation `99468b3` (source unchanged by this evidence commit), compared with the historical [PR #8 audit](../../UI_AUDIT.md). **89 PNGs:** 85 route/state captures, two registry loading/error captures and two rendered print PDF pages. Every image was inspected through contact sheets; key mobile forms/history/calendars, desktop context and both print pages were inspected individually. `inventory.json` records filename, route/state, pixel dimensions and SHA-256 for integrity.
 
+The later owner-review refinements have a 14-image set in [owner-review-2026-11-10](owner-review-2026-11-10/README.md). These follow-up screenshots do not change the 89-image historical inventory above.
+
 Environment: Chromium, `es-MX`, `America/Mexico_City`; primary desktop 1440×900, tablet 1024×768, mobile 390×844. Additional 768px and exploratory body-text scaling captures are labelled separately. Registry state captures use 1280×720. Full-page height varies. The Next.js development indicator is tooling, not product chrome.
 
 Isolation: copied frontend source on loopback 3102, API on 4102, newly migrated/seeded exact-fixture SQLite DB (7/9/9/2/2). Browser API forwarding handles the unchanged default-port CORS policy. No fixture writes were made during this capture run. Separate mutation checks used a different isolated DB; no owner DB was reset. Saving/error captures deliberately intercept a delayed HTTP 500; text remains in the form. Registry loading/error capture waits for the actual application banner, not Next's route announcer. Handoff capture waits for the consultation destination.

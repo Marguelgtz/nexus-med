@@ -1,5 +1,17 @@
 # Testing and Verification
 
+## O-007 owner-review follow-up — 2026-11-10
+
+- Automated checks on the owner-review code: API **113/113** (7 files; 1 intentionally skipped), web **39/39**, workspace typecheck, and ESLint exit 0. The first API attempt hit sandbox `EPERM` when the rollback test spawned `npx`; the permitted rerun passed all 113 tests. ESLint prints the existing non-failing warning that this App Router repository has no `pages/` directory.
+- The Next.js 16 production build passed after all owner-review code changes, including the patient layout and registry action sizing.
+- Existing local SQLite was migrated in place, never reset. The two study rows and their patient/encounter associations, status, result notes, IDs and timestamps were retained; the field digest matched after accounting for the intentional `description` → `name` mapping. SQLite `foreign_key_check` returned zero violations. Re-seeding created zero records.
+- Chromium owner-review captures show registry/patient entry points, full clinical context, the consultation actions and study-status panel, month calendar, focused field editing, and `Otro` study entry. Patient/context/calendar/encounter document widths matched the 390px mobile viewport; patient and registry layouts were also captured at 1024px and 1440px. The study form now opens from `Acciones de esta consulta`, states its patient/encounter association, and uses full-width stacked fields in the narrow consultation sidebar. `Completada` caveat and existing study status badges remain present. No clinical write was submitted during capture.
+- Focused token-pair WCAG relative-luminance checks after the palette change: main text/surface **14.81:1**, muted text/surface **6.58:1**, faint text/page background **5.48:1**, primary action/surface **6.32:1**, warning/banner **6.57:1**, success/badge **6.35:1**, and control border/surface **3.16:1**. This checks core token pairs, not every composed screen state.
+- The prior UI v0 suite's 64-route/viewport geometry checks, print checks and core workflow checks remain documented above as baseline evidence; this follow-up did not repeat the full 64-combination matrix. Its additional owner-review screenshots were inspected individually at desktop, tablet and mobile sizes.
+- Keyboard follow-up: canceling the study form and the embedded prescription form both return focus to the `Acciones de esta consulta` heading. No save was submitted in this check.
+
+Evidence: [owner-review screenshots and dimensions](assets/ui-v0/owner-review-2026-11-10/README.md). Limits: Chromium only for this follow-up, no physician task study, screen-reader validation, Safari/Firefox, or final branding approval. The persistent fictional-data warning and clinical fictional markers remain visible by project safety requirements.
+
 ## O-006 follow-up acceptance checks — cleared by UI v0 verification (2026-11-09)
 
 The following are required before merging PR #7. They were added after the original 112/112 API and 32/32 web test report; do not treat those earlier results as verification of this follow-up.

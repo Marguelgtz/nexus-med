@@ -1,10 +1,29 @@
 # Living Action Plan — Medical Platform MVP
 
 **Document type:** Active execution state (living document)  
-**Last updated:** 2026-11-09
+**Last updated:** 2026-11-10
 **Owner:** Project owner  
 **Primary agent:** Hermes Agent  
-**Current implementation state (updated 2026-11-09):** O-001–O-006 remain implemented. O-007 UI v0 is implemented and locally verified on `feat/o007-ui-foundation`, based on PR #8 at `1a0432f`; foundation `6c412c3`, interaction refinement `99468b3`. API 112/112, web 36/36, typecheck/lint/build and synthetic browser checks pass. Final evidence contains 89 inspected PNGs. Published as [PR #9](https://github.com/Marguelgtz/nexus-med/pull/9) against PR #8; branch pushed to origin. No UI PR has been merged. The pre-existing `apps/web/next-env.d.ts` dev-path modification remains uncommitted.
+**Current implementation state (updated 2026-11-10):** O-001–O-006 remain implemented. O-007 plus the owner-review refinements are implemented on `feat/o007-ui-foundation`, based on PR #8 at `1a0432f`; this follow-up adds direct consultation entry, patient workflow navigation, focused clinical context, individual-field note editing, study ordering inside consultation actions, the `Otro` study name/detail contract, and a data-preserving migration. Code commit `28c00cc` is verified. API 113/113, web 39/39, workspace typecheck, lint and final Next.js production build pass. Chromium screenshots were inspected at 1440, 1024 and 390 CSS px; key routes report no horizontal overflow. The original 89-image inventory remains unchanged; 14 current owner-review captures are separately inventoried. Local startup applied no new migration and seed created zero records. [PR #9](https://github.com/Marguelgtz/nexus-med/pull/9) remains open against PR #8; the evidence/docs commit, push, and PR-body update are pending. The pre-existing `apps/web/next-env.d.ts` dev-path modification remains uncommitted.
+
+## Active follow-up — Owner UI review
+
+**Status:** Code, runtime, data-preservation, responsive visual checks, screenshots, and implementation documentation are verified. Code commit `28c00cc` is complete. The evidence/documentation commit, push, and PR #9 body update remain. Preserve the pre-existing `apps/web/next-env.d.ts` modification.
+
+**Outcome:** Make the main clinical workflows easier to start and scan, reduce nested/dense encounter UI, give patient context its own focused page, and improve the visual identity and mobile calendar while preserving O-007 clinical semantics, API ownership, explicit saving, synthetic-only data, the persistent demo warning, and print isolation.
+
+**Ordered sequence:**
+1. **Navigation and entry points — verified:** patient workflow side navigation, registry-level `Nueva consulta`, appointment actions beside pending work, and appointment creation from the full context page. Filtered synthetic registry, patient summary and context routes returned 200 in Chromium at 1440/1024/390px; document width matched viewport.
+2. **Clinical information and actions — implemented:** one-field-at-a-time consultation editing; study action beside encounter actions; concise study composition; readable association and status caveat. The contract now stores required study `name` plus optional detail; the new migration preserves existing values and associations. API suite passes 113/113.
+3. **Patient workspace and timeline — verified:** all four background fields shown together, dedicated full context page, inline appointment entry, compact date/time/type timeline. Desktop/tablet/mobile patient and context screenshots were individually inspected; no page overflow at 1440/1024/390px.
+4. **Responsive visual refinement — verified:** evergreen/warm-neutral token refinement and selectable mobile month cells with selected-day agenda. Mobile month, patient summary and focused forms were inspected; focused token contrast checks pass. The side-nav grid and registry action sizing were corrected after inspecting desktop screenshots.
+5. **Reconcile and deliver — in progress:** API 113/113, web 39/39, workspace typecheck, lint and final Next.js production build pass. Migration/seed ran against existing local data with no pending migration, zero created records and no data reset. Fourteen owner-review screenshots and testing/documentation updates are ready. Code is committed; next: commit the evidence/docs, push to the existing branch, update PR #9, and leave it open.
+
+**Acceptance:** Existing patient, encounter, study, appointment, document, print, and persistence behavior remains intact. The registry can start a consultation for an active patient in one action. Patient-specific screens offer simple navigation and preserve patient identity. Encounter editing shows a single named field at a time with explicit save/cancel and preserved validation/failure recovery. New encounter studies retain the association statement and category, readable status copy, and a specific name when `Otro` is selected; no study status meaning changes. Full clinical context presents allergies, medications, conditions, and prior surgeries together and offers an appointment path. Timeline entries remain bounded on narrow screens and scan through concise date/time and encounter type. Month view works at 320–390px without horizontal page overflow and routes clearly to that day's appointments. The palette maintains readable contrast and visible keyboard focus. Existing local data and the owner change to `next-env.d.ts` are preserved.
+
+**Branch/PR:** Continue `feat/o007-ui-foundation` and update its existing open UI PR; do not merge. Commit after each verified logical unit. No independent work is delegated.
+
+**Next action:** commit screenshot/evidence documentation; then push the branch and update PR #9 without merging.
 
 ---
 
@@ -50,7 +69,7 @@ Do not duplicate the entire phase task catalog here. Reference task IDs where us
 
 ### Overall status
 
-**O-001–O-006 implementation complete; O-006 awaits owner review.** The O-005 local MVP and four product expansions remain the verified code baseline. O-006 adds the integrated consultation workspace, patient-level study requests, conservative study review, appointment handoff, contextual documents/follow-up, and focused patient workspace. Synthetic-only data, explicit saving, O-005 behavior, and open clinical-status questions are preserved.
+**O-001–O-006 implementation complete; O-007 owner-review follow-up is being delivered.** The O-005 local MVP and four product expansions remain the verified code baseline. O-006 adds the integrated consultation workspace, patient-level study requests, conservative study review, appointment handoff, contextual documents/follow-up, and focused patient workspace. Synthetic-only data, explicit saving, O-005 behavior, and open clinical-status questions are preserved.
 
 ### Confirmed direction
 
@@ -72,7 +91,7 @@ See `DECISIONS.md` and `ARCHITECTURE.md` for details.
 | Product definition | Prepared | `PRODUCT.md`, `WORKFLOWS.md` |
 | Architecture | Implemented per `ARCHITECTURE.md` | Monorepo, Hono API, Prisma 7 + SQLite, SSR shell |
 | Data model | Implemented and migrated | `prisma/schema.prisma`, committed migration |
-| API surface | Patient/encounter/appointment/study/document routes present | O-006 patient-scoped study create supports standalone and validated same-patient encounter requests; full API suite passes 112/112 |
+| API surface | Patient/encounter/appointment/study/document routes present | O-006 patient-scoped study create supports standalone and validated same-patient encounter requests; owner-reviewed study-name contract and migration pass 113/113 API tests |
 | Synthetic fixture | Patient, encounter, appointment, study, prescription and report fixtures present | 7 patients, 9 encounters, 9 appointments, 2 studies, 2 documents (one linked prescription with 2 lines, one unlinked report) |
 | Database and API code | Core and NX-001…NX-004 implemented | Prisma domain modules, migrations, validation, shared DTOs, integration coverage, and seed idempotency pass |
 | UX/UI specification | Complete (O-002) | `docs/UI_SPEC.md` — screens, interactions, states, visual system, story coverage, decisions U-01–U-08 |
