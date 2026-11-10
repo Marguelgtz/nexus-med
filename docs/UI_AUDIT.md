@@ -36,6 +36,10 @@ The owner then reviewed the running application and requested faster workflow en
 
 Follow-up screenshots captured after the desktop layout correction are catalogued in [the owner-review evidence set](assets/ui-v0/owner-review-2026-11-10/README.md). These are implementation decisions based on owner feedback, not physician-study findings.
 
+## Compact-entry follow-up — 2026-11-10
+
+D-043 implements reversible consultation stages, contextual study/follow-up dialogs and one-medication dialogs with compact prescription summaries. Background now belongs to Resumen; its previous read URL redirects. Existing line instructions are preserved/read-only and still print. Screenshot review repaired small study controls, wrapping close buttons and mobile action placement. The final evidence is [25 PNGs](assets/ui-v0/compact-entry-2026-11-10/README.md), including one rendered print page. These are implementation checks, not physician usability or final aesthetic approval.
+
 ## Methodology and coverage
 
 Read project instructions, product/workflow/UI specifications, architecture, current decisions, previous UX audit/redesign, testing notes, and active execution state. Inspected routes, shared primitives, domain components, browser API configuration, and `globals.css`. The earlier `UX_AUDIT.md` concerns O-005 workflow research; this audit assesses the latest O-006 presentation without reopening accepted workflows.

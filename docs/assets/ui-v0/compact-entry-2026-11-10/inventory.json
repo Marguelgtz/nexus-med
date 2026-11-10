@@ -1,0 +1,375 @@
+[
+  {
+    "file": "overview-desktop.png",
+    "state": "overview",
+    "url": "/patients/demo-patient-002",
+    "viewport": {
+      "width": 1440,
+      "height": 900,
+      "label": "desktop"
+    },
+    "sha256": "08957904c576c53bde0a1591ca6e0ab8182fef168b2a057c539e03da03c5e14c",
+    "dimensions": {
+      "width": 1440,
+      "height": 1046
+    }
+  },
+  {
+    "file": "consultation-stage-1-desktop.png",
+    "state": "consultation-stage-1",
+    "url": "/patients/demo-patient-002/consultas/nueva",
+    "viewport": {
+      "width": 1440,
+      "height": 900,
+      "label": "desktop"
+    },
+    "sha256": "84738d5c67eb6b7eb8a78d7bcd1170df6569297da25ea5bc809cec7596fed1e4",
+    "dimensions": {
+      "width": 1440,
+      "height": 1034
+    }
+  },
+  {
+    "file": "consultation-stage-2-desktop.png",
+    "state": "consultation-stage-2",
+    "url": "/patients/demo-patient-002/consultas/nueva",
+    "viewport": {
+      "width": 1440,
+      "height": 900,
+      "label": "desktop"
+    },
+    "sha256": "0d8f8cd0f6335c9e9fa2d78ed6c09d967c5827cb74424d19c7e131cbfbd4a4bd",
+    "dimensions": {
+      "width": 1440,
+      "height": 900
+    }
+  },
+  {
+    "file": "study-request-dialog-desktop.png",
+    "state": "study-request-dialog",
+    "url": "/patients/demo-patient-002/consultas/nueva",
+    "viewport": {
+      "width": 1440,
+      "height": 900,
+      "label": "desktop"
+    },
+    "sha256": "f241060de2d66571276000952258c064358d640348f65d535ba51ceb2bfced39",
+    "dimensions": {
+      "width": 1440,
+      "height": 900
+    }
+  },
+  {
+    "file": "consultation-stage-3-desktop.png",
+    "state": "consultation-stage-3",
+    "url": "/patients/demo-patient-002/consultas/nueva",
+    "viewport": {
+      "width": 1440,
+      "height": 900,
+      "label": "desktop"
+    },
+    "sha256": "8eb4ebd68659f148ee2301d5ab7df183350cbe15ae9639981946ec048a35f6f4",
+    "dimensions": {
+      "width": 1440,
+      "height": 1056
+    }
+  },
+  {
+    "file": "follow-up-dialog-desktop.png",
+    "state": "follow-up-dialog",
+    "url": "/patients/demo-patient-002/consultas/nueva",
+    "viewport": {
+      "width": 1440,
+      "height": 900,
+      "label": "desktop"
+    },
+    "sha256": "c34d3d0ad43924473d8586fd979a7c90cf38660cb9f13525b030bf3ee2fac365",
+    "dimensions": {
+      "width": 1440,
+      "height": 900
+    }
+  },
+  {
+    "file": "prescription-summary-desktop.png",
+    "state": "prescription-summary",
+    "url": "/patients/demo-patient-002/recetas/nueva",
+    "viewport": {
+      "width": 1440,
+      "height": 900,
+      "label": "desktop"
+    },
+    "sha256": "7fc3efab1dab7573a93994adeea0dbbdf3b2e39ef8e8eba13d6f9f168cf5b238",
+    "dimensions": {
+      "width": 1440,
+      "height": 918
+    }
+  },
+  {
+    "file": "medication-dialog-desktop.png",
+    "state": "medication-dialog",
+    "url": "/patients/demo-patient-002/recetas/nueva",
+    "viewport": {
+      "width": 1440,
+      "height": 900,
+      "label": "desktop"
+    },
+    "sha256": "ab17e5bcf0ac7caea34027b993285e7a2d048ce4efc5c5633565b02a63fa3f4e",
+    "dimensions": {
+      "width": 1440,
+      "height": 900
+    }
+  },
+  {
+    "file": "overview-tablet.png",
+    "state": "overview",
+    "url": "/patients/demo-patient-002",
+    "viewport": {
+      "width": 1024,
+      "height": 768,
+      "label": "tablet"
+    },
+    "sha256": "2555ef44722ea531efdcaead41a05d28da48500c3dbdcfd71f2edcb59191f894",
+    "dimensions": {
+      "width": 1024,
+      "height": 1046
+    }
+  },
+  {
+    "file": "consultation-stage-1-tablet.png",
+    "state": "consultation-stage-1",
+    "url": "/patients/demo-patient-002/consultas/nueva",
+    "viewport": {
+      "width": 1024,
+      "height": 768,
+      "label": "tablet"
+    },
+    "sha256": "db33990acb93030957881feb8585a0f434bb480648e2290c3bec2fb933c27f62",
+    "dimensions": {
+      "width": 1024,
+      "height": 1094
+    }
+  },
+  {
+    "file": "consultation-stage-2-tablet.png",
+    "state": "consultation-stage-2",
+    "url": "/patients/demo-patient-002/consultas/nueva",
+    "viewport": {
+      "width": 1024,
+      "height": 768,
+      "label": "tablet"
+    },
+    "sha256": "e9e6e7953e51a8d892fe5b610eba3f3ec67ef5c234880e59b82b1be30288b514",
+    "dimensions": {
+      "width": 1024,
+      "height": 931
+    }
+  },
+  {
+    "file": "study-request-dialog-tablet.png",
+    "state": "study-request-dialog",
+    "url": "/patients/demo-patient-002/consultas/nueva",
+    "viewport": {
+      "width": 1024,
+      "height": 768,
+      "label": "tablet"
+    },
+    "sha256": "ba5c3e9a86252cb943486cabe68de25579dcafbdb8f18421f3c5d2a0a78a1117",
+    "dimensions": {
+      "width": 1024,
+      "height": 768
+    }
+  },
+  {
+    "file": "consultation-stage-3-tablet.png",
+    "state": "consultation-stage-3",
+    "url": "/patients/demo-patient-002/consultas/nueva",
+    "viewport": {
+      "width": 1024,
+      "height": 768,
+      "label": "tablet"
+    },
+    "sha256": "2640c3fb85c5a1c32be47576cf1cbb2f4d7a395270431667d5e68ce7d8da956b",
+    "dimensions": {
+      "width": 1024,
+      "height": 1079
+    }
+  },
+  {
+    "file": "follow-up-dialog-tablet.png",
+    "state": "follow-up-dialog",
+    "url": "/patients/demo-patient-002/consultas/nueva",
+    "viewport": {
+      "width": 1024,
+      "height": 768,
+      "label": "tablet"
+    },
+    "sha256": "1ebaf449620f52f83eac2e941512b7aa8c9a2b3258a187f9fcc9c1580c14d4e8",
+    "dimensions": {
+      "width": 1024,
+      "height": 768
+    }
+  },
+  {
+    "file": "prescription-summary-tablet.png",
+    "state": "prescription-summary",
+    "url": "/patients/demo-patient-002/recetas/nueva",
+    "viewport": {
+      "width": 1024,
+      "height": 768,
+      "label": "tablet"
+    },
+    "sha256": "2d4da3ed2f9ff2faaca9967e1f194444ffe1529d02e96c2a0625a29e3df751b0",
+    "dimensions": {
+      "width": 1024,
+      "height": 918
+    }
+  },
+  {
+    "file": "medication-dialog-tablet.png",
+    "state": "medication-dialog",
+    "url": "/patients/demo-patient-002/recetas/nueva",
+    "viewport": {
+      "width": 1024,
+      "height": 768,
+      "label": "tablet"
+    },
+    "sha256": "ddf9da47124fcacfc8d894276f154ffff0194dc819159edbf2c8e17d69088289",
+    "dimensions": {
+      "width": 1024,
+      "height": 768
+    }
+  },
+  {
+    "file": "overview-mobile.png",
+    "state": "overview",
+    "url": "/patients/demo-patient-002",
+    "viewport": {
+      "width": 390,
+      "height": 844,
+      "label": "mobile"
+    },
+    "sha256": "36973ef11df7e7ef63f23094972bc17fa911127302d0ce940b505b15539f877f",
+    "dimensions": {
+      "width": 390,
+      "height": 1449
+    }
+  },
+  {
+    "file": "consultation-stage-1-mobile.png",
+    "state": "consultation-stage-1",
+    "url": "/patients/demo-patient-002/consultas/nueva",
+    "viewport": {
+      "width": 390,
+      "height": 844,
+      "label": "mobile"
+    },
+    "sha256": "d86f97a41cfe1dcd6a3f69284d6b01d3622a1453f84de98f8c28f4a0d70d8a8d",
+    "dimensions": {
+      "width": 390,
+      "height": 1390
+    }
+  },
+  {
+    "file": "consultation-stage-2-mobile.png",
+    "state": "consultation-stage-2",
+    "url": "/patients/demo-patient-002/consultas/nueva",
+    "viewport": {
+      "width": 390,
+      "height": 844,
+      "label": "mobile"
+    },
+    "sha256": "6f07d7f080a1bb9cf666405a972ec99cf4fe1c3a286b236331bfaa3fad74a522",
+    "dimensions": {
+      "width": 390,
+      "height": 1156
+    }
+  },
+  {
+    "file": "study-request-dialog-mobile.png",
+    "state": "study-request-dialog",
+    "url": "/patients/demo-patient-002/consultas/nueva",
+    "viewport": {
+      "width": 390,
+      "height": 844,
+      "label": "mobile"
+    },
+    "sha256": "9df676117fbc2929ff466b1bae7896f9ff4f4143dec7e7c7be6a55b9f319e103",
+    "dimensions": {
+      "width": 390,
+      "height": 844
+    }
+  },
+  {
+    "file": "consultation-stage-3-mobile.png",
+    "state": "consultation-stage-3",
+    "url": "/patients/demo-patient-002/consultas/nueva",
+    "viewport": {
+      "width": 390,
+      "height": 844,
+      "label": "mobile"
+    },
+    "sha256": "a9be9a3789cc40f5dfbb222b55d1d0f96d18ea1fa93846d7a56ed676cd3850e3",
+    "dimensions": {
+      "width": 390,
+      "height": 1422
+    }
+  },
+  {
+    "file": "follow-up-dialog-mobile.png",
+    "state": "follow-up-dialog",
+    "url": "/patients/demo-patient-002/consultas/nueva",
+    "viewport": {
+      "width": 390,
+      "height": 844,
+      "label": "mobile"
+    },
+    "sha256": "21af73c617fe12653f89a5f76252014f9bcfb207a34e96ebcd5770bc304fd5e6",
+    "dimensions": {
+      "width": 390,
+      "height": 844
+    }
+  },
+  {
+    "file": "prescription-summary-mobile.png",
+    "state": "prescription-summary",
+    "url": "/patients/demo-patient-002/recetas/nueva",
+    "viewport": {
+      "width": 390,
+      "height": 844,
+      "label": "mobile"
+    },
+    "sha256": "ae24ec14ec170256455533c42667354ac75a8f823caf1aab53d9b8e7883044d1",
+    "dimensions": {
+      "width": 390,
+      "height": 1180
+    }
+  },
+  {
+    "file": "medication-dialog-mobile.png",
+    "state": "medication-dialog",
+    "url": "/patients/demo-patient-002/recetas/nueva",
+    "viewport": {
+      "width": 390,
+      "height": 844,
+      "label": "mobile"
+    },
+    "sha256": "1013f38b5e9c35321398bbf6b03a5d7efa617498cb9181abd1bfec742e4a40f0",
+    "dimensions": {
+      "width": 390,
+      "height": 844
+    }
+  },
+  {
+    "file": "prescription-print.png",
+    "state": "rendered-print",
+    "url": "/patients/demo-patient-002/recetas/demo-document-prescription-001",
+    "viewport": {
+      "label": "print"
+    },
+    "sha256": "771cb581dbcb1aace9663c3eb247068e3f05cf83f2a15b5a61ece6cd34ffdeaf",
+    "dimensions": {
+      "width": 990,
+      "height": 1400
+    }
+  }
+]

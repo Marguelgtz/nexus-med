@@ -1,12 +1,16 @@
 # Testing and Verification
 
-## Compact entry — incremental verification (2026-11-10)
+## Compact entry — final verification (2026-11-10)
 
 Dialog/follow-up milestone: web 39/39, web typecheck and ESLint pass (existing warning only). Local Chromium at 390px checks new/saved consultation follow-up dialogs, initial field focus, Tab containment, trigger focus return, dirty Escape cancel/accept and note retention. No clinical write was submitted. A repeated native Escape close-request behavior was found and fixed by handling/preventing Escape at keydown before the guarded close.
 
 Consultation-stage milestone: web typecheck/lint and Chromium checks pass for three stages, retained text/review, custom contextual study, zero requests during stage changes, captured atomic-save payload, simulated 500 retention, simulated cross-stage 400 focus, 320px reflow and saved-note study modal. All final test writes were intercepted. An earlier failed check exposed a Continue/Save DOM-button reuse default-submit bug; separate keyed buttons fixed it. That failed check created exactly two uniquely identified synthetic notes/requests in the local DB. They were backed up and removed with strict fixture/time/association checks; all unrelated table rows matched the pre-cleanup digest and foreign-key checks passed. Final persistence verification uses an isolated fixture DB.
 
 Medication/background milestone: web typecheck/lint and Chromium checks pass for modal create/edit/dirty Escape/focus return, compact two-medication payload, simulated save failure retention, preserved existing per-line instructions, overview-only background, edit/cancel return and former-context redirect. All writes were intercepted. Validation alert selectors were scoped away from Next's route announcer in the harness.
+
+Final production verification: build/TypeScript validation and lint pass; web 39/39 remains green. Separate exact-fixture production captures cover 24 state/viewport combinations without horizontal page overflow. The isolated mutation DB verifies all seven note fields plus atomic studies, a second saved-note request, unchanged original appointment state/linkage, independent follow-up, contextual two-medication prescription, existing line-instruction retention, and background persistence without rewriting notes. Simulated encounter/appointment/document save failures keep values; busy fields are disabled. Empty follow-up dates remain recoverable. Print uses visibility isolation (not display:none for all chrome); a PDF was rendered and inspected. Saved-study close restores focus after unmount. The API was restarted and existing synthetic records remained retrievable. Repeat seed preserved the full mutated DB dump digest and foreign keys (7/10/10/4/3). Full API tests were not rerun for these presentation-only changes.
+
+Evidence: [25 final PNGs and hashes](assets/ui-v0/compact-entry-2026-11-10/README.md). Screenshot inspection corrected study control sizing, close-button wrapping and unnecessary mobile action-card height. Verification also corrected a focus-after-unmount race; the print harness was aligned with the existing visibility-based rules. Limits remain Chromium-only and no physician/screen-reader validation.
 
 ## Focused patient views — 2026-11-10
 
