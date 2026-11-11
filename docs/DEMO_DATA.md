@@ -17,7 +17,8 @@ Seed at least:
 - **7 patients** with plausible synthetic Spanish names. The local development boundary and this document identify the dataset as synthetic; the application has no visible demo banner (D-046).
 - **9 encounters** distributed across at least four patients.
 - **9 appointments**: 4 fixed past appointments (3 completed — two linked to demo encounters, one `procedimiento` — and 1 cancelled) plus 5 upcoming appointments anchored to the first seed run (see Section 3).
-- **2 study requests** attached to `demo-encounter-002b` / `demo-patient-002`: one `ordered`, one `reviewed` with a fictional result note.
+- **3 study requests**: two attached to `demo-encounter-002b` / `demo-patient-002`, and one chest X-ray request attached to `demo-encounter-005b` / `demo-patient-005`, created on the first seed run's practice-local date.
+- **1 received-study example** linked to the patient 005 X-ray request, dated to the current practice-local day, with a locally stored PDF and no clinical findings.
 - **1 prescription** with two visibly fictional free-text lines, linked to `demo-encounter-002b` / `demo-patient-002`.
 - **1 report** with fictional narrative text for `demo-patient-007`, with no encounter link.
 - At least **2 patients with multiple encounters** so the timeline can be evaluated.
@@ -60,14 +61,15 @@ On a clean database, this fixture produces exactly seven demo patients (six acti
 
 ### Study-request fixtures (NX-003 implementation)
 
-`docs/demo-dataset.json` contains two fixed studies; `prisma/seed.ts` uses create-if-missing behavior for them.
+`docs/demo-dataset.json` contains three fixed study requests; `prisma/seed.ts` uses create-if-missing behavior for them.
 
 | ID | Patient / encounter | Study | Status |
 |---|---|---|---|
 | `demo-study-001` | `demo-patient-002` / `demo-encounter-002b` | `laboratorio`: Biometría hemática | `ordered` |
-| `demo-study-002` | `demo-patient-002` / `demo-encounter-002b` | `imagenologia`: Radiografía de tórax AP | `reviewed` (fictional result note) |
+| `demo-study-002` | `demo-patient-002` / `demo-encounter-002b` | `imagenologia`: Radiografía de tórax AP | `reviewed` (no result note) |
+| `demo-study-003` | `demo-patient-005` / `demo-encounter-005b` | `rayos_x`: Radiografía de tórax | `ordered` |
 
-The seed creates both records if missing, including the prescription lines in the same transaction. Existing documents and edited lines are preserved on later runs.
+The seed creates requests if missing. Existing records and edits are preserved on later runs. It also creates `demo-study-receipt-001` once for `demo-study-003`. Its date and receipt time are anchored to the practice-local date/time of the first seed run. The PDF attachment is generated locally, contains only a document title and neutral association text, and is removed if the database transaction fails. Receiving the file does not change the request status or mark it reviewed.
 
 ### Printable-document fixtures (NX-004)
 
@@ -83,8 +85,8 @@ The fixture lines use stable IDs and positions. Document and line records are cr
 - Use deterministic fictional names and stable internal IDs.
 - Do not use actual patient data, real contact details, actual medical record numbers, or copied medical notes.
 - Leave phone numbers blank. If an email is useful for testing, use a reserved `.invalid` domain such as `demo001@example.invalid`.
-- Every clinical note must contain a clear label such as `NOTA FICTICIA DE DEMOSTRACIÓN — NO USAR PARA ATENCIÓN REAL`.
-- Use short fictional examples appropriate to a general surgery practice only to exercise the fields and UI. Do not encode clinical recommendations as authoritative advice.
+- Seeded consultation note fields are blank; do not add fabricated clinical findings or recommendations to fixture notes.
+- The synthetic dataset contains no real patient information. Do not include real data in screenshots, logs, test snapshots, agent memory, or commit messages.
 - Keep the text in Spanish (Mexico).
 - Do not put real patient data in screenshots, logs, test snapshots, agent memory, or commit messages.
 
@@ -96,7 +98,7 @@ The fixture lines use stable IDs and positions. Document and line records are cr
 - The root route `/` should redirect to `/patients`.
 - Empty states must still be reachable, including a patient with no encounters.
 
-The application should present the seeded records without adding demonstration labels. Preserve the exact checked-in fixture and the local synthetic-data boundary.
+The application should present seeded records without visible demonstration labels. The seed and migration must preserve user-created records and edited fixture values; only exact unchanged legacy note values are cleared by the note-cleanup migration.
 
 ## 6. Seed implementation
 
