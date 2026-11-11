@@ -1,7 +1,6 @@
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 
-import { DemoBanner } from '../components/shell/demo-banner';
 import { PatientWorkflowNav } from '../components/shell/patient-workflow-nav';
 import { TopBar } from '../components/shell/top-bar';
 
@@ -9,7 +8,7 @@ import './globals.css';
 
 export const metadata: Metadata = {
   title: 'Nexus Med',
-  description: 'Gestión de consultoría médica para un cirujano general — prototipo local',
+  description: 'Gestión de consultoría médica para un cirujano general',
 };
 
 // App frame (UI_SPEC §2): top bar, persistent demo banner, and the page
@@ -20,7 +19,6 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       <body>
         <a href="#main-content" className="skip-link">Ir al contenido</a>
         <TopBar />
-        <DemoBanner />
         <div className="container">
           <main id="main-content" tabIndex={-1}>
             <div className="patient-workspace-shell">

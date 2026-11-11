@@ -424,3 +424,8 @@ Owner requested a full visual renewal with the same layout. Shared tokens and co
 
 
 The owner clarified that the first iteration changed mostly colors and requested a more substantial glass component redesign. PR #18 now includes floating translucent navigation with shared SVG icons, a directory identity component with initials and secondary metadata, lighter inline row actions, glass panels, inset controls, segmented tabs and frosted native dialogs. Layout columns and domain behavior remain. Chromium inspection covered desktop and mobile routes, calendar, consultation entry and modal opening; a 320px header overflow was fixed. Workspace typecheck, lint and production build pass after this iteration. No clinical writes were submitted.
+
+
+## 2026-11-10 — Operational reception overview and quieter presentation
+
+Owner approved removing visible demonstration labels from application chrome and printable documents (D-046). Stored text and exact fixtures remain unchanged. Reception and secretary agenda now show selected-date appointment/completion totals, all-date queue counts, next future unarrived appointment, planned minutes and completion progress. Scope labels distinguish selected-date counts from the shared queue. Web tests pass 42/42, workspace typecheck/lint and production build pass; Chromium desktop/390/320px checks show no horizontal overflow and no demo banner. No data writes were submitted.
