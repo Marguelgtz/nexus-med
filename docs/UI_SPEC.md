@@ -706,3 +706,17 @@ Medication entry uses `documents/medication-editor.tsx`, the same dialog shell a
 ### Figma handoff boundary
 
 UI v0 is a working baseline, not a final brand approval. The system board and key registry, patient overview, and consultation artboards were reviewed in the browser on 2026-11-10. This pass did not use Figma MCP or import component metadata; measurements above are the browser-reviewed implementation target. Preserve the workflow hierarchy, component ownership, states, tokens, labels, keyboard behavior and print isolation during later design work. Brand approval and any remaining screen-specific density or decorative decisions remain for owner review. Evidence and verification limits live in `TESTING.md` and `assets/ui-v0/README.md`; PR #8's audit remains the historical comparison.
+
+## 10. Secretary and reception workspace — D-044
+
+A view selector opens `/secretaria` or the physician's `/recepcion`. Secretary navigation contains Today and Patients, with study receipt added after its content contract is resolved. Today is a date-driven administrative appointment list and shared waiting queue. Arrival, undo arrival, and physician start-of-attention are explicit actions. Saving a note never silently completes a visit. Appointment cancellation removes it from active queue display; rescheduling explicitly resets reception markers. The physician completes appointments using the existing completion operation.
+
+Patient creation/editing, appointment create/reschedule, and brief administrative details use the existing native dialog. The patient stays named throughout; cancellation protects dirty inputs, failures retain text, successful changes refresh owning SSR data, and focus returns to the trigger. Secretary views request administrative DTOs only. No clinical background, note body, result interpretation, or prescription editor appears there. Clinical note composition, historical reading and printable document pages remain dedicated routes.
+
+### Shared received studies — D-045
+
+Secretary's Studies tab and the physician's received-study inbox use the same entry modal. Select a patient before opening it; patient's name stays visible. Name and local PDF/image attachments are required; date, administrative note, order and consultation are optional. Existing order associations preselect their consultation. Failed option loading offers retry and blocks saving until associations are available. Failed upload retains fields and file selection.
+
+The list separates Pending review and All, supports title/patient search, displays receipt and study dates separately, preserves file names, and opens files in a new tab. Only the medical presentation includes the explicit review dialog and physician note. Patient Studies includes the same receipt list, alongside the existing order workflow. The two records' states are not conflated. New-patient and demographic forms share one implementation, and patient-summary background and scheduling actions reuse their existing forms inside modals. Existing direct routes remain valid.
+
+Received-study entry is also available from a saved consultation, with that consultation preselected. The patient and consultation views display only their associated receipts. A consultation prefill alone is not a dirty draft; closing an untouched dialog does not ask to discard changes. The visible inbox refreshes on focus and every 15 seconds while no receipt/review dialog is open.

@@ -16,6 +16,7 @@ import {
   APPOINTMENT_TYPE_LABELS,
   formatTime,
   instantAtLocalTime,
+  isValidCalendarDate,
   localDateOfInstant,
 } from '../../lib/format';
 import { overlappingScheduledAppointments } from '../../lib/calendar';
@@ -37,6 +38,7 @@ type Props = {
   returnTo?: string;
   onCancel?: () => void;
   dialogTitle?: string;
+  defaultDate?: string;
 };
 
 function toIso(dateStr: string, timeStr: string): string {
@@ -46,9 +48,9 @@ function toIso(dateStr: string, timeStr: string): string {
   return instantAtLocalTime(dateStr, h, m).toISOString();
 }
 
-export function AppointmentForm({ patientId, initial, onSaved, onCreated, returnTo, onCancel, dialogTitle }: Props) {
+export function AppointmentForm({ patientId, initial, onSaved, onCreated, returnTo, onCancel, dialogTitle, defaultDate }: Props) {
   const router = useRouter();
-  const [initialDate] = useState(() => initial ? localDateOfInstant(initial.startAt) : localDateOfInstant(new Date().toISOString()));
+  const [initialDate] = useState(() => initial ? localDateOfInstant(initial.startAt) : defaultDate ?? localDateOfInstant(new Date().toISOString()));
   const [initialTime] = useState(() => initial ? formatTime(initial.startAt) : '09:00');
   const [date, setDate] = useState(initialDate);
   const [time, setTime] = useState(initialTime);
@@ -68,8 +70,9 @@ export function AppointmentForm({ patientId, initial, onSaved, onCreated, return
 
   // Non-blocking overlap check, debounced: candidate [start, start+duration)
   // against that patient's appointments that day.
-  const candidateStart = useMemo(() => toIso(date, time), [date, time]);
+  const candidateStart = useMemo(() => isValidCalendarDate(date) && /^([01]\d|2[0-3]):[0-5]\d$/.test(time) ? toIso(date, time) : null, [date, time]);
   useEffect(() => {
+    if (!candidateStart) return;
     let cancelled = false;
     const timer = setTimeout(async () => {
       try {
@@ -95,8 +98,10 @@ export function AppointmentForm({ patientId, initial, onSaved, onCreated, return
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+    if (!candidateStart) { setError('Revisa la fecha y hora de la cita.'); return; }
+    if (initial?.arrivedAt && !window.confirm('Reprogramar reinicia la recepción de esta cita. ¿Continuar?')) return;
     setBusy(true);
-    const startAt = toIso(date, time);
+    const startAt = candidateStart;
     try {
       if (initial) {
         await updateAppointment(initial.id, {
@@ -171,7 +176,7 @@ export function AppointmentForm({ patientId, initial, onSaved, onCreated, return
         </label>
       </div>
 
-      {overlap.length > 0 ? (
+      {candidateStart && overlap.length > 0 ? (
         <p className="notice">
           Se superpone con: {overlap.join(', ')}. Puedes guardar igualmente.
         </p>
@@ -197,7 +202,7 @@ export function AppointmentForm({ patientId, initial, onSaved, onCreated, return
     </form>
   );
   return dialogTitle ? (
-    <Modal title={dialogTitle} description="La cita se guarda como un registro independiente; no completa ni enlaza la consulta." onClose={cancel} closeDisabled={busy}>
+    <Modal title={dialogTitle} description={initial ? initial.patient.fullName : "Revisa la fecha, hora y paciente antes de guardar."} onClose={cancel} closeDisabled={busy}>
       {form}
     </Modal>
   ) : form;

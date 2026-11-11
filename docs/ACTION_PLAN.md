@@ -6,6 +6,22 @@
 **Primary agent:** Hermes Agent  
 **Current implementation state (updated 2026-11-10):** Compact clinical entry is implemented, verified and pushed on `feat/o007-ui-foundation`: `786533b`, `fd2cf83`, `e39a604`, final corrections `06a4fa8`, evidence `a4434dc`. Three consultation stages, contextual study/follow-up dialogs, compact medication entry and overview background are delivered. The browser-reviewed Figma UI v0 alignment is pushed as `8431d28`; its CSS parser correction is now included on the branch. Web 39/39, typecheck/lint and final production build pass for the previous delivery; this alignment passes web typecheck/lint and local startup smoke checks. The idempotent seed created zero records, migrations were current, `/patients` returned 200 and API health returned `ok`. Isolated persistence/failure/print/restart/seed checks pass; 25 inspected PNGs are inventoried. English authoritative docs are reconciled. PR #9 is updated against PR #8, open and unmerged. Preserve the pre-existing local `apps/web/next-env.d.ts` change.
 
+## Active objective — Secretary workspace (2026-11-10)
+
+**Status:** Implemented on `codex/secretary-workspace`, based on the open UI branch. API foundation is committed as `a16857b`; UI, full checks and browser workflows pass. Preserve the owner's `next-env.d.ts` edit.
+
+**Outcome:** Administrative secretary view without authentication: patient/contact management, scheduling, reception and shared waiting list, and receipt of studies for physician review. Both views share study entry with required patient and optional consultation. Short tasks open in native dialogs.
+
+**Ordered delivery:** (1) Add reception contracts, safe additive migration, API operations and integration coverage. (2) Build the secretary workspace and physician queue using existing forms/dialogs; keep clinical information out of the administrative view. (3) Add shared received-study workflow with owner-approved PDF/image attachments. (4) Consolidate short task entry points, run tests/typecheck/lint/build and runtime checks, reconcile docs, commit reviewable milestones; leave feature PRs unmerged.
+
+**Defaults/dependencies:** Local loopback runtime and a visible Medical/Secretary view selector; no accounts or security roles. D-045 approves local PDF/image attachments. Both views share reception; runtime remains loopback-only. No delegation.
+
+**Acceptance:** Arrival persists and is shared; duplicate/invalid/concurrent transitions fail clearly; cancellations/rescheduling cannot leave active phantom queue entries. Secretary can create/edit demographic data and appointments in dialogs without visiting clinical records. Forms preserve input on failure and confirm dirty dismissal. Long clinical notes and printable documents retain full pages. Existing fixtures and edits survive migration/seed.
+
+**Verification so far:** Final API 121/121, web 39/39, workspace typecheck, lint (existing Pages warning), and production build pass. Isolated production Chromium passes patient/contact persistence, appointment entry, shared arrival/start, dirty dismissal/focus return, upload failure recovery, physician review, physician receipt from a saved consultation, view-switch protection for unsaved notes and 390/320px reflow; no runtime exceptions. Repeat QA seed creates zero rows and preserves the complete nine-table digest plus three attachment hashes.
+
+**Next action:** verify file retrieval after API restart, restore normal startup against the preserved owner DB, reconcile evidence and publish an unmerged dependent PR.
+
 ## Active follow-up — Figma UI v0 foundation alignment (2026-11-10)
 
 **Status:** Implemented and pushed on `feat/o007-ui-foundation`, including the CSS parser correction found during local startup; PR #9 remains open and unmerged. The owner-selected Figma UI v0 system and key workflow artboards were reviewed in the browser; no MCP used. Preserve the pre-existing `apps/web/next-env.d.ts` change.
