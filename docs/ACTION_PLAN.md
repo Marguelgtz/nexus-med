@@ -1,10 +1,10 @@
 # Living Action Plan — Medical Platform MVP
 
 **Document type:** Active execution state (living document)  
-**Last updated:** 2026-11-10
+**Last updated:** 2026-11-11
 **Owner:** Project owner  
 **Primary agent:** Hermes Agent  
-**Current implementation state (updated 2026-11-10):** O-008 secretary/reception/local study receipt is implemented on `codex/secretary-workspace`, based on UI PR #9. The original 59-file PR #10 is closed as superseded by a seven-layer review stack: #11 data/contracts (11 files), #12 reception API (8), #13 receipt API/storage (6), #14 patient action dialogs (9), #15 reception UI (10), #16 received-study UI and polling fix (6), and #17 docs/evidence (9). Each layer is based on the previous layer; #11 is based on PR #9. Original branch/history is retained, no PR is merged. Preserve the owner's pre-existing `apps/web/next-env.d.ts` change.
+**Current implementation state (updated 2026-11-11):** O-008 secretary/reception/local study receipt is implemented on `codex/secretary-workspace`, based on UI PR #9. The original 59-file PR #10 is closed as superseded by a seven-layer review stack: #11 data/contracts (11 files), #12 reception API (8), #13 receipt API/storage (6), #14 patient action dialogs (9), #15 reception UI (10), #16 received-study UI and polling fix (6), and #17 docs/evidence (9). Each layer is based on the previous layer; #11 is based on PR #9. Original branch/history is retained, no PR is merged. Preserve the owner's pre-existing `apps/web/next-env.d.ts` change.
 
 ## Completed objective — Reception at a glance (2026-11-10)
 
@@ -14,7 +14,7 @@
 
 **Branch:** `codex/reception-overview`. Scope is presentation and derived summaries, no changes to stored records or API. Preserve the owner's next-env edit. **Verification:** web 42/42, workspace typecheck, lint (existing Pages warning), production build pass. Chromium confirms reception/secretary metrics and no banner at desktop, 390px and 320px, without overflow. No record writes. Published as [PR #19](https://github.com/Marguelgtz/nexus-med/pull/19), 15 files, based on #18; commit `9463685`. Open and unmerged. Dev is running at http://127.0.0.1:3000/recepcion; next action is owner walkthrough.
 
-## Active objective — Secretary patient cards and shared study sync (2026-11-10)
+## Active objective — Secretary patient cards and shared study sync (2026-11-11)
 
 **Outcome:** Keep contact details visible on secretary patient cards, name the shared study area simply **Estudios**, and let the secretary/physician views reflect shared updates within 30 seconds.
 
@@ -22,7 +22,9 @@
 
 **Sequence:** (1) Add/test the administrative patient-list projection and render phone/email in each card. (2) Rename study entry points and add a shared 30-second interval constant. (3) Apply 30-second polling to reception and studies, keep an accessible icon refresh, and document synchronization behavior. (4) Run API/web checks, browser walkthrough in both views, inspect diff, commit and publish small stacked PRs under 15 files where practical.
 
-**Branch:** `codex/secretary-patient-cards`, based on open PR #19; preserve `apps/web/next-env.d.ts`. **Acceptance:** Secretary cards show phone/email or “Sin registrar”; API response excludes medical background; both views show “Estudios”; secretary-added study appears in physician view after polling or focus; no unsaved receipt/review form is overwritten; no narrow-screen overflow. **Status:** administrative list API and card rendering implemented; verification and the shared sync slice remain.
+**Branch stack:** `codex/secretary-patient-cards` (based on PR #19) → `codex/shared-study-sync` → `codex/presentation-docs-cleanup`; preserve `apps/web/next-env.d.ts`. Keep each PR at 15 files or fewer. **Acceptance:** Secretary cards show phone/email or “Sin registrar”; API response excludes medical background; both views show “Estudios”; secretary-added study appears in physician view after polling or focus; no unsaved receipt/review form is overwritten; no narrow-screen overflow. **Status:** both slices implemented and verified; final normative-doc reconciliation is isolated in the third layer. Commit `84472bb` adds the administrative list and contact cards. PR publication follows.
+
+**Verification:** API 121/121, web 42/42, workspace typecheck, lint (existing Pages warning), and production build pass. Chromium confirms secretary contact cards, 30-second polling on physician/secretary reception and Studies, successful manual API refresh, legacy-route redirect, no visible demo labels, and no horizontal overflow at 1440/390/320px. No local records were written. Dev startup reports zero new seed rows.
 
 ## Active objective — Contemporary UI refresh (2026-11-10)
 

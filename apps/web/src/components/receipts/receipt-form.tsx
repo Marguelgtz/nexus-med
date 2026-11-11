@@ -31,7 +31,7 @@ export function ReceiptForm({ patient, onClose, onSaved, initialEncounterId }: {
     try { const saved = await createStudyReceipt(patient.id, metadata.data, files); onSaved?.(saved); onClose(); }
     catch (err) { setError(err instanceof Error ? err.message : 'No se pudo recibir el estudio.'); setBusy(false); }
   }
-  return <Modal title="Agregar estudio recibido" description={patient.fullName} onClose={close} closeDisabled={busy}>
+  return <Modal title="Agregar estudio" description={patient.fullName} onClose={close} closeDisabled={busy}>
     <form onSubmit={save} aria-busy={busy}>
       <div className="field"><label htmlFor="receipt-title">Nombre del estudio *</label><input id="receipt-title" value={title} maxLength={200} required disabled={busy} onChange={e => setTitle(e.target.value)} /></div>
       <div className="field"><label htmlFor="receipt-date">Fecha del estudio (opcional)</label><input id="receipt-date" type="date" value={date} disabled={busy} onChange={e => setDate(e.target.value)} /></div>
@@ -42,7 +42,7 @@ export function ReceiptForm({ patient, onClose, onSaved, initialEncounterId }: {
       <div className="field"><label htmlFor="receipt-files">Archivos PDF, PNG o JPEG *</label><input id="receipt-files" type="file" accept="application/pdf,image/png,image/jpeg" multiple disabled={busy} onChange={e => setFiles(Array.from(e.target.files ?? []))} aria-describedby="receipt-files-help" /><p id="receipt-files-help" className="field-hint">Hasta 5 archivos; 10 MB por archivo y 24 MB en total.</p>{files.map((file, index) => <p className="field-hint" key={`${index}-${file.name}`}>{file.name} · {(file.size / 1024).toFixed(0)} KB</p>)}</div>
       <div className="field"><label htmlFor="receipt-note">Nota de recepción (opcional)</label><textarea id="receipt-note" rows={2} value={note} maxLength={1000} disabled={busy} onChange={e => setNote(e.target.value)} /><p className="field-hint">Datos de entrega o procedencia. La revisión médica se registra después.</p></div>
       {error ? <p className="error" role="alert">{error}</p> : null}
-      <div className="btn-row"><button className="btn btn-primary" disabled={busy || !options}>{busy ? 'Guardando archivos…' : 'Guardar estudio recibido'}</button><button type="button" className="btn btn-ghost" disabled={busy} onClick={close}>Cancelar</button></div>
+      <div className="btn-row"><button className="btn btn-primary" disabled={busy || !options}>{busy ? 'Guardando archivos…' : 'Guardar estudio'}</button><button type="button" className="btn btn-ghost" disabled={busy} onClick={close}>Cancelar</button></div>
     </form>
   </Modal>;
 }

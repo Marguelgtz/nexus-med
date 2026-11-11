@@ -31,4 +31,4 @@ for (const [cmd, args] of steps) {
   }
 }
 
-console.log('[db:reset] Completado — base de datos reiniciada con datos de demostración.');
+console.log('[db:reset] Completado — base de datos local reiniciada.');

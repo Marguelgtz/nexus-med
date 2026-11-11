@@ -17,13 +17,13 @@ export function TopBar() {
   const calendarActive = pathname === '/calendar' || pathname.startsWith('/calendar');
   const links = administrative ? [{ href: '/secretaria', label: 'Secretaría', active: true }] : [
     { href: '/recepcion', label: 'Recepción', active: pathname === '/recepcion' },
-    { href: '/estudios-recibidos', label: 'Estudios recibidos', active: pathname === '/estudios-recibidos' },
+    { href: '/estudios', label: 'Estudios', active: pathname === '/estudios' },
     { href: '/patients', label: 'Pacientes', active: patientsActive },
     { href: '/calendar', label: 'Calendario', active: calendarActive },
   ];
   const renderLinks = () => links.map(({ href, label, active }) => (
     <Link key={href} href={href} aria-current={active ? 'page' : undefined} className={active ? 'active' : undefined}>
-      <Icon name={({ Recepción: 'activity', 'Estudios recibidos': 'document', Pacientes: 'users', Calendario: 'calendar', Secretaría: 'grid' } as Record<string, IconName>)[ label] ?? 'grid'} />{label}
+      <Icon name={({ Recepción: 'activity', Estudios: 'document', Pacientes: 'users', Calendario: 'calendar', Secretaría: 'grid' } as Record<string, IconName>)[ label] ?? 'grid'} />{label}
     </Link>
   ));
 

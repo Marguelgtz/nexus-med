@@ -368,7 +368,7 @@ nexus-med/
 │   │   │   │   ├── patients/             # Registry, forms, timeline, encounter detail
 │   │   │   │   ├── appointments/          # Appointment/calendar workflow UI
 │   │   │   │   ├── documents/             # Prescription/report forms and print detail
-│   │   │   │   ├── shell/                # Top bar, demo banner, patient context strip
+│   │   │   │   ├── shell/                # Top bar and patient context strip
 │   │   │   │   ├── modal.tsx             # Client native-dialog shell
 │   │   │   │   └── primitives.tsx        # Genuinely shared visual primitives
 │   │   │   └── lib/
@@ -643,7 +643,7 @@ This root command must:
 4. Explicitly invoke Prisma 7 seeding (`prisma db seed`). Prisma 7 does not automatically run the seed command as part of `migrate dev` or `migrate reset`.
 5. Start Hono and wait for `/health` to respond before considering the API ready.
 6. Start Next.js and keep both processes attached to the same terminal session.
-7. Print the local URLs and demo-mode status, and shut both processes down cleanly on Ctrl+C.
+7. Print the local URLs without demo-mode labels, and shut both processes down cleanly on Ctrl+C.
 
 The seed must be idempotent: create missing demo records but never duplicate records, overwrite existing edits, delete user-created data, or reset the database. Repeated normal startup must preserve all local changes. See `DEMO_DATA.md` for the dataset and seed contract.
 
@@ -688,7 +688,7 @@ The final prototype must not open to an empty shell. After a clean local setup:
 - The root route `/` redirects to `/patients`.
 - On a clean database, the checked-in fixture inserts exactly seven demo patients (six active and one archived) and nine demo encounters; user-created records may increase the total later.
 - The fixture set includes at least two patients with multiple encounters, one patient with no encounters, and one archived patient.
-- A persistent banner displays **MODO DEMOSTRACIÓN — TODOS LOS DATOS SON FICTICIOS**.
+- The application displays the seeded records without a demonstration label (D-046).
 - Seed records have stable identifiers and visibly synthetic names/content.
 - Running startup or `npm run db:seed` again must not duplicate records or overwrite edits made during testing.
 
@@ -807,7 +807,7 @@ Do not implement these as part of the current prototype:
 - [ ] The browser cannot access SQLite or Prisma directly.
 - [ ] Hono uses Prisma ORM 7 with a local SQLite file.
 - [ ] Local SQLite migrations and Prisma 7 explicit seeding are reproducible.
-- [ ] The clean first run seeds the required demo dataset and opens `/patients` with the demo banner visible.
+- [ ] The clean first run seeds the required synthetic dataset and opens `/patients` without a demonstration label (D-046).
 - [ ] Repeated seed/startup creates no duplicates and does not overwrite existing edits or user-created records.
 - [ ] Prisma transactions work for local SQLite operations that require atomic multi-write behavior.
 - [ ] Restarting both applications does not delete local data.
@@ -871,6 +871,6 @@ Compact-entry ownership (D-043): `components/modal.tsx` owns only native dialog/
 
 The canonical map in §8 expands with `apps/api/src/domains/receipts/` (receipt association/list/review), `apps/api/src/infrastructure/storage/study-files.ts` (local validated opaque file I/O), `apps/web/src/components/receipts/` (shared receive/review UI), and browser-safe `packages/contracts/src/receipts.ts`. Existing appointments own reception. Existing patient demographic forms are composed from one shared form; the administrative projection excludes clinical fields.
 
-New SSR routes are `/secretaria`, `/recepcion`, and `/estudios-recibidos`. They call Hono with no-store; Next never accesses Prisma/files directly. A route-based view selector has no identity/security semantics. Background polling of the visible agenda pauses during its dialogs. The live queue includes all unfinished arrivals, independent of selected agenda date.
+New SSR routes are `/secretaria`, `/recepcion`, and `/estudios`. `/estudios-recibidos` redirects to `/estudios` for compatibility. They call Hono with no-store; Next never accesses Prisma/files directly. A route-based view selector has no identity/security semantics. Visible reception and shared-study views refresh every 30 seconds and on focus; polling pauses while their forms are open. The live queue includes all unfinished arrivals, independent of selected agenda date.
 
 D-045 supersedes the earlier file-storage exclusion solely for received studies. Storage is `study-files/` beside the resolved SQLite file (`.local/data/study-files/` by default, isolated beside test databases). No uploads go to public assets, Git or remote storage. Receipt metadata and attachment metadata are created together; newly written files are removed on a failed database insert. An interrupted process may leave an unreferenced opaque file, never a falsely successful receipt. Backups/restores must include both database and file directory. No file deletion, replacement, external integration, authentication or public runtime is introduced.

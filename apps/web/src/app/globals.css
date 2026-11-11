@@ -696,6 +696,8 @@ a.timeline-item:hover {
   padding: 4px 10px;
   font-size: 13px;
 }
+.btn-icon { width: 44px; min-width: 44px; padding: 0; }
+.btn-icon .ui-icon { width: 16px; height: 16px; }
 
 /* Identity sub-line under the overview H1 (UI_SPEC §3.3) */
 .subline {
