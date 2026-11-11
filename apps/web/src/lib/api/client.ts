@@ -7,6 +7,13 @@
 
 import {
   type Appointment,
+  type CreateStudyReceipt,
+  type ReceiptQuery,
+  type StudyReceipt,
+  studyReceiptSchema,
+  receiptOptionsSchema,
+  type ReceptionInput,
+  administrativePatientSchema,
   type CreateAppointmentInput,
   type CreateEncounterInput,
   type CreateEncounterStudiesInput,
@@ -84,7 +91,7 @@ async function request<T>(
   try {
     res = await fetch(`${API_BASE}${path}`, {
       ...init,
-      headers: { 'Content-Type': 'application/json', ...(init?.headers ?? {}) },
+      headers: { ...(init?.body instanceof FormData ? {} : { 'Content-Type': 'application/json' }), ...(init?.headers ?? {}) },
       cache: 'no-store',
     });
   } catch {
@@ -375,4 +382,41 @@ export function updateStudyStatus(id: string, input: UpdateStudyInput): Promise<
     { method: 'PATCH', body: JSON.stringify(input) },
     studyRequestSchema.safeParse.bind(studyRequestSchema),
   );
+}
+
+export function getAdministrativePatient(id: string) {
+  return request(`/patients/${encodeURIComponent(id)}/administrative`, undefined, administrativePatientSchema.safeParse.bind(administrativePatientSchema));
+}
+export function updateAdministrativePatient(id: string, input: UpdatePatientInput) {
+  updatePatientInputSchema.parse(input);
+  return request(`/patients/${encodeURIComponent(id)}/administrative`, { method: 'PATCH', body: JSON.stringify(input) }, administrativePatientSchema.safeParse.bind(administrativePatientSchema));
+}
+export function updateReception(id: string, input: ReceptionInput): Promise<Appointment> {
+  return request(`/appointments/${encodeURIComponent(id)}/reception`, { method: 'POST', body: JSON.stringify(input) }, appointmentSchema.safeParse.bind(appointmentSchema));
+}
+
+export function getReceiptOptions(patientId: string) {
+  return request(`/patients/${encodeURIComponent(patientId)}/study-receipt-options`, undefined, receiptOptionsSchema.safeParse.bind(receiptOptionsSchema));
+}
+export function listStudyReceipts(query: ReceiptQuery): Promise<StudyReceipt[]> {
+  const params = new URLSearchParams();
+  if (query.patientId) params.set('patientId', query.patientId);
+  if (query.view) params.set('view', query.view);
+  if (query.review) params.set('review', query.review);
+  return request(`/study-receipts?${params.toString()}`, undefined, asList(studyReceiptSchema));
+}
+export function createStudyReceipt(patientId: string, metadata: CreateStudyReceipt, files: File[]): Promise<StudyReceipt> {
+  const body = new FormData();
+  body.set('metadata', JSON.stringify(metadata));
+  files.forEach(file => body.append('files', file));
+  return request(`/patients/${encodeURIComponent(patientId)}/study-receipts`, { method: 'POST', body }, studyReceiptSchema.safeParse.bind(studyReceiptSchema));
+}
+export function reviewStudyReceipt(id: string, reviewNote: string): Promise<StudyReceipt> {
+  return request(`/study-receipts/${encodeURIComponent(id)}/review`, { method: 'POST', body: JSON.stringify({ reviewNote }) }, studyReceiptSchema.safeParse.bind(studyReceiptSchema));
+}
+export function receiptFileUrl(id: string) { return `${API_BASE}/study-receipt-files/${encodeURIComponent(id)}`; }
+
+export function createAdministrativePatient(input: CreatePatientInput) {
+  createPatientInputSchema.parse(input);
+  return request('/administrative/patients', { method: 'POST', body: JSON.stringify(input) }, administrativePatientSchema.safeParse.bind(administrativePatientSchema));
 }

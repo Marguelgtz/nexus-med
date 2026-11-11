@@ -15,6 +15,7 @@ import {
 } from '@nexus-med/contracts';
 
 import { ApiError, updateMedicalBackground } from '../../lib/api/client';
+import { Modal } from '../modal';
 import { ErrorBanner } from '../primitives';
 import { useBeforeUnloadGuard } from '../../lib/use-before-unload-guard';
 
@@ -29,10 +30,13 @@ const FIELDS: { key: keyof MedicalBackgroundInput; label: string; rows: number }
 
 export function BackgroundForm({
   patientId,
-  initial,
+  initial, onSaved, onCancel, dialogTitle,
 }: {
   patientId: string;
   initial: MedicalBackgroundInput;
+  onSaved?: () => void;
+  onCancel?: () => void;
+  dialogTitle?: string;
 }) {
   const router = useRouter();
   const [values, setValues] = useState({
@@ -51,7 +55,8 @@ export function BackgroundForm({
     values.previousSurgeries !== (initial.previousSurgeries ?? '') ||
     values.allergies !== (initial.allergies ?? '') ||
     values.currentMedications !== (initial.currentMedications ?? '');
-  useBeforeUnloadGuard(dirty);
+  useBeforeUnloadGuard(dirty && !saving);
+  const close = () => { if (!saving && (!dirty || window.confirm('Hay antecedentes sin guardar. ¿Descartar los cambios?'))) onCancel?.(); };
 
   const set = (field: keyof typeof values) => (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setValues((v) => ({ ...v, [field]: e.target.value }));
@@ -88,7 +93,7 @@ export function BackgroundForm({
     setSaving(true);
     try {
       await updateMedicalBackground(patientId, candidate);
-      router.push(`/patients/${patientId}#patient-background`);
+      if (onSaved) onSaved(); else router.push(`/patients/${patientId}#patient-background`);
       router.refresh();
     } catch (err) {
       if (err instanceof ApiError && Object.keys(err.fieldErrors).length > 0) {
@@ -106,9 +111,9 @@ export function BackgroundForm({
 
   const errorFor = (field: string) => fieldErrors[field]?.[0] ?? null;
 
-  return (
+  const form = (
     <form onSubmit={onSubmit} noValidate>
-      <div className="card">
+      <div className={dialogTitle ? undefined : "card"}>
         {FIELDS.map((f) => (
           <div className="field" key={f.key}>
             <label htmlFor={f.key}>
@@ -118,6 +123,7 @@ export function BackgroundForm({
               id={f.key}
               name={f.key}
               rows={f.rows}
+              disabled={saving}
               value={values[f.key]}
               onChange={set(f.key)}
               aria-invalid={errorFor(f.key) ? 'true' : undefined}
@@ -133,10 +139,11 @@ export function BackgroundForm({
         <button type="submit" className="btn btn-primary" disabled={saving}>
           {saving ? 'Guardando…' : 'Guardar antecedentes'}
         </button>
-        <Link href={`/patients/${patientId}#patient-background`} className="btn btn-ghost">
+        {onCancel ? <button type="button" className="btn btn-ghost" disabled={saving} onClick={close}>Cancelar</button> : <Link href={`/patients/${patientId}#patient-background`} className="btn btn-ghost">
           Cancelar
-        </Link>
+        </Link>}
       </div>
     </form>
   );
+  return dialogTitle ? <Modal title={dialogTitle} onClose={close} closeDisabled={saving}>{form}</Modal> : form;
 }
