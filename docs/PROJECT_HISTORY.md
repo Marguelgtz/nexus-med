@@ -402,3 +402,17 @@ Owner feedback authorized focused native medication/study/follow-up dialogs, thr
 Verification includes web 39/39, typecheck/lint, final production build, 24 responsive capture states, isolated real persistence and simulated failure recovery, retained historical instructions, rendered print inspection, API restart and seed digest preservation. Twenty-five PNGs are inventoried. Screenshot review improved study controls, mobile action placement and modal close layout; browser checks fixed deferred study focus return. The earlier premature-submit regression and strictly scoped synthetic cleanup are documented above. PR publication state is in ACTION_PLAN.md; no UI PR was merged.
 
 **Compact-entry publication:** `786533b`, `fd2cf83`, `e39a604`, `06a4fa8` and evidence `a4434dc` are pushed on the existing UI branch. PR #9 is updated against PR #8 and remains open/unmerged. Normal startup at 3000/4000 applies no migration and seeds zero records; the owner next-env.d.ts modification remains uncommitted.
+
+## 2026-11-10 — Secretary and local study receipt (D-044/D-045)
+
+Owner expanded the local MVP to an administrative secretary view without authentication: agenda/patients, reception/shared waiting queue and receiving PDF/images for physician review. This explicitly supersedes the original staff/file exclusions only for these workflows. The UI uses shared native dialogs instead of small standalone form journeys; clinical notes and printable documents remain dedicated views.
+
+Additive nullable appointment markers keep reception distinct from completion. Separate received-study/file records preserve the meaning of existing orders; shared entry requires patient and permits optional consultation/order. The storage boundary writes opaque files beside SQLite, enforces signature/size limits, and cleans new files on metadata failure. Administrative DTOs omit clinical background/review notes. Programmatic view changes use the existing dirty-form guard. Source commits `a16857b`/`db417a8`; API121/web39 and production/browser/preservation checks pass (see TESTING.md). The normal database's original records and owner `next-env.d.ts` change were preserved; no feature merge is authorized.
+
+## 2026-11-10 — Secretary work split into stacked review PRs
+
+The owner flagged the secretary PR's 59-file diff as too large to review. The same feature was split without rewriting its original branch or dropping files into seven stacked PRs: #11 data/contracts (11 files), #12 reception API (8), #13 receipt API/storage (6), #14 patient action dialogs (9), #15 reception UI (10), #16 received-study UI (6), and #17 docs/evidence (9). Every diff is at or below 11 files, and each PR targets the prior stack branch. PR #10 was closed as superseded after all replacements were published; its branch and comments remain available. No PR was merged.
+
+The unresolved Codex review finding on PR #10 identified that 15-second `router.refresh()` polling could unmount the consultation editor during an API error. PR #16 now fetches receipt data through the typed client, retains existing rows and displays a recoverable error on failure, and applies receipt uploads/reviews locally instead of refreshing the surrounding clinical route.
+
+After that correction, workspace typecheck, lint, and `git diff --check` passed. The full API/web suites and production build were not rerun for the polling fix; they passed on the integrated secretary source before it. The owner’s `next-env.d.ts` edit remained uncommitted and outside all PRs.
