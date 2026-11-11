@@ -13,6 +13,7 @@ import {
   archivePatient,
   createPatient,
   getPatient,
+  getAdministrativePatient,
   listPatients,
   updateMedicalBackground,
   updatePatient,
@@ -53,4 +54,19 @@ patientsRoutes.patch('/patients/:patientId/medical-background', async (c) => {
 patientsRoutes.patch('/patients/:patientId/archive', async (c) => {
   const patient = await archivePatient(c.req.param('patientId'));
   return c.json(patient);
+});
+
+patientsRoutes.get('/patients/:patientId/administrative', async (c) =>
+  c.json(await getAdministrativePatient(c.req.param('patientId'))));
+patientsRoutes.patch('/patients/:patientId/administrative', async (c) => {
+  const id = c.req.param('patientId');
+  const input = parseOrThrow(updatePatientInputSchema, await readJsonBody(c));
+  await updatePatient(id, input);
+  return c.json(await getAdministrativePatient(id));
+});
+
+patientsRoutes.post('/administrative/patients', async c => {
+  const input = parseOrThrow(createPatientInputSchema, await readJsonBody(c));
+  const patient = await createPatient(input);
+  return c.json(await getAdministrativePatient(patient.id), 201);
 });

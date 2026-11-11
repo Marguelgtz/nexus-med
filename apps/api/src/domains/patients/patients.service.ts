@@ -9,6 +9,7 @@
 
 import type {
   CreatePatientInput,
+  AdministrativePatient,
   MedicalBackgroundInput,
   PatientDetail,
   PatientListQuery,
@@ -133,4 +134,13 @@ export async function archivePatient(patientId: string): Promise<PatientDetail> 
   return toDetail(
     await prisma.patient.update({ where: { id: patientId }, data: { isArchived: true } }),
   );
+}
+
+export async function getAdministrativePatient(patientId: string): Promise<AdministrativePatient> {
+  const patient = await prisma.patient.findUnique({
+    where: { id: patientId },
+    select: { ...summarySelect, phone: true, email: true },
+  });
+  if (!patient) throw new NotFoundError(PATIENT_NOT_FOUND);
+  return { ...toSummary(patient), phone: patient.phone, email: patient.email };
 }
