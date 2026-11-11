@@ -33,7 +33,7 @@ Gaps and decisions recorded here (no API/data changes required; per D-017 the AP
 2. **No unarchive.** One-way archive is by design (no permanent delete, no restore, in this prototype). The confirmation dialog copy makes this explicit.
 3. **Age display.** `dateOfBirth` is a `YYYY-MM-DD` string. Age is computed client-side and shown as `edad` next to the date; never stored.
 4. **Dates and times.** All ISO 8601 values render with `Intl` in `es-MX` in the local practice timezone: dates as `d 'de' MMMM yyyy`, datetimes as `d 'de' MMMM yyyy, HH:mm`. No UTC display anywhere.
-5. **No auth, no multi-user.** Single-doctor local tool; no login screen, no user management. The demo banner carries the privacy warning instead.
+5. **No auth, no multi-user.** Single-doctor local tool; no login screen or user management. Synthetic seed data is a development boundary, not a visible UI label (D-046).
 6. **Form submission style.** Per `ARCHITECTURE.md`, browser mutations use the typed API client (contract zod schemas validate in the browser first, then the API re-validates authoritatively). After a successful mutation, the page re-renders server-side so the visible state always matches the database.
 
 ---
@@ -45,7 +45,6 @@ Gaps and decisions recorded here (no API/data changes required; per D-017 the AP
                                                         │
 ┌───────────────────────────────────────────────────────┤
 │  Top bar (all screens):  [Nexus Med]  [Pacientes · Calendario desktop / menu mobile] │
-│  Demo banner: MODO DEMOSTRACIÓN — DATOS FICTICIOS     │
 └───────────────────────────────────────────────────────┘
 
 /patients                        Registro de pacientes (list + search + filter)
@@ -82,7 +81,7 @@ Navigation rules:
 
 ## 3. Screen specifications (T-009)
 
-Common to all screens: top bar, demo banner (Section 5.4), container `max-width: 1120px`, content left-aligned. All text in Spanish (Mexico).
+Common to all screens: top bar, container `max-width: 1120px`, content left-aligned. All text in Spanish (Mexico). No demonstration or fictional-data labels are shown (D-046).
 
 ### 3.1 Registro de pacientes — `/patients`
 
@@ -238,7 +237,7 @@ Carried from `WORKFLOWS.md` §9 and made concrete:
 - **No shared caching** of patient/encounter data across sessions; each SSR render fetches fresh (per `ARCHITECTURE.md`).
 - **Identify the patient** on every patient-specific screen (context strip) and on every encounter form.
 - **One-way archive** with explicit, unhiding confirmation copy.
-- **Demo banner** always visible; demo data is fictional.
+- **Presentation:** do not show demonstration or fictional-data labels (D-046); keep the synthetic-data boundary in development documentation.
 
 ---
 
@@ -271,7 +270,7 @@ Minimal, calm, high legibility. A local tool for a single surgeon working during
 
   /* Semantic */
   --success:       #186d3b;
-  --warning:       #805800;   /* archived badge, demo banner text */
+  --warning:       #805800;   /* archived badge text */
   --warning-bg:    #fdf3d7;
   --danger:        #c23b3b;
   --danger-hover:  #a52f2f;
@@ -316,11 +315,9 @@ Type scale: H1 24/32 semibold · H2 18/26 medium · body 15/24 regular · small 
 | **Skeleton** | 8 px radius bars in `--surface-hover` with a subtle shimmer; registry: 3 rows; overview: header + 2 cards. |
 | **Inline confirm** | Bordered panel (`--warning-bg` header strip for archive), message + `Cancelar`/action buttons right-aligned. |
 
-### 5.4 Demo banner
+### 5.4 Demonstration labels (superseded by D-046)
 
-Persistent, directly under the top bar on every screen:
-
-`MODO DEMOSTRACIÓN — DATOS FICTICIOS` — `--warning-bg` background, `--warning` text, 13 px medium, centered, full width. Never dismissible (prototype requirement).
+Do not render a demonstration banner, fictional-data notice, or equivalent label in application chrome.
 
 ### 5.5 State matrix
 
@@ -341,7 +338,7 @@ Persistent, directly under the top bar on every screen:
 
 ### 5.7 Accessibility baseline
 
-Semantic landmarks (`header`, `main`, `nav`); one H1 per page; labels programmatically associated with inputs; error messages linked via `aria-describedby`; focus order natural, focus visible (`--primary` outline); demo banner in a `role="status"`-neutral static element (no live-region noise); color never the only signal (badges have text; errors have text + border); contrast: all token pairs ≥ 4.5:1 for body text.
+Semantic landmarks (`header`, `main`, `nav`); one H1 per page; labels programmatically associated with inputs; error messages linked via `aria-describedby`; focus order natural, focus visible (`--primary` outline); color never the only signal (badges have text; errors have text + border); contrast: all token pairs ≥ 4.5:1 for body text.
 
 ---
 
@@ -364,7 +361,7 @@ Semantic landmarks (`header`, `main`, `nav`); one H1 per page; labels programmat
 | US-011 Maintain clinical continuity | 3.3 (context strip, timeline, `Editada` badge) |
 | US-012 Know whether information was saved | §4 (state separation, banners, navigation-as-confirmation) |
 | US-013 Resume after restart | §2 (URL-driven navigation), §1.4 (local dates), O-004 persistence |
-| US-014 Open a populated prototype | 3.1 (populated registry + demo banner) |
+| US-014 Open a populated prototype | 3.1 (populated registry; no visible demo label per D-046) |
 
 All 14 stories are covered by observable behavior in this spec. No story requires a capability the API lacks; the two heuristic/one-way decisions in §1 (duplicate notice, one-way archive) are design-level and change no API or data assumptions.
 
@@ -562,8 +559,8 @@ Clicking any action opens an inline panel (complete-flow pattern) with an option
   - Printed header: `RECETA` or `INFORME MÉDICO` (or the document `title`), then `Paciente: {fullName}` · `Nacimiento: {fecha} ({edad})` (only when present) · `Fecha: {fecha de creación}`.
   - Prescription body: one block per line — `1. {medicamento} — {dosis} {vía} {frecuencia} {duración}` with the line's `indicaciones` on a second, indented line; missing sub-fields are simply omitted; then `Indicaciones generales:` + text when present.
   - Report body: the narrative with line breaks preserved (`white-space: pre-line`).
-  - Printed footer (always): `MODO DEMOSTRACIÓN — DATOS FICTICIOS` (small, muted) — printed output must carry the demo marker (DEMO_DATA rule) and **nothing else**: no invented doctor name, license number, signature, or clinic details (only patient/practice facts actually present in the app).
-- `Imprimir` calls `window.print()`; `@media print` hides the top bar, demo banner, context strip, actions, and everything outside the paper card; the card prints borderless at full width with 24 mm page margins; medication/report blocks use `break-inside: avoid`. The browser print dialog doubles as "save as PDF" — the UI never describes this as server-generated PDF.
+  - No demonstration or fictional-data footer (D-046). Do not add a doctor name, license number, signature, or clinic details unless those facts exist in the app.
+- `Imprimir` calls `window.print()`; `@media print` hides the top bar, context strip, actions, and everything outside the paper card; the card prints borderless at full width with 24 mm page margins; medication/report blocks use `break-inside: avoid`. The browser print dialog doubles as "save as PDF" — the UI never describes this as server-generated PDF.
 - Screen-only note under the card (13 px muted): `La impresión se abre en el diálogo del navegador (también puede guardarse como PDF). Copia local; no constituye receta electrónica certificada.`
 - **Edit mode** (`Editar`): in place, same form as creation (pre-filled; encounter link and title editable; lines addable/removable). Save re-renders; `Editada` badge when `updatedAt` is after `createdAt` (same rule as encounters). No delete for documents (no permanent-delete rule).
 - `404`: `Receta no encontrada` / `Informe no encontrado` + standard copy.
@@ -611,7 +608,7 @@ Clicking any action opens an inline panel (complete-flow pattern) with an option
 | U-13 | Dedicated surgical/procedure tracking deferred; open question Q-NX-01 recorded | plan free-text + appointment/encounter types already carry the basic flow; the mission says to leave it out when unclear rather than invent clinical behavior |
 | U-14 | Demo appointments: fixed past + first-seed-anchored upcoming | Deterministic where it matters (history); live where the demo lives (the calendar); re-seed never moves them |
 | U-15 | Studies: closed category list + required free-text name and optional detail for `Otro`; created with the encounter; after creation only status + result note change; no edit, no delete | D-041 preserves the existing specific study text as the name and adds optional detail without changing study lifecycle; no permanent-delete rule |
-| U-16 | Printing = WYSIWYG paper card + browser print CSS; printed page carries the demo marker; no PDF library, no invented doctor identity, no legal claims | Mission constraint + DEMO_DATA rule; the screen shows exactly what prints |
+| U-16 | Printing = WYSIWYG paper card + browser print CSS; no demo marker, PDF library, invented doctor identity, or legal claims | Mission constraint and D-046; the screen shows exactly what prints |
 | U-17 | Overview cards: `Citas` and `Recetas e informes` always present (they host creation actions); `Estudios pendientes` only when non-empty (encounter-scoped, no overview action) | Entry points stay one click away; a pending-studies card with nothing pending would be pure noise |
 
 ---
@@ -660,7 +657,7 @@ From a saved encounter, offer `Nueva receta`, `Nuevo informe`, and `Programar se
 
 ### 8.5 Responsive, accessible, and regression behavior
 
-Retain the O-005 typography, color tokens, Spanish (Mexico), system font stack, demo banner, and no-runtime-external-assets rule. At desktop, the note remains visually dominant; at narrow widths, context becomes an accessible disclosure and action buttons wrap. All actions remain keyboard operable with visible focus, labels, and text status cues. Preserve the O-005 registry, calendar, appointment, document, print, note-edit, and status-transition flows. These requirements are not considered verified until the O-006 browser and regression checks pass.
+Retain the O-005 typography, color tokens, Spanish (Mexico), system font stack, and no-runtime-external-assets rule. At desktop, the note remains visually dominant; at narrow widths, context becomes an accessible disclosure and action buttons wrap. All actions remain keyboard operable with visible focus, labels, and text status cues. Preserve the O-005 registry, calendar, appointment, document, print, note-edit, and status-transition flows. These requirements are not considered verified until the O-006 browser and regression checks pass.
 
 
 ## 9. O-007 UI v0 conventions (owner-authorized implementation)
@@ -707,19 +704,19 @@ Medication entry uses `documents/medication-editor.tsx`, the same dialog shell a
 
 UI v0 is a working baseline, not a final brand approval. The system board and key registry, patient overview, and consultation artboards were reviewed in the browser on 2026-11-10. This pass did not use Figma MCP or import component metadata; measurements above are the browser-reviewed implementation target. Preserve the workflow hierarchy, component ownership, states, tokens, labels, keyboard behavior and print isolation during later design work. Brand approval and any remaining screen-specific density or decorative decisions remain for owner review. Evidence and verification limits live in `TESTING.md` and `assets/ui-v0/README.md`; PR #8's audit remains the historical comparison.
 
-## 10. Secretary and reception workspace — D-044
+## 10. Secretary and reception workspace — D-044/D-047
 
-A view selector opens `/secretaria` or the physician's `/recepcion`. Secretary navigation contains Today and Patients, with study receipt added after its content contract is resolved. Today is a date-driven administrative appointment list and shared waiting queue. Arrival, undo arrival, and physician start-of-attention are explicit actions. Saving a note never silently completes a visit. Appointment cancellation removes it from active queue display; rescheduling explicitly resets reception markers. The physician completes appointments using the existing completion operation.
+A view selector opens `/secretaria` or the physician's `/recepcion`. Secretary navigation contains Today, Patients and Estudios. Today is a date-driven administrative appointment list and shared waiting queue. Arrival, undo arrival, and physician start-of-attention are explicit actions. Saving a note never silently completes a visit. Appointment cancellation removes it from active queue display; rescheduling explicitly resets reception markers. The physician completes appointments using the existing completion operation.
 
 Patient creation/editing and appointment create/reschedule use the existing native dialog. Secretary patient cards show identifier, age, phone and email inline; missing contact values say “Sin registrar”. The card's `Editar datos` action opens the existing form. The patient stays named throughout; cancellation protects dirty inputs, failures retain text, successful changes refresh owning SSR data, and focus returns to the trigger. Secretary views request administrative DTOs only. No clinical background, note body, result interpretation, or prescription editor appears there. Clinical note composition, historical reading and printable document pages remain dedicated routes.
 
 ### Shared received studies — D-045
 
-Secretary's Studies tab and the physician's received-study inbox use the same entry modal. Select a patient before opening it; patient's name stays visible. Name and local PDF/image attachments are required; date, administrative note, order and consultation are optional. Existing order associations preselect their consultation. Failed option loading offers retry and blocks saving until associations are available. Failed upload retains fields and file selection.
+Secretary's Estudios tab and the physician's Estudios inbox use the same entry modal. Select a patient before opening it; patient's name stays visible. Name and local PDF/image attachments are required; date, administrative note, order and consultation are optional. Existing order associations preselect their consultation. Failed option loading offers retry and blocks saving until associations are available. Failed upload retains fields and file selection.
 
-The list separates Pending review and All, supports title/patient search, displays receipt and study dates separately, preserves file names, and opens files in a new tab. Only the medical presentation includes the explicit review dialog and physician note. Patient Studies includes the same receipt list, alongside the existing order workflow. The two records' states are not conflated. New-patient and demographic forms share one implementation, and patient-summary background and scheduling actions reuse their existing forms inside modals. Existing direct routes remain valid.
+The list separates Pending review and All, supports title/patient search, displays receipt and study dates separately, preserves file names, and opens files in a new tab. Only the medical presentation includes the explicit review dialog and physician note. Patient Studies includes the same receipt list, alongside the existing order workflow. The two records' states are not conflated. New-patient and demographic forms share one implementation, and patient-summary background and scheduling actions reuse their existing forms inside modals. `/estudios` is the shared inbox route; `/estudios-recibidos` redirects there for existing links.
 
-Received-study entry is also available from a saved consultation, with that consultation preselected. The patient and consultation views display only their associated receipts. A consultation prefill alone is not a dirty draft; closing an untouched dialog does not ask to discard changes. The visible inbox refreshes on focus and every 15 seconds while no receipt/review dialog is open.
+Received-study entry is also available from a saved consultation, with that consultation preselected. The patient and consultation views display only their associated receipts. A consultation prefill alone is not a dirty draft; closing an untouched dialog does not ask to discard changes. The shared Estudios list refreshes on focus and every 30 seconds while no receipt/review dialog is open. Reception's shared queue refreshes on focus and every 30 seconds while no administrative dialog is open. A compact manual refresh remains available on each view. This is periodic polling, not push notifications; the page states the interval so the owner knows when another window's changes will appear.
 
 
 ## Contemporary presentation refresh — owner direction, 2026-11-10
