@@ -4,11 +4,11 @@
 **Last updated:** 2026-11-10
 **Owner:** Project owner  
 **Primary agent:** Hermes Agent  
-**Current implementation state (updated 2026-11-10):** O-008 secretary/reception/local study receipt is implemented and verified on `codex/secretary-workspace`, based on open UI PR #9. Source commits: `a16857b` (API/data/storage), `db417a8` (UI/shared modals). Final API121/web39, typecheck/lint/build and isolated browser/persistence checks pass. Normal dev runs on 3000/4000; two additive migrations applied, seed created zero rows, original data digest preserved. Four inspected synthetic screenshots are inventoried under `docs/assets/secretary/`. Preserve the owner's pre-existing `apps/web/next-env.d.ts` change. No PR is merged.
+**Current implementation state (updated 2026-11-10):** O-008 secretary/reception/local study receipt is implemented and verified on `codex/secretary-workspace`, based on open UI PR #9. Source commits: `a16857b` (API/data/storage), `db417a8` (UI/shared modals). Final API121/web39, typecheck/lint/build and isolated browser/persistence checks pass. Normal dev runs on 3000/4000; two additive migrations applied, seed created zero rows, original data digest preserved. Four inspected synthetic screenshots are inventoried under `docs/assets/secretary/`. Preserve the owner's pre-existing `apps/web/next-env.d.ts` change. PR #10 is open against `feat/o007-ui-foundation` (PR #9). No PR is merged.
 
 ## Active objective — Secretary workspace (2026-11-10)
 
-**Status:** Implemented and verified on `codex/secretary-workspace`, based on open UI PR #9. Source commits `a16857b` and `db417a8`; preserve the owner's `next-env.d.ts` edit. Publication is the remaining handoff step.
+**Status:** Implemented and verified on `codex/secretary-workspace`, based on open UI PR #9. Source commits `a16857b` and `db417a8`; preserve the owner's `next-env.d.ts` edit. Published in [PR #10](https://github.com/Marguelgtz/nexus-med/pull/10), based on PR #9; both remain open and unmerged.
 
 **Outcome:** Administrative secretary view without authentication: patient/contact management, scheduling, reception and shared waiting list, and receipt of studies for physician review. Both views share study entry with required patient and optional consultation. Short tasks open in native dialogs.
 
@@ -22,7 +22,7 @@
 
 **Final runtime evidence:** All three QA attachments retain exact bytes after API restart. Normal startup applied the two additive migrations, created zero seeded rows, returned Secretary HTTP200, and preserved every original data column/row (excluding only new migration-log entries). Original `next-env.d.ts` bytes are retained.
 
-**Next action:** publish the feature branch and an unmerged PR based on `feat/o007-ui-foundation`; owner reviews the running secretary view.
+**Next action:** owner review of [PR #10](https://github.com/Marguelgtz/nexus-med/pull/10) and `http://127.0.0.1:3000/secretaria`. Keep PR #10 and its UI parent #9 unmerged. Normal `npm run dev` remains running on 3000/4000; the only unstaged change is the preserved owner `next-env.d.ts` edit.
 
 ## Active follow-up — Figma UI v0 foundation alignment (2026-11-10)
 
