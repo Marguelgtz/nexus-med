@@ -259,7 +259,7 @@ function StudyItem({ study, patientId }: { study: StudyRequest; patientId: strin
         <div>
           <div className="study-item-title">
             <span className="study-category-label">{STUDY_CATEGORY_LABELS[study.category]}</span>
-            <strong>{study.name}</strong>
+            <strong><Link href={`/patients/${patientId}/estudios/${encodeURIComponent(study.id)}`}>{study.name}</Link></strong>
             {study.description ? <p className="study-description">{study.description}</p> : null}
           </div>
           <p className="field-hint">Registrada {formatDateTime(study.createdAt)}</p>

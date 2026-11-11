@@ -5,8 +5,8 @@
 // - exact preservation of fixture timestamps
 
 import { execFileSync } from 'node:child_process';
-import { closeSync, mkdirSync, openSync, rmSync } from 'node:fs';
-import { writeFile } from 'node:fs/promises';
+import { closeSync, copyFileSync, mkdirSync, openSync, rmSync } from 'node:fs';
+import { readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
@@ -18,8 +18,19 @@ import { idempotentSeed } from '../../../prisma/seed';
 
 const repoRoot = path.resolve(import.meta.dirname, '..', '..', '..');
 const seedDbFile = path.join(repoRoot, '.local', 'test', 'seed.test.db');
+const rollbackDbFile = path.join(repoRoot, '.local', 'test', 'seed.rollback.test.db');
+const seedTime = new Date('2026-11-11T18:00:00.000Z');
+const fixturePdf = { storageKey: '00000000-0000-4000-8000-000000000001', name: 'radiografia-de-torax.pdf', mimeType: 'application/pdf', size: 512 };
 
 let prisma: PrismaClient;
+
+function seedDemo() {
+  return idempotentSeed(prisma, {
+    now: seedTime,
+    storeReceiptFile: async fileName => ({ ...fixturePdf, name: fileName }),
+    removeReceiptFiles: async () => undefined,
+  });
+}
 
 beforeAll(() => {
   rmSync(seedDbFile, { force: true });
@@ -30,6 +41,8 @@ beforeAll(() => {
     stdio: 'inherit',
     env: { ...process.env, DATABASE_URL: `file:${seedDbFile}` },
   });
+  rmSync(rollbackDbFile, { force: true });
+  copyFileSync(seedDbFile, rollbackDbFile);
   const adapter = new PrismaBetterSqlite3({ url: `file:${seedDbFile}` });
   prisma = new PrismaClient({ adapter });
 });
@@ -40,12 +53,13 @@ afterAll(async () => {
 
 describe('idempotent demo seed', () => {
   it('creates exactly the fixture records on the first run', async () => {
-    const result = await idempotentSeed(prisma);
+    const result = await seedDemo();
     expect(result).toEqual({
       patientsCreated: 7,
       encountersCreated: 9,
       appointmentsCreated: 9,
-      studiesCreated: 2,
+      studiesCreated: 3,
+      studyReceiptsCreated: 1,
       documentsCreated: 2,
     });
 
@@ -57,24 +71,29 @@ describe('idempotent demo seed', () => {
     expect(patients).toBe(7);
     expect(encounters).toBe(9);
     expect(appointments).toBe(9);
-    expect(studies).toBe(2);
+    expect(studies).toBe(3);
+    expect(await prisma.studyReceipt.count()).toBe(1);
+    expect(await prisma.studyReceiptFile.count()).toBe(1);
     expect(documents).toBe(2);
     expect(await prisma.prescriptionLine.count()).toBe(2);
   });
 
   it('creates nothing on a second run', async () => {
-    const result = await idempotentSeed(prisma);
+    const result = await seedDemo();
     expect(result).toEqual({
       patientsCreated: 0,
       encountersCreated: 0,
       appointmentsCreated: 0,
       studiesCreated: 0,
+      studyReceiptsCreated: 0,
       documentsCreated: 0,
     });
     expect(await prisma.patient.count()).toBe(7);
     expect(await prisma.encounter.count()).toBe(9);
     expect(await prisma.appointment.count()).toBe(9);
-    expect(await prisma.studyRequest.count()).toBe(2);
+    expect(await prisma.studyRequest.count()).toBe(3);
+    expect(await prisma.studyReceipt.count()).toBe(1);
+    expect(await prisma.studyReceiptFile.count()).toBe(1);
     expect(await prisma.medicalDocument.count()).toBe(2);
     expect(await prisma.prescriptionLine.count()).toBe(2);
   });
@@ -116,7 +135,7 @@ describe('idempotent demo seed', () => {
       where: { id: 'demo-prescription-line-001' },
       data: { medication: 'Texto de prueba editado por usuario' },
     });
-    const result = await idempotentSeed(prisma);
+    const result = await seedDemo();
     expect(result.documentsCreated).toBe(0);
     const prescription = await prisma.medicalDocument.findUnique({
       where: { id: 'demo-document-prescription-001' },
@@ -140,7 +159,66 @@ describe('idempotent demo seed', () => {
 
     const reviewed = await prisma.studyRequest.findUnique({ where: { id: 'demo-study-002' } });
     expect(reviewed?.status).toBe('reviewed');
-    expect(reviewed?.resultNote).toBe('Cine cardiotorácico conservado; sin infiltrados.');
+    expect(reviewed?.resultNote).toBeNull();
+
+    const example = await prisma.studyRequest.findUnique({ where: { id: 'demo-study-003' } });
+    expect(example).toMatchObject({
+      patientId: 'demo-patient-005',
+      encounterId: 'demo-encounter-005b',
+      category: 'rayos_x',
+      name: 'Radiografía de tórax',
+      status: 'ordered',
+      resultNote: null,
+      createdAt: seedTime,
+    });
+  });
+
+  it('seeds a current-day PDF receipt without changing the study request state', async () => {
+    const receipt = await prisma.studyReceipt.findUnique({
+      where: { id: 'demo-study-receipt-001' },
+      include: { files: true },
+    });
+    expect(receipt).toMatchObject({
+      patientId: 'demo-patient-005',
+      encounterId: 'demo-encounter-005b',
+      requestId: 'demo-study-003',
+      title: 'Radiografía de tórax',
+      studyDate: '2026-11-11',
+      receivedAt: seedTime,
+      reviewedAt: null,
+      receiptNote: null,
+    });
+    expect(receipt?.files).toMatchObject([{ id: 'demo-study-receipt-file-001', name: 'radiografia-de-torax.pdf', mimeType: 'application/pdf' }]);
+    const previousSeedDate = new Date('2026-01-01T18:00:00.000Z');
+    await prisma.studyRequest.update({ where: { id: 'demo-study-003' }, data: { createdAt: previousSeedDate, updatedAt: previousSeedDate } });
+    await seedDemo();
+    const request = await prisma.studyRequest.findUnique({ where: { id: 'demo-study-003' } });
+    expect(request?.createdAt).toEqual(seedTime);
+    expect(request?.status).toBe('ordered');
+
+    await prisma.studyRequest.update({ where: { id: 'demo-study-003' }, data: { createdAt: previousSeedDate, resultNote: 'Nota modificada por el médico' } });
+    await seedDemo();
+    const editedRequest = await prisma.studyRequest.findUnique({ where: { id: 'demo-study-003' } });
+    expect(editedRequest?.createdAt).toEqual(previousSeedDate);
+    expect(editedRequest?.resultNote).toBe('Nota modificada por el médico');
+  });
+
+  it('clears only exact legacy fixture notes and preserves edited notes', async () => {
+    const unchangedLegacyReason = 'NOTA FICTICIA DE DEMOSTRACIÓN — NO USAR PARA ATENCIÓN REAL. Consulta de ejemplo para probar el campo motivo.';
+    const editedReason = 'Motivo actualizado por el usuario';
+    await prisma.encounter.update({ where: { id: 'demo-encounter-001a' }, data: { reason: unchangedLegacyReason, historyOfPresentIllness: editedReason } });
+    await prisma.studyRequest.update({ where: { id: 'demo-study-002' }, data: { resultNote: 'Cine cardiotorácico conservado; sin infiltrados.' } });
+
+    const migration = await readFile(path.join(repoRoot, 'prisma/migrations/20261111002000_clear_fixture_note_text/migration.sql'), 'utf8');
+    for (const statement of migration.split(/;\r?\n/).map(value => value.trim()).filter(Boolean)) {
+      await prisma.$executeRawUnsafe(statement);
+    }
+
+    const encounter = await prisma.encounter.findUnique({ where: { id: 'demo-encounter-001a' } });
+    expect(encounter?.reason).toBeNull();
+    expect(encounter?.historyOfPresentIllness).toBe(editedReason);
+    const study = await prisma.studyRequest.findUnique({ where: { id: 'demo-study-002' } });
+    expect(study?.resultNote).toBeNull();
   });
 
   it('preserves fixture timestamps exactly', async () => {
@@ -181,7 +259,7 @@ describe('idempotent demo seed', () => {
     expect(wall.endsWith('09:00')).toBe(true);
 
     // Re-seed: the anchor instant must not move.
-    await idempotentSeed(prisma);
+    await seedDemo();
     const again = await prisma.appointment.findUnique({ where: { id: 'demo-appt-up-001' } });
     expect(again?.startAt.toISOString()).toBe(first!.startAt.toISOString());
     const last = await prisma.appointment.findUnique({ where: { id: 'demo-appt-up-005' } });
@@ -205,7 +283,7 @@ describe('idempotent demo seed', () => {
       data: { fullName: 'Juan Pérez (editado por el usuario)' },
     });
 
-    const result = await idempotentSeed(prisma);
+    const result = await seedDemo();
     expect(result.patientsCreated).toBe(0);
 
     const patient = await prisma.patient.findUnique({ where: { id: 'demo-patient-001' } });
@@ -224,12 +302,13 @@ describe('idempotent demo seed', () => {
       },
     });
 
-    const result = await idempotentSeed(prisma);
+    const result = await seedDemo();
     expect(result).toEqual({
       patientsCreated: 0,
       encountersCreated: 0,
       appointmentsCreated: 0,
       studiesCreated: 0,
+      studyReceiptsCreated: 0,
       documentsCreated: 0,
     });
 
@@ -244,14 +323,11 @@ describe('idempotent demo seed', () => {
 // Atomicity: a seed that fails midway must leave the database exactly as it
 // was — no partial patients or encounters from the failed transaction.
 describe('seed atomicity (rollback on failure)', () => {
-  const rollbackDbFile = path.join(repoRoot, '.local', 'test', 'seed.rollback.test.db');
   const brokenFixturePath = path.join(repoRoot, '.local', 'test', 'rollback-fixture.json');
 
   let rollbackPrisma: PrismaClient;
 
   beforeAll(async () => {
-    rmSync(rollbackDbFile, { force: true });
-    closeSync(openSync(rollbackDbFile, 'a'));
     // Two valid patients + one valid encounter (created first), then an
     // encounter referencing a nonexistent patient → FK violation mid-run.
     const brokenFixture = {
@@ -263,14 +339,12 @@ describe('seed atomicity (rollback on failure)', () => {
         { id: 'rb-encounter-ok', patientId: 'rb-patient-a', reason: 'válido', historyOfPresentIllness: null, relevantHistory: null, physicalExamination: null, assessment: null, plan: null, followUp: null, occurredAt: '2026-01-02T18:00:00.000Z' },
         { id: 'rb-encounter-ghost', patientId: 'rb-patient-ghost', reason: 'viola FK', historyOfPresentIllness: null, relevantHistory: null, physicalExamination: null, assessment: null, plan: null, followUp: null, occurredAt: '2026-01-03T18:00:00.000Z' },
       ],
+      receipts: [
+        { id: 'rb-receipt', patientId: 'rb-patient-a', encounterId: null, requestId: null, title: 'Documento recibido', fileName: 'recibido.pdf', fileId: 'rb-receipt-file' },
+      ],
     };
     await writeFile(brokenFixturePath, JSON.stringify(brokenFixture));
 
-    execFileSync('npx', ['prisma', 'migrate', 'deploy'], {
-      cwd: repoRoot,
-      stdio: 'pipe',
-      env: { ...process.env, DATABASE_URL: `file:${rollbackDbFile}` },
-    });
     const adapter = new PrismaBetterSqlite3({ url: `file:${rollbackDbFile}` });
     rollbackPrisma = new PrismaClient({ adapter });
   });
@@ -282,13 +356,19 @@ describe('seed atomicity (rollback on failure)', () => {
   });
 
   it('rolls back the whole seed when one write fails', async () => {
+    const removedStorageKeys: string[] = [];
     await expect(
-      idempotentSeed(rollbackPrisma, { fixturePath: brokenFixturePath }),
+      idempotentSeed(rollbackPrisma, {
+        fixturePath: brokenFixturePath,
+        storeReceiptFile: async fileName => ({ ...fixturePdf, name: fileName }),
+        removeReceiptFiles: async keys => { removedStorageKeys.push(...keys); },
+      }),
     ).rejects.toThrow();
 
     // The two patients and the valid encounter were created BEFORE the
     // failing one — none of them may survive the rollback.
     expect(await rollbackPrisma.patient.count()).toBe(0);
     expect(await rollbackPrisma.encounter.count()).toBe(0);
+    expect(removedStorageKeys).toEqual([fixturePdf.storageKey]);
   });
 });

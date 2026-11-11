@@ -593,9 +593,11 @@ Clicking any action opens an inline panel (complete-flow pattern) with an option
 **Demo data additions (U-14, detailed in DEMO_DATA.md at implementation):**
 - Fixed past appointments on existing demo patients (completed with linked encounters, one cancelled) using fixed ISO timestamps like the encounters — deterministic, never recomputed.
 - A small number (≈4–6) of *upcoming* appointments anchored to the **first seed run's date** (e.g. seed date +2 d, +5 d, +9 d; stored once, never moved on re-seed) so the demo calendar always shows a live schedule. Documented as the deliberate exception to fixed-timestamp seeding, with the rationale that a calendar demo whose dates all predate "today" demonstrates nothing.
-- Two demo study requests (one `Ordenada` — drives the overview pending card; one `Revisada` with a short result note) attached to existing demo encounters.
+- The O-005 baseline seeded two demo study requests (one `Ordenada`, one `Revisada`) attached to existing demo encounters.
 - One demo prescription (2 lines + general instructions) and one demo report on a demo patient.
-- All new fixture records follow DEMO_DATA rules: `DEMO`-marked, fictional, idempotent create-if-missing, never overwrite user edits.
+- Fixture records use synthetic data and idempotent create-if-missing behavior; re-seeding never overwrites user edits.
+
+**Current seed extension (D-049, 2026-11-11):** A third request (`Radiografía de tórax`) belongs to patient 005 and is created on the first seed run's practice-local date. One received PDF is attached with the same local date. Its content contains no clinical findings. Receipt and physician review remain separate from `StudyRequest.status`. The migration removes only exact unchanged legacy fixture note values; edited values remain untouched.
 
 ### 7.6 Expansion decisions recorded (U-09…U-17)
 
@@ -650,6 +652,8 @@ Keep manual save only. Show a visible unsaved state while note fields or staged 
 - Patient workspace: allow a standalone patient-level request, optionally linked to an existing encounter of that patient. The patient comes from the route; an optional association is validated by Hono and cannot be reassigned later.
 - Keep categories, statuses, transition rules, result-note field, and historical values unchanged. A study has a doctor-authored name and optional additional description; existing descriptions migrate unchanged into the new name field. Display both and doctor-entered result notes verbatim. The UI may record the existing transitions only; it must not claim that `completed` means performed or that a result arrived. No new clinical event dates, source fields, appointment/procedure associations, corrections, or delete behavior.
 - Failed create/update retains the panel's values and current known status; successful save refreshes from the API.
+- In the patient study list, the study name opens its detail route. Show category, name, optional description, request status, request time, optional consultation link, and doctor-authored result note; show an explicit empty state when no result note exists.
+- The request detail lists only receipts linked to that request, including received/study dates, attachment links, receipt note, and separate physician review status/note. Receiving files never changes request status. The medical view may open this detail from a request or associated receipt; the administrative view does not link to clinical details.
 
 ### 8.4 Contextual documents and follow-up
 
