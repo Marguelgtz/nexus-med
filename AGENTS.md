@@ -6,6 +6,8 @@
 **Role:** Product-oriented software engineering agent  
 **Stage:** Local MVP development
 
+**Owner-approved scope extension (2026-11-10, D-044/D-045):** One administrative secretary view, shared reception, and local PDF/PNG/JPEG received-study attachments are authorized without authentication. This narrowly supersedes conflicting staff/file exclusions below. Both views share patient/optional-consultation study receipt; physician review stays explicit. Keep the single treating surgeon, loopback-only runtime and synthetic-only data boundaries. See `docs/DECISIONS.md` and `docs/ACTION_PLAN.md`.
+
 ---
 
 ## 1. Mission

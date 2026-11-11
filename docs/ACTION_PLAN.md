@@ -4,7 +4,27 @@
 **Last updated:** 2026-11-10
 **Owner:** Project owner  
 **Primary agent:** Hermes Agent  
-**Current implementation state (updated 2026-11-10):** Compact clinical entry is implemented, verified and pushed on `feat/o007-ui-foundation`: `786533b`, `fd2cf83`, `e39a604`, final corrections `06a4fa8`, evidence `a4434dc`. Three consultation stages, contextual study/follow-up dialogs, compact medication entry and overview background are delivered. The browser-reviewed Figma UI v0 alignment is pushed as `8431d28`; its CSS parser correction is now included on the branch. Web 39/39, typecheck/lint and final production build pass for the previous delivery; this alignment passes web typecheck/lint and local startup smoke checks. The idempotent seed created zero records, migrations were current, `/patients` returned 200 and API health returned `ok`. Isolated persistence/failure/print/restart/seed checks pass; 25 inspected PNGs are inventoried. English authoritative docs are reconciled. PR #9 is updated against PR #8, open and unmerged. Preserve the pre-existing local `apps/web/next-env.d.ts` change.
+**Current implementation state (updated 2026-11-10):** O-008 secretary/reception/local study receipt is implemented on `codex/secretary-workspace`, based on UI PR #9. The original 59-file PR #10 is being replaced by a seven-layer review stack: #11 data/contracts (11 files), #12 reception API (8), #13 receipt API/storage (6), #14 patient action dialogs (9), #15 reception UI (10), #16 received-study UI and polling fix (6), and #17 docs/evidence (9). Each layer is based on the previous layer; #11 is based on PR #9. No PR is merged. Preserve the owner's pre-existing `apps/web/next-env.d.ts` change.
+
+## Active objective — Secretary workspace (2026-11-10)
+
+**Status:** Implemented and verified on `codex/secretary-workspace`, based on open UI PR #9. Source commits `a16857b`, `db417a8`, and review fix `ae901ef`; preserve the `next-env.d.ts` edit. Published as [PRs #11–#17](https://github.com/Marguelgtz/nexus-med/pull/11) in a stack of 6–11 files each. Original PR #10 remains open only until this replacement stack is fully published; no PR is merged.
+
+**Outcome:** Administrative secretary view without authentication: patient/contact management, scheduling, reception and shared waiting list, and receipt of studies for physician review. Both views share study entry with required patient and optional consultation. Short tasks open in native dialogs.
+
+**Ordered delivery:** (1) Add reception contracts, safe additive migration, API operations and integration coverage. (2) Build the secretary workspace and physician queue using existing forms/dialogs; keep clinical information out of the administrative view. (3) Add shared received-study workflow with owner-approved PDF/image attachments. (4) Consolidate short task entry points, run tests/typecheck/lint/build and runtime checks, reconcile docs, commit reviewable milestones; leave feature PRs unmerged.
+
+**Defaults/dependencies:** Local loopback runtime and a visible Medical/Secretary view selector; no accounts or security roles. D-045 approves local PDF/image attachments. Both views share reception; runtime remains loopback-only. No delegation.
+
+**Acceptance:** Arrival persists and is shared; duplicate/invalid/concurrent transitions fail clearly; cancellations/rescheduling cannot leave active phantom queue entries. Secretary can create/edit demographic data and appointments in dialogs without visiting clinical records. Forms preserve input on failure and confirm dirty dismissal. Long clinical notes and printable documents retain full pages. Existing fixtures and edits survive migration/seed.
+
+**Verification so far:** Final API 121/121, web 39/39, workspace typecheck, lint (existing Pages warning), and production build pass. Isolated production Chromium passes patient/contact persistence, appointment entry, shared arrival/start, dirty dismissal/focus return, upload failure recovery, physician review, physician receipt from a saved consultation, view-switch protection for unsaved notes and 390/320px reflow; no runtime exceptions. Repeat QA seed creates zero rows and preserves the complete nine-table digest plus three attachment hashes.
+
+**Final runtime evidence:** All three QA attachments retain exact bytes after API restart. Normal startup applied the two additive migrations, created zero seeded rows, returned Secretary HTTP200, and preserved every original data column/row (excluding only new migration-log entries). Original `next-env.d.ts` bytes are retained.
+
+**Review finding:** PR #10's polling issue is corrected in PR #16. Receipt refresh now calls the receipt API directly, keeps the existing rows on network errors, and applies upload/review results locally instead of refreshing the route that contains the clinical editor. Workspace typecheck, lint, and `git diff --check` pass after this change; the full API/web suites and build are from the integrated source before the polling fix and were not rerun for stack extraction.
+
+**Next action:** review the stack bottom-up from [PR #11](https://github.com/Marguelgtz/nexus-med/pull/11) through #17 and inspect `http://127.0.0.1:3000/secretaria`. Leave all feature PRs unmerged. Normal `npm run dev` remains running on 3000/4000; the only unstaged change is the preserved owner `next-env.d.ts` edit.
 
 ## Active follow-up — Figma UI v0 foundation alignment (2026-11-10)
 
