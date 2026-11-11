@@ -14,21 +14,29 @@ const reception = (id: string, action: string) => app.request(`/api/appointments
 });
 
 describe('Administrative reception', () => {
-  it('persists arrival and attention separately from completion, and rejects repeated transitions', async () => {
+  it('lets a physician start an unarrived consultation and records its arrival atomically', async () => {
     const { appointment: a } = await appointment();
-    expect((await reception(a.id, 'start')).status).toBe(409);
-    const arrived = await reception(a.id, 'arrive');
-    expect(arrived.status).toBe(200);
-    const body = await arrived.json() as Record<string, unknown>;
+    const started = await reception(a.id, 'start');
+    expect(started.status).toBe(200);
+    const body = await started.json() as Record<string, unknown>;
     expect(body.arrivedAt).toBeTruthy();
-    expect(body.attentionStartedAt).toBeNull();
+    expect(body.attentionStartedAt).toBeTruthy();
     expect(body.status).toBe('scheduled');
     expect(body.linkedEncounterId).toBeNull();
-    expect((await reception(a.id, 'arrive')).status).toBe(409);
-    expect((await reception(a.id, 'start')).status).toBe(200);
+    expect((await reception(a.id, 'start')).status).toBe(409);
     expect((await reception(a.id, 'undoArrival')).status).toBe(409);
     const saved = await app.request(`/api/appointments/${a.id}`);
     expect((await saved.json() as Record<string, unknown>).attentionStartedAt).toBeTruthy();
+  });
+  it('records secretary arrival separately and preserves its timestamp when consultation starts', async () => {
+    const { appointment: a } = await appointment();
+    const arrived = await reception(a.id, 'arrive');
+    expect(arrived.status).toBe(200);
+    const arrivedAt = (await arrived.json() as { arrivedAt: string }).arrivedAt;
+    expect((await reception(a.id, 'arrive')).status).toBe(409);
+    const started = await reception(a.id, 'start');
+    expect(started.status).toBe(200);
+    expect(await started.json()).toMatchObject({ arrivedAt, attentionStartedAt: expect.any(String) });
   });
   it('allows correction before attention and clears queue markers on reschedule', async () => {
     const { appointment: a } = await appointment();

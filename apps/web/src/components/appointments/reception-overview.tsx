@@ -1,16 +1,16 @@
 import type { Appointment } from '@nexus-med/contracts';
 import { summarizeReception } from '../../lib/reception-summary';
-import { APPOINTMENT_TYPE_LABELS, formatTime } from '../../lib/format';
+import { APPOINTMENT_TYPE_LABELS, formatTime, practiceToday } from '../../lib/format';
 import { Icon, type IconName } from '../icon';
 
-export function ReceptionOverview({ appointments, queue, asOf }: {
-  appointments: Appointment[]; queue: Appointment[]; asOf: string;
+export function ReceptionOverview({ appointments, queue, date, asOf }: {
+  appointments: Appointment[]; queue: Appointment[]; date: string; asOf: string;
 }) {
   const summary = summarizeReception(appointments, queue, asOf);
   const metrics: { label: string; value: number; detail: string; icon: IconName }[] = [
-    { label: 'Citas de la fecha', value: summary.total, detail: `${summary.cancelled} canceladas`, icon: 'calendar' },
+    { label: date === practiceToday(new Date(asOf)) ? 'Citas de hoy' : 'Citas del día', value: summary.total, detail: `${summary.cancelled} canceladas`, icon: 'calendar' },
     { label: 'En espera', value: summary.waiting, detail: 'Recepción · todas las fechas', icon: 'users' },
-    { label: 'En atención', value: summary.attending, detail: 'Recepción · todas las fechas', icon: 'activity' },
+    { label: 'En consulta', value: summary.attending, detail: 'Recepción · todas las fechas', icon: 'activity' },
     { label: 'Completadas', value: summary.completed, detail: 'De la fecha seleccionada', icon: 'document' },
   ];
   return <section className="reception-overview" aria-label="Resumen de recepción">
