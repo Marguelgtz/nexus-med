@@ -10,3 +10,5 @@ export * from './encounters';
 export * from './appointments';
 export * from './studies';
 export * from './documents';
+
+export * from './receipts';

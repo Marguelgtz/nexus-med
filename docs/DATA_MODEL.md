@@ -75,3 +75,9 @@ The SQLite database lives in `.local/data/medical.db`; the development orchestra
 This is separate from excluded file uploads and R2 storage. User/account/session, clinic/organization, and billing models remain excluded. The browser forms, detail/edit workflow, patient overview, and CSS print presentation are implemented and browser-verified.
 
 Open questions: procedure lifecycle (Q-NX-01); study-category validation (Q-NX-02); minimum source/reason and the difference between clinical order time and record-entry time for standalone studies (Q-O006-01); meaning of `completed`, result arrival, and review timestamps (Q-O006-02/03); future Cloudflare D1 transaction guarantees and SSR adapter selection remain deployment decisions. Standalone requests use `createdAt` as entry time only; no clinical order time is inferred.
+
+## Secretary extension — D-044/D-045
+
+`Appointment.arrivedAt` and `attentionStartedAt` are nullable instants, separate from scheduled/completed/cancelled. Existing rows migrate to null. Arrival requires scheduled with no prior arrival; start requires arrival and no prior start; undo arrival is only available before attention. Conditional writes reject stale/duplicate transitions. Reschedule resets both markers; cancellation/completion preserve timestamps but remove the visit from active reception.
+
+`StudyReceipt` contains id, patientId (required/restrict), encounterId and requestId (optional/restrict), title, optional studyDate/receiptNote, receivedAt, nullable reviewedAt/reviewNote. `StudyReceiptFile` contains id, receiptId (restrict), unique opaque storageKey, original display name, validated mimeType, and byte size. Patient/request/encounter association is validated by Hono. Nested receipt/file metadata creation is atomic; filesystem writes are cleaned if database creation fails. Existing study requests and printable MedicalDocuments are separate entities. No seed receipts are invented.

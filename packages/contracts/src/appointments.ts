@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
 import { idSchema, isoDateTimeSchema } from './common';
+import { fullNameSchema } from './patients';
 
 /**
  * Appointments (UI_SPEC §7.1, decisions D-028/D-029).
@@ -39,7 +40,7 @@ export const durationMinutesSchema = z.number().int().min(5).max(480);
 /** A patient reference embedded in an appointment (calendar + lists). */
 const appointmentPatientSchema = z.object({
   id: idSchema,
-  fullName: z.string().trim().min(2).max(120),
+  fullName: fullNameSchema,
 });
 export type AppointmentPatient = z.infer<typeof appointmentPatientSchema>;
 
@@ -54,6 +55,8 @@ export const appointmentSchema = z.object({
   durationMinutes: durationMinutesSchema,
   type: appointmentTypeSchema,
   status: appointmentStatusSchema,
+  arrivedAt: isoDateTimeSchema.nullable().default(null),
+  attentionStartedAt: isoDateTimeSchema.nullable().default(null),
   actualDurationMinutes: durationMinutesSchema.nullable(),
   completedAt: isoDateTimeSchema.nullable(),
   linkedEncounterId: idSchema.nullable(),
@@ -120,3 +123,9 @@ export const linkEncounterInputSchema = z
   })
   .strict();
 export type LinkEncounterInput = z.infer<typeof linkEncounterInputSchema>;
+
+/** Reception is separate from appointment completion and clinical notes. */
+export const receptionInputSchema = z.object({
+  action: z.enum(['arrive', 'start', 'undoArrival']),
+}).strict();
+export type ReceptionInput = z.infer<typeof receptionInputSchema>;

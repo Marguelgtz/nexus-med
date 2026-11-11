@@ -91,3 +91,10 @@ export const patientDetailSchema = z.object({
 });
 
 export type PatientDetail = z.infer<typeof patientDetailSchema>;
+
+/** Administrative projection: never contains medical background or notes. */
+export const administrativePatientSchema = patientSummarySchema.extend({
+  phone: z.string().nullable(),
+  email: z.string().nullable(),
+});
+export type AdministrativePatient = z.infer<typeof administrativePatientSchema>;

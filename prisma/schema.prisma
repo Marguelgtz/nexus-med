@@ -39,6 +39,7 @@ model Patient {
   appointments     Appointment[]
   studyRequests    StudyRequest[]
   medicalDocuments MedicalDocument[]
+  studyReceipts    StudyReceipt[]
 
   @@index([fullName])
   @@map("patients")
@@ -76,6 +77,7 @@ model Encounter {
   // Study requests ordered during this consultation (UI_SPEC §7.3).
   studyRequests      StudyRequest[]
   medicalDocuments   MedicalDocument[]
+  studyReceipts      StudyReceipt[]
 
   @@index([patientId, occurredAt(sort: Desc)])
   @@map("encounters")
@@ -101,6 +103,8 @@ model Appointment {
   // scheduled, completed, cancelled (validated at the API).
   status                String     @default("scheduled")
   // Set on completion; the doctor's record of how long it actually took.
+  arrivedAt             DateTime?
+  attentionStartedAt    DateTime?
   actualDurationMinutes Int?
   completedAt           DateTime?
   linkedEncounterId     String?    @unique
@@ -138,6 +142,8 @@ model StudyRequest {
   resultNote  String?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
+
+  receipts    StudyReceipt[]
 
   @@index([patientId, status])
   @@index([encounterId])
@@ -178,4 +184,38 @@ model PrescriptionLine {
 
   @@index([documentId, position])
   @@map("prescription_lines")
+}
+
+// Received evidence is distinct from a physician-authored study order.
+model StudyReceipt {
+  id          String @id @default(uuid())
+  patientId   String
+  patient     Patient @relation(fields: [patientId], references: [id], onDelete: Restrict)
+  encounterId String?
+  encounter   Encounter? @relation(fields: [encounterId], references: [id], onDelete: Restrict)
+  requestId   String?
+  request     StudyRequest? @relation(fields: [requestId], references: [id], onDelete: Restrict)
+  title       String
+  studyDate   String?
+  receiptNote String?
+  receivedAt  DateTime @default(now())
+  reviewedAt  DateTime?
+  reviewNote  String?
+  files       StudyReceiptFile[]
+
+  @@index([patientId, receivedAt])
+  @@index([reviewedAt, receivedAt])
+  @@map("study_receipts")
+}
+model StudyReceiptFile {
+  id          String @id @default(uuid())
+  receiptId   String
+  receipt     StudyReceipt @relation(fields: [receiptId], references: [id], onDelete: Restrict)
+  storageKey  String @unique
+  name        String
+  mimeType    String
+  size        Int
+
+  @@index([receiptId])
+  @@map("study_receipt_files")
 }
