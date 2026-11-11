@@ -30,6 +30,7 @@ export function TopBar() {
     <header className="topbar">
       <div className="topbar-inner">
         <Link href={administrative ? '/secretaria' : '/patients'} className="topbar-brand">
+          <span className="brand-symbol" aria-hidden="true">+</span>
           Nexus Med
         </Link>
         <nav className="topbar-nav" aria-label="Navegación principal">

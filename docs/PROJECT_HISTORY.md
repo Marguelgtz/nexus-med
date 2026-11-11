@@ -416,3 +416,8 @@ The owner flagged the secretary PR's 59-file diff as too large to review. The sa
 The unresolved Codex review finding on PR #10 identified that 15-second `router.refresh()` polling could unmount the consultation editor during an API error. PR #16 now fetches receipt data through the typed client, retains existing rows and displays a recoverable error on failure, and applies receipt uploads/reviews locally instead of refreshing the surrounding clinical route.
 
 After that correction, workspace typecheck, lint, and `git diff --check` passed. The full API/web suites and production build were not rerun for the polling fix; they passed on the integrated secretary source before it. The owner’s `next-env.d.ts` edit remained uncommitted and outside all PRs.
+
+
+## 2026-11-10 — Contemporary visual refresh
+
+Owner requested a full visual renewal with the same layout. Shared tokens and component styles now use a cool mineral/slate palette, petroleum-blue actions, white surfaces, restrained elevation, rounded controls and clearer selected navigation. The shell has a compact brand mark; existing columns, screen composition and workflows remain. Typography stays offline. Workspace typecheck, lint and production build pass; Chromium desktop/mobile inspection confirms no horizontal overflow in the checked views. Local startup had no pending migrations and seeded zero new rows. No clinical data was changed.
