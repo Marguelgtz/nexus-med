@@ -12,7 +12,8 @@ import type { PatientSummary } from '@nexus-med/contracts';
 
 import { listPatients, type PatientListQuery } from '../../lib/api/client';
 import { formatAge } from '../../lib/format';
-import { ButtonLink, EmptyState, ErrorBanner, Skeleton } from '../primitives';
+import { NewPatientButton } from './patient-task-button';
+import { EmptyState, ErrorBanner, Skeleton } from '../primitives';
 
 const SEARCH_DEBOUNCE_MS = 300;
 
@@ -135,9 +136,7 @@ export function PatientRegistry({ initialPatients }: { initialPatients: PatientS
     <>
       <div className="page-head">
         <h1>Pacientes</h1>
-        <ButtonLink href="/patients/new" variant="primary">
-          Nuevo paciente
-        </ButtonLink>
+        <NewPatientButton patients={patients} />
       </div>
 
       <div style={{ marginBottom: 12 }}>
@@ -180,16 +179,12 @@ export function PatientRegistry({ initialPatients }: { initialPatients: PatientS
               <button type="button" className="btn btn-ghost" onClick={onClear}>
                 Limpiar búsqueda
               </button>
-              <Link href={`/patients/new?nombre=${encodeURIComponent(query.trim())}`} className="btn btn-primary">
-                Crear un paciente con este nombre
-              </Link>
+              <NewPatientButton patients={patients} label="Crear un paciente con este nombre" prefillName={query.trim()} />
             </div>
           </div>
         ) : (
           <EmptyState title="Aún no hay pacientes">
-            <Link href="/patients/new" className="btn btn-primary">
-              Nuevo paciente
-            </Link>
+            <NewPatientButton patients={patients} />
           </EmptyState>
         )
       ) : (
