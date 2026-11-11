@@ -7,7 +7,7 @@ import type {
   UpdateMedicalDocumentInput,
 } from '@nexus-med/contracts';
 
-import { prisma } from '../../infrastructure/database/prisma';
+import { prisma } from '../../infrastructure/database/runtime-client';
 import { ConflictError, NotFoundError, ValidationError } from '../../shared/http/errors';
 
 const PATIENT_NOT_FOUND = 'Paciente no encontrado';

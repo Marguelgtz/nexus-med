@@ -6,6 +6,10 @@
 
 import { serve } from '@hono/node-server';
 
+// Configure the local SQLite client before serving Hono requests. The Worker
+// entry point supplies a request-scoped D1 client instead.
+import './infrastructure/database/prisma';
+import './infrastructure/storage/local-study-files';
 import { createApp } from './app';
 
 const port = Number(process.env.API_PORT ?? 4000);

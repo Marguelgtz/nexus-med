@@ -1,7 +1,7 @@
 import type { CreateStudyReceipt } from '@nexus-med/contracts';
 import type { z } from 'zod';
 import type { receiptQuerySchema } from '@nexus-med/contracts';
-import { prisma } from '../../infrastructure/database/prisma';
+import { prisma } from '../../infrastructure/database/runtime-client';
 import { removeStudyFiles, storeStudyFiles, readStudyFile } from '../../infrastructure/storage/study-files';
 import { ConflictError, NotFoundError, ValidationError } from '../../shared/http/errors';
 const include = { patient: { select: { id: true, fullName: true } }, encounter: { select: { id: true, occurredAt: true } }, files: true } as const;

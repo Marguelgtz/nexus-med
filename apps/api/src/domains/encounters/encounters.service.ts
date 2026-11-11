@@ -13,7 +13,7 @@ import type {
   UpdateEncounterInput,
 } from '@nexus-med/contracts';
 
-import { prisma } from '../../infrastructure/database/prisma';
+import { prisma } from '../../infrastructure/database/runtime-client';
 import { NotFoundError } from '../../shared/http/errors';
 
 const ENCOUNTER_NOT_FOUND = 'Consulta no encontrada';

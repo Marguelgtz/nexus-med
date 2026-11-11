@@ -12,6 +12,7 @@ import { PrismaBetterSqlite3 } from '@prisma/adapter-better-sqlite3';
 
 import { PrismaClient } from '../../generated/prisma/client';
 import { resolveDbPath } from '../../../../../prisma/lib/db-path';
+import { prisma, setDefaultPrismaClient } from './runtime-client';
 
 const dbPath = resolveDbPath();
 
@@ -22,4 +23,7 @@ mkdirSync(path.dirname(dbPath), { recursive: true });
 
 const adapter = new PrismaBetterSqlite3({ url: `file:${dbPath}` });
 
-export const prisma = new PrismaClient({ adapter });
+const localPrisma = new PrismaClient({ adapter });
+setDefaultPrismaClient(localPrisma);
+
+export { prisma };
