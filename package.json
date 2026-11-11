@@ -25,15 +25,31 @@
     "node": ">=20.9.0"
   },
   "devDependencies": {
+    "@opennextjs/cloudflare": "^1.20.16",
     "eslint": "^9.39.5",
     "eslint-config-next": "^16.4.5",
     "prisma": "^7.10.1",
-    "tsx": "^4.20.0"
+    "tsx": "^4.20.0",
+    "wrangler": "^4.160.1"
+  },
+  "overrides": {
+    "@opennextjs/aws": {
+      "@node-minify/core": {
+        "glob": {
+          ".": "10.5.0",
+          "minimatch": "11.0.8"
+        }
+      }
+    },
+    "@opennextjs/cloudflare": {
+      "glob": "14.0.5"
+    }
   },
   "allowScripts": {
     "@prisma/engines@7.10.1": true,
     "better-sqlite3@12.11.1": true,
     "esbuild@0.28.2": true,
-    "prisma@7.10.1": true
+    "prisma@7.10.1": true,
+    "workerd@1.20261110.1": true
   }
 }
