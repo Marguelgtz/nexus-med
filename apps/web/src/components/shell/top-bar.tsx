@@ -6,6 +6,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
+import { Icon, type IconName } from '../icon';
 import { confirmInAppNavigation } from '../../lib/use-before-unload-guard';
 
 export function TopBar() {
@@ -22,7 +23,7 @@ export function TopBar() {
   ];
   const renderLinks = () => links.map(({ href, label, active }) => (
     <Link key={href} href={href} aria-current={active ? 'page' : undefined} className={active ? 'active' : undefined}>
-      {label}
+      <Icon name={({ Recepción: 'activity', 'Estudios recibidos': 'document', Pacientes: 'users', Calendario: 'calendar', Secretaría: 'grid' } as Record<string, IconName>)[ label] ?? 'grid'} />{label}
     </Link>
   ));
 
@@ -30,7 +31,7 @@ export function TopBar() {
     <header className="topbar">
       <div className="topbar-inner">
         <Link href={administrative ? '/secretaria' : '/patients'} className="topbar-brand">
-          <span className="brand-symbol" aria-hidden="true">+</span>
+          <span className="brand-symbol" aria-hidden="true"><Icon name="activity" /></span>
           Nexus Med
         </Link>
         <nav className="topbar-nav" aria-label="Navegación principal">

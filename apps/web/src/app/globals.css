@@ -2806,21 +2806,147 @@ body:has(.app-dialog[open]) { overflow: hidden; }
   .reception-appointments > li { grid-template-columns: 56px minmax(0, 1fr); gap: var(--s-2); }
 }
 
-/* Shared interaction polish; print retains its existing document rules. */
+/* Glass component system — screen presentation, shared across both workspaces. */
 @media screen {
-  :where(button, a, input, select, textarea, summary):focus-visible {
-    outline: 3px solid var(--primary);
-    outline-offset: 3px;
+  :root {
+    --bg: #eef2f8;
+    --surface: #ffffff;
+    --primary: #203b68;
+    --primary-hover: #132b51;
+    --info-bg: #e8eef9;
+    --border: #dce3ef;
+    --glass: rgb(255 255 255 / 72%);
+    --glass-edge: rgb(255 255 255 / 92%);
+    --shadow-surface: 0 8px 32px rgb(35 52 86 / 5%), inset 0 1px 0 var(--glass-edge);
   }
-  .registry-row:hover { background: var(--surface-hover); }
-  .registry-row .main { letter-spacing: -0.015em; }
-  .reception-agenda, .reception-queue, .receipt-list > li, .row-list {
-    box-shadow: var(--shadow-surface);
+  body {
+    background: radial-gradient(ellipse at 5% 0%, #dce8f6 0, transparent 44%),
+      radial-gradient(ellipse at 95% 35%, #e5e2f3 0, transparent 43%), var(--bg);
+    background-attachment: fixed;
   }
-  .patient-nav-links a[aria-current='page'] {
-    box-shadow: inset 3px 0 var(--primary);
+  h1 { font-size: 32px; line-height: 40px; letter-spacing: -0.045em; }
+  .page-head > div > .muted { margin: 6px 0 0; }
+  .section-label { color: #64758d; letter-spacing: 0.12em; font-size: 10px; }
+  .ui-icon { flex: 0 0 auto; vertical-align: middle; }
+  .topbar {
+    height: auto;
+    min-height: 68px;
+    margin: 16px auto 0;
+    width: calc(100% - 32px);
+    max-width: var(--container);
+    padding: 10px 16px;
+    border: 1px solid var(--glass-edge);
+    border-radius: 22px;
+    background: var(--glass);
+    backdrop-filter: blur(24px) saturate(145%);
+    box-shadow: 0 8px 32px rgb(35 52 86 / 7%), inset 0 1px 0 white;
   }
+  .topbar-inner { gap: 20px; }
+  .topbar-brand { font-size: 17px; gap: 10px; }
+  .brand-symbol {
+    width: 34px; height: 34px; border-radius: 11px;
+    background: linear-gradient(145deg, #49658f, #1b3154);
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 30%), 0 3px 8px rgb(30 50 85 / 16%);
+  }
+  .brand-symbol .ui-icon { width: 22px; height: 22px; }
+  .topbar-nav { gap: 2px; }
+  .topbar-nav a { gap: 7px; padding: 8px 11px; font-size: 13px; border-radius: 12px; }
+  .topbar-nav a.active {
+    background: rgb(255 255 255 / 94%); color: var(--primary);
+    box-shadow: 0 2px 8px rgb(35 52 86 / 8%), inset 0 0 0 1px rgb(255 255 255 / 90%);
+  }
+  .view-selector select { background: rgb(237 242 250 / 70%); border-color: transparent; border-radius: 12px; }
+  .demo-banner {
+    display: flex; align-items: center; justify-content: center; gap: 7px;
+    background: transparent; border: 0; color: #746044;
+    font-size: 10px; font-weight: 600; letter-spacing: 0.08em; padding: 12px;
+  }
+  .demo-banner::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: #b78232; }
+  .container { padding-top: 24px; }
+  .btn {
+    gap: 8px; border-radius: 13px; min-height: 44px;
+    font-weight: 600; letter-spacing: -0.015em;
+    transition: background 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+  }
+  .btn-primary {
+    background: linear-gradient(165deg, #3e5780, #21385d);
+    border-color: #2e4569;
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 24%), 0 4px 9px rgb(30 50 85 / 15%);
+  }
+  .btn-primary:hover:not(:disabled) { background: #1e3457; box-shadow: 0 6px 14px rgb(30 50 85 / 22%); }
+  .btn-secondary { background: rgb(255 255 255 / 65%); border-color: rgb(172 188 210 / 40%); box-shadow: inset 0 1px 0 white, 0 2px 4px rgb(35 52 86 / 3%); }
+  .btn:active:not(:disabled) { transform: translateY(1px); }
+  .card, .row-list, .reception-agenda, .reception-queue, .receipt-list > li,
+  .timeline-item, .clinical-context-item, .admin-patient-list, .patient-workspace-shell:has(.patient-workflow-nav) > .patient-workflow-nav {
+    background: var(--glass); border: 1px solid var(--glass-edge); border-radius: 20px;
+    box-shadow: var(--shadow-surface); backdrop-filter: blur(18px);
+  }
+  .reception-queue { border-top: 3px solid #7189af; }
+  .card-header { padding-bottom: 8px; }
+  .field input, .field textarea, .field select, .study-field input, .study-field select,
+  .form-row input, .form-row select, .form-row textarea, .search-input {
+    background: rgb(245 248 253 / 80%); border-color: rgb(168 185 208 / 38%);
+    border-radius: 12px; box-shadow: inset 0 1px 3px rgb(35 52 86 / 3%);
+    transition: border-color 160ms ease, background 160ms ease, box-shadow 160ms ease;
+  }
+  .field :is(input, textarea, select):focus { background: white; box-shadow: 0 0 0 4px rgb(75 111 165 / 9%); }
+  .field label { font-size: 12px; color: #4b5e77; font-weight: 600; margin-bottom: 7px; }
+  .segmented { background: rgb(222 229 240 / 55%); border: 1px solid rgb(255 255 255 / 65%); padding: 4px; border-radius: 14px; gap: 3px; }
+  .segmented :is(a, button) { border-radius: 10px; font-size: 12px; padding: 8px 16px; }
+  .segmented :is(a, button).active { background: #fff; box-shadow: 0 2px 6px rgb(35 52 86 / 9%); }
+  .badge { padding: 4px 10px; border: 1px solid rgb(120 146 183 / 10%); font-size: 11px; }
+  .patient-nav-links a { gap: 10px; border-radius: 12px; min-height: 44px; }
+  .patient-nav-links a[aria-current='page'] { background: white; box-shadow: 0 2px 8px rgb(35 52 86 / 7%); }
+  .patient-nav-links .ui-icon { color: #7185a3; width: 17px; height: 17px; }
+  .app-dialog {
+    background: rgb(248 250 255 / 94%); backdrop-filter: blur(30px);
+    border: 1px solid white; border-radius: 24px;
+    box-shadow: 0 32px 100px rgb(20 36 65 / 25%), inset 0 1px 0 white;
+  }
+  .app-dialog-header { background: transparent; padding: 24px; border-bottom-color: rgb(168 185 208 / 25%); }
+  .app-dialog-header h2 { font-size: 23px; letter-spacing: -0.035em; }
+  .app-dialog-content { padding: 24px; }
+  .app-dialog::backdrop { background: rgb(28 42 65 / 32%); backdrop-filter: blur(7px); }
+  .registry-search { position: relative; margin: 24px 0 16px; }
+  .registry-search > .ui-icon { position: absolute; left: 17px; top: 17px; color: #7185a3; }
+  .registry-search .search-input { min-height: 52px; padding-left: 46px; background: rgb(255 255 255 / 65%); border: 1px solid var(--glass-edge); border-radius: 16px; box-shadow: var(--shadow-surface); }
+  .registry-count { color: var(--text-muted); font-size: 12px; margin: 20px 4px 10px; }
+  .registry-row { min-height: 84px; padding: 16px 20px; border-color: rgb(160 178 203 / 18%); }
+  .registry-row:hover { background: rgb(255 255 255 / 65%); }
+  .registry-person { grid-template-columns: minmax(0, 1fr) 100px 100px; }
+  .registry-identity { display: flex; align-items: center; gap: 14px; min-width: 0; }
+  .registry-identity > span:last-child { min-width: 0; }
+  .registry-identity .main { display: block; font-size: 14px; font-weight: 600; }
+  .registry-identifier { display: block; font-size: 12px; color: #718099; margin-top: 2px; }
+  .patient-avatar { width: 42px; height: 42px; flex: 0 0 auto; display: grid; place-items: center; border-radius: 15px; font-size: 12px; font-weight: 650; color: #536a8e; background: linear-gradient(140deg, #edf2fb, #dde7f4); border: 1px solid rgb(255 255 255 / 80%); }
+  .registry-row:nth-child(3n+2) .patient-avatar { background: linear-gradient(140deg, #edf4f1, #dcebe5); color: #4b7067; }
+  .registry-row:nth-child(3n) .patient-avatar { background: linear-gradient(140deg, #f1eff8, #e6e1f1); color: #71658b; }
+  .registry-actions .btn { background: transparent; border-color: transparent; box-shadow: none; color: var(--primary); font-size: 12px; }
+  .registry-actions .btn:hover { background: white; box-shadow: 0 2px 6px rgb(35 52 86 / 6%); }
+  .workspace-tabs { gap: 6px; border-bottom: 0; padding: 4px; background: rgb(222 229 240 / 55%); border-radius: 14px; width: fit-content; max-width: 100%; }
+  .workspace-tabs a { padding: 8px 14px; font-size: 12px; border-radius: 10px; }
+  .workspace-tabs a[aria-current] { background: white; box-shadow: 0 2px 6px rgb(35 52 86 / 8%); }
+  .topbar-mobile-panel { background: rgb(248 250 255 / 97%); backdrop-filter: blur(24px); border-color: white; border-radius: 18px; }
+  .topbar-mobile-panel a { display: flex; align-items: center; gap: 10px; }
 }
-@media (max-width: 639px) {
+@media screen and (max-width: 639px) {
   .brand-symbol { display: none; }
+  .topbar { margin-top: 10px; width: calc(100% - 20px); min-height: 60px; padding: 8px 10px; border-radius: 18px; }
+  .topbar-inner { gap: 6px; }
+  .topbar-brand { font-size: 15px; }
+  .view-selector select { max-width: 132px; font-size: 12px; }
+  h1 { font-size: 28px; line-height: 36px; }
+  .page-head { gap: 16px; }
+  .registry-person { grid-template-columns: minmax(0, 1fr) auto; }
+  .registry-identity { grid-column: 1 / -1; }
+  .registry-row { padding: 16px; gap: 8px; }
+  .registry-person > .cell { padding-left: 56px; font-size: 12px; }
+  .registry-actions { padding-left: 48px; justify-content: flex-start; }
+  .registry-actions .btn { min-height: 36px; padding: 4px 8px; }
+  .registry-state { display: none; }
+  .registry-state:has(.badge) { display: block; }
+  .demo-banner { font-size: 9px; letter-spacing: 0.05em; }
+  .app-dialog-header, .app-dialog-content { padding: 20px; }
+  .workspace-tabs { gap: 2px; }
+  .workspace-tabs a { padding: 8px 10px; }
 }

@@ -14,6 +14,7 @@ import { listPatients, type PatientListQuery } from '../../lib/api/client';
 import { formatAge } from '../../lib/format';
 import { NewPatientButton } from './patient-task-button';
 import { EmptyState, ErrorBanner, Skeleton } from '../primitives';
+import { Icon } from '../icon';
 
 const SEARCH_DEBOUNCE_MS = 300;
 
@@ -28,9 +29,8 @@ function PatientRow({ patient }: { patient: PatientSummary }) {
   return (
     <article className="row registry-row">
       <Link href={`/patients/${patient.id}`} className="registry-person">
-        <span className="main">{patient.fullName}</span>
+        <span className="registry-identity"><span className="patient-avatar" aria-hidden="true">{patient.fullName.trim().split(/\s+/).slice(0, 2).map(part => part[0]).join('')}</span><span><span className="main">{patient.fullName}</span><span className="registry-identifier">{patient.externalIdentifier ?? 'Sin identificador'}</span></span></span>
         <span className="cell">{age !== null ? `${age} años` : '—'}</span>
-        <span className="cell mono">{patient.externalIdentifier ?? '—'}</span>
         <span className="registry-state">
           {patient.isArchived ? <span className="badge badge-archived">Archivado</span> : null}
         </span>
@@ -42,7 +42,7 @@ function PatientRow({ patient }: { patient: PatientSummary }) {
             className="btn btn-secondary btn-sm"
             aria-label={`Nueva consulta para ${patient.fullName}`}
           >
-            Nueva consulta
+            Nueva consulta <Icon name="arrow" />
           </Link>
         ) : null}
       </div>
@@ -135,11 +135,11 @@ export function PatientRegistry({ initialPatients }: { initialPatients: PatientS
   return (
     <>
       <div className="page-head">
-        <h1>Pacientes</h1>
+<div><p className="section-label">Directorio clínico</p><h1>Pacientes</h1><p className="muted">Cada paciente, su historia y el siguiente paso.</p></div>
         <NewPatientButton patients={patients} />
       </div>
 
-      <div style={{ marginBottom: 12 }}>
+      <div className="registry-search"><Icon name="search" />
         <input
           type="search"
           className="search-input"
@@ -162,6 +162,8 @@ export function PatientRegistry({ initialPatients }: { initialPatients: PatientS
           </button>
         ))}
       </div>
+
+      <p className="registry-count" role="status">{loading ? 'Actualizando directorio…' : `${patients.length} pacientes en esta vista`}</p>
 
       {error !== null ? (
         <ErrorBanner message={error} retryHref={pathname} />
