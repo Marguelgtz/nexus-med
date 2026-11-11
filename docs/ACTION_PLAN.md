@@ -4,11 +4,11 @@
 **Last updated:** 2026-11-10
 **Owner:** Project owner  
 **Primary agent:** Hermes Agent  
-**Current implementation state (updated 2026-11-10):** O-008 secretary/reception/local study receipt is implemented on `codex/secretary-workspace`, based on UI PR #9. The original 59-file PR #10 is being replaced by a seven-layer review stack: #11 data/contracts (11 files), #12 reception API (8), #13 receipt API/storage (6), #14 patient action dialogs (9), #15 reception UI (10), #16 received-study UI and polling fix (6), and #17 docs/evidence (9). Each layer is based on the previous layer; #11 is based on PR #9. No PR is merged. Preserve the owner's pre-existing `apps/web/next-env.d.ts` change.
+**Current implementation state (updated 2026-11-10):** O-008 secretary/reception/local study receipt is implemented on `codex/secretary-workspace`, based on UI PR #9. The original 59-file PR #10 is closed as superseded by a seven-layer review stack: #11 data/contracts (11 files), #12 reception API (8), #13 receipt API/storage (6), #14 patient action dialogs (9), #15 reception UI (10), #16 received-study UI and polling fix (6), and #17 docs/evidence (9). Each layer is based on the previous layer; #11 is based on PR #9. Original branch/history is retained, no PR is merged. Preserve the owner's pre-existing `apps/web/next-env.d.ts` change.
 
 ## Active objective — Secretary workspace (2026-11-10)
 
-**Status:** Implemented and verified on `codex/secretary-workspace`, based on open UI PR #9. Source commits `a16857b`, `db417a8`, and review fix `ae901ef`; preserve the `next-env.d.ts` edit. Published as [PRs #11–#17](https://github.com/Marguelgtz/nexus-med/pull/11) in a stack of 6–11 files each. Original PR #10 remains open only until this replacement stack is fully published; no PR is merged.
+**Status:** Implemented and verified on `codex/secretary-workspace`, based on open UI PR #9. Source commits `a16857b`, `db417a8`, and review fix `ae901ef`; preserve the `next-env.d.ts` edit. Published as [PRs #11–#17](https://github.com/Marguelgtz/nexus-med/pull/11) in a stack of 6–11 files each. Original PR #10 was closed after the replacement stack was published; no PR is merged.
 
 **Outcome:** Administrative secretary view without authentication: patient/contact management, scheduling, reception and shared waiting list, and receipt of studies for physician review. Both views share study entry with required patient and optional consultation. Short tasks open in native dialogs.
 
