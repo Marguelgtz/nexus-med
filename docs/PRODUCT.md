@@ -1,5 +1,8 @@
 # Product Definition — Medical Platform MVP
 
+**2026-11-10 extension — D-044/D-045:** The owner authorizes a secretary administrative workspace without authentication, patient/contact and appointment management, shared reception/waiting queue, and locally stored PDF/PNG/JPEG study receipts. This supersedes earlier staff/file exclusions only for these workflows; one treating surgeon, synthetic data, local loopback runtime, and no accounts remain. Study receipt can be added by either view, with required patient and optional consultation/order. Receipt and physician review are distinct from historical study-request statuses.
+
+
 **Status:** MVP/O-005 scope confirmed; owner-authorized O-006 implementation complete and pending owner review. Clinical semantics remain open where noted.
 **Version:** 1.0  
 **Primary user:** One general surgeon  

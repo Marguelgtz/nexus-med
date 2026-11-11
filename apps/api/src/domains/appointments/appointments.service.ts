@@ -17,6 +17,7 @@ import type {
   CreateAppointmentInput,
   LinkEncounterInput,
   UpdateAppointmentInput,
+  ReceptionInput,
 } from '@nexus-med/contracts';
 
 import { prisma } from '../../infrastructure/database/prisma';
@@ -45,6 +46,8 @@ interface AppointmentRow {
   durationMinutes: number;
   type: string;
   status: string;
+  arrivedAt: Date | null;
+  attentionStartedAt: Date | null;
   actualDurationMinutes: number | null;
   completedAt: Date | null;
   linkedEncounterId: string | null;
@@ -62,6 +65,8 @@ function toAppointment(row: AppointmentRow): Appointment {
     // the cast is the serialization boundary, not a skip of validation.
     type: row.type as Appointment['type'],
     status: row.status as Appointment['status'],
+    arrivedAt: row.arrivedAt?.toISOString() ?? null,
+    attentionStartedAt: row.attentionStartedAt?.toISOString() ?? null,
     actualDurationMinutes: row.actualDurationMinutes,
     completedAt: row.completedAt ? row.completedAt.toISOString() : null,
     linkedEncounterId: row.linkedEncounterId,
@@ -160,7 +165,7 @@ export async function updateAppointment(
   if (existing.status === 'cancelled') data.status = 'scheduled';
   const row = await prisma.appointment.update({
     where: { id: appointmentId },
-    data,
+    data: { ...data, arrivedAt: null, attentionStartedAt: null },
     include: rowInclude,
   });
   return toAppointment(row);
@@ -274,4 +279,26 @@ async function requireEncounterForPatient(encounterId: string, patientId: string
       encounterId: ['La consulta pertenece a otro paciente'],
     });
   }
+}
+
+/** Conditional writes prevent two windows from silently applying stale transitions. */
+export async function updateReception(id: string, input: ReceptionInput): Promise<Appointment> {
+  await findAppointment(id);
+  const now = new Date();
+  const result = await prisma.appointment.updateMany({
+    where: {
+      id, status: 'scheduled',
+      ...(input.action === 'arrive' ? { arrivedAt: null } : { arrivedAt: { not: null } }),
+      attentionStartedAt: null,
+    },
+    data: input.action === 'arrive' ? { arrivedAt: now }
+      : input.action === 'start' ? { attentionStartedAt: now }
+      : { arrivedAt: null },
+  });
+  if (result.count !== 1) throw new ConflictError('La recepción cambió o la cita ya no está programada. Actualiza la lista.');
+  return toAppointment(await findAppointment(id));
+}
+
+export async function listReception() {
+  return (await prisma.appointment.findMany({ where: { status: 'scheduled', arrivedAt: { not: null } }, include: rowInclude, orderBy: [{ arrivedAt: 'asc' }, { id: 'asc' }] })).map(toAppointment);
 }
