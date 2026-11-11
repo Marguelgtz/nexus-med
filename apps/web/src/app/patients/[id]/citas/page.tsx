@@ -1,3 +1,4 @@
+import { PatientTaskButton } from '../../../../components/patients/patient-task-button';
 // Patient appointments (UI_SPEC §7.2): the patient's schedule in one
 // place — scheduled (including past dates) and historical records.
 // Scheduling stays distinct from the explicitly linked clinical note.
@@ -92,7 +93,7 @@ export default async function PatientAppointmentsPage({
   return (
     <>
       <PatientSectionHeader patient={patient} title="Citas" description="Programación de la atención: fecha, hora y estado. La nota clínica se registra en Consultas.">
-        {!patient.isArchived ? <Link href={`/patients/${id}/citas/nueva`} className="btn btn-primary">Nueva cita</Link> : null}
+        {!patient.isArchived ? <PatientTaskButton patient={patient} action="appointment" label="Nueva cita" className="btn btn-primary" /> : null}
       </PatientSectionHeader>
 
       <div className="card">

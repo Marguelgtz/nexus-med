@@ -5,13 +5,18 @@
 // renders no data.
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
+import { confirmInAppNavigation } from '../../lib/use-before-unload-guard';
 
 export function TopBar() {
   const pathname = usePathname();
+  const router = useRouter();
+  const administrative = pathname.startsWith('/secretaria');
   const patientsActive = pathname === '/patients' || pathname.startsWith('/patients/');
   const calendarActive = pathname === '/calendar' || pathname.startsWith('/calendar');
-  const links = [
+  const links = administrative ? [{ href: '/secretaria', label: 'Secretaría', active: true }] : [
+    { href: '/recepcion', label: 'Recepción', active: pathname === '/recepcion' },
+    { href: '/estudios-recibidos', label: 'Estudios recibidos', active: pathname === '/estudios-recibidos' },
     { href: '/patients', label: 'Pacientes', active: patientsActive },
     { href: '/calendar', label: 'Calendario', active: calendarActive },
   ];
@@ -24,12 +29,13 @@ export function TopBar() {
   return (
     <header className="topbar">
       <div className="topbar-inner">
-        <Link href="/patients" className="topbar-brand">
+        <Link href={administrative ? '/secretaria' : '/patients'} className="topbar-brand">
           Nexus Med
         </Link>
         <nav className="topbar-nav" aria-label="Navegación principal">
           {renderLinks()}
         </nav>
+        <label className="view-selector"><span className="sr-only">Vista de trabajo</span><select aria-label="Vista de trabajo" value={administrative ? 'secretary' : 'medical'} onChange={e => { if (confirmInAppNavigation()) router.push(e.target.value === 'secretary' ? '/secretaria' : '/recepcion'); else e.currentTarget.value = administrative ? 'secretary' : 'medical'; }}><option value="medical">Vista: Médico</option><option value="secretary">Vista: Secretaría</option></select></label>
         <details className="topbar-mobile-menu">
           <summary aria-label="Navegación principal">
             <span className="topbar-menu-icon" aria-hidden="true">
