@@ -395,9 +395,11 @@ nexus-med/
 │       │   │   │   └── encounters.service.ts
 │       │   │   ├── appointments/          # Appointment and calendar domain
 │       │   │   ├── studies/               # Study-request domain
-│       │   │   └── documents/             # Prescription/report domain
+│       │   │   ├── documents/             # Prescription/report domain
+│       │   │   └── receipts/              # Received studies and explicit physician review
 │       │   ├── generated/prisma/         # Prisma 7 client (gitignored; `npm run db:generate`)
 │       │   ├── infrastructure/
+│       │   │   ├── storage/study-files.ts  # Bounded local study attachment I/O
 │       │   │   └── database/
 │       │   │       └── prisma.ts         # Prisma client/adapter initialization
 │       │   ├── routes/
@@ -864,3 +866,11 @@ Build the smallest complete patient-to-consultation workflow. Do not introduce a
 The existing `apps/web/src/app/globals.css` owns light-theme tokens and component styles; `components/primitives.tsx` stays server-safe. Patient-specific repeated study entry is shared through `components/patients/study-fields.tsx` and uses the contracts' `StudyInput` without owning validation/persistence. Workflow components retain draft/save/error state and call the existing typed Hono client. No new app, package, persistence layer or dependency was added. See `UI_SPEC.md` §9 for responsive composition, control APIs and Figma handoff conventions.
 
 Compact-entry ownership (D-043): `components/modal.tsx` owns only native dialog/focus/viewport behavior. Existing domain forms own drafts, validation, confirmation and API operations. `patients/consultation-sections.ts` shares clinical field labels/order across staged new-note entry and saved-note editing; `patients/staged-study-dialog.tsx` collects a local order for the existing atomic encounter save. `documents/medication-editor.tsx` validates a single local medication draft while the parent document form retains explicit document saving and historical line instructions. No package, API, schema or persistence boundary changes.
+
+## D-044/D-045 local secretary and study-receipt extension
+
+The canonical map in §8 expands with `apps/api/src/domains/receipts/` (receipt association/list/review), `apps/api/src/infrastructure/storage/study-files.ts` (local validated opaque file I/O), `apps/web/src/components/receipts/` (shared receive/review UI), and browser-safe `packages/contracts/src/receipts.ts`. Existing appointments own reception. Existing patient demographic forms are composed from one shared form; the administrative projection excludes clinical fields.
+
+New SSR routes are `/secretaria`, `/recepcion`, and `/estudios-recibidos`. They call Hono with no-store; Next never accesses Prisma/files directly. A route-based view selector has no identity/security semantics. Background polling of the visible agenda pauses during its dialogs. The live queue includes all unfinished arrivals, independent of selected agenda date.
+
+D-045 supersedes the earlier file-storage exclusion solely for received studies. Storage is `study-files/` beside the resolved SQLite file (`.local/data/study-files/` by default, isolated beside test databases). No uploads go to public assets, Git or remote storage. Receipt metadata and attachment metadata are created together; newly written files are removed on a failed database insert. An interrupted process may leave an unreferenced opaque file, never a falsely successful receipt. Backups/restores must include both database and file directory. No file deletion, replacement, external integration, authentication or public runtime is introduced.
