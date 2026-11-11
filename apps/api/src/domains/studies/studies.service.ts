@@ -19,7 +19,9 @@ import type {
   UpdateStudyInput,
 } from '@nexus-med/contracts';
 
-import { prisma } from '../../infrastructure/database/runtime-client';
+import { randomUUID } from 'node:crypto';
+
+import { executeAtomicWrite, prisma } from '../../infrastructure/database/runtime-client';
 import { ConflictError, NotFoundError, ValidationError } from '../../shared/http/errors';
 
 const STUDY_NOT_FOUND = 'Estudio no encontrado';
@@ -134,25 +136,40 @@ async function createStudies(
   encounterId: string | null,
   studies: StudyInput[],
 ): Promise<StudyRequest[]> {
-  const rows = await prisma.$transaction(async (tx) => {
-    const created: StudyRow[] = [];
-    for (const study of studies) {
-      created.push(
-        await tx.studyRequest.create({
-          data: {
-            patientId,
-            ...(encounterId ? { encounterId } : {}),
-            category: study.category,
-            name: study.name,
-            description: study.description?.trim() || null,
-          },
-          include: rowInclude,
-        }),
-      );
-    }
-    return created;
+  if (!studies.length) return [];
+
+  const rowsToCreate = studies.map((study) => ({ id: randomUUID(), study }));
+  const ids = rowsToCreate.map(({ id }) => id);
+  const timestamp = Date.now();
+  await executeAtomicWrite(
+    rowsToCreate.map(({ id, study }, index) => {
+      const createdAt = new Date(timestamp + index).toISOString();
+      return {
+        sql: `INSERT INTO study_requests (
+          id, patientId, encounterId, category, name, description, status,
+          resultNote, createdAt, updatedAt
+        ) VALUES (?, ?, ?, ?, ?, ?, 'ordered', NULL, ?, ?)`,
+        values: [
+          id,
+          patientId,
+          encounterId,
+          study.category,
+          study.name,
+          study.description?.trim() || null,
+          createdAt,
+          createdAt,
+        ],
+      };
+    }),
+  );
+
+  const rows = await prisma.studyRequest.findMany({ where: { id: { in: ids } }, include: rowInclude });
+  const rowsById = new Map(rows.map((row) => [row.id, row]));
+  return ids.map((id) => {
+    const row = rowsById.get(id);
+    if (!row) throw new Error('A committed study request could not be reloaded.');
+    return toStudyRequest(row);
   });
-  return rows.map(toStudyRequest);
 }
 
 /** All studies ordered during one encounter (the encounter-detail section). */

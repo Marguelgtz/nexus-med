@@ -2,10 +2,19 @@ import { PrismaD1 } from '@prisma/adapter-d1';
 import { PrismaClient } from './generated/prisma-worker/client';
 
 import { createApp } from './app';
-import { withPrismaClient } from './infrastructure/database/runtime-client';
+import { type AtomicWrite, withPrismaClient } from './infrastructure/database/runtime-client';
 import { withStudyFileStorage } from './infrastructure/storage/runtime-study-files';
 
-type D1Binding = ConstructorParameters<typeof PrismaD1>[0];
+type PrismaD1Argument = ConstructorParameters<typeof PrismaD1>[0];
+type D1Binding = Exclude<
+  PrismaD1Argument,
+  {
+    CLOUDFLARE_D1_TOKEN: string;
+    CLOUDFLARE_ACCOUNT_ID: string;
+    CLOUDFLARE_DATABASE_ID: string;
+    CLOUDFLARE_SHADOW_DATABASE_ID?: string;
+  }
+>;
 
 interface R2Binding {
   put(key: string, value: Uint8Array): Promise<unknown>;
@@ -20,9 +29,19 @@ interface Env {
 
 const app = createApp();
 
-export default {
+const worker = {
   async fetch(request: Request, env: Env): Promise<Response> {
     const prisma = new PrismaClient({ adapter: new PrismaD1(env.DB) });
+    const atomicWrite: AtomicWrite = async (statements) => {
+      const results = await env.DB.batch(
+        statements.map(({ sql, values }) => env.DB.prepare(sql).bind(...values)),
+      );
+      const failedResult = results.find((result) => !result.success);
+      if (failedResult) {
+        throw new Error(`D1 atomic write failed: ${failedResult.error ?? 'unknown database error'}`);
+      }
+    };
+
     try {
       return await withPrismaClient(prisma, () =>
         withStudyFileStorage(
@@ -38,9 +57,12 @@ export default {
           },
           () => app.fetch(request, env),
         ),
+        atomicWrite,
       );
     } finally {
       await prisma.$disconnect();
     }
   },
 };
+
+export default worker;

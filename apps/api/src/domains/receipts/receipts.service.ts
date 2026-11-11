@@ -1,7 +1,9 @@
+import { randomUUID } from 'node:crypto';
+
 import type { CreateStudyReceipt } from '@nexus-med/contracts';
 import type { z } from 'zod';
 import type { receiptQuerySchema } from '@nexus-med/contracts';
-import { prisma } from '../../infrastructure/database/runtime-client';
+import { executeAtomicWrite, prisma } from '../../infrastructure/database/runtime-client';
 import { removeStudyFiles, storeStudyFiles, readStudyFile } from '../../infrastructure/storage/study-files';
 import { ConflictError, NotFoundError, ValidationError } from '../../shared/http/errors';
 const include = { patient: { select: { id: true, fullName: true } }, encounter: { select: { id: true, occurredAt: true } }, files: true } as const;
@@ -32,8 +34,34 @@ export async function createReceipt(patientId: string, input: CreateStudyReceipt
     if (!encounter || encounter.patientId !== patientId) throw new ValidationError('La consulta no pertenece al paciente.');
   }
   const stored = await storeStudyFiles(files);
+  const receiptId = randomUUID();
+  const receivedAt = new Date().toISOString();
   try {
-    const row = await prisma.studyReceipt.create({ data: { patientId, encounterId, requestId: input.requestId ?? null, title: input.title, studyDate: input.studyDate ?? null, receiptNote: input.receiptNote ?? null, files: { create: stored } }, include });
+    await executeAtomicWrite([
+      {
+        sql: `INSERT INTO study_receipts (
+          id, patientId, encounterId, requestId, title, studyDate, receiptNote,
+          receivedAt, reviewedAt, reviewNote
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NULL, NULL)`,
+        values: [
+          receiptId,
+          patientId,
+          encounterId,
+          input.requestId ?? null,
+          input.title,
+          input.studyDate ?? null,
+          input.receiptNote ?? null,
+          receivedAt,
+        ],
+      },
+      ...stored.map((file) => ({
+        sql: `INSERT INTO study_receipt_files (
+          id, receiptId, storageKey, name, mimeType, size
+        ) VALUES (?, ?, ?, ?, ?, ?)`,
+        values: [randomUUID(), receiptId, file.storageKey, file.name, file.mimeType, file.size],
+      })),
+    ]);
+    const row = await prisma.studyReceipt.findUniqueOrThrow({ where: { id: receiptId }, include });
     return dto(row, true);
   } catch (error) { await removeStudyFiles(stored.map(file => file.storageKey)); throw error; }
 }

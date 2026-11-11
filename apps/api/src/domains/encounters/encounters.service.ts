@@ -13,7 +13,9 @@ import type {
   UpdateEncounterInput,
 } from '@nexus-med/contracts';
 
-import { prisma } from '../../infrastructure/database/runtime-client';
+import { randomUUID } from 'node:crypto';
+
+import { executeAtomicWrite, prisma } from '../../infrastructure/database/runtime-client';
 import { NotFoundError } from '../../shared/http/errors';
 
 const ENCOUNTER_NOT_FOUND = 'Consulta no encontrada';
@@ -103,23 +105,56 @@ export async function createEncounter(
   if (!studies || studies.length === 0) {
     return toDetail(await prisma.encounter.create({ data: { ...note, patientId } }));
   }
-  // The encounter and its studies commit atomically: a failure after the
-  // encounter row leaves no orphan and no half-saved consultation.
-  const created = await prisma.$transaction(async (tx) => {
-    const encounter = await tx.encounter.create({ data: { ...note, patientId } });
-    for (const study of studies) {
-      await tx.studyRequest.create({
-        data: {
-          encounterId: encounter.id,
+  // IDs and timestamps are generated before the batch so the same ordered
+  // write set runs atomically in SQLite and D1.
+  const encounterId = randomUUID();
+  const timestamp = Date.now();
+  const createdAt = new Date(timestamp).toISOString();
+  await executeAtomicWrite([
+    {
+      sql: `INSERT INTO encounters (
+        id, patientId, occurredAt, type, reason, historyOfPresentIllness,
+        relevantHistory, physicalExamination, assessment, plan, followUp,
+        createdAt, updatedAt
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      values: [
+        encounterId,
+        patientId,
+        input.occurredAt,
+        input.type ?? 'consulta',
+        note.reason ?? null,
+        note.historyOfPresentIllness ?? null,
+        note.relevantHistory ?? null,
+        note.physicalExamination ?? null,
+        note.assessment ?? null,
+        note.plan ?? null,
+        note.followUp ?? null,
+        createdAt,
+        createdAt,
+      ],
+    },
+    ...studies.map((study, index) => {
+      const studyTimestamp = new Date(timestamp + index + 1).toISOString();
+      return {
+        sql: `INSERT INTO study_requests (
+          id, patientId, encounterId, category, name, description, status,
+          resultNote, createdAt, updatedAt
+        ) VALUES (?, ?, ?, ?, ?, ?, 'ordered', NULL, ?, ?)`,
+        values: [
+          randomUUID(),
           patientId,
-          category: study.category,
-          name: study.name,
-          description: study.description?.trim() || null,
-        },
-      });
-    }
-    return encounter;
-  });
+          encounterId,
+          study.category,
+          study.name,
+          study.description?.trim() || null,
+          studyTimestamp,
+          studyTimestamp,
+        ],
+      };
+    }),
+  ]);
+
+  const created = await prisma.encounter.findUniqueOrThrow({ where: { id: encounterId } });
   return toDetail(created);
 }
 

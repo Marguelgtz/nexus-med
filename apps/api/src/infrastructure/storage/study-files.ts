@@ -8,7 +8,9 @@ import { studyFileStorage } from './runtime-study-files';
 const validKey = (key: string) => /^[a-f0-9-]{36}$/.test(key);
 
 export async function removeStudyFiles(keys: string[]) {
-  await Promise.all(keys.map((key) => (validKey(key) ? studyFileStorage.delete(key) : undefined)));
+  await Promise.all(
+    keys.map((key) => (validKey(key) ? studyFileStorage.delete(key).catch(() => undefined) : undefined)),
+  );
 }
 
 export async function storeStudyFiles(files: File[]) {
@@ -64,8 +66,8 @@ export async function storeStudyFiles(files: File[]) {
   const written: string[] = [];
   try {
     for (const file of validated) {
-      await studyFileStorage.put(file.storageKey, file.data);
       written.push(file.storageKey);
+      await studyFileStorage.put(file.storageKey, file.data);
     }
     return validated.map(({ storageKey, name, mimeType, size }) => ({ storageKey, name, mimeType, size }));
   } catch (error) {

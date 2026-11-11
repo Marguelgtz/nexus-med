@@ -7,7 +7,9 @@ import type {
   UpdateMedicalDocumentInput,
 } from '@nexus-med/contracts';
 
-import { prisma } from '../../infrastructure/database/runtime-client';
+import { randomUUID } from 'node:crypto';
+
+import { executeAtomicWrite, prisma } from '../../infrastructure/database/runtime-client';
 import { ConflictError, NotFoundError, ValidationError } from '../../shared/http/errors';
 
 const PATIENT_NOT_FOUND = 'Paciente no encontrado';
@@ -111,6 +113,38 @@ export async function createMedicalDocument(
   input: CreateMedicalDocumentInput,
 ): Promise<MedicalDocument> {
   await validateAssociation(patientId, input.encounterId);
+  if (input.kind === 'prescription') {
+    const id = randomUUID();
+    const timestamp = new Date().toISOString();
+    await executeAtomicWrite([
+      {
+        sql: `INSERT INTO medical_documents (
+          id, patientId, encounterId, kind, title, body, createdAt, updatedAt
+        ) VALUES (?, ?, ?, 'prescription', ?, ?, ?, ?)`,
+        values: [id, patientId, input.encounterId || null, input.title || null, input.body || null, timestamp, timestamp],
+      },
+      ...lineData(input.lines).map((line, position) => ({
+        sql: `INSERT INTO prescription_lines (
+          id, documentId, position, medication, dose, route, frequency, duration, instructions
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        values: [
+          randomUUID(),
+          id,
+          position,
+          line.medication,
+          line.dose,
+          line.route,
+          line.frequency,
+          line.duration,
+          line.instructions,
+        ],
+      })),
+    ]);
+
+    const row = await prisma.medicalDocument.findUniqueOrThrow({ where: { id }, include: documentInclude });
+    return toMedicalDocument(row);
+  }
+
   const row = await prisma.medicalDocument.create({
     data: {
       patientId,
@@ -118,7 +152,6 @@ export async function createMedicalDocument(
       kind: input.kind,
       title: input.title || null,
       body: input.body || null,
-      ...(input.kind === 'prescription' ? { lines: { create: lineData(input.lines) } } : {}),
     },
     include: documentInclude,
   });
@@ -140,25 +173,47 @@ export async function updateMedicalDocument(
   }
   await validateAssociation(existing.patientId, input.encounterId);
 
-  const row = await prisma.$transaction(async (tx) => {
-    if (input.kind === 'prescription') {
-      await tx.prescriptionLine.deleteMany({ where: { documentId } });
-    }
-    await tx.medicalDocument.update({
-      where: { id: documentId },
-      data: {
-        encounterId: input.encounterId || null,
-        title: input.title || null,
-        body: input.body || null,
-      },
-    });
-    if (input.kind === 'prescription') {
-      for (const line of lineData(input.lines)) {
-        await tx.prescriptionLine.create({ data: { ...line, documentId } });
-      }
-    }
-    return tx.medicalDocument.findUniqueOrThrow({ where: { id: documentId }, include: documentInclude });
-  });
+  const timestamp = new Date().toISOString();
+  await executeAtomicWrite([
+    {
+      sql: `DELETE FROM prescription_lines
+        WHERE documentId = ? AND EXISTS (
+          SELECT 1 FROM medical_documents WHERE id = ? AND kind = 'prescription'
+        )`,
+      values: [documentId, documentId],
+    },
+    {
+      sql: `UPDATE medical_documents
+        SET encounterId = ?, title = ?, body = ?, updatedAt = ?
+        WHERE id = ? AND kind = ?`,
+      values: [input.encounterId || null, input.title || null, input.body || null, timestamp, documentId, input.kind],
+    },
+    ...(input.kind === 'prescription'
+      ? lineData(input.lines).map((line, position) => ({
+          sql: `INSERT INTO prescription_lines (
+            id, documentId, position, medication, dose, route, frequency, duration, instructions
+          ) SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?
+          WHERE EXISTS (
+            SELECT 1 FROM medical_documents WHERE id = ? AND kind = 'prescription'
+          )`,
+          values: [
+            randomUUID(),
+            documentId,
+            position,
+            line.medication,
+            line.dose,
+            line.route,
+            line.frequency,
+            line.duration,
+            line.instructions,
+            documentId,
+          ],
+        }))
+      : []),
+  ]);
+
+  const row = await prisma.medicalDocument.findUnique({ where: { id: documentId }, include: documentInclude });
+  if (!row) throw new NotFoundError('Documento no encontrado');
   return toMedicalDocument(row);
 }
 
