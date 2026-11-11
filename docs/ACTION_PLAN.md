@@ -12,7 +12,7 @@
 
 **Sequence:** Remove visible application/document labels (D-046); derive and test date/queue summaries; render responsive overview; verify build and browser; publish a focused PR based on #18.
 
-**Branch:** `codex/reception-overview`. Scope is presentation and derived summaries, no changes to stored records or API. Preserve the owner's next-env edit. **Verification:** web 42/42, workspace typecheck, lint (existing Pages warning), production build pass. Chromium confirms reception/secretary metrics and no banner at desktop, 390px and 320px, without overflow. No record writes. Publication pending.
+**Branch:** `codex/reception-overview`. Scope is presentation and derived summaries, no changes to stored records or API. Preserve the owner's next-env edit. **Verification:** web 42/42, workspace typecheck, lint (existing Pages warning), production build pass. Chromium confirms reception/secretary metrics and no banner at desktop, 390px and 320px, without overflow. No record writes. Published as [PR #19](https://github.com/Marguelgtz/nexus-med/pull/19), 15 files, based on #18; commit `9463685`. Open and unmerged. Dev is running at http://127.0.0.1:3000/recepcion; next action is owner walkthrough.
 
 ## Active objective — Contemporary UI refresh (2026-11-10)
 
