@@ -66,6 +66,24 @@ interface FixtureStudyRequest {
   description?: string | null;
   status: string;
   resultNote?: string | null;
+  seedOnCurrentDay?: boolean;
+}
+
+interface FixtureStudyReceipt {
+  id: string;
+  patientId: string;
+  encounterId: string | null;
+  requestId: string | null;
+  title: string;
+  fileName: string;
+  fileId: string;
+}
+
+interface SeedReceiptFile {
+  storageKey: string;
+  name: string;
+  mimeType: string;
+  size: number;
 }
 
 interface FixturePrescriptionLine {
@@ -93,6 +111,7 @@ interface Fixture {
   encounters: FixtureEncounter[];
   appointments?: FixtureAppointment[];
   studies?: FixtureStudyRequest[];
+  receipts?: FixtureStudyReceipt[];
   documents?: FixtureMedicalDocument[];
 }
 
@@ -110,6 +129,11 @@ type PrismaLike = {
     create(args: { data: Record<string, unknown> }): Promise<unknown>;
   };
   studyRequest: {
+    findUnique(args: { where: { id: string } }): Promise<{ id: string } | null>;
+    updateMany(args: { where: { id: string; createdAt: Date; updatedAt: Date }; data: { createdAt: Date; updatedAt: Date } }): Promise<{ count: number }>;
+    create(args: { data: Record<string, unknown> }): Promise<unknown>;
+  };
+  studyReceipt: {
     findUnique(args: { where: { id: string } }): Promise<{ id: string } | null>;
     create(args: { data: Record<string, unknown> }): Promise<unknown>;
   };
@@ -192,6 +216,51 @@ function addPracticeDays(anchor: Date, dayOffset: number): { year: number; month
   return { year: shifted.getUTCFullYear(), month: shifted.getUTCMonth() + 1, day: shifted.getUTCDate() };
 }
 
+function practiceDateString(instant: Date): string {
+  const { year, month, day } = practiceDateParts(instant);
+  return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+}
+
+function createNeutralStudyPdf(studyTitle: string): string {
+  const safeText = (value: string) => value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^\x20-\x7e]/g, '')
+    .replace(/[\\()]/g, '\\$&');
+  const stream = `BT /F1 20 Tf 50 760 Td (Nexus Med) Tj /F1 14 Tf 0 -32 Td (${safeText(studyTitle)}) Tj 0 -24 Td (Documento asociado al expediente.) Tj ET`;
+  const objects = [
+    '<< /Type /Catalog /Pages 2 0 R >>',
+    '<< /Type /Pages /Kids [3 0 R] /Count 1 >>',
+    '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 5 0 R >> >> /Contents 4 0 R >>',
+    `<< /Length ${stream.length} >>\nstream\n${stream}\nendstream`,
+    '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>',
+  ];
+  let pdf = '%PDF-1.4\n';
+  const offsets = [0];
+  for (let index = 0; index < objects.length; index += 1) {
+    offsets.push(pdf.length);
+    pdf += `${index + 1} 0 obj\n${objects[index]}\nendobj\n`;
+  }
+  const xrefOffset = pdf.length;
+  pdf += `xref\n0 ${objects.length + 1}\n0000000000 65535 f \n`;
+  for (const offset of offsets.slice(1)) pdf += `${String(offset).padStart(10, '0')} 00000 n \n`;
+  pdf += `trailer\n<< /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n${xrefOffset}\n%%EOF\n`;
+  return pdf;
+}
+
+async function storeDefaultReceiptFile(fileName: string, studyTitle: string): Promise<SeedReceiptFile> {
+  const { storeStudyFiles } = await import('../apps/api/src/infrastructure/storage/study-files.js');
+  const file = new File([createNeutralStudyPdf(studyTitle)], fileName, { type: 'application/pdf' });
+  const [stored] = await storeStudyFiles([file]);
+  if (!stored) throw new Error('No se pudo guardar el PDF del estudio de ejemplo.');
+  return stored;
+}
+
+async function removeDefaultReceiptFiles(keys: string[]): Promise<void> {
+  const { removeStudyFiles } = await import('../apps/api/src/infrastructure/storage/study-files.js');
+  await removeStudyFiles(keys);
+}
+
 /**
  * Create any missing fixture records. Existing records — whether edited demo
  * records or user-created ones — are left untouched. All writes run through
@@ -200,21 +269,46 @@ function addPracticeDays(anchor: Date, dayOffset: number): { year: number; month
  */
 export async function idempotentSeed(
   prisma: PrismaLike,
-  options: { fixturePath?: string } = {},
+  options: {
+    fixturePath?: string;
+    now?: Date;
+    storeReceiptFile?: (fileName: string, studyTitle: string) => Promise<SeedReceiptFile>;
+    removeReceiptFiles?: (storageKeys: string[]) => Promise<void>;
+  } = {},
 ): Promise<{
   patientsCreated: number;
   encountersCreated: number;
   appointmentsCreated: number;
   studiesCreated: number;
+  studyReceiptsCreated: number;
   documentsCreated: number;
 }> {
   const fixture = await loadFixture(options.fixturePath);
+  const seedTime = options.now ?? new Date();
+  const storeReceiptFile = options.storeReceiptFile ?? storeDefaultReceiptFile;
+  const removeReceiptFiles = options.removeReceiptFiles ?? removeDefaultReceiptFiles;
+  const stagedReceiptFiles = new Map<string, SeedReceiptFile>();
 
   let patientsCreated = 0;
   let encountersCreated = 0;
   let appointmentsCreated = 0;
   let studiesCreated = 0;
+  let studyReceiptsCreated = 0;
   let documentsCreated = 0;
+  const attachedReceiptIds = new Set<string>();
+
+  try {
+    // File storage is outside SQLite's transaction. Stage only files for rows
+    // that appear to be missing, then remove any file that fails to attach.
+    for (const receipt of fixture.receipts ?? []) {
+      if (await prisma.studyReceipt.findUnique({ where: { id: receipt.id } })) continue;
+      stagedReceiptFiles.set(receipt.id, await storeReceiptFile(receipt.fileName, receipt.title));
+    }
+
+  } catch (error) {
+    await removeReceiptFiles([...stagedReceiptFiles.values()].map((file) => file.storageKey));
+    throw error;
+  }
 
   await prisma.$transaction(async (tx) => {
     for (const p of fixture.patients) {
@@ -291,7 +385,17 @@ export async function idempotentSeed(
     // Study requests: fixture timestamps, like the encounters.
     for (const s of fixture.studies ?? []) {
       const existing = await tx.studyRequest.findUnique({ where: { id: s.id } });
-      if (existing) continue;
+      if (existing) {
+        // Upgrade an earlier seed of this explicitly current-day example,
+        // but only while both timestamps still match its untouched baseline.
+        if (s.seedOnCurrentDay) {
+          await tx.studyRequest.updateMany({
+            where: { id: s.id, createdAt: SEEDED_AT, updatedAt: SEEDED_AT },
+            data: { createdAt: seedTime, updatedAt: seedTime },
+          });
+        }
+        continue;
+      }
       await tx.studyRequest.create({
         data: {
           id: s.id,
@@ -302,11 +406,34 @@ export async function idempotentSeed(
           description: s.description ?? null,
           status: s.status,
           resultNote: s.resultNote ?? null,
-          createdAt: SEEDED_AT,
-          updatedAt: SEEDED_AT,
+          createdAt: s.seedOnCurrentDay ? seedTime : SEEDED_AT,
+          updatedAt: s.seedOnCurrentDay ? seedTime : SEEDED_AT,
         },
       });
       studiesCreated += 1;
+    }
+
+    // Receipt evidence is independent of the physician's request status.
+    for (const receipt of fixture.receipts ?? []) {
+      const existing = await tx.studyReceipt.findUnique({ where: { id: receipt.id } });
+      if (existing) continue;
+      const file = stagedReceiptFiles.get(receipt.id);
+      if (!file) throw new Error(`No se preparó el archivo del estudio recibido ${receipt.id}.`);
+      await tx.studyReceipt.create({
+        data: {
+          id: receipt.id,
+          patientId: receipt.patientId,
+          encounterId: receipt.encounterId,
+          requestId: receipt.requestId,
+          title: receipt.title,
+          studyDate: practiceDateString(seedTime),
+          receiptNote: null,
+          receivedAt: seedTime,
+          files: { create: [{ id: receipt.fileId, ...file }] },
+        },
+      });
+      attachedReceiptIds.add(receipt.id);
+      studyReceiptsCreated += 1;
     }
 
     // Printable demo documents are created with their lines atomically. Once
@@ -356,9 +483,17 @@ export async function idempotentSeed(
       });
       appointmentsCreated += 1;
     }
+  }).catch(async (error: unknown) => {
+    await removeReceiptFiles([...stagedReceiptFiles.values()].map((file) => file.storageKey));
+    throw error;
   });
 
-  return { patientsCreated, encountersCreated, appointmentsCreated, studiesCreated, documentsCreated };
+  const unattachedStorageKeys = [...stagedReceiptFiles.entries()]
+    .filter(([receiptId]) => !attachedReceiptIds.has(receiptId))
+    .map(([, file]) => file.storageKey);
+  if (unattachedStorageKeys.length) await removeReceiptFiles(unattachedStorageKeys);
+
+  return { patientsCreated, encountersCreated, appointmentsCreated, studiesCreated, studyReceiptsCreated, documentsCreated };
 }
 
 async function main(): Promise<void> {
@@ -366,7 +501,7 @@ async function main(): Promise<void> {
   const { prisma } = await import('../apps/api/src/infrastructure/database/prisma.js');
   const result = await idempotentSeed(prisma);
   console.log(
-    `[seed] done — patients created: ${result.patientsCreated}, encounters created: ${result.encountersCreated}, appointments created: ${result.appointmentsCreated}, studies created: ${result.studiesCreated}, documents created: ${result.documentsCreated}`
+    `[seed] done — patients created: ${result.patientsCreated}, encounters created: ${result.encountersCreated}, appointments created: ${result.appointmentsCreated}, studies created: ${result.studiesCreated}, study receipts created: ${result.studyReceiptsCreated}, documents created: ${result.documentsCreated}`
   );
   await prisma.$disconnect();
 }

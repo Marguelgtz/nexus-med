@@ -26,15 +26,16 @@ function ReviewDialog({ receipt, onClose, onSaved }: { receipt: StudyReceipt; on
     </form>
   </Modal>;
 }
-export function ReceivedStudies({ receipts, patients, administrative = false, fixedPatient, initialEncounterId, asOf }: {
-  receipts: StudyReceipt[]; patients: PatientSummary[]; administrative?: boolean; fixedPatient?: { id: string; fullName: string }; initialEncounterId?: string; asOf?: string;
+export function ReceivedStudies({ receipts, patients, administrative = false, fixedPatient, initialEncounterId, requestId, asOf, heading = 'Estudios', allowAdd = true, initialFilter = 'pending' }: {
+  receipts: StudyReceipt[]; patients: PatientSummary[]; administrative?: boolean; fixedPatient?: { id: string; fullName: string }; initialEncounterId?: string; requestId?: string; asOf?: string;
+  heading?: string; allowAdd?: boolean; initialFilter?: 'pending' | 'all';
 }) {
   const [receiptRows, setReceiptRows] = useState(receipts);
   const [lastUpdatedAt, setLastUpdatedAt] = useState<string | null>(asOf ?? null);
   const [refreshing, setRefreshing] = useState(false);
   const [refreshError, setRefreshError] = useState<string | null>(null);
   const refreshInProgress = useRef(false);
-  const [filter, setFilter] = useState<'pending' | 'all'>('pending');
+  const [filter, setFilter] = useState<'pending' | 'all'>(initialFilter);
   const [query, setQuery] = useState('');
   const [pickerAnchor, setPickerAnchor] = useState<HTMLElement | null>(null);
   const [patient, setPatient] = useState<{ id: string; fullName: string } | null>(null);
@@ -49,7 +50,7 @@ export function ReceivedStudies({ receipts, patients, administrative = false, fi
         view: administrative ? 'administrative' : 'medical',
         review: 'all',
       });
-      setReceiptRows(initialEncounterId ? latest.filter(row => row.encounter?.id === initialEncounterId) : latest);
+      setReceiptRows(latest.filter(row => (!initialEncounterId || row.encounter?.id === initialEncounterId) && (!requestId || row.requestId === requestId)));
       setLastUpdatedAt(new Date().toISOString());
       setRefreshError(null);
     } catch {
@@ -58,7 +59,7 @@ export function ReceivedStudies({ receipts, patients, administrative = false, fi
       refreshInProgress.current = false;
       setRefreshing(false);
     }
-  }, [administrative, fixedPatient, initialEncounterId]);
+  }, [administrative, fixedPatient, initialEncounterId, requestId]);
   useEffect(() => {
     if (pickerAnchor || patient || review) return;
     const refreshIfVisible = () => { if (document.visibilityState === 'visible') void refreshReceipts(); };
@@ -69,17 +70,18 @@ export function ReceivedStudies({ receipts, patients, administrative = false, fi
   function saveReceipt(receipt: StudyReceipt) {
     if (fixedPatient && receipt.patient.id !== fixedPatient.id) return;
     if (initialEncounterId && receipt.encounter?.id !== initialEncounterId) return;
+    if (requestId && receipt.requestId !== requestId) return;
     setReceiptRows(current => [receipt, ...current.filter(row => row.id !== receipt.id)]
       .sort((left, right) => right.receivedAt.localeCompare(left.receivedAt)));
   }
   const pending = receiptRows.filter(row => !row.reviewedAt).length;
   const rows = receiptRows.filter(row => (filter === 'all' || !row.reviewedAt) && `${row.title} ${row.patient.fullName}`.toLocaleLowerCase().includes(query.toLocaleLowerCase()));
   return <section className="received-studies" aria-label="Estudios">
-      <div className="page-head"><div><h2>Estudios</h2><p className="muted">{pending} pendiente{pending !== 1 ? 's' : ''} de revisión médica</p><p className="sync-status">Se actualiza cada 30 segundos{lastUpdatedAt ? ` · Última consulta: ${formatTime(lastUpdatedAt)}` : ''}</p></div><div className="actions"><button className="btn btn-primary" onClick={event => fixedPatient ? setPatient(fixedPatient) : setPickerAnchor(event.currentTarget)}>Agregar estudio</button><button className="btn btn-ghost btn-sm btn-icon" type="button" disabled={refreshing} onClick={() => void refreshReceipts()} aria-label={refreshing ? 'Actualizando estudios' : 'Actualizar estudios'} title="Actualizar ahora"><Icon name="refresh" /><span className="sr-only">{refreshing ? 'Actualizando…' : 'Actualizar estudios'}</span></button></div></div>
+      <div className="page-head"><div><h2>{heading}</h2><p className="muted">{pending} pendiente{pending !== 1 ? 's' : ''} de revisión médica</p><p className="sync-status">Se actualiza cada 30 segundos{lastUpdatedAt ? ` · Última consulta: ${formatTime(lastUpdatedAt)}` : ''}</p></div><div className="actions">{allowAdd ? <button className="btn btn-primary" onClick={event => fixedPatient ? setPatient(fixedPatient) : setPickerAnchor(event.currentTarget)}>Agregar estudio</button> : null}<button className="btn btn-ghost btn-sm btn-icon" type="button" disabled={refreshing} onClick={() => void refreshReceipts()} aria-label={refreshing ? 'Actualizando estudios' : 'Actualizar estudios'} title="Actualizar ahora"><Icon name="refresh" /><span className="sr-only">{refreshing ? 'Actualizando…' : 'Actualizar estudios'}</span></button></div></div>
     {refreshError ? <p className="error" role="alert">{refreshError} <button className="btn btn-ghost btn-sm" onClick={() => void refreshReceipts()}>Reintentar</button></p> : null}
-    <div className="workspace-toolbar"><div className="segmented" role="group" aria-label="Filtrar estudios"><button className={filter === 'pending' ? 'active' : ''} aria-pressed={filter === 'pending'} onClick={() => setFilter('pending')}>Pendientes ({pending})</button><button className={filter === 'all' ? 'active' : ''} aria-pressed={filter === 'all'} onClick={() => setFilter('all')}>Todos</button></div><div className="field"><label htmlFor="receipt-search">Buscar estudio o paciente</label><input type="search" id="receipt-search" value={query} onChange={e => setQuery(e.target.value)} /></div></div>
-    {!rows.length ? <div className="workspace-empty"><h3>{query ? 'Sin coincidencias' : filter === 'pending' ? 'No hay estudios pendientes de revisión' : 'Aún no hay estudios'}</h3><p className="muted">Los archivos se conservan en el expediente del paciente.</p></div> : <ul className="receipt-list">{rows.map(row => <li key={row.id}>
-      <div className="receipt-heading"><div><h3>{row.title}</h3><p>{administrative ? row.patient.fullName : <Link href={`/patients/${row.patient.id}/estudios`}>{row.patient.fullName}</Link>}</p></div><span className={`badge ${row.reviewedAt ? 'badge-edited' : 'badge-archived'}`}>{row.reviewedAt ? 'Revisado' : 'Pendiente de revisión'}</span></div>
+    {!requestId ? <div className="workspace-toolbar"><div className="segmented" role="group" aria-label="Filtrar estudios"><button className={filter === 'pending' ? 'active' : ''} aria-pressed={filter === 'pending'} onClick={() => setFilter('pending')}>Pendientes ({pending})</button><button className={filter === 'all' ? 'active' : ''} aria-pressed={filter === 'all'} onClick={() => setFilter('all')}>Todos</button></div><div className="field"><label htmlFor="receipt-search">Buscar estudio o paciente</label><input type="search" id="receipt-search" value={query} onChange={e => setQuery(e.target.value)} /></div></div> : null}
+    {!rows.length ? <div className="workspace-empty"><h3>{query ? 'Sin coincidencias' : requestId ? 'Aún no hay archivos recibidos para esta solicitud' : filter === 'pending' ? 'No hay estudios pendientes de revisión' : 'Aún no hay estudios'}</h3><p className="muted">Los archivos se conservan en el expediente del paciente.</p></div> : <ul className="receipt-list">{rows.map(row => <li key={row.id}>
+      <div className="receipt-heading"><div><h3>{!administrative && row.requestId ? <Link href={`/patients/${row.patient.id}/estudios/${encodeURIComponent(row.requestId)}`}>{row.title}</Link> : row.title}</h3><p>{administrative ? row.patient.fullName : <Link href={`/patients/${row.patient.id}/estudios`}>{row.patient.fullName}</Link>}</p></div><span className={`badge ${row.reviewedAt ? 'badge-edited' : 'badge-archived'}`}>{row.reviewedAt ? 'Revisado' : 'Pendiente de revisión'}</span></div>
       <p className="field-hint">Recibido: {formatDateTime(row.receivedAt)}{row.studyDate ? ` · Fecha del estudio: ${formatDate(row.studyDate)}` : ''}</p>
       <p className="field-hint">{row.encounter ? `Consulta: ${formatDateTime(row.encounter.occurredAt)}` : 'Asociado al paciente, sin consulta'}{row.requestId ? ' · Con solicitud relacionada' : ' · Sin solicitud previa'}</p>
       {row.receiptNote ? <p className="receipt-note">{row.receiptNote}</p> : null}
