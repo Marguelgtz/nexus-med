@@ -2231,6 +2231,9 @@ a.timeline-item:hover {
   overflow-wrap: anywhere;
   line-height: 1.45;
 }
+.patient-activity-appointment { border-left-color: color-mix(in srgb, var(--accent, var(--primary)) 58%, var(--border)); }
+.activity-actions { display: flex; flex-wrap: wrap; gap: var(--s-2); margin-top: var(--s-2); }
+.patient-activity-history .timeline-item { min-width: 0; }
 
 .note-section {
   margin: 0;

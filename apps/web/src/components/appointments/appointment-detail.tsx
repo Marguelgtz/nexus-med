@@ -86,8 +86,8 @@ export function AppointmentDetail({
               Atender paciente
             </Link>
           ) : null}
-          <Link href={`/patients/${patientId}/citas`} className="btn btn-secondary">
-            Volver a citas
+          <Link href={`/patients/${patientId}/citas-y-consultas`} className="btn btn-secondary">
+            Citas y consultas
           </Link>
         </div>
       </div>
