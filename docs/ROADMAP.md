@@ -89,3 +89,9 @@ No remote Cloudflare resources are part of O-001 through O-005.
 ## O-008 — Secretary and local study reception
 
 Owner-approved extension after O-007: add an administrative view without accounts, coordinate arrivals with the physician, and receive local study attachments for explicit physician review. Build API/data/storage foundations before the UI slices; reuse shared forms and native modals. Authentication, remote deployment and wider clinic staffing remain future work. Execution state lives in ACTION_PLAN.md.
+
+## O-009 — Reception and patient-study UX refinement
+
+**Outcome:** Make high-frequency reception actions direct and role-appropriate, consolidate patient scheduling and clinical history into one discoverable section, and make study records open into a useful detail view. Preserve distinct appointment/encounter meaning, local-only operation, synthetic data, and explicit physician review.
+
+**Sequence:** Reception search/date/dialog flow → unified patient activity view → study detail and current-day sample receipt → integrated browser, persistence, and data-preservation verification. Deliver as small stacked PRs.

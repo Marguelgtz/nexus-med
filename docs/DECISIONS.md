@@ -135,3 +135,13 @@ The owner explicitly selected local PDF/image storage. A received study has a pa
 ## D-047 — Secretary patient cards and shared-study synchronization — 2026-11-11
 
 **Status:** Accepted from owner feedback. Show phone and email on secretary patient cards, using an administrative DTO that excludes medical history. Call the shared section and navigation item **Estudios**; secretary and physician continue to use the same study receipt workflow, and physician review remains explicit. Refresh the shared studies list and reception queue every 30 seconds while visible, also refresh on focus, and keep a compact manual refresh action. This uses periodic API requests, not push notifications.
+
+## D-048 — Reception entry and unified patient activity — 2026-11-11
+
+**Status:** Accepted from owner feedback. Apply a selected agenda date immediately; use “Citas de hoy” only when the selected date is today. Use “En consulta” for started attention. Secretary registers arrival; the physician can start an unarrived scheduled consultation in one atomic transition. Reception can start an unscheduled consultation by searching/selecting a patient or registering one and continuing to the note. Patient navigation combines appointments and consultations into one `Citas y consultas` view, but keeps appointment logistics and clinical encounters visibly distinct. Existing detail/edit routes remain valid.
+
+Use a compact anchored patient search panel that shows no directory results until the user types, places `Registrar nuevo paciente` above a divider, and supports explicit result selection. Full patient forms remain accessible dialogs with a visible close control and internal scrolling.
+
+## D-049 — Patient study detail and current-day example — 2026-11-11
+
+**Status:** Accepted from owner feedback. Patient study requests open a detail page that shows their existing order metadata, authored notes and associated received-study attachments. Receiving files does not alter order status; physician review remains explicit. Seed one stable, idempotent received-study example dated to the practice's current local date so the inbox and detail workflow are visible. Remove explicit fictitious/demo labels from exact seed fixture note values and migrate only unchanged fixture values; preserve user edits and the synthetic-data development boundary.
