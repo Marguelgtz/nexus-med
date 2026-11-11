@@ -1,3 +1,4 @@
+import { PatientTaskButton } from '../../../components/patients/patient-task-button';
 // Focused overview: patient demographics and next action, not the complete record.
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
@@ -48,7 +49,7 @@ export default async function PatientPage({ params }: { params: Promise<{ id: st
           <Link href={`/patients/${patient.id}/consultas/nueva`} className="btn btn-primary">
             Nueva consulta
           </Link>
-          {!patient.isArchived ? <Link href={`/patients/${patient.id}/citas/nueva`} className="btn btn-secondary">Nueva cita</Link> : null}
+          {!patient.isArchived ? <PatientTaskButton patient={patient} action="appointment" label="Nueva cita" /> : null}
           <Link href={`/patients/${patient.id}/estudios?solicitar=1`} className="btn btn-secondary">Solicitar estudio</Link>
           <details className="patient-more-actions">
             <summary className="btn btn-ghost">Más acciones</summary>
@@ -56,7 +57,7 @@ export default async function PatientPage({ params }: { params: Promise<{ id: st
               <Link href={`/patients/${patient.id}/citas`}>Ver citas</Link>
               {!patient.isArchived ? <Link href={`/patients/${patient.id}/recetas/nueva`}>Nueva receta</Link> : null}
               {!patient.isArchived ? <Link href={`/patients/${patient.id}/informes/nueva`}>Nuevo informe</Link> : null}
-              <Link href={`/patients/${patient.id}/editar`}>Editar datos</Link>
+              <PatientTaskButton patient={patient} action="demographics" label="Editar datos" className="btn btn-ghost" />
               {!patient.isArchived ? <ArchiveControl patientId={patient.id} fullName={patient.fullName} /> : null}
             </div>
           </details>
@@ -108,7 +109,7 @@ export default async function PatientPage({ params }: { params: Promise<{ id: st
 
       {pendingStudies.length === 0 && nextAppointments.length === 0 ? <section className="card"><h2>Sin pendientes de atención</h2><p className="faint">Puedes iniciar una consulta o programar una cita desde las acciones del resumen.</p></section> : null}
       <section className="patient-background-section" id="patient-background" aria-labelledby="patient-background-title">
-        <div className="page-head"><h2 id="patient-background-title">Antecedentes</h2><Link href={`/patients/${patient.id}/antecedentes`} className="btn btn-ghost btn-sm">Editar antecedentes</Link></div>
+        <div className="page-head"><h2 id="patient-background-title">Antecedentes</h2><PatientTaskButton patient={patient} action="background" label="Editar antecedentes" className="btn btn-ghost btn-sm" /></div>
         <p className="field-hint">Un campo sin registro no descarta el antecedente.</p>
         <div className="clinical-context-grid">{BACKGROUND_FIELDS.map(({ key, label }) => <section className="clinical-context-item" key={key}><h3>{label}</h3><p>{patient[key] || <em className="faint">No registrado</em>}</p></section>)}</div>
       </section>

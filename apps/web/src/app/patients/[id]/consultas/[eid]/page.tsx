@@ -1,3 +1,4 @@
+import { ReceivedStudies } from '../../../../../components/receipts/received-studies';
 // Consultation detail page (UI_SPEC §3.7). SSR fetches the patient (for
 // the context strip and 404 handling) and the encounter by id. A stale
 // bookmark — unknown id, or an id belonging to another patient — renders
@@ -12,6 +13,7 @@ import {
   encounterDetailSchema,
   patientDetailSchema,
   studyRequestSchema,
+  studyReceiptSchema,
   type Appointment,
 } from '@nexus-med/contracts';
 
@@ -32,7 +34,7 @@ export default async function EncounterPage({
   const [{ id, eid }, query] = await Promise.all([params, searchParams]);
   const appointmentId = Array.isArray(query.appointmentId) ? query.appointmentId[0] : query.appointmentId;
 
-  const [patientRes, encounterRes, studiesRes, encountersRes, appointmentRes] = await Promise.all([
+  const [patientRes, encounterRes, studiesRes, encountersRes, appointmentRes, receiptsRes] = await Promise.all([
     fetchServer(`/api/patients/${encodeURIComponent(id)}`, patientDetailSchema),
     fetchServer(`/api/encounters/${encodeURIComponent(eid)}`, encounterDetailSchema),
     fetchServer(
@@ -43,6 +45,7 @@ export default async function EncounterPage({
     appointmentId
       ? fetchServer(`/api/appointments/${encodeURIComponent(appointmentId)}`, appointmentSchema)
       : Promise.resolve(null),
+    fetchServer(`/api/study-receipts?patientId=${encodeURIComponent(id)}&review=all`, z.array(studyReceiptSchema)),
   ]);
 
   if (!patientRes.ok) {
@@ -108,6 +111,7 @@ export default async function EncounterPage({
         encounters={encountersRes.data}
         appointment={appointment}
       />
+      {receiptsRes.ok ? <ReceivedStudies receipts={receiptsRes.data.filter(receipt => receipt.encounter?.id === encounter.id)} patients={[]} fixedPatient={patient} initialEncounterId={encounter.id} /> : <ErrorBanner message="No se pudieron cargar los archivos recibidos de esta consulta." retryHref={`/patients/${id}/consultas/${eid}`} />}
     </>
   );
 }
