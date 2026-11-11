@@ -4,7 +4,7 @@
 // 1. Prepares the local environment (data directory).
 // 2. Generates the Prisma client (gitignored — required after any fresh clone).
 // 3. Applies pending migrations (`prisma migrate deploy`).
-// 4. Runs the idempotent demo seed (no-op when records already exist).
+// 4. Runs the idempotent seed (no-op when records already exist).
 // 5. Starts the Hono API and waits for its health endpoint.
 // 6. Starts the Next.js frontend.
 // 7. Reports failures clearly; Ctrl+C stops both services.
@@ -76,7 +76,7 @@ async function main() {
   console.log('[dev] Aplicando migraciones…');
   await run('npx', ['prisma', 'migrate', 'deploy']);
 
-  console.log('[dev] Inicializando datos de demostración (idempotente)…');
+  console.log('[dev] Inicializando datos locales (idempotente)…');
   await run('npx', ['prisma', 'db', 'seed']);
 
   console.log('[dev] Iniciando API…');
@@ -101,7 +101,6 @@ async function main() {
   console.log('');
   console.log(`[dev] Frontend: http://127.0.0.1:${WEB_PORT}`);
   console.log(`[dev] API:      ${API_INTERNAL_URL}`);
-  console.log('[dev] Datos de demostración activos (pacientes ficticios).');
   console.log('[dev] Ctrl+C detiene ambos servicios.');
 
   children.forEach((child, i) => {

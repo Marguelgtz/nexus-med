@@ -11,8 +11,7 @@ export const metadata: Metadata = {
   description: 'Gestión de consultoría médica para un cirujano general',
 };
 
-// App frame (UI_SPEC §2): top bar, persistent demo banner, and the page
-// container. Every screen renders inside this shell.
+// App frame (UI_SPEC §2): shared top bar and page container.
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="es">
