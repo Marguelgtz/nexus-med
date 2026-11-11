@@ -3,7 +3,7 @@
 **Status:** O-002/O-005 baseline, owner-authorized O-006 implementation contract (§8), and verified O-007 UI v0 presentation conventions (§9). Implementation PRs remain unmerged for owner review.
 **Owner:** `apps/web` (Next.js App Router)  
 **Interface language:** Spanish (Mexico) — all UI strings below are the canonical copy; technical prose stays in English.  
-**Data:** Synthetic demo records only. A persistent demo banner is part of every screen.
+**Data:** Synthetic demo records only. D-046 removes demonstration labeling from screens and printable documents.
 
 This spec follows `TASKS.md` work packages T-007–T-011: it reconciles workflows with the implemented API (Section 1), defines the information architecture (Section 2), specifies every screen and interaction (Sections 3–4), the states and visual system (Section 5), and closes with story coverage and recorded decisions (Section 6).
 
@@ -727,3 +727,10 @@ Received-study entry is also available from a saved consultation, with that cons
 The owner clarified that the refresh must redesign components with a contemporary glass treatment, beyond changing colors. Keep route composition, columns and clinical workflows. Floating translucent navigation, blurred panels with bright inner edges, slate-blue gradient actions, inset form controls, compact segmented tabs and larger native dialog surfaces define the shared screen system. The patient directory now groups initials, name and identifier into an identity block, with a secondary consultation action and a live result count. Decorative initials are not clinical classifications. Shared stroke icons support navigation and entry actions, and all decorative SVGs are hidden from assistive technology. The persistent demo warning stays visible.
 
 Glass uses sufficiently opaque light surfaces over soft blue/lilac background illumination; ink text remains dark. Local offline fonts, existing responsive breakpoints and print styling are retained. At compact widths, the brand symbol is hidden so the view selector and navigation menu fit at 320px. Browser inspection covers registry, secretary, patient summary, calendar, consultation entry and a native patient dialog.
+
+
+## Reception overview and presentation policy — 2026-11-10
+
+D-046 supersedes older banner/watermark requirements in this document. Application chrome and printable documents do not display demonstration/fictional-data labels. Existing clinical text and fixture records are preserved.
+
+Reception and secretary agenda show date-scoped non-cancelled appointment totals, completed appointments, cancellations and planned minutes. Waiting and in-attention totals use the shared queue across all dates and explicitly label that scope. The next appointment is the earliest scheduled, unarrived appointment at or after the server-rendered snapshot time in the selected date. No next patient is inferred from overdue appointments. The overview refreshes with the existing reception data; progress derives from completed/non-cancelled appointments. Empty days display zero counts and an explicit empty next-appointment state.

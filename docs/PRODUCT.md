@@ -72,7 +72,7 @@ This section describes the **original P0 MVP**. O-005 subsequently approved appo
 - Keep patient and encounter data after application restarts.
 - Seed the database with clearly fictional demo patients and encounter records on first setup.
 - Open the patient registry by default with demo records visible.
-- Show a persistent demo-mode banner.
+- D-046: omit demonstration labels from the application and printed documents.
 
 ### Original MVP exclusions and updated O-005 boundary
 
@@ -245,7 +245,7 @@ Acceptance criteria:
 - The browser opens to the patient registry by default.
 - At least six active synthetic patients are visible in the default list; the archived demo patient is accessible through archived records.
 - Encounter history is present for multiple patients; at least one patient has no encounters to demonstrate the empty state.
-- A persistent demo-mode banner warns that all records are fictional.
+- D-046 removes visible demonstration labeling; development remains local with synthetic records.
 
 ## 7. Product and UX principles
 

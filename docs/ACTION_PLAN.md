@@ -6,6 +6,14 @@
 **Primary agent:** Hermes Agent  
 **Current implementation state (updated 2026-11-10):** O-008 secretary/reception/local study receipt is implemented on `codex/secretary-workspace`, based on UI PR #9. The original 59-file PR #10 is closed as superseded by a seven-layer review stack: #11 data/contracts (11 files), #12 reception API (8), #13 receipt API/storage (6), #14 patient action dialogs (9), #15 reception UI (10), #16 received-study UI and polling fix (6), and #17 docs/evidence (9). Each layer is based on the previous layer; #11 is based on PR #9. Original branch/history is retained, no PR is merged. Preserve the owner's pre-existing `apps/web/next-env.d.ts` change.
 
+## Active objective — Reception at a glance (2026-11-10)
+
+**Outcome:** Owner-approved presentation without demonstration labels, plus an operational reception overview using existing agenda/queue data.
+
+**Sequence:** Remove visible application/document labels (D-046); derive and test date/queue summaries; render responsive overview; verify build and browser; publish a focused PR based on #18.
+
+**Branch:** `codex/reception-overview`. Scope is presentation and derived summaries, no changes to stored records or API. Preserve the owner's next-env edit. **Verification:** web 42/42, workspace typecheck, lint (existing Pages warning), production build pass. Chromium confirms reception/secretary metrics and no banner at desktop, 390px and 320px, without overflow. No record writes. Published as [PR #19](https://github.com/Marguelgtz/nexus-med/pull/19), 15 files, based on #18; commit `9463685`. Open and unmerged. Dev is running at http://127.0.0.1:3000/recepcion; next action is owner walkthrough.
+
 ## Active objective — Contemporary UI refresh (2026-11-10)
 
 **Status:** Delivered in [PR #18](https://github.com/Marguelgtz/nexus-med/pull/18), nine files, based on PR #17; initial code commit `36880a0` followed by owner-directed glass component redesign. Open and unmerged.

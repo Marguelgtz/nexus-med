@@ -20,5 +20,5 @@ export async function ReceptionPage({ searchParams, administrative }: { searchPa
   const failed = [appointments, queue, patients, receipts].find(result => !result.ok);
   if (failed && !failed.ok) return <ErrorBanner message={failed.notFound ? 'No se pudo cargar el espacio de trabajo.' : failed.error} retryHref={administrative ? '/secretaria' : '/recepcion'} />;
   if (!appointments.ok || !queue.ok || !patients.ok || !receipts.ok) return null;
-  return <ReceptionWorkspace appointments={appointments.data} queue={queue.data} patients={patients.data} receipts={receipts.data} date={date} administrative={administrative} section={section} />;
+  return <ReceptionWorkspace asOf={new Date().toISOString()} appointments={appointments.data} queue={queue.data} patients={patients.data} receipts={receipts.data} date={date} administrative={administrative} section={section} />;
 }

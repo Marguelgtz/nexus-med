@@ -126,3 +126,8 @@ For consequential choices, present the smallest useful option set and one recomm
 ## D-045 — Local study attachments approved — 2026-11-10
 
 The owner explicitly selected local PDF/image storage. A received study has a patient, optional consultation and optional existing order, a title, optional study date and receipt note, received time, local attachments, and a separate explicit physician review. Both views share entry. External studies do not create fictional orders. Historical `StudyRequest.status` and result notes are not modified by receipt/review. Limit files to 5 per receipt, PDF/PNG/JPEG, 10 MiB each, 24 MiB combined, 25 MiB multipart transport. Validate signatures and associations in Hono. Store opaque file keys beside the SQLite database under `study-files/`, outside Git/public assets; retain files and records, no deletion or replacement UI in this slice. Authentication and network deployment remain deferred.
+
+
+## D-046 — Presentation without demonstration labels — 2026-11-10
+
+**Status:** Accepted, explicit owner instruction. Remove the persistent demonstration/fictional-data banner and the same footer from printable documents. This supersedes earlier requirements for visible demonstration labels only. Preserve exact seed fixtures, existing records, local-only operation and the synthetic-data development boundary. The owner also approves an operational reception overview derived from existing appointments and queue data; no invented activity or new clinical states.

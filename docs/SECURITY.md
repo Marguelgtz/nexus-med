@@ -4,7 +4,7 @@
 
 This is an experimental local prototype, not a production medical-record system and not a declaration of compliance with any law or certification standard.
 
-**Use synthetic data only.** Do not enter real patient names, contact details, medical histories, scans, reports, or other identifiable health information. Demo records must be unmistakably fictional and must be labeled in the UI.
+**Use synthetic data only.** Do not enter real patient names, contact details, medical histories, scans, reports, or other identifiable health information. D-046 removes demonstration labels from application chrome and printed documents by owner request; the local development data boundary still applies.
 
 ## Local development
 

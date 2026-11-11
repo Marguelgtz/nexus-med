@@ -45,7 +45,6 @@ function PrintedDocument({ document }: { document: MedicalDocument }) {
         <div className="medical-document-content report-body">{document.body}</div>
       )}
 
-      <footer className="medical-document-demo-mark">MODO DEMOSTRACIÓN — DATOS FICTICIOS</footer>
     </article>
   );
 }

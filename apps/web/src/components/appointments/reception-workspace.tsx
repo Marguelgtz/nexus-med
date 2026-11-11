@@ -10,12 +10,13 @@ import { EditPatientForm } from '../patients/edit-patient-form';
 import { PatientPicker } from '../patients/patient-picker';
 import { ReceivedStudies } from '../receipts/received-studies';
 import { AppointmentForm } from './appointment-form';
+import { ReceptionOverview } from './reception-overview';
 
 type Patient = { id: string; fullName: string };
 type Dialog = null | { kind: 'picker' } | { kind: 'new'; scheduleAfter: boolean } | { kind: 'appointment'; patient: Patient; initial?: Appointment } | { kind: 'patient'; patient: AdministrativePatient };
-export function ReceptionWorkspace({ appointments, queue, patients, receipts, date, administrative, section }: {
+export function ReceptionWorkspace({ appointments, queue, patients, receipts, date, administrative, section, asOf }: {
   appointments: Appointment[]; queue: Appointment[]; patients: PatientSummary[]; receipts: StudyReceipt[];
-  date: string; administrative: boolean; section: 'agenda' | 'pacientes' | 'estudios';
+  date: string; asOf: string; administrative: boolean; section: 'agenda' | 'pacientes' | 'estudios';
 }) {
   const router = useRouter();
   const [dialog, setDialog] = useState<Dialog>(null);
@@ -66,6 +67,7 @@ export function ReceptionWorkspace({ appointments, queue, patients, receipts, da
       {!filtered.length ? <div className="workspace-empty"><h2>No hay coincidencias</h2><p>Revisa el nombre o registra un nuevo paciente.</p></div> : null}
     </section> : <>
       <div className="workspace-toolbar"><form action={base} className="workspace-date"><input type="hidden" name="seccion" value="agenda" /><label htmlFor="reception-date">Fecha de agenda</label><input id="reception-date" name="fecha" type="date" defaultValue={date} required /><button className="btn btn-secondary btn-sm">Ver</button></form><div className="actions"><Link href={`${base}?fecha=${addDays(date, -1)}`} className="btn btn-ghost btn-sm" aria-label="Día anterior">‹</Link><Link href={base} className="btn btn-ghost btn-sm">Hoy</Link><Link href={`${base}?fecha=${addDays(date, 1)}`} className="btn btn-ghost btn-sm" aria-label="Día siguiente">›</Link><button className="btn btn-secondary btn-sm" onClick={refresh} disabled={disabled}>{refreshing ? 'Actualizando…' : 'Actualizar'}</button></div></div>
+      <ReceptionOverview appointments={appointments} queue={queue} asOf={asOf} />
       <div className="reception-grid"><section className="reception-agenda" aria-labelledby="agenda-title"><div className="card-header"><h2 id="agenda-title">{formatDayLong(date)}</h2><span className="muted">{appointments.length} {appointments.length === 1 ? 'cita' : 'citas'}</span></div>
         {!appointments.length ? <div className="workspace-empty"><h3>La agenda está libre</h3><p className="muted">Puedes programar una cita o registrar una atención sin cita previa.</p><button className="btn btn-secondary" onClick={() => setDialog({ kind: 'picker' })}>Agendar paciente</button></div> : <ul className="reception-appointments">{appointments.map(a => <li key={a.id} className={a.status === 'cancelled' ? 'appointment-cancelled' : ''}><div className="reception-time"><strong>{formatTime(a.startAt)}</strong><span>{a.durationMinutes} min</span></div><div className="reception-person"><strong>{a.patient.fullName}</strong><p className="field-hint">{APPOINTMENT_TYPE_LABELS[a.type]} · {a.status === 'completed' ? 'Completada' : a.status === 'cancelled' ? 'Cancelada' : a.attentionStartedAt ? 'En atención' : a.arrivedAt ? 'En espera' : 'Por llegar'}</p>{appointmentActions(a)}</div></li>)}</ul>}
       </section><aside className="reception-queue" aria-labelledby="queue-title"><div className="card-header"><h2 id="queue-title">Recepción compartida</h2><span className="badge badge-edited">{waiting.length} en espera</span></div><p className="field-hint">Llegadas pendientes de finalizar, incluidas las de otra fecha. Se actualiza cada 15 segundos.</p>
