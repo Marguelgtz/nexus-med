@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect } from 'react';
+import { Icon, type IconName } from '../icon';
 
 /** Patient-aware navigation is shown only after a patient route is selected. */
 export function PatientWorkflowNav() {
@@ -45,7 +46,7 @@ export function PatientWorkflowNav() {
       aria-current={item.active ? 'page' : undefined}
       className={item.active ? 'active' : undefined}
     >
-      {item.label}
+      <Icon name={({ Resumen: 'grid', Consultas: 'activity', Citas: 'calendar', Estudios: 'document', 'Recetas e informes': 'document' } as Record<string, IconName>)[ item.label] ?? 'grid'} />{item.label}
     </Link>
   ));
   const activeSection = links.find((item) => item.active)?.label ?? 'Paciente';

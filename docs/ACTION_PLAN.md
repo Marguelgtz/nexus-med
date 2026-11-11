@@ -6,6 +6,18 @@
 **Primary agent:** Hermes Agent  
 **Current implementation state (updated 2026-11-10):** O-008 secretary/reception/local study receipt is implemented on `codex/secretary-workspace`, based on UI PR #9. The original 59-file PR #10 is closed as superseded by a seven-layer review stack: #11 data/contracts (11 files), #12 reception API (8), #13 receipt API/storage (6), #14 patient action dialogs (9), #15 reception UI (10), #16 received-study UI and polling fix (6), and #17 docs/evidence (9). Each layer is based on the previous layer; #11 is based on PR #9. Original branch/history is retained, no PR is merged. Preserve the owner's pre-existing `apps/web/next-env.d.ts` change.
 
+## Active objective — Contemporary UI refresh (2026-11-10)
+
+**Status:** Delivered in [PR #18](https://github.com/Marguelgtz/nexus-med/pull/18), nine files, based on PR #17; initial code commit `36880a0` followed by owner-directed glass component redesign. Open and unmerged.
+
+**Outcome:** Redesign shared components with translucent surfaces, floating navigation, iconography, identity-based patient rows, integrated controls and glass dialogs while preserving existing layout, navigation and clinical workflows.
+
+**Next action:** Owner visual review at http://127.0.0.1:3000/patients and /secretaria; dev remains running.
+
+**Sequence:** (1) Record the visual direction in UI_SPEC. (2) Update shared tokens, shell, controls, panels and dialog styling. (3) Check type/lint/build and desktop/mobile rendering; record results and commit a focused PR under 15 files.
+
+**Scope:** Presentation only, on `codex/contemporary-ui-refresh`, based on PR #17. Preserve the owner's next-env edit. Acceptance: clear contrast and keyboard focus, consistent components across physician/secretary views, no horizontal mobile overflow and unchanged print layout. **Verification:** workspace typecheck and lint pass (existing Pages warning); production build passes outside the subprocess-restricted sandbox. Chromium inspected registry, patient overview and secretary at 1440px, plus registry/secretary at 390px, all with viewport-width scroll bounds. Startup had no pending migrations and seed created zero records. Additional Chromium checks cover calendar, consultation entry, 320px registry and an opened native patient dialog with input focus. A two-pixel compact-header overflow was corrected and measured again with no elements beyond 320px. Production build and typecheck pass after component changes; lint passes with its existing warning. No clinical writes or test suites were run for this presentation-only change.
+
 ## Active objective — Secretary workspace (2026-11-10)
 
 **Status:** Implemented and verified on `codex/secretary-workspace`, based on open UI PR #9. Source commits `a16857b`, `db417a8`, and review fix `ae901ef`; preserve the `next-env.d.ts` edit. Published as [PRs #11–#17](https://github.com/Marguelgtz/nexus-med/pull/11) in a stack of 6–11 files each. Original PR #10 was closed after the replacement stack was published; no PR is merged.
