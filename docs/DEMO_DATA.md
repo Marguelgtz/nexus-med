@@ -14,7 +14,7 @@ This is a development fixture dataset, not medical guidance and not a substitute
 
 Seed at least:
 
-- **7 patients** with plausible fictional Spanish names. The persistent demo banner identifies the entire dataset as synthetic without making every patient row look like a placeholder.
+- **7 patients** with plausible synthetic Spanish names. The local development boundary and this document identify the dataset as synthetic; the application has no visible demo banner (D-046).
 - **9 encounters** distributed across at least four patients.
 - **9 appointments**: 4 fixed past appointments (3 completed — two linked to demo encounters, one `procedimiento` — and 1 cancelled) plus 5 upcoming appointments anchored to the first seed run (see Section 3).
 - **2 study requests** attached to `demo-encounter-002b` / `demo-patient-002`: one `ordered`, one `reviewed` with a fictional result note.
@@ -88,15 +88,15 @@ The fixture lines use stable IDs and positions. Document and line records are cr
 - Keep the text in Spanish (Mexico).
 - Do not put real patient data in screenshots, logs, test snapshots, agent memory, or commit messages.
 
-## 5. Visible demo state
+## 5. Seeded first-run state
 
-- Show a persistent banner in the application shell: **MODO DEMOSTRACIÓN — TODOS LOS DATOS SON FICTICIOS**.
-- Patient display names and identifiers should look natural; the persistent banner and explicit fictional labels in note/document examples identify demo content.
+- Do not show a demonstration or fictional-data banner in the application (D-046).
+- Patient display names and identifiers should look natural; the development environment and this document establish that the seed data is synthetic.
 - The registry should show seeded records immediately.
 - The root route `/` should redirect to `/patients`.
 - Empty states must still be reachable, including a patient with no encounters.
 
-The UI should make it impossible to mistake the seeded dataset for real patient data.
+The application should present the seeded records without adding demonstration labels. Preserve the exact checked-in fixture and the local synthetic-data boundary.
 
 ## 6. Seed implementation
 
@@ -112,7 +112,7 @@ Required behavior:
 6. New demo fixture records may be added in later revisions, but existing records should not be rewritten automatically.
 7. Normal startup runs migrations first, then the seed command, then starts both services.
 
-One owner-approved exception updates the seven untouched placeholder patient names and `DEMO-00x` identifiers once. Its migration matches each stable fixture ID plus both original placeholder values, so renamed or otherwise edited patient rows and all user-created rows remain unchanged. The fixture seeds the same plausible fictional display names on clean installs. Clinical note text keeps its fictional-content markers, and the persistent banner stays visible.
+One owner-approved exception updates the seven untouched placeholder patient names and `DEMO-00x` identifiers once. Its migration matches each stable fixture ID plus both original placeholder values, so renamed or otherwise edited patient rows and all user-created rows remain unchanged. The fixture seeds the same plausible fictional display names on clean installs. Per D-046, preserve existing fixture and stored note text while omitting application-level demo labels.
 
 A destructive reset belongs only in an explicit local-only command (`npm run db:reset`) and must never run as part of normal startup.
 
@@ -130,7 +130,7 @@ Expected startup sequence:
 2. Apply pending Prisma migrations to local SQLite.
 3. Run the idempotent demo seed explicitly.
 4. Start Hono and Next.js together.
-5. Print both local URLs and the demo mode status.
+5. Print both local URLs; do not print a demo-mode or fictional-data label.
 
 Open `http://127.0.0.1:3000` and land on the populated patient registry.
 
@@ -140,7 +140,7 @@ After the developer creates or edits local patients/encounters:
 
 - Stopping and restarting the application must preserve all records.
 - Running the seed again must not reset, replace, or duplicate records.
-- The demo banner remains enabled for the prototype.
+- The seeded synthetic records remain available without a visible demo banner (D-046).
 - A database reset is explicit and destructive; provide a clear warning and require an explicit confirmation flag or interactive confirmation.
 
 ## 9. Seed verification

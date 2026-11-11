@@ -15,7 +15,7 @@
 - The patient registry is the default working screen.
 - On first run, six active seeded patients are visible; the one archived fixture is accessible through the archived view/filter.
 - Implemented primary navigation: **Pacientes** and **Calendario**, with contextual patient/encounter/appointment actions.
-- Show a persistent **MODO DEMOSTRACIÓN — DATOS FICTICIOS** banner while demo mode is enabled.
+- Do not show demonstration or fictional-data labels in the application (D-046); the synthetic-data restriction remains a development boundary.
 - Keep the active patient's name and internal identifier visible on patient-specific screens.
 
 ## 2. Find or create a patient

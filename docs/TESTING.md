@@ -148,7 +148,7 @@ Before product UI implementation, verify:
 2. Run `npm run dev`.
 3. Confirm Next.js and Hono start and print their local URLs.
 4. Open `http://127.0.0.1:3000`; confirm redirect to a populated `/patients` registry.
-5. Confirm the demo-mode banner is visible.
+5. Confirm the populated registry opens without a demonstration or fictional-data label (D-046).
 6. Search for a synthetic patient and open the overview.
 7. Create a patient and verify it persists.
 8. Create an encounter for that patient and verify it appears in the correct timeline.

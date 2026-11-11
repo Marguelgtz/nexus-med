@@ -170,7 +170,7 @@ At a phase boundary, reconcile the work packages for the next phase using actual
 
 **T-017 — First-run demo presentation**
 - Redirect `/` to `/patients`.
-- Display a persistent Spanish demo warning.
+- Show the populated synthetic registry without a visible demo warning or fictional-data label (superseded by D-046).
 - Confirm the exact fixture appears in active/archive views and patient timelines.
 
 **T-018 — Startup and persistence verification**
@@ -227,7 +227,7 @@ Acceptance: one or more study requests can be entered from an encounter; patient
 **NX-004 — Prescriptions and medical reports**
 - `MedicalDocument` (`kind` = `prescription`/`report`) + `PrescriptionLine` (medication, dose, route, frequency, duration, instructions — every value doctor-entered) (D-028); linked to a patient and optionally to an encounter; no stored files, PDFs, or uploads.
 - Hono: create, retrieve, and update supported document content; shared validation/DTOs.
-- Web: prescription form with repeatable lines; report form with a doctor-written narrative plus existing patient/encounter details only; patient overview “Recetas e informes” section so documents can be reopened; dedicated print view using ordinary HTML + `@media print` (standard page, sensible page breaks, navigation/buttons/app controls excluded, demo marker on the paper). Browser print dialog for print/save-as-PDF.
+- Web: prescription form with repeatable lines; report form with a doctor-written narrative plus existing patient/encounter details only; patient overview “Recetas e informes” section so documents can be reopened; dedicated print view using ordinary HTML + `@media print` (standard page, sensible page breaks, navigation/buttons/app controls excluded, no fictional-data marker per D-046). Browser print dialog for print/save-as-PDF.
 - Content rules: the doctor authors all clinical content — no medication catalog, dose calculation, interaction checks, or clinical conclusions; no signature, legal-validity, or official-prescription claims; no invented doctor identity or clinic details.
 
 Acceptance: doctor-authored content persists and reopens from patient context; patient/encounter links are correct; prescription lines are repeatable; print output is legible and excludes app controls; print styling adds no dependency; seeded records are fictional and idempotent.
