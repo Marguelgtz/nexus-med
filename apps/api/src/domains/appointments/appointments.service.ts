@@ -285,17 +285,32 @@ async function requireEncounterForPatient(encounterId: string, patientId: string
 export async function updateReception(id: string, input: ReceptionInput): Promise<Appointment> {
   await findAppointment(id);
   const now = new Date();
-  const result = await prisma.appointment.updateMany({
-    where: {
-      id, status: 'scheduled',
-      ...(input.action === 'arrive' ? { arrivedAt: null } : { arrivedAt: { not: null } }),
-      attentionStartedAt: null,
-    },
-    data: input.action === 'arrive' ? { arrivedAt: now }
-      : input.action === 'start' ? { attentionStartedAt: now }
-      : { arrivedAt: null },
-  });
-  if (result.count !== 1) throw new ConflictError('La recepción cambió o la cita ya no está programada. Actualiza la lista.');
+  let changed = 0;
+  if (input.action === 'start') {
+    const startedBeforeArrival = await prisma.appointment.updateMany({
+      where: { id, status: 'scheduled', arrivedAt: null, attentionStartedAt: null },
+      data: { arrivedAt: now, attentionStartedAt: now },
+    });
+    changed = startedBeforeArrival.count;
+    if (changed === 0) {
+      const startedAfterArrival = await prisma.appointment.updateMany({
+        where: { id, status: 'scheduled', arrivedAt: { not: null }, attentionStartedAt: null },
+        data: { attentionStartedAt: now },
+      });
+      changed = startedAfterArrival.count;
+    }
+  } else {
+    const result = await prisma.appointment.updateMany({
+      where: {
+        id, status: 'scheduled',
+        ...(input.action === 'arrive' ? { arrivedAt: null } : { arrivedAt: { not: null } }),
+        attentionStartedAt: null,
+      },
+      data: input.action === 'arrive' ? { arrivedAt: now } : { arrivedAt: null },
+    });
+    changed = result.count;
+  }
+  if (changed !== 1) throw new ConflictError('La recepción cambió o la cita ya no está programada. Actualiza la lista.');
   return toAppointment(await findAppointment(id));
 }
 

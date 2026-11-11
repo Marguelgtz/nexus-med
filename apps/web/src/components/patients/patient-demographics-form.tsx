@@ -22,11 +22,11 @@ export type DemographicsProps = {
   dialogTitle?: string;
 };
 const FIELDS = [
-  { key: 'fullName', label: 'Nombre completo', type: 'text', required: true },
+  { key: 'fullName', label: 'Nombre completo', type: 'text', required: true, placeholder: 'Ej. Ana López' },
   { key: 'dateOfBirth', label: 'Fecha de nacimiento', type: 'date' },
-  { key: 'phone', label: 'Teléfono', type: 'tel' },
-  { key: 'email', label: 'Correo electrónico', type: 'email' },
-  { key: 'externalIdentifier', label: 'Identificador externo', type: 'text' },
+  { key: 'phone', label: 'Teléfono', type: 'tel', placeholder: 'Ej. 55 1234 5678' },
+  { key: 'email', label: 'Correo electrónico', type: 'email', placeholder: 'Ej. nombre@correo.com' },
+  { key: 'externalIdentifier', label: 'Identificador externo', type: 'text', placeholder: 'Ej. NX-001' },
 ] as const;
 
 /** Shared by registration, demographic edits, and administrative dialogs. */
@@ -77,6 +77,7 @@ export function PatientDemographicsForm({ patientId, initial, prefillName, exist
       {FIELDS.map(field => <div className="field" key={field.key}>
         <label htmlFor={`demographic-${field.key}`}>{field.label}{'required' in field ? ' *' : ''}</label>
         <input id={`demographic-${field.key}`} name={field.key} type={field.type} value={values[field.key]} disabled={saving}
+          placeholder={'placeholder' in field ? field.placeholder : undefined}
           aria-invalid={errors[field.key]?.length ? true : undefined} aria-describedby={errors[field.key]?.length ? `${field.key}-error` : undefined}
           onChange={e => { setValues(v => ({ ...v, [field.key]: e.target.value })); setErrors(v => ({ ...v, [field.key]: [] })); }} />
         {errors[field.key]?.length ? <p className="field-error" id={`${field.key}-error`}>{errors[field.key]?.[0]}</p> : null}

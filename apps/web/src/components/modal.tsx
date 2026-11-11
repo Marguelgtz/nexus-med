@@ -47,7 +47,7 @@ export function Modal({ title, description, onClose, closeDisabled = false, chil
       onCancel={(event) => { event.preventDefault(); if (!closeDisabled) onClose(); }}>
       <header className="app-dialog-header">
         <h2 id={titleId}>{title}</h2>
-        <button type="button" className="btn btn-ghost btn-sm" disabled={closeDisabled} onClick={onClose} aria-label="Cerrar diálogo">Cerrar</button>
+        <button type="button" className="btn btn-ghost btn-icon app-dialog-close" disabled={closeDisabled} onClick={onClose} aria-label="Cerrar diálogo" title="Cerrar">×</button>
       </header>
       <div className="app-dialog-content">
         {description ? <p className="field-hint" id={descriptionId}>{description}</p> : null}

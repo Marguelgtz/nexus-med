@@ -36,7 +36,7 @@ export function ReceivedStudies({ receipts, patients, administrative = false, fi
   const refreshInProgress = useRef(false);
   const [filter, setFilter] = useState<'pending' | 'all'>('pending');
   const [query, setQuery] = useState('');
-  const [picker, setPicker] = useState(false);
+  const [pickerAnchor, setPickerAnchor] = useState<HTMLElement | null>(null);
   const [patient, setPatient] = useState<{ id: string; fullName: string } | null>(null);
   const [review, setReview] = useState<StudyReceipt | null>(null);
   const refreshReceipts = useCallback(async () => {
@@ -60,12 +60,12 @@ export function ReceivedStudies({ receipts, patients, administrative = false, fi
     }
   }, [administrative, fixedPatient, initialEncounterId]);
   useEffect(() => {
-    if (picker || patient || review) return;
+    if (pickerAnchor || patient || review) return;
     const refreshIfVisible = () => { if (document.visibilityState === 'visible') void refreshReceipts(); };
     const timer = window.setInterval(refreshIfVisible, SHARED_REFRESH_INTERVAL_MS);
     window.addEventListener('focus', refreshIfVisible);
     return () => { window.clearInterval(timer); window.removeEventListener('focus', refreshIfVisible); };
-  }, [picker, patient, review, refreshReceipts]);
+  }, [pickerAnchor, patient, review, refreshReceipts]);
   function saveReceipt(receipt: StudyReceipt) {
     if (fixedPatient && receipt.patient.id !== fixedPatient.id) return;
     if (initialEncounterId && receipt.encounter?.id !== initialEncounterId) return;
@@ -75,7 +75,7 @@ export function ReceivedStudies({ receipts, patients, administrative = false, fi
   const pending = receiptRows.filter(row => !row.reviewedAt).length;
   const rows = receiptRows.filter(row => (filter === 'all' || !row.reviewedAt) && `${row.title} ${row.patient.fullName}`.toLocaleLowerCase().includes(query.toLocaleLowerCase()));
   return <section className="received-studies" aria-label="Estudios">
-      <div className="page-head"><div><h2>Estudios</h2><p className="muted">{pending} pendiente{pending !== 1 ? 's' : ''} de revisión médica</p><p className="sync-status">Se actualiza cada 30 segundos{lastUpdatedAt ? ` · Última consulta: ${formatTime(lastUpdatedAt)}` : ''}</p></div><div className="actions"><button className="btn btn-primary" onClick={() => fixedPatient ? setPatient(fixedPatient) : setPicker(true)}>Agregar estudio</button><button className="btn btn-ghost btn-sm btn-icon" type="button" disabled={refreshing} onClick={() => void refreshReceipts()} aria-label={refreshing ? 'Actualizando estudios' : 'Actualizar estudios'} title="Actualizar ahora"><Icon name="refresh" /><span className="sr-only">{refreshing ? 'Actualizando…' : 'Actualizar estudios'}</span></button></div></div>
+      <div className="page-head"><div><h2>Estudios</h2><p className="muted">{pending} pendiente{pending !== 1 ? 's' : ''} de revisión médica</p><p className="sync-status">Se actualiza cada 30 segundos{lastUpdatedAt ? ` · Última consulta: ${formatTime(lastUpdatedAt)}` : ''}</p></div><div className="actions"><button className="btn btn-primary" onClick={event => fixedPatient ? setPatient(fixedPatient) : setPickerAnchor(event.currentTarget)}>Agregar estudio</button><button className="btn btn-ghost btn-sm btn-icon" type="button" disabled={refreshing} onClick={() => void refreshReceipts()} aria-label={refreshing ? 'Actualizando estudios' : 'Actualizar estudios'} title="Actualizar ahora"><Icon name="refresh" /><span className="sr-only">{refreshing ? 'Actualizando…' : 'Actualizar estudios'}</span></button></div></div>
     {refreshError ? <p className="error" role="alert">{refreshError} <button className="btn btn-ghost btn-sm" onClick={() => void refreshReceipts()}>Reintentar</button></p> : null}
     <div className="workspace-toolbar"><div className="segmented" role="group" aria-label="Filtrar estudios"><button className={filter === 'pending' ? 'active' : ''} aria-pressed={filter === 'pending'} onClick={() => setFilter('pending')}>Pendientes ({pending})</button><button className={filter === 'all' ? 'active' : ''} aria-pressed={filter === 'all'} onClick={() => setFilter('all')}>Todos</button></div><div className="field"><label htmlFor="receipt-search">Buscar estudio o paciente</label><input type="search" id="receipt-search" value={query} onChange={e => setQuery(e.target.value)} /></div></div>
     {!rows.length ? <div className="workspace-empty"><h3>{query ? 'Sin coincidencias' : filter === 'pending' ? 'No hay estudios pendientes de revisión' : 'Aún no hay estudios'}</h3><p className="muted">Los archivos se conservan en el expediente del paciente.</p></div> : <ul className="receipt-list">{rows.map(row => <li key={row.id}>
@@ -87,7 +87,7 @@ export function ReceivedStudies({ receipts, patients, administrative = false, fi
       {!administrative && row.reviewNote ? <p className="receipt-note"><strong>Nota del médico: </strong>{row.reviewNote}</p> : null}
       {row.reviewedAt ? <p className="field-hint">Revisión registrada: {formatDateTime(row.reviewedAt)}</p> : !administrative ? <button className="btn btn-ghost" onClick={() => setReview(row)}>Registrar revisión</button> : null}
     </li>)}</ul>}
-    {picker ? <PatientPicker title="Agregar estudio: elegir paciente" patients={patients} onClose={() => setPicker(false)} onSelect={selected => { setPicker(false); setPatient(selected); }} /> : null}
+    {pickerAnchor ? <PatientPicker title="Agregar estudio" patients={patients} anchor={pickerAnchor} searchContacts={administrative} onClose={() => setPickerAnchor(null)} onSelect={selected => { setPickerAnchor(null); setPatient(selected); }} /> : null}
     {patient ? <ReceiptForm patient={patient} initialEncounterId={initialEncounterId} onClose={() => setPatient(null)} onSaved={saveReceipt} /> : null}
     {review ? <ReviewDialog receipt={review} onClose={() => setReview(null)} onSaved={saveReceipt} /> : null}
   </section>;
