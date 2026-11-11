@@ -78,7 +78,7 @@ const summarySelect = {
   updatedAt: true,
 } as const;
 
-export async function listPatients(query: PatientListQuery): Promise<PatientSummary[]> {
+function patientWhere(query: PatientListQuery) {
   const archived = query.status === 'archived' ? true : query.status === 'active' ? false : undefined;
   const search = query.q
     ? {
@@ -90,12 +90,28 @@ export async function listPatients(query: PatientListQuery): Promise<PatientSumm
       }
     : {};
 
+  return { ...(archived === undefined ? {} : { isArchived: archived }), ...search };
+}
+
+export async function listPatients(query: PatientListQuery): Promise<PatientSummary[]> {
   const rows = await prisma.patient.findMany({
-    where: { ...(archived === undefined ? {} : { isArchived: archived }), ...search },
+    where: patientWhere(query),
     orderBy: { fullName: 'asc' },
     select: summarySelect,
   });
   return rows.map(toSummary);
+}
+
+/** Administrative list projection: contact details without clinical fields. */
+export async function listAdministrativePatients(
+  query: PatientListQuery,
+): Promise<AdministrativePatient[]> {
+  const rows = await prisma.patient.findMany({
+    where: patientWhere(query),
+    orderBy: { fullName: 'asc' },
+    select: { ...summarySelect, phone: true, email: true },
+  });
+  return rows.map(row => ({ ...toSummary(row), phone: row.phone, email: row.email }));
 }
 
 export async function getPatient(patientId: string): Promise<PatientDetail> {

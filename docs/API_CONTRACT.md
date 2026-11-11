@@ -58,6 +58,10 @@ Initial query parameters:
 
 Response: a collection of patient summary DTOs. Keep the response small and include only fields needed by the registry.
 
+### `GET /api/administrative/patients`
+
+Uses the same `q` and `status` query parameters as `GET /api/patients`, and returns administrative patient DTOs with phone and email in addition to summary fields. It never includes medical background or encounter content. The secretary workspace uses this projection to show contact information on patient cards without one request per patient.
+
 ### `POST /api/patients`
 
 Creates a patient.
