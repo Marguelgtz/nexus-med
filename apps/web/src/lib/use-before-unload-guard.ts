@@ -2,6 +2,13 @@
 
 import { useEffect } from 'react';
 
+const PROGRAMMATIC_NAVIGATION = 'nexus-med:before-navigation';
+
+/** Programmatic navigation must use the same mounted dirty-form guard as links. */
+export function confirmInAppNavigation(): boolean {
+  return window.dispatchEvent(new Event(PROGRAMMATIC_NAVIGATION, { cancelable: true }));
+}
+
 /**
  * Protect unsaved clinical text from page unloads, in-app links, and browser
  * history navigation. The browser controls the beforeunload wording; local
@@ -69,11 +76,16 @@ export function useBeforeUnloadGuard(
       }
     };
 
+    const onProgrammaticNavigation = (event: Event) => {
+      if (!event.defaultPrevented && !window.confirm(message)) event.preventDefault();
+    };
+    window.addEventListener(PROGRAMMATIC_NAVIGATION, onProgrammaticNavigation);
     window.addEventListener('beforeunload', handler);
     document.addEventListener('click', onDocumentClick, true);
     window.addEventListener('popstate', onPopState, true);
 
     return () => {
+      window.removeEventListener(PROGRAMMATIC_NAVIGATION, onProgrammaticNavigation);
       window.removeEventListener('beforeunload', handler);
       document.removeEventListener('click', onDocumentClick, true);
       window.removeEventListener('popstate', onPopState, true);

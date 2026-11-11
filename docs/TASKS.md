@@ -314,3 +314,14 @@ Sequential work packages:
 - **O007-3 — Verification and handoff:** verify critical workflows, keyboard/reflow/states/print; compare real screenshots with PR #8; synchronize canonical conventions and Figma boundaries; publish focused commits and a dependent UI PR without merging.
 
 Dependencies: PR #8 on PR #7; implementation follows research. Detailed execution/evidence belongs in `ACTION_PLAN.md` / `TESTING.md`, not this catalog. Acceptance: high-impact audit findings addressed, no known blocking workflow regression, automated gates and representative browser checks pass, screenshots inspected, reviewable pushed implementation with explicit limits. Figma refinement remains a later owner-directed mission.
+
+## 9. O-008 — Local secretary and received-study workflow (owner-approved 2026-11-10)
+
+**Outcome:** Administrative secretary presentation, shared reception and locally received studies without authentication. Depends on O-007's existing shell/dialog/forms and API foundation.
+
+1. **Reception foundation:** additive nullable appointment markers, validated atomic transitions, administrative patient projection, isolated migration/transition tests.
+2. **Administrative workspace:** day agenda, patient/contact registration/edit, scheduling/rescheduling/cancellation and shared physician queue; short tasks in reusable modals.
+3. **Study receipt:** local PDF/image attachments, required patient and optional consultation/order, shared entry, physician inbox/review and patient-level display. Receipt/review remain separate from original orders.
+4. **Delivery:** full existing suites, typecheck/lint/build, focused desktop/mobile and persistence/failure checks, synchronized docs and reviewable unmerged feature branch.
+
+**Acceptance:** Both views share persisted records. Secretary presentation excludes clinical narrative/review notes. Invalid/duplicate reception transitions and cross-patient study associations fail safely. File sizes/types/content are bounded, storage stays outside Git/public paths, and upload failure cannot look successful. Existing migrations/fixtures/clinical workflows persist. View selection is not authorization. Runtime remains local/synthetic-only.
