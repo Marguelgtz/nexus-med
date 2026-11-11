@@ -44,14 +44,14 @@ export default async function NewAppointmentPage({
         fullName={patient.fullName}
         externalIdentifier={patient.externalIdentifier}
         isArchived={patient.isArchived}
-        backHref={returnTo ?? `/patients/${patient.id}/citas`}
-        backLabel={returnTo ? 'Volver a consulta' : 'Volver a citas'}
+        backHref={returnTo ?? `/patients/${patient.id}/citas-y-consultas`}
+        backLabel={returnTo ? 'Volver a consulta' : 'Citas y consultas'}
       />
       <div className="page-head">
         <h1>Nueva cita — {patient.fullName}</h1>
         <div className="actions">
-          <Link href={returnTo ?? `/patients/${id}/citas`} className="btn btn-secondary">
-            {returnTo ? 'Volver a consulta' : 'Volver a citas'}
+          <Link href={returnTo ?? `/patients/${id}/citas-y-consultas`} className="btn btn-secondary">
+            {returnTo ? 'Volver a consulta' : 'Citas y consultas'}
           </Link>
         </div>
       </div>

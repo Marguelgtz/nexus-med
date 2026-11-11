@@ -54,7 +54,7 @@ export default async function PatientPage({ params }: { params: Promise<{ id: st
           <details className="patient-more-actions">
             <summary className="btn btn-ghost">Más acciones</summary>
             <div className="patient-more-actions-menu">
-              <Link href={`/patients/${patient.id}/citas`}>Ver citas</Link>
+              <Link href={`/patients/${patient.id}/citas-y-consultas`}>Ver citas y consultas</Link>
               {!patient.isArchived ? <Link href={`/patients/${patient.id}/recetas/nueva`}>Nueva receta</Link> : null}
               {!patient.isArchived ? <Link href={`/patients/${patient.id}/informes/nueva`}>Nuevo informe</Link> : null}
               <PatientTaskButton patient={patient} action="demographics" label="Editar datos" className="btn btn-ghost" />

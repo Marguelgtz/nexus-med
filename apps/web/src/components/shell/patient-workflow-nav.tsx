@@ -16,7 +16,7 @@ export function PatientWorkflowNav() {
     if (area !== 'patients' || !patientId || patientId === 'new' || pathname !== patientHref) return;
     const redirectLegacyAnchor = () => {
       const hash = window.location.hash;
-      const destination = hash === '#patient-history' ? '/consultas'
+      const destination = hash === '#patient-history' ? '/citas-y-consultas'
         : hash === '#patient-studies' ? '/estudios'
         : hash === '#patient-documents' ? '/documentos'
 
@@ -28,14 +28,13 @@ export function PatientWorkflowNav() {
     return () => window.removeEventListener('hashchange', redirectLegacyAnchor);
   }, [pathname, patientHref, patientId, area, router]);
   if (area !== 'patients' || !patientId || patientId === 'new') return null;
-  const onConsultation = pathname.startsWith(`${patientHref}/consultas`);
-  const onAppointment = pathname.startsWith(`${patientHref}/citas`);
+  const activityHref = `${patientHref}/citas-y-consultas`;
+  const onActivity = pathname === activityHref || pathname.startsWith(`${patientHref}/citas/`) || pathname.startsWith(`${patientHref}/consultas`);
   const onDocument = pathname === `${patientHref}/documentos` || pathname.startsWith(`${patientHref}/recetas`) || pathname.startsWith(`${patientHref}/informes`);
   const onNewConsultation = pathname === `${patientHref}/consultas/nueva`;
   const links = [
     { href: patientHref, label: 'Resumen', active: pathname === patientHref || pathname === `${patientHref}/antecedentes` || pathname === `${patientHref}/editar` },
-    { href: `${patientHref}/consultas`, label: 'Consultas', active: onConsultation },
-    { href: `${patientHref}/citas`, label: 'Citas', active: onAppointment },
+    { href: activityHref, label: 'Citas y consultas', active: onActivity },
     { href: `${patientHref}/estudios`, label: 'Estudios', active: pathname === `${patientHref}/estudios` },
     { href: `${patientHref}/documentos`, label: 'Recetas e informes', active: onDocument },
   ];
@@ -46,14 +45,14 @@ export function PatientWorkflowNav() {
       aria-current={item.active ? 'page' : undefined}
       className={item.active ? 'active' : undefined}
     >
-      <Icon name={({ Resumen: 'grid', Consultas: 'activity', Citas: 'calendar', Estudios: 'document', 'Recetas e informes': 'document' } as Record<string, IconName>)[ item.label] ?? 'grid'} />{item.label}
+      <Icon name={({ Resumen: 'grid', 'Citas y consultas': 'activity', Estudios: 'document', 'Recetas e informes': 'document' } as Record<string, IconName>)[ item.label] ?? 'grid'} />{item.label}
     </Link>
   ));
   const activeSection = links.find((item) => item.active)?.label ?? 'Paciente';
 
   return (
     <nav className="patient-workflow-nav" aria-label="Flujos del paciente">
-      {pathname !== patientHref && pathname !== `${patientHref}/consultas` && !onNewConsultation ? (
+      {pathname !== patientHref && pathname !== activityHref && !onNewConsultation ? (
         <Link href={`${patientHref}/consultas/nueva`} className="btn btn-primary patient-nav-start">
           Nueva consulta
         </Link>
