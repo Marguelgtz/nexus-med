@@ -325,3 +325,32 @@ Dependencies: PR #8 on PR #7; implementation follows research. Detailed executio
 4. **Delivery:** full existing suites, typecheck/lint/build, focused desktop/mobile and persistence/failure checks, synchronized docs and reviewable unmerged feature branch.
 
 **Acceptance:** Both views share persisted records. Secretary presentation excludes clinical narrative/review notes. Invalid/duplicate reception transitions and cross-patient study associations fail safely. File sizes/types/content are bounded, storage stays outside Git/public paths, and upload failure cannot look successful. Existing migrations/fixtures/clinical workflows persist. View selection is not authorization. Runtime remains local/synthetic-only.
+
+## 10. O-009 — Reception and patient-study UX refinement (owner-approved 2026-11-11)
+
+**Outcome:** Reduce clicks in reception, fix the patient edit dialog, unify patient-level scheduling/history navigation, and provide useful study details and examples without displaying fictional-data labels.
+
+### Work packages
+
+**O009-1 — Reception and patient selection**
+- Apply agenda date changes immediately; show date-accurate metric labels and clearer queue/status wording.
+- Make physician `Iniciar consulta` atomically start an unarrived scheduled visit; keep arrival registration as a secretary action.
+- Add physician `Nueva consulta` from reception, selecting an existing patient or registering one and continuing directly into note entry.
+- Use a compact anchored patient-search panel with explicit result selection, search-only results, and a top-centered `Registrar nuevo paciente` action. Add phone/email field placeholders.
+- Make full edit dialogs scroll internally with a persistent accessible close button.
+
+**O009-2 — Unified patient activity**
+- Replace separate patient `Citas` and `Consultas` navigation items with one `Citas y consultas` view.
+- Show upcoming appointments separately from a chronological history of appointments and consultations; keep row types, links, status transitions and schemas distinct.
+- Preserve old list URLs through redirects; leave patient summary unchanged.
+
+**O009-3 — Study detail and safe examples**
+- Make patient study requests open a detail page with order metadata, clinician-authored notes and linked received files.
+- Allow the existing request to remain unchanged when a receipt is attached; keep physician review explicit.
+- Seed an idempotent current-day received-study example with a local attachment. Remove explicit fictitious/demo note markers only from exact checked-in fixture values, preserving user-edited records through a conditional data migration.
+
+**O009-4 — Integrated verification and delivery**
+- Verify role-specific reception flows, form recovery/close behavior, patient activity navigation, study detail/file viewing, seed idempotency and fixture migration preservation.
+- Publish coherent dependent PRs, each capped at 15 changed files where practical; leave all feature PRs open for owner review.
+
+**Acceptance:** Reception actions match role; date selection needs no `Ver` action; patient selection never shows the full directory before search; the new-consultation path preserves context; appointments and consultations are easier to reach without merging their domain meaning; every study row opens; the example appears for the current local date and survives restart without duplication; no note-fictitious label remains in seeded encounters; user edits not matching the exact fixture remain intact.

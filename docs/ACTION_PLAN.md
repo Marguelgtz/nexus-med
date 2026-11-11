@@ -1,5 +1,21 @@
 # Living Action Plan — Medical Platform MVP
 
+## Active objective — Reception and patient-study UX refinement (O-009, 2026-11-11)
+
+**Outcome:** Implement D-048/D-049: direct reception workflows, one patient activity destination, compact patient lookup, reliable dialogs, study detail with current-day sample data, and removal of fixture-only fictitious note labels.
+
+**UX research:** W3C combobox guidance supports a collapsed, filtered suggestion panel with explicit selection and Escape dismissal; W3C modal guidance calls for a visible close control, focus containment and focus restoration. AHRQ EHR usability research supports aligning the interface to role workflow and quick cross-function navigation. The resulting design is recorded in `UI_SPEC.md` O-009.
+
+**Scope and exclusions:** Local synthetic MVP only; no authentication, remote services, clinical interpretation, new study states, or merging of Appointment and Encounter records. Keep the existing patient summary and physician review semantics. Preserve the owner’s `apps/web/next-env.d.ts` change.
+
+**Sequence:** (1) Reception controls, role-specific start actions, patient search panel, and modal repair. (2) One `Citas y consultas` patient destination with legacy redirects and separate event types. (3) Patient StudyRequest detail with received file/note associations. (4) Idempotent today-dated sample receipt and safe exact-fixture label cleanup migration. (5) API/web verification, browser walkthrough, and reviewable PR stack.
+
+**PR strategy:** New stack starts from open PR #22. Proposed boundaries: reception/patient selection → patient activity navigation → study detail and sample data. Keep each PR at 15 changed files or fewer; publish only after its focused verification passes. Do not merge feature PRs.
+
+**Acceptance:** Reception date applies without a `Ver` button; secretary arrival and physician consultation-start are clear; direct new consultation works for found and newly registered patients; patient dialog is compact and search-first; edit dialog remains closable while scrolling; patient activity combines navigation without conflating event semantics; request rows open detail and expose related receipts/files; today's seeded receipt and sample attachment persist without duplication; user edits remain unchanged; no explicit `NOTA FICTICIA DE DEMOSTRACIÓN` marker remains in fixture notes.
+
+**Current status:** UX research and codebase review complete; implementation plan and accepted decisions recorded. Next: implement the reception/patient-selection slice.
+
 **Document type:** Active execution state (living document)  
 **Last updated:** 2026-11-11
 **Owner:** Project owner  
