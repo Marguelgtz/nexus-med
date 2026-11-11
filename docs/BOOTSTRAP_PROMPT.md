@@ -88,7 +88,7 @@ Use `docs/demo-dataset.json` as the authoritative fixture. Do not silently subst
 - Multiple encounters for some patients.
 - At least one patient with no encounters.
 - Stable fixture identifiers and fixed dates.
-- Clearly fictional note content and a demo warning in the UI.
+- Synthetic note content for local fixtures; do not add a visible demo warning or fictional-data label to the UI (D-046).
 - Idempotent create-if-missing behavior; never overwrite local edits or user-created records.
 - Normal startup must never reset the database.
 

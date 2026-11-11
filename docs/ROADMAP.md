@@ -32,7 +32,7 @@ The agreed development order is **database/API foundation → UX/UI design → p
 
 ## O-004 — First-run demo and reliability
 
-**Outcome:** A clean local start opens a populated patient registry with the exact synthetic fixture, persistent Spanish demo warning, and user data preserved across restarts.
+**Outcome:** A clean local start opens a populated patient registry with the exact synthetic fixture and user data preserved across restarts. Per D-046, the application shows no demo warning or fictional-data label.
 
 **Exit condition:** `npm install` followed by `npm run dev` (with dependencies installed) starts both apps, migrates/seeds safely, and passes end-to-end workflows without Cloudflare, remote services, or manual database setup.
 
