@@ -8,7 +8,11 @@
 
 ## Active objective — Contemporary UI refresh (2026-11-10)
 
+**Status:** Delivered in [PR #18](https://github.com/Marguelgtz/nexus-med/pull/18), five files, based on PR #17; code commit `36880a0`. Open and unmerged.
+
 **Outcome:** Renew the entire shared visual language while preserving existing layout, navigation and clinical workflows.
+
+**Next action:** Owner visual review at http://127.0.0.1:3000/patients and /secretaria; dev remains running.
 
 **Sequence:** (1) Record the visual direction in UI_SPEC. (2) Update shared tokens, shell, controls, panels and dialog styling. (3) Check type/lint/build and desktop/mobile rendering; record results and commit a focused PR under 15 files.
 
