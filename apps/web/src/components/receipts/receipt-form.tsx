@@ -1,13 +1,11 @@
 'use client';
 import { useEffect, useState, type FormEvent } from 'react';
-import { useRouter } from 'next/navigation';
-import { createStudyReceiptSchema, RECEIPT_MAX_FILES, RECEIPT_MAX_FILE_BYTES, RECEIPT_MAX_TOTAL_FILE_BYTES, type ReceiptOptions } from '@nexus-med/contracts';
+import { createStudyReceiptSchema, RECEIPT_MAX_FILES, RECEIPT_MAX_FILE_BYTES, RECEIPT_MAX_TOTAL_FILE_BYTES, type ReceiptOptions, type StudyReceipt } from '@nexus-med/contracts';
 import { createStudyReceipt, getReceiptOptions } from '../../lib/api/client';
 import { formatDateTime } from '../../lib/format';
 import { useBeforeUnloadGuard } from '../../lib/use-before-unload-guard';
 import { Modal } from '../modal';
-export function ReceiptForm({ patient, onClose, onSaved, initialEncounterId }: { patient: { id: string; fullName: string }; onClose: () => void; onSaved?: () => void; initialEncounterId?: string }) {
-  const router = useRouter();
+export function ReceiptForm({ patient, onClose, onSaved, initialEncounterId }: { patient: { id: string; fullName: string }; onClose: () => void; onSaved?: (receipt: StudyReceipt) => void; initialEncounterId?: string }) {
   const [title, setTitle] = useState('');
   const [date, setDate] = useState('');
   const [note, setNote] = useState('');
@@ -30,7 +28,7 @@ export function ReceiptForm({ patient, onClose, onSaved, initialEncounterId }: {
     if (!metadata.success) { setError('Revisa el título (2–200 caracteres), la fecha y la nota (máximo 1,000 caracteres).'); return; }
     if (!files.length || files.length > RECEIPT_MAX_FILES || files.some(file => file.size === 0 || file.size > RECEIPT_MAX_FILE_BYTES) || files.reduce((sum, file) => sum + file.size, 0) > RECEIPT_MAX_TOTAL_FILE_BYTES) { setError('Adjunta de 1 a 5 archivos: máximo 10 MB por archivo y 24 MB en total.'); return; }
     setBusy(true);
-    try { await createStudyReceipt(patient.id, metadata.data, files); onSaved?.(); onClose(); router.refresh(); }
+    try { const saved = await createStudyReceipt(patient.id, metadata.data, files); onSaved?.(saved); onClose(); }
     catch (err) { setError(err instanceof Error ? err.message : 'No se pudo recibir el estudio.'); setBusy(false); }
   }
   return <Modal title="Agregar estudio recibido" description={patient.fullName} onClose={close} closeDisabled={busy}>

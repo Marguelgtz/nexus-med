@@ -22,6 +22,7 @@ export const studyReceiptSchema = z.object({
 });
 export type StudyReceipt = z.infer<typeof studyReceiptSchema>;
 export const receiptQuerySchema = z.object({ patientId: idSchema.optional(), view: z.enum(['administrative', 'medical']).default('medical'), review: z.enum(['pending', 'all']).default('pending') }).strict();
+export type ReceiptQuery = z.infer<typeof receiptQuerySchema>;
 export const reviewReceiptSchema = z.object({ reviewNote: z.string().trim().max(1000).optional() }).strict();
 
 export const receiptOptionsSchema = z.object({

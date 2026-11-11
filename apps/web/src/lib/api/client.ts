@@ -8,6 +8,7 @@
 import {
   type Appointment,
   type CreateStudyReceipt,
+  type ReceiptQuery,
   type StudyReceipt,
   studyReceiptSchema,
   receiptOptionsSchema,
@@ -396,6 +397,13 @@ export function updateReception(id: string, input: ReceptionInput): Promise<Appo
 
 export function getReceiptOptions(patientId: string) {
   return request(`/patients/${encodeURIComponent(patientId)}/study-receipt-options`, undefined, receiptOptionsSchema.safeParse.bind(receiptOptionsSchema));
+}
+export function listStudyReceipts(query: ReceiptQuery): Promise<StudyReceipt[]> {
+  const params = new URLSearchParams();
+  if (query.patientId) params.set('patientId', query.patientId);
+  if (query.view) params.set('view', query.view);
+  if (query.review) params.set('review', query.review);
+  return request(`/study-receipts?${params.toString()}`, undefined, asList(studyReceiptSchema));
 }
 export function createStudyReceipt(patientId: string, metadata: CreateStudyReceipt, files: File[]): Promise<StudyReceipt> {
   const body = new FormData();
