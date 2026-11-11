@@ -1,6 +1,8 @@
 // Small helpers shared by API test files.
 
 import { createApp } from '../src/app';
+import '../src/infrastructure/database/prisma';
+import '../src/infrastructure/storage/local-study-files';
 import type { PatientDetail } from '@nexus-med/contracts';
 
 export const app = createApp();

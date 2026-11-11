@@ -8,6 +8,9 @@ build/
 coverage/
 .turbo/
 
+# Local plans/design documents: .local/plans/<objective>/ (never publish)
+/.local/plans/
+
 # Local runtime state, SQLite, demo data exports, and local PR drafts
 .local/
 .wrangler/

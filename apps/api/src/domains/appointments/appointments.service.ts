@@ -20,7 +20,7 @@ import type {
   ReceptionInput,
 } from '@nexus-med/contracts';
 
-import { prisma } from '../../infrastructure/database/prisma';
+import { prisma } from '../../infrastructure/database/runtime-client';
 import { ConflictError, NotFoundError, ValidationError } from '../../shared/http/errors';
 
 const APPOINTMENT_NOT_FOUND = 'Cita no encontrada';

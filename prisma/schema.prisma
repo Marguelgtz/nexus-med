@@ -6,6 +6,14 @@ generator client {
   output   = "../apps/api/src/generated/prisma"
 }
 
+// The same canonical schema generates a Worker-compatible client for the
+// Cloudflare D1 entry point. Local Node development keeps the default runtime.
+generator worker {
+  provider = "prisma-client"
+  runtime  = "cloudflare"
+  output   = "../apps/api/src/generated/prisma-worker"
+}
+
 datasource db {
   provider = "sqlite"
   // Prisma 7: the connection URL is not allowed in the schema. It is defined
