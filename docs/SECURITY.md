@@ -42,3 +42,9 @@ A separate review is required for the applicable jurisdiction, hosting configura
 - Google OAuth/OIDC integration and session handling.
 - Authorization policy for a remotely reachable deployment.
 - Private object storage and document access controls if R2/file storage is added.
+
+## D-044/D-045 prototype boundary update
+
+Secretary/Physician are unauthenticated views of the same local synthetic dataset; UI differences do not enforce authorization. Services remain bound to loopback, CORS limited to the local frontend; do not expose this runtime to a network. Secretary screens use administrative DTOs and do not render clinical notes or physician review notes.
+
+Local received-study PDFs/PNGs/JPEGs are owner-approved. Hono bounds request/file sizes, validates signatures and patient associations, uses generated opaque storage keys, and serves file bytes with no-store/nosniff/sandbox headers. Files reside beside SQLite outside Git/public assets. Use synthetic attachments only. Preserve both DB and files in any local backup. This approval adds no real patient-data handling, legal document claims, remote storage or authentication.

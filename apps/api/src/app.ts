@@ -12,6 +12,7 @@ import { encountersRoutes } from './domains/encounters/encounters.routes';
 import { documentsRoutes } from './domains/documents/documents.routes';
 import { patientsRoutes } from './domains/patients/patients.routes';
 import { studiesRoutes } from './domains/studies/studies.routes';
+import { receiptsRoutes } from './domains/receipts/receipts.routes';
 import { healthRoutes } from './routes/health';
 import { onErrorHandler, onNotFound } from './shared/http/errors';
 
@@ -35,12 +36,21 @@ export function createApp(): Hono {
     }),
   );
 
+  app.use('/api/*', async (c, next) => {
+    const origin = c.req.header('Origin');
+    if (!['GET', 'HEAD', 'OPTIONS'].includes(c.req.method) && origin && !ALLOWED_ORIGINS.includes(origin)) {
+      return c.json({ error: { code: 'VALIDATION_ERROR', message: 'Origen de solicitud no permitido.' } }, 403);
+    }
+    await next();
+  });
+
   app.route('/', healthRoutes);
   app.route('/api', patientsRoutes);
   app.route('/api', encountersRoutes);
   app.route('/api', appointmentsRoutes);
   app.route('/api', studiesRoutes);
   app.route('/api', documentsRoutes);
+  app.route('/api', receiptsRoutes);
 
   return app;
 }

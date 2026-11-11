@@ -13,6 +13,7 @@ import { Hono } from 'hono';
 
 import {
   appointmentRangeQuerySchema,
+  receptionInputSchema,
   completeAppointmentInputSchema,
   createAppointmentInputSchema,
   linkEncounterInputSchema,
@@ -28,6 +29,8 @@ import {
   listAppointmentsInRange,
   listPatientAppointments,
   updateAppointment,
+  updateReception,
+  listReception,
 } from './appointments.service';
 import { parseOrThrow, readJsonBody } from '../../shared/http/parse';
 
@@ -78,3 +81,10 @@ appointmentsRoutes.post('/appointments/:appointmentId/link-encounter', async (c)
   const appointment = await linkEncounter(c.req.param('appointmentId'), input);
   return c.json(appointment);
 });
+
+appointmentsRoutes.post('/appointments/:appointmentId/reception', async (c) => {
+  const input = parseOrThrow(receptionInputSchema, await readJsonBody(c));
+  return c.json(await updateReception(c.req.param('appointmentId'), input));
+});
+
+appointmentsRoutes.get('/reception', async c => c.json(await listReception()));
