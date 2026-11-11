@@ -181,3 +181,17 @@ Run the relevant commands that exist in the repository, normally:
 6. end-to-end checks for completed vertical slices.
 
 Do not claim a command passed unless it was executed successfully. Report skipped checks and why.
+
+## Secretary and local received studies — 2026-11-10
+
+Source milestones: `a16857b` (API/contracts/migrations/storage) and `db417a8` (workspace/shared dialogs). Final checks: API **121/121**, web **39/39**, workspace typecheck, lint exit 0 (existing Pages-directory warning), and Next production build all pass. Installed Next.js API guides for router refresh/navigation and fetch were consulted; the existing SSR/no-store architecture is retained. No runtime packages were added.
+
+Isolated production Chromium, driven directly through the browser protocol (no MCP), passed patient create/contact edit persistence; guarded dirty Escape cancel/accept and focus restoration; patient selection and appointment creation in dialogs; shared arrival and physician start; secretary absence of physician start controls; synthetic PDF upload with a deliberately blocked network request and successful retry preserving fields/files; physician review and administrative omission of review notes; patient-background and appointment dialogs; unsaved consultation protection on rejected/accepted view changes; and physician attachment entry from a saved consultation with preselected association. Untouched association prefill closes without a dirty prompt. No runtime exceptions occurred. Secretary agenda/studies, physician reception and registry have no horizontal overflow at 320px; 390px agenda/modal captures were inspected. Four inspected synthetic screenshots and hashes are in `assets/secretary/README.md`.
+
+API coverage includes concurrent/repeated/invalid reception transitions, rescheduling reset, administrative read/create/edit projection, invalid clinical input rejection, external receipt without an order, cross-patient consultation rejection, MIME/signature/file-count/transport-size rejection, foreign-browser-origin rejection, file retrieval/no-store, explicit one-time review, and original order-status preservation.
+
+QA used a separate `.local/secretary-qa/medical.db`, exact seeded fixtures plus explicitly fictional browser records, and a generated synthetic PDF. Repeat seed created zero rows and preserved the full nine-table digest and all three stored attachment hashes. After API restart all three attachments were retrieved with identical SHA-256 bytes. No QA mutations reached the owner's database.
+
+Normal `npm run dev` then applied the two additive migrations to the existing local DB and seeded zero new records. A before/after digest of all original columns/rows across seven existing tables matched exactly after excluding only the two intentionally added migration-log entries. New receipt tables remained empty in the normal DB. The original `next-env.d.ts` owner bytes are preserved. Secretary route returns HTTP 200 on normal startup.
+
+Limits: this is a local synthetic-data demonstration. View selection is not authentication/authorization. These checks do not establish network deployment safety, physician policy approval, assistive-technology validation, or real medical-document validity. There is no attachment replacement/deletion UI in this slice.

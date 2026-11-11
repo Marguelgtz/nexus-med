@@ -4,11 +4,11 @@
 **Last updated:** 2026-11-10
 **Owner:** Project owner  
 **Primary agent:** Hermes Agent  
-**Current implementation state (updated 2026-11-10):** Compact clinical entry is implemented, verified and pushed on `feat/o007-ui-foundation`: `786533b`, `fd2cf83`, `e39a604`, final corrections `06a4fa8`, evidence `a4434dc`. Three consultation stages, contextual study/follow-up dialogs, compact medication entry and overview background are delivered. The browser-reviewed Figma UI v0 alignment is pushed as `8431d28`; its CSS parser correction is now included on the branch. Web 39/39, typecheck/lint and final production build pass for the previous delivery; this alignment passes web typecheck/lint and local startup smoke checks. The idempotent seed created zero records, migrations were current, `/patients` returned 200 and API health returned `ok`. Isolated persistence/failure/print/restart/seed checks pass; 25 inspected PNGs are inventoried. English authoritative docs are reconciled. PR #9 is updated against PR #8, open and unmerged. Preserve the pre-existing local `apps/web/next-env.d.ts` change.
+**Current implementation state (updated 2026-11-10):** O-008 secretary/reception/local study receipt is implemented and verified on `codex/secretary-workspace`, based on open UI PR #9. Source commits: `a16857b` (API/data/storage), `db417a8` (UI/shared modals). Final API121/web39, typecheck/lint/build and isolated browser/persistence checks pass. Normal dev runs on 3000/4000; two additive migrations applied, seed created zero rows, original data digest preserved. Four inspected synthetic screenshots are inventoried under `docs/assets/secretary/`. Preserve the owner's pre-existing `apps/web/next-env.d.ts` change. No PR is merged.
 
 ## Active objective — Secretary workspace (2026-11-10)
 
-**Status:** Implemented on `codex/secretary-workspace`, based on the open UI branch. API foundation is committed as `a16857b`; UI, full checks and browser workflows pass. Preserve the owner's `next-env.d.ts` edit.
+**Status:** Implemented and verified on `codex/secretary-workspace`, based on open UI PR #9. Source commits `a16857b` and `db417a8`; preserve the owner's `next-env.d.ts` edit. Publication is the remaining handoff step.
 
 **Outcome:** Administrative secretary view without authentication: patient/contact management, scheduling, reception and shared waiting list, and receipt of studies for physician review. Both views share study entry with required patient and optional consultation. Short tasks open in native dialogs.
 
@@ -20,7 +20,9 @@
 
 **Verification so far:** Final API 121/121, web 39/39, workspace typecheck, lint (existing Pages warning), and production build pass. Isolated production Chromium passes patient/contact persistence, appointment entry, shared arrival/start, dirty dismissal/focus return, upload failure recovery, physician review, physician receipt from a saved consultation, view-switch protection for unsaved notes and 390/320px reflow; no runtime exceptions. Repeat QA seed creates zero rows and preserves the complete nine-table digest plus three attachment hashes.
 
-**Next action:** verify file retrieval after API restart, restore normal startup against the preserved owner DB, reconcile evidence and publish an unmerged dependent PR.
+**Final runtime evidence:** All three QA attachments retain exact bytes after API restart. Normal startup applied the two additive migrations, created zero seeded rows, returned Secretary HTTP200, and preserved every original data column/row (excluding only new migration-log entries). Original `next-env.d.ts` bytes are retained.
+
+**Next action:** publish the feature branch and an unmerged PR based on `feat/o007-ui-foundation`; owner reviews the running secretary view.
 
 ## Active follow-up — Figma UI v0 foundation alignment (2026-11-10)
 
