@@ -14,6 +14,7 @@ import {
   createPatient,
   getPatient,
   getAdministrativePatient,
+  listAdministrativePatients,
   listPatients,
   updateMedicalBackground,
   updatePatient,
@@ -26,6 +27,11 @@ patientsRoutes.get('/patients', async (c) => {
   const query = parseOrThrow(patientListQuerySchema, cleanQuery(c.req.query()));
   const patients = await listPatients(query);
   return c.json(patients);
+});
+
+patientsRoutes.get('/administrative/patients', async c => {
+  const query = parseOrThrow(patientListQuerySchema, cleanQuery(c.req.query()));
+  return c.json(await listAdministrativePatients(query));
 });
 
 patientsRoutes.post('/patients', async (c) => {

@@ -60,6 +60,10 @@ describe('Administrative reception', () => {
     expect(await created.json()).not.toHaveProperty('allergies');
     const saved = await app.request(`/api/patients/${patient.id}/administrative`, { method: 'PATCH', headers, body: JSON.stringify({ phone: '5551234567' }) });
     expect(await saved.json()).toMatchObject({ phone: '5551234567' });
+    const listed = await app.request('/api/administrative/patients?status=all');
+    const rows = await listed.json() as Record<string, unknown>[];
+    expect(rows.find(row => row.id === patient.id)).toMatchObject({ phone: '5551234567', email: null });
+    expect(rows.find(row => row.id === patient.id)).not.toHaveProperty('allergies');
     const rejected = await app.request(`/api/patients/${patient.id}/administrative`, { method: 'PATCH', headers, body: JSON.stringify({ allergies: 'not allowed' }) });
     expect(rejected.status).toBe(400);
   });

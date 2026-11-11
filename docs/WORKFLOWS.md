@@ -143,7 +143,7 @@ Archiving never deletes encounters or history. No permanent delete workflow is p
 5. The Prisma seed command is invoked explicitly.
 6. The idempotent seed creates any missing demo records without overwriting existing data.
 7. Next.js and Hono start together.
-8. Browser opens to `/patients` and displays synthetic data plus the demo banner.
+8. Browser opens to `/patients` and displays the seeded records. Per D-046, the application does not add a visible demonstration label.
 
 On later starts, existing database contents and user edits must be preserved. Normal startup must never reset the database. See `DEMO_DATA.md` and `ARCHITECTURE.md`.
 
