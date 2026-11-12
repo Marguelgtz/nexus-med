@@ -441,3 +441,23 @@ API tests pass 121/121, web tests 42/42, workspace typecheck and lint pass, and 
 Owner feedback called for opening a patient's study, reviewing its notes and files in context, and showing a current-day example. Study-request names and linked medical-view receipt titles now open a request-specific detail page with the encounter association, result note, attachments, receipt date, and separate physician review state. The patient 005 fixture includes a chest X-ray request and one locally generated neutral PDF; neither receiving the file nor seeding the receipt changes the physician's request status. A conditional migration clears only exact legacy fixture note text and leaves any edited field untouched.
 
 The seed tests pass 14/14, web tests 44/44, workspace typecheck and lint pass (the existing Pages-directory warning remains), and Chromium confirms the patient-list link, detail page, PDF response signature, and responsive layout at 390px. The new migration was applied to the existing local database; idempotent seeding added the new request and receipt without replacing user records. [PR #26](https://github.com/Marguelgtz/nexus-med/pull/26) contains 13 files and commits `82ac95d`/`de56add`, based on PR #25; it remains open and unmerged. The owner's `next-env.d.ts` edit remains uncommitted.
+
+## 2026-11-12 — A separate visual direction before another broad UI revision
+
+The owner rejected further refinements built on the previous UI foundation and authorized an isolated interactive example. The local-only `/exploracion-ui` sample explores warm paper, ink navigation, terracotta actions, serif headings, an aligned directory, patient quick view and full-work-surface registration. “Signup” was interpreted as patient registration; page-versus-panel remains a reversible assumption. This is a design proposal, not final branding approval or authorization to replace every application screen.
+
+The sample uses only checked-in fictional demographics and transient component state. It does not write through the API or expose clinical notes. Existing product screens retain their current implementation. Web 44/44, typecheck, lint and build pass; Chrome checks cover search, filters, preview, validation and temporary registration, with overflow measurements at 320/390/768/1440px. Production returns HTTP 404. Dirty native-confirm control was limited by browser tooling; see `TESTING.md`. No push, PR, merge or remote deployment was performed. Next is owner review of this direction before integration.
+
+
+## 2026-11-12 — Readability takes precedence over editorial styling (D-050)
+
+The owner found the isolated direction better but rejected thin lettering, emphasizing working users aged 60–70. That audience constraint is now explicit in PRODUCT and DECISIONS. The sample keeps its separate route and color direction while replacing fine serif headings with sturdy sans-serif text, raising main text/names to 18px and functional data to 16px, strengthening contrast and controls, exposing row-action labels and removing decorative copy. Small layouts reorganize instead of shrinking text. The sample remains a reversible proposal, without broader rollout or data/API changes.
+
+Frontend checks and focused browser measurements pass; exact evidence and limits are in TESTING. Actual comfort for the intended age group is still untested and must not be inferred from passing technical checks. Work stays local on `codex/ui-editorial-exploration`, with no push, merge or deployment.
+
+
+## 2026-11-12 — Preserve three designs for comparison
+
+The owner clarified that typography fixes did not resolve rejection of the sample's overall design. They requested a new iteration alongside the previous sample and current product, and explicitly liked the side navigation. Proposal 2 therefore has a separate development-only route, a solid midnight-blue sidebar, cool white workspace, cobalt actions, patient cards and a dedicated identity/contact pane. Both samples expose comparison links; the existing application and prior sample stylesheet remain intact.
+
+The two previews share registration/validation instead of copying it, while retaining independent transient state and exact fictional demographics. Frontend checks, browser checks in both versions, narrow-layout measurements and production 404 checks pass; details and limitations are in TESTING. The design remains a proposal, not approval for application-wide replacement. Work stays local on `codex/ui-second-direction`, based on `be0339a`; no push, PR, merge or deployment.

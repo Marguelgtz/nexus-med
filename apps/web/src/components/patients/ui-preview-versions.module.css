@@ -1,0 +1,10 @@
+.versions { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; padding: 5px; border: 1px solid #c6cede; border-radius: 10px; background: #fff; }
+.versions a.versionLink { display: inline-flex; justify-content: center; align-items: center; min-height: 44px; padding: 8px 12px; color: #35435f; border: 0; border-radius: 6px; font: 600 1rem/1.5 'Verdana', 'Segoe UI', sans-serif; text-decoration: none; }
+.versions a.versionLink:hover { background: #f0f3fa; }
+.versions a.versionLink[aria-current] { background: #e9efff; color: #193c9f; }
+.versions a.versionLink:focus-visible { outline: 3px solid #244abd; outline-offset: 2px; }
+@media (max-width: 540px) {
+  .versions { width: 100%; }
+  .versions a.versionLink { flex: 1 1 110px; }
+  .versions a.versionLink:first-child { flex-basis: 100%; }
+}

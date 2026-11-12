@@ -6,6 +6,7 @@
 **Status:** MVP/O-005 scope confirmed; owner-authorized O-006 implementation complete and pending owner review. Clinical semantics remain open where noted.
 **Version:** 1.0  
 **Primary user:** One general surgeon  
+**Readability requirement (owner, 2026-11-12 — D-050):** Design for working professionals aged 60–70 as part of the intended audience. Favor clearly legible default text, firm strokes, strong contrast, visibly labeled actions and comfortably sized controls. Do not shrink essential text to maintain density or fit a narrow screen. Actual readability still needs intended-user review; the current implementation trial is isolated to `/exploracion-ui`.
 **Interface language:** Spanish (Mexico)  
 **Prototype:** Local-only, offline at runtime, synthetic data only
 

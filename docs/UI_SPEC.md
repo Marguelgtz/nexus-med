@@ -1,5 +1,33 @@
 # UI Specification — Medical Platform MVP
 
+## Iteration 2 — separate alternative, 2026-11-12
+
+Owner explicitly requests keeping the current app, the previous example and a new iteration, and confirms a preference for side navigation. The prior sample is not an accepted visual design; retain it at `/exploracion-ui` for comparison. Add `/exploracion-ui-2`, development-only with the same synthetic-only, in-memory preview boundary.
+
+**Direction:** A clinical workbench with a solid midnight-blue sidebar, white/cool-gray work area, cobalt actions, a prominent labeled search, a patient-card grid and a distinct patient-preview column. This replaces the warm-paper/terracotta directory-table composition in the new version only. Keep D-050 readable type: 18px main copy, >=16px functional labels/data, firm headings, visible focus and >=52px controls. At narrow widths use two-column navigation and stack results/preview; never shrink text to force the desktop composition to fit.
+
+**Interaction:** Existing filtering and temporary registration semantics remain; a card opens identity/contact in the preview, with Escape/focus return. Registration stays on a complete work surface. Share the existing preview registration renderer/validation between iterations, styled through each version's CSS module. Add direct `App actual`, `Propuesta 1` and `Propuesta 2` navigation to both samples. No patient API calls, clinical information or production exposure. The actual product remains unchanged. This is a visual alternative for owner review, not a broad rollout.
+
+## Alternative direction sample — 2026-11-12
+
+**Owner readability correction (2026-11-12):** The first sample's fine serif strokes and 9–13px metadata were rejected for working users aged 60–70. Keep the sample isolated, but replace editorial typography with a sturdy locally available sans-serif stack. Use relative sizes: 1.125rem main text (18px at the default root), 1rem functional data/labels (16px), and at least .875rem auxiliary copy (14px). Use 600–700 weight for names, headings and controls; stronger secondary text and input boundaries; controls at least 52px high; and visible `Ver datos` row actions. Small viewports must reorganize into readable rows and a two-column navigation rather than shrink text. Remove decorative slogans and the paper illustration. This supersedes the original typography/compact-control details below, not the existing prototype's no-persistence boundary.
+
+Implemented stack: `Verdana`, `Segoe UI`, sans-serif; main body weight 500, patient names/headings 700, primary/row actions 600. Secondary text is `#46544b`, primary action `#913c28`, field boundary `#71806f`. The search label stays visible. At narrow widths navigation and filters use two columns, and patient row actions span their row. Technical checks and computed sizes are recorded in `TESTING.md`; these do not establish intended-user comfort.
+
+Research reference: [W3C older-user guidance](https://www.w3.org/WAI/older-users/developing/) discusses text presentation, contrast and text resizing. The selected sizes are project design choices, not a universal age threshold or a claim of usability validation. Preserve keyboard access and reflow; inspect enlarged/narrow layouts before delivery.
+
+Owner authorizes a distinct interactive example, not an application-wide replacement. `/exploracion-ui` is a development-only route outside the authenticated application shell, with its own CSS module. The production route returns not-found. Pass only the exact fictional fixture's demographic fields from the server; never read a database or expose clinical fixture notes. All preview changes are transient and visibly identified as such.
+
+**Direction:** Editorial, warm and precise. Ink `#26352f`, paper `#f7f5f0`, terracotta `#a7472f`, pale sage for secondary surfaces. A fixed-width left navigation rail and quiet utility header replace floating glass navigation. Serif display headings contrast with locally available sans-serif body text. No external fonts, gradients, glass effects or decorative animation. Rows share clear columns; selected rows use a thin accent and a patient-detail panel.
+
+**Interaction:** Directory search matches names/identifiers, with active/archive/all filters and explicit empty states. A patient preview contains identity/contact data and no invented clinical findings. `Nuevo paciente` opens a full work surface with persistent labels, identity/contact groups, optional fields clearly marked, and explicit validation using existing transport schemas. Cancel guards dirty input; preview completion adds a temporary row and explains that it will disappear on reload. Registration must not imply API persistence. Page-based registration is a reversible interpretation of “signup”; the optional page-versus-panel question received no answer during implementation.
+
+**Accessibility/responsiveness:** Real buttons and headings, named search/filter groups, semantic table on desktop, stacked labeled metadata on mobile, visible focus, status/error announcements, keyboard-operable preview, focus on changed-view headings and first invalid input. At 768px the rail becomes a compact header; at 320/390px controls stack. No required hover actions or horizontal document scrolling.
+
+**Research:** [UK Parliament form guidance](https://designsystem.parliament.uk/how-tos/designing-forms/) distinguishes repeated staff workflows from infrequent public forms and supports grouped fields without a forced one-question wizard. [GOV.UK question pages](https://design-system.service.gov.uk/patterns/question-pages/) supports focused tasks and testing without a progress indicator. These inform grouping, not the chosen palette or a usability-validation claim. Historical `UI_AUDIT.md`, `UI_RESEARCH.md` and `UX_AUDIT.md` are context, not current owner aesthetic approval. No other uniquely identified owner feedback/example was found in tracked files.
+
+**Review boundary:** Compare directory, opened patient and registration at desktop/mobile before deciding whether to integrate. Existing application, authentication, saves, clinical semantics and print output retain their current implementation. No new dependencies, new persistence or backend changes.
+
 **Status:** O-002/O-005 baseline, owner-authorized O-006 implementation contract (§8), and verified O-007 UI v0 presentation conventions (§9). Implementation PRs remain unmerged for owner review.
 **Owner:** `apps/web` (Next.js App Router)  
 **Interface language:** Spanish (Mexico) — all UI strings below are the canonical copy; technical prose stays in English.  

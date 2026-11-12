@@ -1,5 +1,31 @@
 # Testing and Verification
 
+## Separate UI iteration 2 — 2026-11-12
+
+The current application, proposal 1 and proposal 2 remain at `/patients`, `/exploracion-ui` and `/exploracion-ui-2`. The prior sample stylesheet is unchanged; only its comparison navigation and shared registration import changed. Both previews share the original registration rendering/validation through `preview-registration.tsx`; all shared CSS class references exist in both modules.
+
+Final frontend typecheck, lint (inherited TopBar/Pages notices only), 44/44 existing web tests, production build and diff whitespace check pass. The first extraction check failed on an old unused form copy; it was removed before the successful final typecheck/lint/build. No new unit tests were added; API tests were not rerun because no API/domain code changed.
+
+Chrome passed proposal navigation, previous-sample form open/required-name focus/clean cancellation, new patient selection, Escape/focus return, archived filtering, no-results/reset, required-name and invalid-email validation, retained values, temporary registration and reset to the original fixtures on reload. New directory and registration fit 320/390/768/1440px; at 320px no input extends past the viewport. Names are 18px/700; card actions 16px and 54px high; mobile navigation 16px and 56px high; new-form inputs 18px and >=56px high. Selected contrast pairs: text/white 14.54:1, secondary/white 6.27:1, white/primary 7.53:1, sidebar text/background 12.64:1, field border/white 3.40:1. These are focused checks, not accessibility certification or intended-user testing. Native dirty-confirm interaction retains the earlier tooling limitation; its shared implementation is unchanged.
+
+A temporary local production server returned HTTP 404 for both preview routes and was stopped. No patient API writes or stored records were created by the previews. Evidence is ignored under `.local/ui-exploration/iteration-2/`; desktop/form screenshots show the separate card-and-detail composition. No deployment was performed.
+
+## Readability follow-up — 2026-11-12 (D-050)
+
+Only the isolated UI sample changed. Frontend typecheck, lint (the same inherited warnings) and production build pass. No new tests were added, and the existing behavior/API suites were not rerun for CSS and visible-label changes.
+
+Chrome computed-style checks confirm 18px/700 patient names, 40px/700 desktop headings, 16px field text/labels and 52px-or-larger navigation, filters, fields and row actions. Directory reflow was measured at 320/390/768/1024/1440px; registration at 320/390/768/1440px, with no horizontal document overflow or clipped form inputs at 320px. At 768px, table and available container width both measure 695px. Screenshots found and corrected mobile filters splitting words; mobile navigation and filters now reorganize instead of shrinking text. Quick-view open/Escape close, registration open, required-name focus and clean cancellation were checked. Dirty-confirm behavior is unchanged and retains the previous tooling limitation below.
+
+Selected WCAG relative-luminance pairs: ink `#26352f` on table `#fffefa` **12.75:1**; secondary `#46544b` on paper `#f7f5f0` **7.33:1**; white on primary `#913c28` **7.29:1**; field border `#71806f` on `#fffefa` **4.15:1**. These are focused pairs, not an exhaustive audit or accessibility certification. Snapshots are ignored in `.local/ui-exploration/readability/`. No intended-user study, screen-reader test or native 200% browser-zoom certification was performed. No application records were written.
+
+## Alternative UI sample — 2026-11-12
+
+`codex/ui-editorial-exploration`: web tests 44/44, web typecheck, lint and final production build pass. Lint retains the existing TopBar navigation warning and missing-Pages notice. Build required a permitted subprocess rerun after the sandbox could not parse TypeScript's configuration output. No API code changed; API integration tests were not rerun.
+
+Chrome verified directory search by identifier, empty/reset state, archive filtering, patient quick view, Escape focus return, required-name and invalid-email messages, future-date rejection, duplicate warning, successful temporary registration and reset to exact fixtures on reload. The native date input needed a keyboard edit after browser-automation `fill` to emit its React change event; fill-only attempts are not counted as date validation passes. Directory and registration document widths fit 320/390/768/1440px. Visual inspection corrected wrapping mobile navigation labels. Screenshots are ignored local evidence in `.local/ui-exploration/`.
+
+The sample reuses `useBeforeUnloadGuard`; native dirty-confirm acceptance/cancellation was not verified because browser control timed out while the confirmation was open. This limitation does not count as a passed check. Keyboard preview close/focus return did pass. Existing `/patients` retains its original presentation and six active fixture rows. Normal startup applied no pending migrations and both seeds created zero rows. A separate loopback production server on port 3002 returned HTTP **404** for the sample and was stopped after verification. No application data was created by the sample; its registration changes exist only in memory.
+
 ## Compact entry — final verification (2026-11-10)
 
 Dialog/follow-up milestone: web 39/39, web typecheck and ESLint pass (existing warning only). Local Chromium at 390px checks new/saved consultation follow-up dialogs, initial field focus, Tab containment, trigger focus return, dirty Escape cancel/accept and note retention. No clinical write was submitted. A repeated native Escape close-request behavior was found and fixed by handling/preventing Escape at keydown before the guarded close.
