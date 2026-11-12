@@ -18,7 +18,7 @@ import type {
 } from '@nexus-med/contracts';
 
 import { prisma } from '../../infrastructure/database/runtime-client';
-import { NotFoundError } from '../../shared/http/errors';
+import { NotFoundError, ValidationError } from '../../shared/http/errors';
 
 const PATIENT_NOT_FOUND = 'Paciente no encontrado';
 
@@ -49,6 +49,8 @@ function toDetail(
   row: PatientRow & {
     phone: string | null;
     email: string | null;
+    appointmentEmailConsent: boolean;
+    appointmentEmailConsentUpdatedAt: Date | null;
     medicalConditions: string | null;
     previousSurgeries: string | null;
     allergies: string | null;
@@ -59,6 +61,8 @@ function toDetail(
     ...toSummary(row),
     phone: row.phone,
     email: row.email,
+    appointmentEmailConsent: row.appointmentEmailConsent,
+    appointmentEmailConsentUpdatedAt: row.appointmentEmailConsentUpdatedAt?.toISOString() ?? null,
     medicalConditions: row.medicalConditions,
     previousSurgeries: row.previousSurgeries,
     allergies: row.allergies,
@@ -109,9 +113,13 @@ export async function listAdministrativePatients(
   const rows = await prisma.patient.findMany({
     where: patientWhere(query),
     orderBy: { fullName: 'asc' },
-    select: { ...summarySelect, phone: true, email: true },
+    select: { ...summarySelect, phone: true, email: true, appointmentEmailConsent: true, appointmentEmailConsentUpdatedAt: true },
   });
-  return rows.map(row => ({ ...toSummary(row), phone: row.phone, email: row.email }));
+  return rows.map(row => ({
+    ...toSummary(row), phone: row.phone, email: row.email,
+    appointmentEmailConsent: row.appointmentEmailConsent,
+    appointmentEmailConsentUpdatedAt: row.appointmentEmailConsentUpdatedAt?.toISOString() ?? null,
+  }));
 }
 
 export async function getPatient(patientId: string): Promise<PatientDetail> {
@@ -121,7 +129,10 @@ export async function getPatient(patientId: string): Promise<PatientDetail> {
 }
 
 export async function createPatient(input: CreatePatientInput): Promise<PatientDetail> {
-  return toDetail(await prisma.patient.create({ data: input }));
+  return toDetail(await prisma.patient.create({ data: {
+    ...input,
+    appointmentEmailConsentUpdatedAt: input.appointmentEmailConsent ? new Date() : null,
+  } }));
 }
 
 export async function updatePatient(
@@ -130,7 +141,22 @@ export async function updatePatient(
 ): Promise<PatientDetail> {
   const existing = await prisma.patient.findUnique({ where: { id: patientId } });
   if (!existing) throw new NotFoundError(PATIENT_NOT_FOUND);
-  return toDetail(await prisma.patient.update({ where: { id: patientId }, data: input }));
+  const emailChanged = input.email !== undefined &&
+    (input.email?.trim().toLowerCase() ?? null) !== (existing.email?.trim().toLowerCase() ?? null);
+  const requestedConsent = input.appointmentEmailConsent;
+  const consent = emailChanged
+    ? requestedConsent === true
+    : requestedConsent ?? existing.appointmentEmailConsent;
+  const email = input.email !== undefined ? input.email : existing.email;
+  if (consent && !email) throw new ValidationError('Agrega un correo antes de aceptar mensajes de citas.');
+
+  const consentChanged = consent !== existing.appointmentEmailConsent;
+  const data = {
+    ...input,
+    appointmentEmailConsent: consent,
+    ...(emailChanged || consentChanged ? { appointmentEmailConsentUpdatedAt: new Date() } : {}),
+  };
+  return toDetail(await prisma.patient.update({ where: { id: patientId }, data }));
 }
 
 /** Update current medical background. Only the provided fields change. */
@@ -155,8 +181,12 @@ export async function archivePatient(patientId: string): Promise<PatientDetail> 
 export async function getAdministrativePatient(patientId: string): Promise<AdministrativePatient> {
   const patient = await prisma.patient.findUnique({
     where: { id: patientId },
-    select: { ...summarySelect, phone: true, email: true },
+    select: { ...summarySelect, phone: true, email: true, appointmentEmailConsent: true, appointmentEmailConsentUpdatedAt: true },
   });
   if (!patient) throw new NotFoundError(PATIENT_NOT_FOUND);
-  return { ...toSummary(patient), phone: patient.phone, email: patient.email };
+  return {
+    ...toSummary(patient), phone: patient.phone, email: patient.email,
+    appointmentEmailConsent: patient.appointmentEmailConsent,
+    appointmentEmailConsentUpdatedAt: patient.appointmentEmailConsentUpdatedAt?.toISOString() ?? null,
+  };
 }

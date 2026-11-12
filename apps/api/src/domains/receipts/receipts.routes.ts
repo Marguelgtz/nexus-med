@@ -4,8 +4,13 @@ import { RECEIPT_MAX_BODY_BYTES, createStudyReceiptSchema, receiptQuerySchema, r
 import { parseOrThrow, readJsonBody } from '../../shared/http/parse';
 import { ValidationError } from '../../shared/http/errors';
 import { createReceipt, getReceiptFile, listReceipts, reviewReceipt, receiptOptions } from './receipts.service';
+import { canReadClinicalInCurrentView } from '../auth/auth.routes';
 export const receiptsRoutes = new Hono();
-receiptsRoutes.get('/study-receipts', async c => c.json(await listReceipts(parseOrThrow(receiptQuerySchema, c.req.query()))));
+receiptsRoutes.get('/study-receipts', async c => {
+  const query = parseOrThrow(receiptQuerySchema, c.req.query());
+  const view = canReadClinicalInCurrentView() ? 'medical' : 'administrative';
+  return c.json(await listReceipts({ ...query, view }));
+});
 receiptsRoutes.post('/patients/:patientId/study-receipts', bodyLimit({ maxSize: RECEIPT_MAX_BODY_BYTES, onError: c => c.json({ error: { code: 'VALIDATION_ERROR', message: 'El envío supera 25 MB.' } }, 413) }), async c => {
   let data: FormData;
   try { data = await c.req.raw.formData(); } catch { throw new ValidationError('Envía los datos y archivos como formulario.'); }
@@ -26,4 +31,4 @@ receiptsRoutes.get('/study-receipt-files/:fileId', async c => {
   return c.body(bytes, 200, { 'Content-Type': file.mimeType, 'Content-Disposition': `inline; filename*=UTF-8''${encodeURIComponent(file.name)}`, 'X-Content-Type-Options': 'nosniff', 'Content-Security-Policy': 'sandbox', 'Cache-Control': 'no-store' });
 });
 
-receiptsRoutes.get('/patients/:patientId/study-receipt-options', async c => c.json(await receiptOptions(c.req.param('patientId'))));
+receiptsRoutes.get('/patients/:patientId/study-receipt-options', async c => c.json(await receiptOptions(c.req.param('patientId'), canReadClinicalInCurrentView())));

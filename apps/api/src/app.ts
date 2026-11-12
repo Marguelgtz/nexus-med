@@ -15,14 +15,19 @@ import { studiesRoutes } from './domains/studies/studies.routes';
 import { receiptsRoutes } from './domains/receipts/receipts.routes';
 import { healthRoutes } from './routes/health';
 import { onErrorHandler, onNotFound } from './shared/http/errors';
+import { authRoutes } from './domains/auth/auth.routes';
+import { emailRoutes } from './domains/email/email.routes';
+import { appointmentEmailRoutes } from './domains/email/appointment-email';
+import { isTrustedAppOrigin, requireAuthentication } from './domains/auth/authorization';
 
-// The only browser origin of the local prototype. Server-side (SSR) calls do
-// not go through browser CORS; this constrains direct browser access to the
-// local frontend.
-const ALLOWED_ORIGINS = ['http://127.0.0.1:3000', 'http://localhost:3000'];
+interface CreateAppOptions {
+  /** Unit/integration tests can opt out and exercise domain behavior directly. */
+  authentication?: 'required' | 'disabled';
+}
 
-export function createApp(): Hono {
+export function createApp(options: CreateAppOptions = {}): Hono {
   const app = new Hono();
+  const authenticationRequired = options.authentication !== 'disabled';
 
   app.onError(onErrorHandler);
   app.notFound(onNotFound);
@@ -30,21 +35,33 @@ export function createApp(): Hono {
   app.use(
     '*',
     cors({
-      origin: ALLOWED_ORIGINS,
-      allowMethods: ['GET', 'POST', 'PATCH', 'OPTIONS'],
-      allowHeaders: ['Content-Type'],
+      origin: (origin, context) => isTrustedAppOrigin(origin, context) ? origin : '',
+      allowMethods: ['GET', 'HEAD', 'POST', 'PATCH', 'OPTIONS'],
+      allowHeaders: ['Content-Type', 'Authorization'],
+      exposeHeaders: ['X-Retry-After'],
     }),
   );
 
   app.use('/api/*', async (c, next) => {
+    c.header('Cache-Control', 'no-store');
+    await next();
+  });
+
+  app.use('/api/*', async (c, next) => {
+    const unsafeMethod = !['GET', 'HEAD', 'OPTIONS'].includes(c.req.method);
     const origin = c.req.header('Origin');
-    if (!['GET', 'HEAD', 'OPTIONS'].includes(c.req.method) && origin && !ALLOWED_ORIGINS.includes(origin)) {
-      return c.json({ error: { code: 'VALIDATION_ERROR', message: 'Origen de solicitud no permitido.' } }, 403);
+    if (unsafeMethod && ((authenticationRequired && !origin) || (origin && !isTrustedAppOrigin(origin, c)))) {
+      return c.json({ error: { code: 'FORBIDDEN', message: 'Origen de solicitud no permitido.' } }, 403);
     }
     await next();
   });
 
+  if (authenticationRequired) app.use('/api/*', requireAuthentication);
+
   app.route('/', healthRoutes);
+  app.route('/api', authRoutes);
+  app.route('/api', emailRoutes);
+  app.route('/api', appointmentEmailRoutes);
   app.route('/api', patientsRoutes);
   app.route('/api', encountersRoutes);
   app.route('/api', appointmentsRoutes);

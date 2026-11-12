@@ -41,6 +41,8 @@ export const durationMinutesSchema = z.number().int().min(5).max(480);
 const appointmentPatientSchema = z.object({
   id: idSchema,
   fullName: fullNameSchema,
+  email: z.string().nullable().optional(),
+  appointmentEmailConsent: z.boolean().optional(),
 });
 export type AppointmentPatient = z.infer<typeof appointmentPatientSchema>;
 

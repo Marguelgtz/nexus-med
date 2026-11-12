@@ -78,11 +78,13 @@ export async function getReceiptFile(id: string) {
   return { file, bytes: await readStudyFile(file.storageKey) };
 }
 
-export async function receiptOptions(patientId: string) {
+export async function receiptOptions(patientId: string, includeClinicalRequests = true) {
   if (!await prisma.patient.findUnique({ where: { id: patientId }, select: { id: true } })) throw new NotFoundError('Paciente no encontrado');
   const [consultations, requests] = await Promise.all([
     prisma.encounter.findMany({ where: { patientId }, select: { id: true, occurredAt: true, type: true }, orderBy: { occurredAt: 'desc' } }),
-    prisma.studyRequest.findMany({ where: { patientId }, select: { id: true, name: true, encounterId: true }, orderBy: { createdAt: 'desc' } }),
+    includeClinicalRequests
+      ? prisma.studyRequest.findMany({ where: { patientId }, select: { id: true, name: true, encounterId: true }, orderBy: { createdAt: 'desc' } })
+      : Promise.resolve([]),
   ]);
   return { consultations: consultations.map(row => ({ ...row, occurredAt: row.occurredAt.toISOString() })), requests };
 }

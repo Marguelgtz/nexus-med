@@ -20,6 +20,8 @@ const rootDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const API_PORT = Number(process.env.API_PORT ?? 4000);
 const WEB_PORT = Number(process.env.WEB_PORT ?? 3000);
 const API_INTERNAL_URL = `http://127.0.0.1:${API_PORT}`;
+const APP_BASE_URL = process.env.APP_BASE_URL ?? `http://127.0.0.1:${WEB_PORT}`;
+const DEMO_DATABASE_URL = process.env.DEMO_DATABASE_URL ?? `file:${path.join(rootDir, '.local', 'data', 'demo.db')}`;
 
 const children = [];
 
@@ -28,9 +30,9 @@ function track(child) {
   return child;
 }
 
-function run(cmd, args) {
+function run(cmd, args, env = process.env) {
   return new Promise((resolve, reject) => {
-    const child = spawn(cmd, args, { cwd: rootDir, stdio: 'inherit' });
+    const child = spawn(cmd, args, { cwd: rootDir, stdio: 'inherit', env });
     child.on('exit', (code) => {
       if (code === 0) resolve();
       else reject(new Error(`${cmd} ${args.join(' ')} exited with code ${code}`));
@@ -79,12 +81,29 @@ async function main() {
   console.log('[dev] Inicializando datos locales (idempotente)…');
   await run('npx', ['prisma', 'db', 'seed']);
 
+  console.log('[dev] Preparando base persistente de demo…');
+  const demoPath = DEMO_DATABASE_URL.startsWith('file:')
+    ? path.resolve(rootDir, DEMO_DATABASE_URL.slice('file:'.length))
+    : null;
+  if (!demoPath) throw new Error('DEMO_DATABASE_URL debe usar SQLite local (file:).');
+  mkdirSync(path.dirname(demoPath), { recursive: true });
+  closeSync(openSync(demoPath, 'a'));
+  await run('npx', ['prisma', 'migrate', 'deploy'], { ...process.env, DATABASE_URL: DEMO_DATABASE_URL });
+  await run('npx', ['prisma', 'db', 'seed'], {
+    ...process.env,
+    DATABASE_URL: DEMO_DATABASE_URL,
+    STUDY_FILES_DIRECTORY: path.join(rootDir, '.local', 'data', 'demo-study-files'),
+  });
+
+  console.log('[dev] Inicializando identidades de demostración (idempotente)…');
+  await run('npm', ['run', 'auth:seed-local']);
+
   console.log('[dev] Iniciando API…');
   track(
-    spawn('npx', ['tsx', 'apps/api/src/index.ts'], {
+    spawn(process.execPath, ['--import', 'tsx', 'apps/api/src/index.ts'], {
       cwd: rootDir,
       stdio: 'inherit',
-      env: { ...process.env, API_PORT: String(API_PORT) },
+      env: { ...process.env, API_PORT: String(API_PORT), API_INTERNAL_URL, APP_BASE_URL, DEMO_DATABASE_URL },
     }),
   );
   await waitForUrl(`${API_INTERNAL_URL}/health`);
@@ -94,13 +113,14 @@ async function main() {
     spawn('npx', ['next', 'dev', '-p', String(WEB_PORT), '-H', '127.0.0.1'], {
       cwd: path.join(rootDir, 'apps', 'web'),
       stdio: 'inherit',
-      env: { ...process.env, API_INTERNAL_URL },
+      env: { ...process.env, API_INTERNAL_URL, APP_BASE_URL },
     }),
   );
 
   console.log('');
   console.log(`[dev] Frontend: http://127.0.0.1:${WEB_PORT}`);
   console.log(`[dev] API:      ${API_INTERNAL_URL}`);
+  console.log('[dev] Placeholders: .local/auth/demo-credentials.json');
   console.log('[dev] Ctrl+C detiene ambos servicios.');
 
   children.forEach((child, i) => {

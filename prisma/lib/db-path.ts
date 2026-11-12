@@ -14,6 +14,7 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 const rootDir = path.resolve(here, '..', '..');
 
 export const DEFAULT_DB_PATH = path.join(rootDir, '.local', 'data', 'medical.db');
+export const DEFAULT_DEMO_DB_PATH = path.join(rootDir, '.local', 'data', 'demo.db');
 
 export function resolveDbPath(): string {
   const url = process.env.DATABASE_URL;
@@ -25,4 +26,10 @@ export function resolveDbPath(): string {
 
 export function resolveDbUrl(): string {
   return `file:${resolveDbPath()}`;
+}
+
+export function resolveDemoDbPath(): string {
+  const url = process.env.DEMO_DATABASE_URL;
+  if (url && url.startsWith('file:')) return url.slice('file:'.length);
+  return DEFAULT_DEMO_DB_PATH;
 }

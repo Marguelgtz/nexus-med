@@ -5,7 +5,7 @@ import '../src/infrastructure/database/prisma';
 import '../src/infrastructure/storage/local-study-files';
 import type { PatientDetail } from '@nexus-med/contracts';
 
-export const app = createApp();
+export const app = createApp({ authentication: 'disabled' });
 
 let counter = 0;
 

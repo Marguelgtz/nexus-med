@@ -19,7 +19,7 @@ interface RuntimeClient {
 const requestClient = new AsyncLocalStorage<RuntimeClient>();
 let defaultClient: RuntimeClient | undefined;
 
-function createSqliteAtomicWrite(client: PrismaClient): AtomicWrite {
+export function createSqliteAtomicWrite(client: PrismaClient): AtomicWrite {
   return async (statements) => {
     await client.$transaction(async (tx) => {
       for (const statement of statements) {

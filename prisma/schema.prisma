@@ -28,6 +28,8 @@ model Patient {
   dateOfBirth        String?
   phone              String?
   email              String?
+  appointmentEmailConsent          Boolean   @default(false)
+  appointmentEmailConsentUpdatedAt  DateTime?
   // Practice-specific identifier (optional).
   externalIdentifier String?
 
@@ -117,6 +119,7 @@ model Appointment {
   completedAt           DateTime?
   linkedEncounterId     String?    @unique
   linkedEncounter       Encounter? @relation(fields: [linkedEncounterId], references: [id], onDelete: SetNull)
+  emailOutbox           EmailOutbox[]
   createdAt             DateTime   @default(now())
   updatedAt             DateTime   @updatedAt
 
@@ -226,4 +229,147 @@ model StudyReceiptFile {
 
   @@index([receiptId])
   @@map("study_receipt_files")
+}
+
+// Better Auth identity. Role is server-owned and scoped to this single
+// practice; multi-practice support requires explicit practice foreign keys
+// on clinical data rather than inferring tenancy from this role field.
+model User {
+  id            String    @id
+  name          String
+  email         String    @unique
+  emailVerified Boolean   @default(false)
+  image         String?
+  role          String    @default("pending")
+  disabledAt    DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  sessions             Session[]
+  accounts             Account[]
+  createdInvitations   Invitation[]    @relation("InvitationCreator")
+  acceptedInvitations  Invitation[]    @relation("InvitationAcceptor")
+  securityEvents       SecurityEvent[] @relation("SecurityEventActor")
+
+  @@index([role, disabledAt])
+  @@map("auth_users")
+}
+
+model Session {
+  id        String   @id
+  expiresAt DateTime
+  token     String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  // A demo-only preference stored per session, never on the shared user.
+  demoView  String   @default("doctor")
+
+  @@index([userId])
+  @@map("auth_sessions")
+}
+
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@index([userId])
+  @@unique([providerId, accountId])
+  @@map("auth_accounts")
+}
+
+model Verification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([identifier])
+  @@map("auth_verifications")
+}
+
+model Invitation {
+  id             String    @id @default(uuid())
+  email          String
+  role           String    @default("secretary")
+  tokenHash      String    @unique
+  expiresAt      DateTime
+  createdById    String
+  createdBy      User      @relation("InvitationCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  acceptedUserId String?
+  acceptedUser   User?     @relation("InvitationAcceptor", fields: [acceptedUserId], references: [id], onDelete: SetNull)
+  acceptedAt     DateTime?
+  revokedAt      DateTime?
+  createdAt      DateTime  @default(now())
+
+  @@index([email, expiresAt, revokedAt, acceptedAt])
+  @@map("auth_invitations")
+}
+
+model SecurityEvent {
+  id        String   @id @default(uuid())
+  actorId   String?
+  actor     User?    @relation("SecurityEventActor", fields: [actorId], references: [id], onDelete: SetNull)
+  event     String
+  targetId  String?
+  outcome   String
+  createdAt DateTime @default(now())
+
+  @@index([actorId, createdAt])
+  @@index([event, createdAt])
+  @@map("security_events")
+}
+
+model AuthRateLimit {
+  key        String   @id
+  count      Int      @default(0)
+  windowFrom DateTime
+  updatedAt  DateTime @updatedAt
+
+  @@index([windowFrom])
+  @@map("auth_rate_limits")
+}
+
+// Durable delivery queue. Auth message payloads are encrypted with the auth
+// secret because they contain single-use verification/reset URLs.
+model EmailOutbox {
+  id             String    @id @default(uuid())
+  kind           String
+  appointmentId  String?
+  appointment    Appointment? @relation(fields: [appointmentId], references: [id], onDelete: Restrict)
+  appointmentVersion String?
+  appointmentEvent String?
+  recipient      String
+  subject        String
+  encryptedBody  String
+  idempotencyKey String    @unique
+  status         String    @default("queued")
+  attempts       Int       @default(0)
+  availableAt    DateTime  @default(now())
+  leaseExpiresAt DateTime?
+  sentAt         DateTime?
+  lastError      String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([status, availableAt])
+  @@index([appointmentId, createdAt])
+  @@map("email_outbox")
 }
