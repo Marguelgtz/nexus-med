@@ -13,12 +13,16 @@ beforeEach(async () => {
   patientId = patient.id as string;
 });
 
-async function makeEncounter(studies?: unknown, targetPatientId = patientId): Promise<any> {
+async function makeEncounter(
+  studies?: unknown,
+  targetPatientId = patientId,
+  occurredAt = '2026-11-01T10:30:00-06:00',
+): Promise<any> {
   const res = await app.request(`/api/patients/${targetPatientId}/encounters`, {
     method: 'POST',
     headers: json,
     body: JSON.stringify({
-      occurredAt: '2026-11-01T10:30:00-06:00',
+      occurredAt,
       reason: 'Seguimiento de prueba',
       ...(studies !== undefined ? { studies } : {}),
     }),
@@ -47,6 +51,23 @@ describe('creating studies with an encounter', () => {
     expect(studies[0].encounter).toMatchObject({ id: created.id });
     expect(studies[0].encounter.occurredAt).toBeTruthy();
     expect(studies[0].encounter.reason).toBe('Seguimiento de prueba');
+  });
+
+  it('normalizes offset timestamps before the atomic insert so timeline order is chronological', async () => {
+    const later = await makeEncounter(
+      [{ category: 'laboratorio', name: 'Estudio posterior' }],
+      patientId,
+      '2026-11-01T10:30:00-06:00',
+    );
+    const earlier = await makeEncounter(
+      [{ category: 'laboratorio', name: 'Estudio previo' }],
+      patientId,
+      '2026-11-01T15:00:00Z',
+    );
+
+    expect(later.occurredAt).toBe('2026-11-01T16:30:00.000Z');
+    const timeline = (await (await app.request(`/api/patients/${patientId}/encounters`)).json()) as any[];
+    expect(timeline.map((encounter) => encounter.id)).toEqual([later.id, earlier.id]);
   });
 
   it('creates no study rows when studies is omitted', async () => {

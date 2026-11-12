@@ -120,7 +120,7 @@ export async function createEncounter(
       values: [
         encounterId,
         patientId,
-        input.occurredAt,
+        new Date(input.occurredAt).toISOString(),
         input.type ?? 'consulta',
         note.reason ?? null,
         note.historyOfPresentIllness ?? null,
