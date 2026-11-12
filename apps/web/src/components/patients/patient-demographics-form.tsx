@@ -9,7 +9,7 @@ import { practiceToday } from '../../lib/format';
 import { useBeforeUnloadGuard } from '../../lib/use-before-unload-guard';
 import { Modal } from '../modal';
 
-export type DemographicValues = Pick<AdministrativePatient, 'fullName' | 'dateOfBirth' | 'phone' | 'email' | 'externalIdentifier'>;
+export type DemographicValues = Pick<AdministrativePatient, 'fullName' | 'dateOfBirth' | 'phone' | 'email' | 'externalIdentifier' | 'appointmentEmailConsent'>;
 type SavedPatient = { id: string; fullName: string };
 export type DemographicsProps = {
   patientId?: string;
@@ -32,12 +32,12 @@ const FIELDS = [
 /** Shared by registration, demographic edits, and administrative dialogs. */
 export function PatientDemographicsForm({ patientId, initial, prefillName, existingPatients = [], administrative, onSaved, onCancel, dialogTitle }: DemographicsProps) {
   const router = useRouter();
-  const pristine = { fullName: initial?.fullName ?? prefillName ?? '', dateOfBirth: initial?.dateOfBirth ?? '', phone: initial?.phone ?? '', email: initial?.email ?? '', externalIdentifier: initial?.externalIdentifier ?? '' };
+  const pristine = { fullName: initial?.fullName ?? prefillName ?? '', dateOfBirth: initial?.dateOfBirth ?? '', phone: initial?.phone ?? '', email: initial?.email ?? '', externalIdentifier: initial?.externalIdentifier ?? '', appointmentEmailConsent: initial?.appointmentEmailConsent ?? false };
   const [values, setValues] = useState(pristine);
   const [errors, setErrors] = useState<Record<string, string[]>>({});
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
-  const dirty = FIELDS.some(({ key }) => values[key] !== pristine[key]);
+  const dirty = FIELDS.some(({ key }) => values[key] !== pristine[key]) || values.appointmentEmailConsent !== pristine.appointmentEmailConsent;
   useBeforeUnloadGuard(dirty && !saving);
   const duplicate = !patientId && existingPatients.find(p => p.fullName.trim().toLocaleLowerCase() === values.fullName.trim().toLocaleLowerCase());
   function close() {
@@ -48,6 +48,7 @@ export function PatientDemographicsForm({ patientId, initial, prefillName, exist
     event.preventDefault();
     setError(null);
     const candidate = { fullName: values.fullName.trim(), dateOfBirth: values.dateOfBirth || null,
+      appointmentEmailConsent: values.appointmentEmailConsent,
       ...(patientId ? { phone: values.phone.trim() || null, email: values.email.trim() || null, externalIdentifier: values.externalIdentifier.trim() || null }
         : { ...(values.phone.trim() ? { phone: values.phone.trim() } : {}), ...(values.email.trim() ? { email: values.email.trim() } : {}), ...(values.externalIdentifier.trim() ? { externalIdentifier: values.externalIdentifier.trim() } : {}) }) };
     const parsed = (patientId ? updatePatientInputSchema : createPatientInputSchema).safeParse(candidate);
@@ -79,9 +80,20 @@ export function PatientDemographicsForm({ patientId, initial, prefillName, exist
         <input id={`demographic-${field.key}`} name={field.key} type={field.type} value={values[field.key]} disabled={saving}
           placeholder={'placeholder' in field ? field.placeholder : undefined}
           aria-invalid={errors[field.key]?.length ? true : undefined} aria-describedby={errors[field.key]?.length ? `${field.key}-error` : undefined}
-          onChange={e => { setValues(v => ({ ...v, [field.key]: e.target.value })); setErrors(v => ({ ...v, [field.key]: [] })); }} />
+          onChange={e => { setValues(v => ({ ...v, [field.key]: e.target.value,
+            ...(field.key === 'email' && e.target.value.trim().toLowerCase() !== pristine.email.trim().toLowerCase() ? { appointmentEmailConsent: false } : {}),
+          })); setErrors(v => ({ ...v, [field.key]: [] })); }} />
         {errors[field.key]?.length ? <p className="field-error" id={`${field.key}-error`}>{errors[field.key]?.[0]}</p> : null}
       </div>)}
+      <div className="field field-checkbox">
+        <label htmlFor="appointment-email-consent">
+          <input id="appointment-email-consent" type="checkbox" checked={values.appointmentEmailConsent}
+            disabled={saving || !values.email.trim()}
+            onChange={event => setValues(value => ({ ...value, appointmentEmailConsent: event.target.checked }))} />
+          Acepta recibir por correo confirmaciones, cambios y cancelaciones de citas
+        </label>
+        <p className="faint">El correo solo incluye información de coordinación; no contiene notas ni datos clínicos. Si cambias el correo, confirma el permiso de nuevo.</p>
+      </div>
     </div>
     {duplicate ? <p className="notice">Ya existe un paciente con este nombre: {duplicate.fullName}. Revisa antes de crear otro registro.</p> : null}
     {error ? <p role="alert" className="error">{error}</p> : null}

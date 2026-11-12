@@ -7,6 +7,8 @@
 
 import {
   type Appointment,
+  type AppointmentEmailEvent,
+  type AppointmentEmailStatus,
   type CreateStudyReceipt,
   type ReceiptQuery,
   type StudyReceipt,
@@ -34,6 +36,7 @@ import {
   type UpdateMedicalDocumentInput,
   type UpdateStudyInput,
   appointmentSchema,
+  appointmentEmailStatusSchema,
   createMedicalDocumentInputSchema,
   createAppointmentInputSchema,
   createEncounterInputSchema,
@@ -55,9 +58,9 @@ import {
   updateStudyInputSchema,
 } from '@nexus-med/contracts';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://127.0.0.1:4000/api';
+const API_BASE = '/api';
 
-export type ApiErrorCode = 'VALIDATION_ERROR' | 'NOT_FOUND' | 'CONFLICT' | 'INTERNAL_ERROR';
+export type ApiErrorCode = 'VALIDATION_ERROR' | 'UNAUTHENTICATED' | 'FORBIDDEN' | 'RATE_LIMITED' | 'NOT_FOUND' | 'CONFLICT' | 'INTERNAL_ERROR';
 
 export class ApiError extends Error {
   readonly status: number;
@@ -292,6 +295,26 @@ export function updateAppointment(id: string, input: UpdateAppointmentInput): Pr
     `/appointments/${encodeURIComponent(id)}`,
     { method: 'PATCH', body: JSON.stringify(input) },
     appointmentSchema.safeParse.bind(appointmentSchema),
+  );
+}
+
+export function listAppointmentEmails(id: string): Promise<AppointmentEmailStatus[]> {
+  return request(`/appointments/${encodeURIComponent(id)}/emails`, undefined, asList(appointmentEmailStatusSchema));
+}
+
+export function sendAppointmentEmail(id: string, event: AppointmentEmailEvent): Promise<AppointmentEmailStatus> {
+  return request(
+    `/appointments/${encodeURIComponent(id)}/emails`,
+    { method: 'POST', body: JSON.stringify({ event }) },
+    appointmentEmailStatusSchema.safeParse.bind(appointmentEmailStatusSchema),
+  );
+}
+
+export function retryAppointmentEmail(id: string, emailId: string, acknowledgePossibleDuplicate: boolean): Promise<AppointmentEmailStatus> {
+  return request(
+    `/appointments/${encodeURIComponent(id)}/emails/${encodeURIComponent(emailId)}/retry`,
+    { method: 'POST', body: JSON.stringify({ acknowledgePossibleDuplicate }) },
+    appointmentEmailStatusSchema.safeParse.bind(appointmentEmailStatusSchema),
   );
 }
 
