@@ -4,6 +4,10 @@ Use `Confirmed`, `Proposed`, `Open`, or `Superseded`. Record the date and ration
 
 ## Confirmed decisions
 
+### D-050 — Readability for working older professionals — 2026-11-12
+
+**Status:** Accepted from explicit owner feedback. Intended users include professionals aged 60–70 who continue working. Readable default type, sufficiently firm strokes, contrast, clear action labels and generous control targets take precedence over fine editorial type or compact presentation. Narrow layouts must reorganize instead of shrinking essential text. The immediate authorized change is the isolated UI sample, not a whole-application rollout. Its selected 18px main text / 16px functional metadata / 14px auxiliary copy and 52px controls are provisional design choices, not universal age-based thresholds or a claim of validated usability.
+
 | ID | Decision | Notes |
 |---|---|---|
 | D-001 | Initial user is one general surgeon. | No assistant/staff workflow in the prototype. |

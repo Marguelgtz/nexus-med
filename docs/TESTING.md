@@ -1,5 +1,13 @@
 # Testing and Verification
 
+## Readability follow-up — 2026-11-12 (D-050)
+
+Only the isolated UI sample changed. Frontend typecheck, lint (the same inherited warnings) and production build pass. No new tests were added, and the existing behavior/API suites were not rerun for CSS and visible-label changes.
+
+Chrome computed-style checks confirm 18px/700 patient names, 40px/700 desktop headings, 16px field text/labels and 52px-or-larger navigation, filters, fields and row actions. Directory reflow was measured at 320/390/768/1024/1440px; registration at 320/390/768/1440px, with no horizontal document overflow or clipped form inputs at 320px. At 768px, table and available container width both measure 695px. Screenshots found and corrected mobile filters splitting words; mobile navigation and filters now reorganize instead of shrinking text. Quick-view open/Escape close, registration open, required-name focus and clean cancellation were checked. Dirty-confirm behavior is unchanged and retains the previous tooling limitation below.
+
+Selected WCAG relative-luminance pairs: ink `#26352f` on table `#fffefa` **12.75:1**; secondary `#46544b` on paper `#f7f5f0` **7.33:1**; white on primary `#913c28` **7.29:1**; field border `#71806f` on `#fffefa` **4.15:1**. These are focused pairs, not an exhaustive audit or accessibility certification. Snapshots are ignored in `.local/ui-exploration/readability/`. No intended-user study, screen-reader test or native 200% browser-zoom certification was performed. No application records were written.
+
 ## Alternative UI sample — 2026-11-12
 
 `codex/ui-editorial-exploration`: web tests 44/44, web typecheck, lint and final production build pass. Lint retains the existing TopBar navigation warning and missing-Pages notice. Build required a permitted subprocess rerun after the sandbox could not parse TypeScript's configuration output. No API code changed; API integration tests were not rerun.

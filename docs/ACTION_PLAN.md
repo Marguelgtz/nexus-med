@@ -2,13 +2,17 @@
 
 ## Active objective — Alternative UI exploration (2026-11-12)
 
+**Readability follow-up (D-050, implemented):** Owner finds the first sample better but still too thin/small and explicitly prioritizes working users aged 60–70. The sample now uses sturdy sans-serif headings, 18px main text/names, 16px functional metadata, 14px auxiliary copy, stronger text/control contrast, 52px controls, a persistent search label and explicit `Ver datos` row actions. Decorative slogans and the paper illustration are removed. Mobile navigation/filters reorganize without reducing text. Paper/ink/terracotta, page-based registration, synthetic fixture and transient state remain. No API/data/auth behavior or deployment changes. Usability with the intended audience remains untested; this constraint is also recorded in `PRODUCT.md` and `DECISIONS.md`.
+
+**Readability verification:** Frontend typecheck, lint (inherited warnings) and production build pass. Browser confirms 18px/700 patient names, 40px/700 desktop headings, 16px labels/inputs and >=52px primary/filter/navigation/row controls. Focused contrast pairs: main text on table 12.75:1, secondary text on paper 7.33:1, white on primary 7.29:1 and input border on field 4.15:1. These are selected pairs, not a full accessibility audit. Current screenshots: ignored `.local/ui-exploration/readability/`. Existing behavior tests and production-route exclusion remain the prior sample evidence; no API tests were rerun for this presentation change.
+
 **Outcome:** Give the owner a visibly different interactive sample before an application-wide redesign. Owner requests new navigation, controls and colors, with a registration alternative to a pop-up.
 
 **Scope:** Local-development-only `/exploracion-ui`: directory, patient preview and registration using exact checked-in synthetic demographics. Preview changes live only in component memory and are explicitly labeled; no API writes, clinical data, auth changes, remote deployment or changes to existing product screens. Interpreted “signup” as patient registration in a full work surface; an optional page-versus-panel question received no answer during implementation, so this remains a reversible design assumption.
 
 **Sequence:** (1) Inspect current UI, historical audits and primary references; specify the sample in `UI_SPEC.md`. (2) Implement isolated styles and complete preview interactions. (3) Verify desktop/mobile, keyboard, search/filter, validation, unsaved exit and temporary registration; run lint, typecheck, web tests and build. (4) Reconcile evidence and commit for owner review. Work is sequential; no delegation.
 
-**Design:** Warm paper surfaces, dark ink navigation, terracotta primary actions, editorial headings, aligned directory rows, full-page registration. CSS module isolation; reuse icons and transport schemas; no new dependencies or external assets.
+**Design:** Warm paper surfaces, dark ink navigation, darker terracotta primary actions, sturdy sans-serif headings, aligned directory rows, full-page registration. CSS module isolation; reuse icons and transport schemas; no new dependencies or external assets.
 
 **Branch:** `codex/ui-editorial-exploration`, based on `codex/ux-qa-fixes` at `9d0f7c2` (PR #31). Clean initial tree. Focused local commit; no merge/deployment planned. Earlier active sections below are inherited historical handoffs.
 
@@ -16,7 +20,7 @@
 
 **Verification:** Web 44/44; web TypeScript check; lint (only inherited TopBar and Pages-directory warnings); final Next production build pass. Sandbox build initially failed to parse the TypeScript subprocess output; permitted rerun passed. Local production server confirmed `/exploracion-ui` HTTP 404, then was stopped. Existing `/patients` still renders its original shell and six active fixtures. Normal startup applied no migrations and both seed runs created zero rows. Browser snapshots in ignored `.local/ui-exploration/`; sample running at http://127.0.0.1:3000/exploracion-ui. Next-generated `next-env.d.ts` is back to its original contents after the build.
 
-**Next:** Owner compares this direction with the current application, including `Nuevo paciente`. No final branding or broad rollout is approved by this sample. Review the focused local commit `feat(ui): add isolated editorial design exploration` on this branch; no push, PR, merge or remote deployment in this session.
+**Next:** Owner compares the readability revision with the current application, including `Nuevo paciente`. Review the local exploration branch and its `fix(ui): improve sample readability and controls` follow-up. No final branding or broad rollout is approved by this sample; no push, PR, merge or remote deployment in this session.
 
 ## Active objective — Reception and patient-study UX refinement (O-009, 2026-11-11)
 
