@@ -18,7 +18,7 @@
 
 **Acceptance:** Secretary's sidebar reaches name/ID/contact search and administrative patient cards without exposing the clinical registry or `/patients/[id]`; patient-card main target opens the expediente, consultation remains an explicit second action, and `← Pacientes` restores the prior query/filter; Reception's daily Citas tab lists appointments for the selected date with current status/actions while the calendar stays the same; deep links and role switches still route correctly.
 
-**Status:** D-052 is recorded in open PR #38. The date-driven Citas view is in open PR #39, and role-aware sidebar destinations are in open PR #40 (`codex/secretary-navigation`, commit `51b207b`), based on #39. Web tests are 49/49; typecheck, lint, production build and diff check pass. Browser confirmed secretary access to administrative patient search and the physician's Citas link. Next: branch `codex/patient-card-expediente` from #40; make a patient card's main area open the expediente, retain a separate `Nueva consulta` action, and restore the registry filters on return.
+**Status:** D-052 is recorded in open PR #38. Open PR #39 adds the date-driven Citas view; open PR #40 adds role-aware sidebar destinations; and open PR #41 (`codex/patient-card-expediente`, commit `0e01195`) completes the patient-card expediente navigation, based on #40. Web tests are 52/52; typecheck, lint, production build and diff check pass. Browser confirmed secretary patient search, physician Citas, separate card actions, and restoration of the archived search/filter from the expediente. No records were changed. Next: owner review of #38 → #39 → #40 → #41; leave the feature PRs open and unmerged.
 
 ## Completed objective — Proposal 2 across the application (2026-11-12)
 
