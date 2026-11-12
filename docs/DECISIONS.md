@@ -4,6 +4,10 @@ Use `Confirmed`, `Proposed`, `Open`, or `Superseded`. Record the date and ration
 
 ## Confirmed decisions
 
+### D-052 — Role-aware patient access and focused Reception appointments — 2026-11-12
+
+**Status:** Accepted from explicit owner feedback. The secretary sidebar exposes **Citas**, **Pacientes**, and **Estudios** and routes patient search to the existing administrative list under `/secretaria?seccion=pacientes`; secretary never enters the clinical `/patients/[id]` workspace. Physician patient-directory cards open the expediente when their main area is selected; `Nueva consulta` remains a separate, explicit action, and returning from the expediente restores the directory query/filter. Reception gains a date-driven **Citas** view at `/recepcion?seccion=citas`, distinct from its attention/queue overview; the existing `/calendar` day/week/month experience stays unchanged. No API, data, clinical, role-enforcement, or calendar behavior changes.
+
 ### D-051 — Adopt Proposal 2 across the application — 2026-11-12
 
 **Status:** Accepted by explicit owner request. Apply `/exploracion-ui-2` visual direction throughout the application: midnight sidebar, cobalt primary actions, cool light workspace, sturdy readable text (D-050). Preserve clinical/administrative workflows, persistence, session/role restrictions and explicit physician review. Use global sidebar navigation plus separate patient section navigation; patient registration becomes a full page, with contextual consultation shortcuts retaining unsaved work. The preview is a visual reference, not production data logic. Implementation is planned in `UI_ROLLOUT_PLAN.md`; no rollout completion or deployment is claimed. Earlier sample-only restrictions are superseded for this adoption. Cloudflare hostname changes remain separate.

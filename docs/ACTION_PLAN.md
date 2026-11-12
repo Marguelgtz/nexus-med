@@ -1,6 +1,26 @@
 # Living Action Plan — Medical Platform MVP
 
-## Active objective — Proposal 2 across the application (2026-11-12)
+## Active follow-up — Patient and appointment navigation (2026-11-12)
+
+**Outcome:** Close three owner-reported navigation gaps in the completed Proposal 2 rollout: secretary must reach administrative patient search from the global sidebar; clicking a patient card should open its expediente with a separate `Nueva consulta` action; Reception needs a focused daily Citas tab and global entry point. Keep `/calendar` unchanged and secretary on administrative patient DTOs only. Patient signup remains the full page opened by `Nuevo paciente`; it is not a global navigation destination.
+
+**Scope:** UI/navigation and focused tests only. No API, schema, authorization, clinical behavior, calendar, or new signup flow changes. The existing `/patients` redirect for secretary stays intact.
+
+**Ordered sub-objectives:**
+
+1. Record the owner-approved behavior in `DECISIONS.md`, `WORKFLOWS.md`, and `UI_SPEC.md`, with this stack plan (documentation PR #38).
+2. Add `/recepcion?seccion=citas` as a date-driven appointment list with `Recepción` / `Citas` tabs; preserve appointment actions and leave `/calendar` unchanged (PR #39).
+3. Expose role-appropriate global destinations: physician `Citas` to the new Reception section; secretary `Citas`, administrative `Pacientes`, and `Estudios` within `/secretaria` (PR #40).
+4. Make each directory card open its patient expediente, keep `Nueva consulta` as a separate action, and preserve search/filter when returning to the registry (PR #41).
+5. Verify role boundaries, routes, return context, responsive navigation, web tests, typecheck, lint, production build, and browser flow; update the live plan/evidence.
+
+**Dependencies:** #39 precedes #40 because the physician sidebar destination requires the new section. #41 is data/navigation independent but stays last in the review stack. Keep each PR to roughly 3–8 files and implementation PRs open/unmerged.
+
+**Acceptance:** Secretary's sidebar reaches name/ID/contact search and administrative patient cards without exposing the clinical registry or `/patients/[id]`; patient-card main target opens the expediente, consultation remains an explicit second action, and `← Pacientes` restores the prior query/filter; Reception's daily Citas tab lists appointments for the selected date with current status/actions while the calendar stays the same; deep links and role switches still route correctly.
+
+**Status:** Approved scope recorded on `codex/proposal-2-navigation-plan`, based on open PR #37. Next: publish this focused decision/workflow/spec plan as PR #38, then implement the three dependent slices.
+
+## Completed objective — Proposal 2 across the application (2026-11-12)
 
 **Outcome:** Owner selects Proposal 2 for application-wide adoption, preserving working workflows and improving navigation. D-051 supersedes the earlier sample-only review boundary. Detailed ordered scope, navigation rules and acceptance journeys: [rollout plan](UI_ROLLOUT_PLAN.md). Existing sample verification below is historical, not evidence for a completed rollout.
 
