@@ -9,6 +9,8 @@ The reference iteration is now the production visual direction per D-051. Use th
 
 Owner authorizes applying Proposal 2 across the application (D-051). The [rollout plan](UI_ROLLOUT_PLAN.md) defines implementation order, navigation, form placement and acceptance journeys. The production screens now use the shared direction; sample verification remains historical and separate from production workflow evidence.
 
+Owner-approved navigation follow-up D-052: the physician sidebar has a focused **Citas** entry to the daily Reception schedule while **Calendario** remains unchanged. The secretary sidebar links to administrative **Citas**, **Pacientes**, and **Estudios** sections within `/secretaria`; it never links to clinical patient routes. In the physician directory, clicking a patient card opens the expediente, `Nueva consulta` is a distinct action, and returning to Pacientes restores the source query/filter. Signup remains a full page launched by `Nuevo paciente`, not a sidebar destination.
+
 ## Iteration 2 — separate alternative, 2026-11-12
 
 Owner explicitly requests keeping the current app, the previous example and a new iteration, and confirms a preference for side navigation. The prior sample is not an accepted visual design; retain it at `/exploracion-ui` for comparison. Add `/exploracion-ui-2`, development-only with the same synthetic-only, in-memory preview boundary.
@@ -81,7 +83,7 @@ Gaps and decisions recorded here (no API/data changes required; per D-017 the AP
 / ──────────────── 307 redirect ────────────────▶ /patients
                                                         │
 ┌───────────────────────────────────────────────────────┤
-│  Top bar (all screens):  [Nexus Med]  [Pacientes · Calendario desktop / menu mobile] │
+│  Global sidebar: physician [Recepción · Citas · Estudios · Pacientes · Calendario]; secretary [Citas · Pacientes · Estudios] │
 └───────────────────────────────────────────────────────┘
 
 /patients                        Registro de pacientes (list + search + filter)
@@ -102,13 +104,19 @@ Gaps and decisions recorded here (no API/data changes required; per D-017 the AP
 /patients/[id]/recetas/[did]     Receta (detail + print)
 /patients/[id]/informes/nueva    Nuevo informe (report form)
 /patients/[id]/informes/[did]    Informe (detail + print)
+/recepcion                      Recepción (atención y queue)
+/recepcion?seccion=citas        Citas del día (focused appointment list)
+/secretaria?seccion=agenda      Citas administrativas y queue compartida
+/secretaria?seccion=pacientes   Búsqueda y datos administrativos de pacientes
+/secretaria?seccion=estudios    Estudios recibidos (vista administrativa)
 /calendar?vista=semana&fecha=…   Calendario (day/week/month views)
 /not-found                       404 page (unknown id, unknown route, invalid fecha)
 ```
 
 Navigation rules:
 
-- The primary nav items are **Pacientes** (the registry is the home working screen) and **Calendario** (the schedule at a glance). Everything else is reached through contextual actions on the registry row, the calendar, or the patient overview.
+- Physician primary navigation: **Recepción**, **Citas**, **Estudios**, **Pacientes**, and **Calendario**. **Citas** is a focused date-driven appointment list inside Reception; **Calendario** remains the separate day/week/month schedule.
+- Secretary primary navigation: **Citas**, **Pacientes**, and **Estudios**, routed to administrative sections under `/secretaria`. The Patients link uses administrative contact data; it does not expose the physician clinical registry or patient routes.
 - Patient-specific screens carry a persistent context strip under the top bar: `← Pacientes` (back link) + patient full name + external identifier (if any) + `Archivado` badge when archived.
 - Encounter screens nest under the patient; back returns to Consultas. Appointment/document forms return to their owning section unless an explicit consultation return context is supplied.
 - URL patterns are the single source of navigation state (shareable, bookmarkable, restorable after restart — US-013).
@@ -129,23 +137,22 @@ Layout (top to bottom):
 1. Heading row: `Pacientes` (H1) + right-aligned primary button `Nuevo paciente`.
 2. Search field: full-width input, placeholder `Buscar por nombre o identificador`, leading magnifier icon. Search is debounced 300 ms and applied as `?q=` (history-replaced, not pushed, so the back button does not walk through keystrokes).
 3. Filter tabs (segmented control): `Activos` (default) · `Archivados` · `Todos` → `status=active|archived|all`. Active tab is visually marked; count per tab is shown in parentheses when known from the same fetch (prototype: fetch the active list; tab counts update after re-render — counts are optional and may be omitted if they require extra requests; never block the list on them).
-4. Result list: one row per patient (see row spec). Sorted by the server (`fullName` asc).
+4. Results: responsive patient cards sorted by the server (`fullName` asc). The main card area opens the patient's expediente; each active card exposes a separate `Nueva consulta` action.
 5. States:
    - **Loading** (first SSR only): skeleton rows (3).
    - **Empty, no search:** `Aún no hay pacientes` + `Nuevo paciente` button.
    - **Empty, with search:** `Sin resultados para "q"` + actions: `Limpiar búsqueda` (ghost) and `Crear un paciente con este nombre` (primary; carries the query as the pre-filled name on `/patients/new?nombre=`).
    - **API error:** page-level error banner (`No se pudo cargar el listado`) + `Reintentar` button (client refetch); last good data is not displayed as fresh (no stale-data masquerading).
 
-**Row spec** (each row is a link to `/patients/[id]`):
+**Patient card spec** (the main identity/details surface is a link to `/patients/[id]`):
 
 | Column | Content | Notes |
 |---|---|---|
-| Nombre | `fullName` | Bold; primary tap target |
-| Edad / Nacimiento | Age if `dateOfBirth` present, else `—` | Age computed from `dateOfBirth` |
-| Identificador | `externalIdentifier` or `—` | Monospace, muted |
-| Estado | `Archivado` badge (amber) only when archived | Active rows show nothing |
+| Identity | Initials/avatar, `fullName`, age and `externalIdentifier` | Main card target opens the expediente; include a visible `Abrir expediente` cue |
+| Status | `Archivado` badge only when archived | Active cards show no badge |
+| Action | `Nueva consulta` for an active patient | Separate action, never nested inside the expediente link |
 
-Row hover: subtle background change; the whole row is clickable. Archived rows keep their normal row styling plus the badge.
+Cards show visible keyboard focus and a restrained hover cue. Returning from the expediente restores the originating query/status through a validated internal return path. Archived cards open their record but do not offer a new consultation.
 
 ### 3.2 Nuevo paciente — `/patients/new`
 
@@ -747,7 +754,7 @@ UI v0 is a working baseline, not a final brand approval. The system board and ke
 
 ## 10. Secretary and reception workspace — D-044/D-047
 
-A view selector opens `/secretaria` or the physician's `/recepcion`. Secretary navigation contains Today, Patients and Estudios. Today is a date-driven administrative appointment list and shared waiting queue. Arrival, undo arrival, and physician start-of-attention are explicit actions. Saving a note never silently completes a visit. Appointment cancellation removes it from active queue display; rescheduling explicitly resets reception markers. The physician completes appointments using the existing completion operation.
+A view selector opens `/secretaria` or the physician's `/recepcion`. Secretary navigation contains Citas, Pacientes and Estudios, using administrative patient DTOs only. Citas is a date-driven administrative appointment list and shared waiting queue; Pacientes provides name/ID search and contact cards. Physician Reception has **Recepción** and **Citas** tabs; Citas is a focused selected-day schedule while `/calendar` day/week/month remains unchanged. Arrival, undo arrival, and physician start-of-attention are explicit actions. Saving a note never silently completes a visit. Appointment cancellation removes it from active queue display; rescheduling explicitly resets reception markers. The physician completes appointments using the existing completion operation.
 
 Patient creation/editing and appointment create/reschedule use the existing native dialog. Secretary patient cards show identifier, age, phone and email inline; missing contact values say “Sin registrar”. The card's `Editar datos` action opens the existing form. The patient stays named throughout; cancellation protects dirty inputs, failures retain text, successful changes refresh owning SSR data, and focus returns to the trigger. Secretary views request administrative DTOs only. No clinical background, note body, result interpretation, or prescription editor appears there. Clinical note composition, historical reading and printable document pages remain dedicated routes.
 

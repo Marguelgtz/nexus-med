@@ -1,6 +1,6 @@
 # Product Workflows — Medical Platform MVP
 
-**Status:** Original MVP workflows plus verified NX-001…NX-004 and owner-authorized O-006 behavior (2026-11-09); implementation PR #7 is open for owner review.
+**Status:** Original MVP workflows plus verified NX-001…NX-004 and owner-authorized O-006 behavior (2026-11-09), with navigation corrections D-052 (2026-11-12).
 **Primary user:** One general surgeon  
 **Interface:** Spanish (Mexico)  
 **Data:** Synthetic demo records only
@@ -14,7 +14,8 @@
 - Opening `/` redirects to `/patients`.
 - The patient registry is the default working screen.
 - On first run, six active seeded patients are visible; the one archived fixture is accessible through the archived view/filter.
-- Implemented primary navigation: **Pacientes** and **Calendario**, with contextual patient/encounter/appointment actions.
+- Physician primary navigation: **Recepción**, **Citas**, **Estudios**, **Pacientes**, and **Calendario**, with contextual patient/encounter/appointment actions. **Citas** opens a selected-day list in Reception; **Calendario** remains the existing day/week/month view.
+- Secretary primary navigation: **Citas**, **Pacientes**, and **Estudios**, all within `/secretaria`. Patient search uses administrative contact data and never routes to the physician's clinical record pages.
 - Do not show demonstration or fictional-data labels in the application (D-046); the synthetic-data restriction remains a development boundary.
 - Keep the active patient's name and internal identifier visible on patient-specific screens.
 
@@ -25,13 +26,14 @@
 2. The list displays active patients alphabetically by full name (case-insensitive), giving the registry a predictable default order.
 3. Doctor searches by partial name or internal ID.
 4. Results show full name, date of birth/age when available, ID, and archive status.
-5. Doctor selects a result and opens its overview.
+5. The main patient-card target opens the overview. `Nueva consulta` remains a separate action on the card.
 
 Expected behavior:
 - Search is case-insensitive and supports partial matches.
 - No-results state offers a way to clear the search or create a patient.
 - Archived patients are omitted from the default active list but remain retrievable through an archived filter or search.
 - Similar names are distinguishable through additional metadata.
+- Returning from an overview to **Pacientes** restores the originating search/filter when present.
 
 ### Create
 1. Doctor selects **Nuevo paciente**.
@@ -254,10 +256,10 @@ Consultas owns the chronological note list; Resumen owns background and its edit
 
 ## 16. Secretary, reception and received studies — D-044/D-045
 
-1. Select Secretary from the view selector. Today shows the selected day's appointments and the shared live waiting queue. Patient/contact and scheduling tasks open in native dialogs, preserving the workspace. Walk-ins are registered as an ordinary appointment for the current date before recording arrival.
+1. Select Secretary from the view selector. Global **Citas**, **Pacientes**, and **Estudios** destinations stay within the administrative workspace. **Citas** shows the selected day's appointments and shared live waiting queue; **Pacientes** provides name/ID search and administrative contact cards, not the physician's clinical records. Patient/contact and scheduling tasks open in native dialogs, preserving the workspace. Walk-ins are registered as an ordinary appointment for the current date before recording arrival.
 2. Register arrival explicitly. The physician sees the same persistent queue, starts attention explicitly, opens the consultation, and completes the appointment explicitly. Opening/saving a note does not complete the appointment or record a physician review. Undo arrival is available before attention starts. Rescheduling confirms that reception will reset; cancellation removes the visit from the active queue. The live queue includes unfinished arrivals from earlier dates.
 3. Both views add a received study: select patient, title, optional study date, optional consultation, optional existing order, optional receipt note and 1–5 PDF/PNG/JPEG files. No prior order is required. Order/consultation associations must belong to the patient; an order's existing consultation is respected. Save creates the metadata and local files, then refreshes the workspace. Failure preserves the form and file selection.
 4. Physician opens the received-study inbox or the patient's Studies section, opens files, and explicitly records review with an optional physician-authored note. Secretary sees received/reviewed state but no clinical review note/editor. Neither receipt nor review rewrites the original order. Both views operate on the same records without separate databases.
-5. Brief registration/demographic/background/scheduling actions use shared native modals; direct routes remain valid fallback/bookmarks. Long consultation entry, historical clinical notes, and printable documents retain dedicated pages. Closing a changed form requires confirmation; failed saves remain visible with input intact.
+5. Physician Reception offers **Recepción** and focused **Citas** tabs. Citas shows and manages the selected day's existing appointments; the independent **Calendario** day/week/month view remains unchanged. Brief registration/demographic/background/scheduling actions use shared native modals; direct routes remain valid fallback/bookmarks. Long consultation entry, historical clinical notes, and printable documents retain dedicated pages. Closing a changed form requires confirmation; failed saves remain visible with input intact.
 
 The view selector shapes presentation; it does not authenticate users or enforce authorization.
