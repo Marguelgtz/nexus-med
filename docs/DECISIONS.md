@@ -4,6 +4,11 @@ Use `Confirmed`, `Proposed`, `Open`, or `Superseded`. Record the date and ration
 
 ## Confirmed decisions
 
+### D-051 — Adopt Proposal 2 across the application — 2026-11-12
+
+**Status:** Accepted by explicit owner request. Apply `/exploracion-ui-2` visual direction throughout the application: midnight sidebar, cobalt primary actions, cool light workspace, sturdy readable text (D-050). Preserve clinical/administrative workflows, persistence, session/role restrictions and explicit physician review. Use global sidebar navigation plus separate patient section navigation; patient registration becomes a full page, with contextual consultation shortcuts retaining unsaved work. The preview is a visual reference, not production data logic. Implementation is planned in `UI_ROLLOUT_PLAN.md`; no rollout completion or deployment is claimed. Earlier sample-only restrictions are superseded for this adoption. Cloudflare hostname changes remain separate.
+
+
 ### D-050 — Readability for working older professionals — 2026-11-12
 
 **Status:** Accepted from explicit owner feedback. Intended users include professionals aged 60–70 who continue working. Readable default type, sufficiently firm strokes, contrast, clear action labels and generous control targets take precedence over fine editorial type or compact presentation. Narrow layouts must reorganize instead of shrinking essential text. The immediate authorized change is the isolated UI sample, not a whole-application rollout. Its selected 18px main text / 16px functional metadata / 14px auxiliary copy and 52px controls are provisional design choices, not universal age-based thresholds or a claim of validated usability.
