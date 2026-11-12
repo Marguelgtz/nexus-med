@@ -1,5 +1,9 @@
 # Testing and Verification
 
+## Proposal 2 operations styling — 2026-11-12
+
+Applied the new surface, type, action, card, reception metric, secretary tab, and calendar treatment to the shared operations views. Week layout uses an internal horizontal scroll area at narrow widths. These are CSS-only changes; interaction and API workflow code is unchanged. Integrated browser check is pending along with later clinical/auth migration.
+
 ## Proposal 2 patient directory and registration — 2026-11-12
 
 Production registry now displays API-backed selectable patient cards and a demographics-only preview panel. Selecting a record does not change route; opening the expediente or starting a consultation are explicit actions. `Nuevo paciente` routes to the existing persisted form page and includes an internal return path preserving registry search/filter on cancel. The return path accepts only `/patients` paths. Typecheck, web 44/44, lint and `git diff --check` pass. Production build and browser inspection remain pending. No patient records were changed.

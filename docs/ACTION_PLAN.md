@@ -4,11 +4,11 @@
 
 **Outcome:** Owner selects Proposal 2 for application-wide adoption, preserving working workflows and improving navigation. D-051 supersedes the earlier sample-only review boundary. Detailed ordered scope, navigation rules and acceptance journeys: [rollout plan](UI_ROLLOUT_PLAN.md). Existing sample verification below is historical, not evidence for a completed rollout.
 
-**Status:** Shell slice implemented in PR #34 (`codex/proposal-2-shell`, 5 files) based on plan PR #32. Patient slice implemented locally on child branch `codex/proposal-2-patients`: API-backed directory now uses selectable cards plus demographics preview and real expediente actions; new-patient action opens a page and preserves the registry query on cancel. Typecheck, lint, web tests and diff check pass for patient slice; production build pending. Its PR will stack on #34 after build verification. Browser rendering remains to review.
+**Status:** Shell slice implemented in PR #34 (`codex/proposal-2-shell`, 5 files) based on plan PR #32. Patient slice implemented in PR #35 (7 files, based on #34): API-backed directory now uses selectable cards plus demographics preview and real expediente actions; new-patient action opens a page and preserves the registry query on cancel. Typecheck, lint, web tests and diff check pass for patient slice; production build pending. Its PR will stack on #34 after build verification. Browser rendering remains to review.
 
 Shell implementation details: global tokens (cool page, midnight/cobalt, readable type/control sizing), persistent role-aware global sidebar, nested patient navigation and session actions retained. Patient, operations, clinical and auth screens still need visual migration and browser verification. Inventory includes authenticated physician/secretary/demo views, registry and patient subroutes, reception/calendar, studies/receipts, prescriptions/reports, account/access and authentication screens. Current role/session behavior in source takes precedence over historical documentation claiming auth is absent.
 
-**Sequence:** (1) Shared tokens, controls and application sidebar (PR #34). (2) Persisted patient directory, full-page registration and patient workspace navigation (in progress). (3) Reception, secretary and calendar. (4) Consultation/context, studies/receipts and printable documents. (5) Auth/access screens and integrated responsive/keyboard/workflow regression. Each slice includes focused verification before the next.
+**Sequence:** (1) Shared tokens, controls and application sidebar (PR #34). (2) Persisted patient directory, full-page registration and patient workspace navigation (PR #35). (3) Reception, secretary and calendar (in progress on `codex/proposal-2-operations`). (4) Consultation/context, studies/receipts and printable documents. (5) Auth/access screens and integrated responsive/keyboard/workflow regression. Each slice includes focused verification before the next.
 
 **Dependencies:** Shell before screen migrations; patient context before clinical screens. Shared CSS and navigation changes are sequential. No schema/API changes planned. Synthetic fixtures and existing save/authorization behavior remain authoritative. Cloudflare hostname changes are a separate pending request: the requested nested workers.dev hostname is unsupported by the documented Worker-name URL format; no routing/deployment change was made.
 
@@ -18,7 +18,7 @@ Shell implementation details: global tokens (cool page, midnight/cobalt, readabl
 
 **Shell verification:** Web 44/44, typecheck, lint (inherited missing Pages-directory and `window.location.assign` notices) and production build pass. Initial sandbox build could not parse TypeScript subprocess output; permitted rerun passed. `git diff --check` passes. No API changes or patient mutations. Browser visual verification remains to be done; local port 3000 was not running during this check.
 
-**Next action:** Commit and publish the shell PR for review, then branch the patient directory/registration integration from it. Keep both isolated previews for comparison. No deployment.
+**Next action:** Run focused checks for operations visual changes, then publish a small operations styling PR stacked on #35. Next migrate clinical and account screens, then perform integrated browser workflow checks. Keep both isolated previews for comparison. No deployment.
 
 ## Previous objective — Alternative UI exploration (2026-11-12)
 
