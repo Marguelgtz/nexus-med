@@ -1,5 +1,9 @@
 # Testing and Verification
 
+## Proposal 2 daily Citas view — 2026-11-12
+
+`/recepcion?seccion=citas` renders a focused agenda for the selected date, with the same appointment statuses and existing start/reschedule/cancel actions as Recepción. Its Recepción/Citas tabs and previous/today/next controls preserve the selected section and date. `/calendar` is unchanged, and administrative section resolution cannot select the physician Citas view. Web tests pass **46/46**, web typecheck passes, lint exits 0 with the inherited missing-Pages notice and TopBar `window.location.assign()` warning, production build passes after a sandbox-only `--showConfig` subprocess parsing failure (the unsandboxed rerun succeeded), and `git diff --check` passes. Browser inspection confirmed the focused heading, selected date, seeded appointment and actions, then navigation back to Recepción; no records were changed. No API tests were needed because the API and persistence contract did not change.
+
 ## Proposal 2 operations styling — 2026-11-12
 
 Applied the new surface, type, action, card, reception metric, secretary tab, and calendar treatment to the shared operations views. Week layout uses an internal horizontal scroll area at narrow widths. These are CSS-only changes; interaction and API workflow code is unchanged. Slice checks passed: web 44/44, typecheck, lint (inherited notices), build and diff check. The final integrated browser pass is recorded below.

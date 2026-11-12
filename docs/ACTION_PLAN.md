@@ -18,7 +18,7 @@
 
 **Acceptance:** Secretary's sidebar reaches name/ID/contact search and administrative patient cards without exposing the clinical registry or `/patients/[id]`; patient-card main target opens the expediente, consultation remains an explicit second action, and `← Pacientes` restores the prior query/filter; Reception's daily Citas tab lists appointments for the selected date with current status/actions while the calendar stays the same; deep links and role switches still route correctly.
 
-**Status:** Approved scope recorded on `codex/proposal-2-navigation-plan`, based on open PR #37. Next: publish this focused decision/workflow/spec plan as PR #38, then implement the three dependent slices.
+**Status:** D-052 is recorded in open PR #38. The date-driven Citas view and role-section resolver are implemented and verified in open PR #39 (`codex/reception-citas-view`, commit `358fe79`), based on #38. Web tests are 46/46, web typecheck/lint/build and diff check pass, and browser navigation between Citas and Recepción was confirmed without changing records. Next: branch `codex/secretary-navigation` from #39 and expose the role-appropriate destinations in the global sidebar.
 
 ## Completed objective — Proposal 2 across the application (2026-11-12)
 
