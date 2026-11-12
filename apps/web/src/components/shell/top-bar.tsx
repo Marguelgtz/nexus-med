@@ -6,12 +6,16 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
+import { useState } from 'react';
+import type { AuthSession } from '@nexus-med/contracts';
 import { Icon, type IconName } from '../icon';
 import { confirmInAppNavigation } from '../../lib/use-before-unload-guard';
 
-export function TopBar() {
+export function TopBar({ session }: { session: AuthSession }) {
   const pathname = usePathname();
   const router = useRouter();
+  const [changingView, setChangingView] = useState(false);
+  const [error, setError] = useState('');
   const administrative = pathname.startsWith('/secretaria');
   const patientsActive = pathname === '/patients' || pathname.startsWith('/patients/');
   const calendarActive = pathname === '/calendar' || pathname.startsWith('/calendar');
@@ -37,7 +41,48 @@ export function TopBar() {
         <nav className="topbar-nav" aria-label="Navegación principal">
           {renderLinks()}
         </nav>
-        <label className="view-selector"><span className="sr-only">Vista de trabajo</span><select aria-label="Vista de trabajo" value={administrative ? 'secretary' : 'medical'} onChange={e => { if (confirmInAppNavigation()) router.push(e.target.value === 'secretary' ? '/secretaria' : '/recepcion'); else e.currentTarget.value = administrative ? 'secretary' : 'medical'; }}><option value="medical">Vista: Médico</option><option value="secretary">Vista: Secretaría</option></select></label>
+        {session.user.role === 'demo' ? (
+          <label className="view-selector"><span className="sr-only">Vista de demostración</span>
+            <select aria-label="Vista de demostración" disabled={changingView} value={session.activeView ?? 'doctor'} onChange={async (event) => {
+              const select = event.currentTarget;
+              const view = event.currentTarget.value;
+              if (!confirmInAppNavigation()) {
+                select.value = session.activeView ?? 'doctor';
+                return;
+              }
+              setChangingView(true);
+              setError('');
+              try {
+                const response = await fetch('/api/demo/view', {
+                  method: 'PATCH',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ view }),
+                  cache: 'no-store',
+                });
+                if (!response.ok) throw new Error('No se pudo cambiar la vista.');
+                const destination = view === 'secretary' ? '/secretaria' : '/recepcion';
+                router.replace(destination);
+                router.refresh();
+              } catch {
+                setError('No se pudo cambiar la vista. Intenta de nuevo.');
+                select.value = session.activeView ?? 'doctor';
+              } finally {
+                setChangingView(false);
+              }
+            }}>
+              <option value="doctor">Demo: Médico</option>
+              <option value="secretary">Demo: Secretaría</option>
+            </select>
+          </label>
+        ) : null}
+        {session.canManageAccess ? <Link className="topbar-account-link" href="/configuracion/accesos">Accesos</Link> : null}
+        <span className="topbar-user" title={session.user.name}>{session.user.name}</span>
+        <button className="topbar-signout" type="button" onClick={async () => {
+          if (!confirmInAppNavigation()) return;
+          const response = await fetch('/api/auth/sign-out', { method: 'POST', cache: 'no-store' });
+          if (response.ok) window.location.assign('/login');
+          else setError('No se pudo cerrar la sesión. Intenta de nuevo.');
+        }}>Salir</button>
         <details className="topbar-mobile-menu">
           <summary aria-label="Navegación principal">
             <span className="topbar-menu-icon" aria-hidden="true">
@@ -51,6 +96,7 @@ export function TopBar() {
           </nav>
         </details>
       </div>
+      {error ? <p className="topbar-feedback" role="status">{error}</p> : null}
     </header>
   );
 }

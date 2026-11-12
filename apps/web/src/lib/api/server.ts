@@ -12,10 +12,29 @@
 // undefined fields later.
 
 import 'server-only';
+import { getCloudflareContext } from '@opennextjs/cloudflare';
+import { headers } from 'next/headers';
 
 import { z } from 'zod';
 
 const API_BASE = process.env.API_INTERNAL_URL ?? 'http://127.0.0.1:4000';
+type ApiService = { fetch(request: Request): Promise<Response> };
+
+async function fetchApi(path: string, cookie: string | null, appOrigin: string): Promise<Response> {
+  const requestHeaders = new Headers();
+  if (cookie) requestHeaders.set('cookie', cookie);
+  requestHeaders.set('cache-control', 'no-store');
+
+  if (process.env.NODE_ENV !== 'production') {
+    return fetch(`${API_BASE}${path}`, { cache: 'no-store', headers: requestHeaders });
+  }
+
+  const { env } = await getCloudflareContext({ async: true });
+  const api = (env as CloudflareEnv & { API?: ApiService }).API;
+  if (!api) throw new Error('Private API service binding is unavailable.');
+  const request = new Request(new URL(path, appOrigin), { headers: requestHeaders, method: 'GET' });
+  return api.fetch(request);
+}
 
 /**
  * A failed API request. `status` is the HTTP status when the API answered
@@ -42,7 +61,12 @@ export class ApiError extends Error {
 export async function apiGet<S extends z.ZodTypeAny>(path: string, schema: S): Promise<z.infer<S>> {
   let res: Response;
   try {
-    res = await fetch(`${API_BASE}${path}`, { cache: 'no-store' });
+    const incomingHeaders = await headers();
+    const cookie = incomingHeaders.get('cookie');
+    const scheme = incomingHeaders.get('x-forwarded-proto') === 'https' ? 'https' : 'http';
+    const host = incomingHeaders.get('host') ?? '127.0.0.1:3000';
+    const appOrigin = process.env.APP_BASE_URL ?? `${scheme}://${host}`;
+    res = await fetchApi(path, cookie, appOrigin);
   } catch {
     throw new ApiError('No se pudo conectar con el servicio de pacientes.', null);
   }

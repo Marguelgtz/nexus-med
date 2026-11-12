@@ -19,6 +19,7 @@ import {
   AppointmentTypeBadge,
 } from './badges';
 import { AppointmentForm } from './appointment-form';
+import { AppointmentEmail } from './appointment-email';
 import {
   cancelAppointment,
   completeAppointment,
@@ -128,6 +129,8 @@ export function AppointmentDetail({
         ) : null}
 
         {appt.status === 'cancelled' ? <p className="faint">Cita cancelada.</p> : null}
+
+        {!isArchived ? <AppointmentEmail appointment={appt} showHistory /> : null}
 
         {error ? <p className="error">{error}</p> : null}
 
