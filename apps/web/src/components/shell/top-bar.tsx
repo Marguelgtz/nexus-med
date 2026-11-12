@@ -5,30 +5,30 @@
 // renders no data.
 
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useState } from 'react';
 import type { AuthSession } from '@nexus-med/contracts';
-import { Icon, type IconName } from '../icon';
+import { Icon } from '../icon';
 import { confirmInAppNavigation } from '../../lib/use-before-unload-guard';
+import { getPrimaryNavigationLinks } from './primary-navigation';
 
 export function TopBar({ session }: { session: AuthSession }) {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const router = useRouter();
   const [changingView, setChangingView] = useState(false);
   const [error, setError] = useState('');
   const administrative = pathname.startsWith('/secretaria');
-  const patientsActive = pathname === '/patients' || pathname.startsWith('/patients/');
-  const calendarActive = pathname === '/calendar' || pathname.startsWith('/calendar');
   const secretary = session.user.role === 'secretary' || (session.user.role === 'demo' && session.activeView === 'secretary') || administrative;
-  const links = secretary ? [{ href: '/secretaria', label: 'Secretaría', active: true }] : [
-    { href: '/recepcion', label: 'Recepción', active: pathname === '/recepcion' },
-    { href: '/estudios', label: 'Estudios', active: pathname === '/estudios' },
-    { href: '/patients', label: 'Pacientes', active: patientsActive },
-    { href: '/calendar', label: 'Calendario', active: calendarActive },
-  ];
-  const renderLinks = () => links.map(({ href, label, active }) => (
+  const links = getPrimaryNavigationLinks({
+    secretary,
+    pathname,
+    section: searchParams.get('seccion'),
+    date: searchParams.get('fecha'),
+  });
+  const renderLinks = () => links.map(({ href, label, active, icon }) => (
     <Link key={href} href={href} aria-current={active ? 'page' : undefined} className={active ? 'active' : undefined}>
-      <Icon name={({ Recepción: 'activity', Estudios: 'document', Pacientes: 'users', Calendario: 'calendar', Secretaría: 'grid' } as Record<string, IconName>)[ label] ?? 'grid'} />{label}
+      <Icon name={icon} />{label}
     </Link>
   ));
 
