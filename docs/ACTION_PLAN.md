@@ -1,5 +1,23 @@
 # Living Action Plan — Medical Platform MVP
 
+## Active objective — Alternative UI exploration (2026-11-12)
+
+**Outcome:** Give the owner a visibly different interactive sample before an application-wide redesign. Owner requests new navigation, controls and colors, with a registration alternative to a pop-up.
+
+**Scope:** Local-development-only `/exploracion-ui`: directory, patient preview and registration using exact checked-in synthetic demographics. Preview changes live only in component memory and are explicitly labeled; no API writes, clinical data, auth changes, remote deployment or changes to existing product screens. Interpreted “signup” as patient registration in a full work surface; an optional page-versus-panel question received no answer during implementation, so this remains a reversible design assumption.
+
+**Sequence:** (1) Inspect current UI, historical audits and primary references; specify the sample in `UI_SPEC.md`. (2) Implement isolated styles and complete preview interactions. (3) Verify desktop/mobile, keyboard, search/filter, validation, unsaved exit and temporary registration; run lint, typecheck, web tests and build. (4) Reconcile evidence and commit for owner review. Work is sequential; no delegation.
+
+**Design:** Warm paper surfaces, dark ink navigation, terracotta primary actions, editorial headings, aligned directory rows, full-page registration. CSS module isolation; reuse icons and transport schemas; no new dependencies or external assets.
+
+**Branch:** `codex/ui-editorial-exploration`, based on `codex/ux-qa-fixes` at `9d0f7c2` (PR #31). Clean initial tree. Focused local commit; no merge/deployment planned. Earlier active sections below are inherited historical handoffs.
+
+**Acceptance/status:** Sample implemented and verified; visual preference remains for owner review. Directory and registration have no horizontal overflow at 320/390/768/1440px. Browser checks passed identifier search, no results/reset, archived filter, quick view with Escape/focus restoration, required name, invalid email, future-date rejection, duplicate warning, temporary registration and reset on reload. Source reuses the existing dirty-navigation guard; its native-confirm acceptance/cancellation flow could not be completed because browser control timed out on the open dialog. Do not count that check as passed. No new persisted records or clinical writes.
+
+**Verification:** Web 44/44; web TypeScript check; lint (only inherited TopBar and Pages-directory warnings); final Next production build pass. Sandbox build initially failed to parse the TypeScript subprocess output; permitted rerun passed. Local production server confirmed `/exploracion-ui` HTTP 404, then was stopped. Existing `/patients` still renders its original shell and six active fixtures. Normal startup applied no migrations and both seed runs created zero rows. Browser snapshots in ignored `.local/ui-exploration/`; sample running at http://127.0.0.1:3000/exploracion-ui. Next-generated `next-env.d.ts` is back to its original contents after the build.
+
+**Next:** Owner compares this direction with the current application, including `Nuevo paciente`. No final branding or broad rollout is approved by this sample. Review the focused local commit `feat(ui): add isolated editorial design exploration` on this branch; no push, PR, merge or remote deployment in this session.
+
 ## Active objective — Reception and patient-study UX refinement (O-009, 2026-11-11)
 
 **Outcome:** Implement D-048/D-049: direct reception workflows, one patient activity destination, compact patient lookup, reliable dialogs, study detail with current-day sample data, and removal of fixture-only fictitious note labels.

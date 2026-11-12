@@ -1,5 +1,13 @@
 # Testing and Verification
 
+## Alternative UI sample — 2026-11-12
+
+`codex/ui-editorial-exploration`: web tests 44/44, web typecheck, lint and final production build pass. Lint retains the existing TopBar navigation warning and missing-Pages notice. Build required a permitted subprocess rerun after the sandbox could not parse TypeScript's configuration output. No API code changed; API integration tests were not rerun.
+
+Chrome verified directory search by identifier, empty/reset state, archive filtering, patient quick view, Escape focus return, required-name and invalid-email messages, future-date rejection, duplicate warning, successful temporary registration and reset to exact fixtures on reload. The native date input needed a keyboard edit after browser-automation `fill` to emit its React change event; fill-only attempts are not counted as date validation passes. Directory and registration document widths fit 320/390/768/1440px. Visual inspection corrected wrapping mobile navigation labels. Screenshots are ignored local evidence in `.local/ui-exploration/`.
+
+The sample reuses `useBeforeUnloadGuard`; native dirty-confirm acceptance/cancellation was not verified because browser control timed out while the confirmation was open. This limitation does not count as a passed check. Keyboard preview close/focus return did pass. Existing `/patients` retains its original presentation and six active fixture rows. Normal startup applied no pending migrations and both seeds created zero rows. A separate loopback production server on port 3002 returned HTTP **404** for the sample and was stopped after verification. No application data was created by the sample; its registration changes exist only in memory.
+
 ## Compact entry — final verification (2026-11-10)
 
 Dialog/follow-up milestone: web 39/39, web typecheck and ESLint pass (existing warning only). Local Chromium at 390px checks new/saved consultation follow-up dialogs, initial field focus, Tab containment, trigger focus return, dirty Escape cancel/accept and note retention. No clinical write was submitted. A repeated native Escape close-request behavior was found and fixed by handling/preventing Escape at keydown before the guarded close.

@@ -10,6 +10,8 @@
 
 ## Current Phase 4 code map (2026-11-08)
 
+**Local UI exploration (2026-11-12):** `apps/web/src/app/exploracion-ui/page.tsx` composes a standalone design sample, backed only by the checked-in synthetic demographic fixture. `components/patients/ui-exploration.tsx` and its CSS module own the sample's presentation and transient interactions. The server page returns not-found outside development. This is outside the authenticated application shell; it performs no API/database reads or writes and changes no application ownership boundary. No clinical fixture notes are passed to the client. It is not a second implementation of patient persistence.
+
 This implementation inventory complements the original architectural target tree below. The topology is unchanged: local Next.js + Hono, one Prisma/SQLite database, no Cloudflare runtime.
 
 - API domains: `apps/api/src/domains/appointments/`, `studies/`, and `documents/`; `encounters/` also performs atomic study creation.
