@@ -12,3 +12,5 @@ export * from './studies';
 export * from './documents';
 
 export * from './receipts';
+export * from './auth';
+export * from './email';

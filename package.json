@@ -16,6 +16,7 @@
     "db:migrate:dev": "prisma migrate dev",
     "db:seed": "prisma db seed",
     "db:reset": "node scripts/db-reset.mjs",
+    "auth:seed-local": "node --import tsx apps/api/src/bootstrap/local-auth.ts",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "lint": "eslint .",
     "test": "npm run test --workspaces --if-present",

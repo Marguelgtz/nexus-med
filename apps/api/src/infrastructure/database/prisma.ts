@@ -14,16 +14,15 @@ import { PrismaClient } from '../../generated/prisma/client';
 import { resolveDbPath } from '../../../../../prisma/lib/db-path';
 import { prisma, setDefaultPrismaClient } from './runtime-client';
 
-const dbPath = resolveDbPath();
+export function createLocalPrismaClient(dbPath = resolveDbPath()): PrismaClient {
+  // better-sqlite3 does not create parent directories; ensure the data dir
+  // exists before first use (also covers direct API development).
+  mkdirSync(path.dirname(dbPath), { recursive: true });
+  const adapter = new PrismaBetterSqlite3({ url: `file:${dbPath}` });
+  return new PrismaClient({ adapter });
+}
 
-// better-sqlite3 does not create parent directories; ensure the data dir
-// exists before first use (also covers `npm run dev:api` without the
-// orchestrator).
-mkdirSync(path.dirname(dbPath), { recursive: true });
-
-const adapter = new PrismaBetterSqlite3({ url: `file:${dbPath}` });
-
-const localPrisma = new PrismaClient({ adapter });
+export const localPrisma = createLocalPrismaClient();
 setDefaultPrismaClient(localPrisma);
 
 export { prisma };

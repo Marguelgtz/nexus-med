@@ -21,7 +21,7 @@ export default defineConfig({
     path: 'prisma/migrations',
     // Prisma 7 does not run seeding automatically; the seed command is
     // explicit and idempotent (see prisma/seed.ts).
-    seed: 'tsx prisma/seed.ts',
+    seed: 'node --import tsx prisma/seed.ts',
   },
   datasource: {
     url: envUrl && envUrl.startsWith('file:') ? envUrl : defaultDbUrl,

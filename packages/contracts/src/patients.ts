@@ -32,9 +32,14 @@ export const createPatientInputSchema = z
     dateOfBirth: dateSchema.nullable().optional(),
     phone: phoneSchema.optional(),
     email: emailSchema.optional(),
+    appointmentEmailConsent: z.boolean().default(false),
     externalIdentifier: externalIdentifierSchema.optional(),
   })
-  .strict();
+  .strict()
+  .refine(value => !value.appointmentEmailConsent || Boolean(value.email), {
+    message: 'Agrega un correo antes de aceptar mensajes de citas',
+    path: ['appointmentEmailConsent'],
+  });
 
 export type CreatePatientInput = z.infer<typeof createPatientInputSchema>;
 
@@ -45,11 +50,16 @@ export const updatePatientInputSchema = z
     dateOfBirth: dateSchema.nullable().optional(),
     phone: phoneSchema.optional().nullable(),
     email: emailSchema.optional().nullable(),
+    appointmentEmailConsent: z.boolean().optional(),
     externalIdentifier: externalIdentifierSchema.optional().nullable(),
   })
   .strict()
   .refine((value) => Object.keys(value).length > 0, {
     message: 'At least one field must be provided',
+  })
+  .refine(value => value.appointmentEmailConsent !== true || (value.email !== null), {
+    message: 'Agrega o conserva un correo antes de aceptar mensajes de citas',
+    path: ['appointmentEmailConsent'],
   });
 
 export type UpdatePatientInput = z.infer<typeof updatePatientInputSchema>;
@@ -80,6 +90,8 @@ export const patientDetailSchema = z.object({
   dateOfBirth: dateSchema.nullable(),
   phone: z.string().nullable(),
   email: z.string().nullable(),
+  appointmentEmailConsent: z.boolean(),
+  appointmentEmailConsentUpdatedAt: isoDateTimeSchema.nullable(),
   externalIdentifier: z.string().nullable(),
   medicalConditions: z.string().nullable(),
   previousSurgeries: z.string().nullable(),
@@ -96,5 +108,7 @@ export type PatientDetail = z.infer<typeof patientDetailSchema>;
 export const administrativePatientSchema = patientSummarySchema.extend({
   phone: z.string().nullable(),
   email: z.string().nullable(),
+  appointmentEmailConsent: z.boolean(),
+  appointmentEmailConsentUpdatedAt: isoDateTimeSchema.nullable(),
 });
 export type AdministrativePatient = z.infer<typeof administrativePatientSchema>;

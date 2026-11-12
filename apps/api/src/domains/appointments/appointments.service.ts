@@ -41,7 +41,7 @@ function isUniqueConstraintViolation(error: unknown): boolean {
 // ISO 8601 strings and validated enums. Services serialize at this boundary.
 interface AppointmentRow {
   id: string;
-  patient: { id: string; fullName: string };
+  patient: { id: string; fullName: string; email: string | null; appointmentEmailConsent: boolean };
   startAt: Date;
   durationMinutes: number;
   type: string;
@@ -58,7 +58,12 @@ interface AppointmentRow {
 function toAppointment(row: AppointmentRow): Appointment {
   return {
     id: row.id,
-    patient: { id: row.patient.id, fullName: row.patient.fullName },
+    patient: {
+      id: row.patient.id,
+      fullName: row.patient.fullName,
+      email: row.patient.email,
+      appointmentEmailConsent: row.patient.appointmentEmailConsent,
+    },
     startAt: row.startAt.toISOString(),
     durationMinutes: row.durationMinutes,
     // The values are only ever written through the validated API boundary;
@@ -75,7 +80,7 @@ function toAppointment(row: AppointmentRow): Appointment {
   };
 }
 
-const rowInclude = { patient: { select: { id: true, fullName: true } } } as const;
+const rowInclude = { patient: { select: { id: true, fullName: true, email: true, appointmentEmailConsent: true } } } as const;
 
 async function findAppointment(id: string): Promise<AppointmentRow> {
   const row = await prisma.appointment.findUnique({ where: { id }, include: rowInclude });

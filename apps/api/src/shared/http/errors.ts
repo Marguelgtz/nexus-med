@@ -41,6 +41,27 @@ export class ConflictError extends ApiError {
   }
 }
 
+export class UnauthenticatedError extends ApiError {
+  constructor() {
+    super(401, 'UNAUTHENTICATED', 'Inicia sesión para continuar.');
+    this.name = 'UnauthenticatedError';
+  }
+}
+
+export class ForbiddenError extends ApiError {
+  constructor(message = 'No tienes permiso para realizar esta acción.') {
+    super(403, 'FORBIDDEN', message);
+    this.name = 'ForbiddenError';
+  }
+}
+
+export class RateLimitedError extends ApiError {
+  constructor() {
+    super(429, 'RATE_LIMITED', 'Demasiadas solicitudes. Intenta de nuevo más tarde.');
+    this.name = 'RateLimitedError';
+  }
+}
+
 export function onErrorHandler(error: Error, c: Context): Response {
   if (error instanceof ApiError) {
     return c.json(
@@ -51,7 +72,7 @@ export function onErrorHandler(error: Error, c: Context): Response {
           ...(error.fieldErrors ? { fieldErrors: error.fieldErrors } : {}),
         },
       },
-      error.status as 400 | 404 | 409 | 500,
+      error.status as 400 | 401 | 403 | 404 | 409 | 429 | 500,
     );
   }
 

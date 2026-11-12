@@ -35,7 +35,7 @@ export const isoDateTimeSchema = z.iso.datetime({ offset: true });
  */
 export const errorEnvelopeSchema = z.object({
   error: z.object({
-    code: z.enum(['VALIDATION_ERROR', 'NOT_FOUND', 'CONFLICT', 'INTERNAL_ERROR']),
+    code: z.enum(['VALIDATION_ERROR', 'UNAUTHENTICATED', 'FORBIDDEN', 'RATE_LIMITED', 'NOT_FOUND', 'CONFLICT', 'INTERNAL_ERROR']),
     message: z.string(),
     fieldErrors: z.record(z.string(), z.array(z.string())).optional(),
   }),

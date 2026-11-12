@@ -13,7 +13,7 @@
 
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 // Fixed timestamp for seeded patient rows so repeated seeds are deterministic.
 const SEEDED_AT = new Date('2026-01-01T12:00:00.000-06:00');
@@ -106,7 +106,7 @@ interface FixtureMedicalDocument {
   lines?: FixturePrescriptionLine[];
 }
 
-interface Fixture {
+export interface Fixture {
   patients: FixturePatient[];
   encounters: FixtureEncounter[];
   appointments?: FixtureAppointment[];
@@ -246,6 +246,29 @@ function createNeutralStudyPdf(studyTitle: string): string {
   for (const offset of offsets.slice(1)) pdf += `${String(offset).padStart(10, '0')} 00000 n \n`;
   pdf += `trailer\n<< /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n${xrefOffset}\n%%EOF\n`;
   return pdf;
+}
+
+export function createDemoReceiptPdf(studyTitle: string): Uint8Array {
+  return new TextEncoder().encode(createNeutralStudyPdf(studyTitle));
+}
+
+export async function getCloudflareDemoSeedData(seedTime = new Date()) {
+  const fixture = await loadFixture();
+  const upcomingAppointments = upcomingDemoAppointments.map((spec) => ({
+    id: spec.id,
+    patientId: spec.patientId,
+    startAt: instantAtWallTime(addPracticeDays(seedTime, spec.dayOffset), spec.hour, spec.minute).toISOString(),
+    durationMinutes: spec.durationMinutes,
+    type: spec.type,
+    status: 'scheduled',
+  }));
+  return {
+    fixture,
+    seedTime: seedTime.toISOString(),
+    baselineSeededAt: SEEDED_AT.toISOString(),
+    practiceDate: practiceDateString(seedTime),
+    upcomingAppointments,
+  };
 }
 
 async function storeDefaultReceiptFile(fileName: string, studyTitle: string): Promise<SeedReceiptFile> {
@@ -499,6 +522,13 @@ export async function idempotentSeed(
 async function main(): Promise<void> {
   // Imported lazily so this module stays testable without the generated client.
   const { prisma } = await import('../apps/api/src/infrastructure/database/prisma.js');
+  if (process.env.STUDY_FILES_DIRECTORY) {
+    const [{ createLocalStudyFileStorage }, { setDefaultStudyFileStorage }] = await Promise.all([
+      import('../apps/api/src/infrastructure/storage/local-study-files.js'),
+      import('../apps/api/src/infrastructure/storage/runtime-study-files.js'),
+    ]);
+    setDefaultStudyFileStorage(createLocalStudyFileStorage(path.resolve(process.env.STUDY_FILES_DIRECTORY)));
+  }
   const result = await idempotentSeed(prisma);
   console.log(
     `[seed] done — patients created: ${result.patientsCreated}, encounters created: ${result.encountersCreated}, appointments created: ${result.appointmentsCreated}, studies created: ${result.studiesCreated}, study receipts created: ${result.studyReceiptsCreated}, documents created: ${result.documentsCreated}`
@@ -506,7 +536,9 @@ async function main(): Promise<void> {
   await prisma.$disconnect();
 }
 
-main().catch((error: unknown) => {
-  console.error('[seed] failed:', error instanceof Error ? error.message : error);
-  process.exitCode = 1;
-});
+if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href) {
+  main().catch((error: unknown) => {
+    console.error('[seed] failed:', error instanceof Error ? error.message : error);
+    process.exitCode = 1;
+  });
+}
