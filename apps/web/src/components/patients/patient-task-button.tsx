@@ -1,16 +1,23 @@
 'use client';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import type { PatientDetail, PatientSummary } from '@nexus-med/contracts';
+import type { PatientDetail } from '@nexus-med/contracts';
 import { AppointmentForm } from '../appointments/appointment-form';
 import { BackgroundForm } from './background-form';
 import { EditPatientForm } from './edit-patient-form';
-import { NewPatientForm } from './new-patient-form';
 import { Icon } from '../icon';
-export function NewPatientButton({ patients, label = 'Nuevo paciente', prefillName }: { patients: PatientSummary[]; label?: string; prefillName?: string }) {
-  const [open, setOpen] = useState(false);
+import { usePathname, useSearchParams } from 'next/navigation';
+export function NewPatientButton({ label = 'Nuevo paciente', prefillName }: { label?: string; prefillName?: string }) {
   const router = useRouter();
-  return <><button className="btn btn-primary" onClick={() => setOpen(true)}><Icon name="plus" />{label}</button>{open ? <NewPatientForm prefillName={prefillName} existingPatients={patients} dialogTitle="Registrar paciente" onCancel={() => setOpen(false)} onSaved={patient => { setOpen(false); router.push(`/patients/${patient.id}`); router.refresh(); }} /> : null}</>;
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  return <button className="btn btn-primary" onClick={() => {
+    const params = new URLSearchParams();
+    if (prefillName) params.set('nombre', prefillName);
+    const current = searchParams.toString();
+    params.set('returnTo', current ? `${pathname}?${current}` : pathname);
+    router.push(`/patients/new?${params.toString()}`);
+  }}><Icon name="plus" />{label}</button>;
 }
 export function PatientTaskButton({ patient, action, label, className = 'btn btn-secondary' }: { patient: PatientDetail; action: 'appointment' | 'demographics' | 'background'; label: string; className?: string }) {
   const [open, setOpen] = useState(false);

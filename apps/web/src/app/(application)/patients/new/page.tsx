@@ -13,10 +13,11 @@ export const dynamic = 'force-dynamic';
 export default async function NewPatientPage({
   searchParams,
 }: {
-  searchParams: Promise<{ nombre?: string }>;
+  searchParams: Promise<{ nombre?: string; returnTo?: string }>;
 }) {
   const params = await searchParams;
   const prefillName = params.nombre?.trim() || undefined;
+  const returnTo = safePatientReturn(params.returnTo);
 
   let existing: { id: string; fullName: string }[] = [];
   const res = await fetchServer(
@@ -33,7 +34,12 @@ export default async function NewPatientPage({
       <div className="page-head">
         <h1>Nuevo paciente</h1>
       </div>
-      <NewPatientForm prefillName={prefillName} existingPatients={existing} />
+      <NewPatientForm prefillName={prefillName} existingPatients={existing} returnTo={returnTo} />
     </>
   );
+}
+
+function safePatientReturn(value?: string) {
+  if (!value || !value.startsWith('/patients') || value.startsWith('//') || value.includes('\\')) return '/patients';
+  return value;
 }
