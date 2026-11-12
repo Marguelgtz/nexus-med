@@ -24,17 +24,17 @@ const TABS: { value: 'active' | 'archived' | 'all'; label: string }[] = [
   { value: 'all', label: 'Todos' },
 ];
 
-function PatientRow({ patient }: { patient: PatientSummary }) {
+function PatientCard({ patient, selected, onSelect }: { patient: PatientSummary; selected: boolean; onSelect: () => void }) {
   const age = formatAge(patient.dateOfBirth);
   return (
-    <article className="row registry-row">
-      <Link href={`/patients/${patient.id}`} className="registry-person">
-        <span className="registry-identity"><span className="patient-avatar" aria-hidden="true">{patient.fullName.trim().split(/\s+/).slice(0, 2).map(part => part[0]).join('')}</span><span><span className="main">{patient.fullName}</span><span className="registry-identifier">{patient.externalIdentifier ?? 'Sin identificador'}</span></span></span>
-        <span className="cell">{age !== null ? `${age} años` : '—'}</span>
-        <span className="registry-state">
-          {patient.isArchived ? <span className="badge badge-archived">Archivado</span> : null}
-        </span>
-      </Link>
+    <article className={`patient-directory-card${selected ? ' selected' : ''}`}>
+      <button type="button" className="patient-card-select" aria-pressed={selected} onClick={onSelect}>
+        <span className="patient-avatar" aria-hidden="true">{patient.fullName.trim().split(/\s+/).slice(0, 2).map(part => part[0]).join('')}</span>
+        <span className="patient-card-name">{patient.fullName}</span>
+        <span className="patient-card-meta">{age !== null ? `${age} años` : 'Edad sin registrar'}</span>
+        <span className="patient-card-meta">{patient.externalIdentifier ?? 'Sin identificador'}</span>
+        {patient.isArchived ? <span className="badge badge-archived">Archivado</span> : null}
+      </button>
       <div className="registry-actions">
         {!patient.isArchived ? (
           <Link
@@ -61,6 +61,7 @@ export function PatientRegistry({ initialPatients }: { initialPatients: PatientS
     return s === 'archived' || s === 'all' ? s : 'active';
   });
   const [patients, setPatients] = useState<PatientSummary[]>(initialPatients);
+  const [selectedPatientId, setSelectedPatientId] = useState<string | null>(initialPatients.find((patient) => !patient.isArchived)?.id ?? initialPatients[0]?.id ?? null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [hasSearched, setHasSearched] = useState(false);
@@ -136,11 +137,12 @@ export function PatientRegistry({ initialPatients }: { initialPatients: PatientS
     <>
       <div className="page-head">
 <div><p className="section-label">Directorio clínico</p><h1>Pacientes</h1><p className="muted">Cada paciente, su historia y el siguiente paso.</p></div>
-        <NewPatientButton patients={patients} />
+        <NewPatientButton />
       </div>
 
-      <div className="registry-search"><Icon name="search" />
+      <div className="registry-search"><label className="registry-search-label" htmlFor="patient-registry-search">Buscar por nombre o identificador</label><Icon name="search" />
         <input
+          id="patient-registry-search"
           type="search"
           className="search-input"
           placeholder="Buscar por nombre o identificador"
@@ -181,19 +183,31 @@ export function PatientRegistry({ initialPatients }: { initialPatients: PatientS
               <button type="button" className="btn btn-ghost" onClick={onClear}>
                 Limpiar búsqueda
               </button>
-              <NewPatientButton patients={patients} label="Crear un paciente con este nombre" prefillName={query.trim()} />
+              <NewPatientButton label="Crear un paciente con este nombre" prefillName={query.trim()} />
             </div>
           </div>
         ) : (
           <EmptyState title="Aún no hay pacientes">
-            <NewPatientButton patients={patients} />
+            <NewPatientButton />
           </EmptyState>
         )
       ) : (
-        <div className="row-list">
+        <div className="patient-directory-layout">
+        <div className="patient-card-grid">
           {patients.map((p) => (
-            <PatientRow key={p.id} patient={p} />
+            <PatientCard key={p.id} patient={p} selected={p.id === (patients.some((patient) => patient.id === selectedPatientId) ? selectedPatientId : patients.find((patient) => !patient.isArchived)?.id ?? patients[0]?.id)} onSelect={() => setSelectedPatientId(p.id)} />
           ))}
+        </div>
+        {(() => {
+          const selected = patients.find((patient) => patient.id === selectedPatientId) ?? patients.find((patient) => !patient.isArchived) ?? patients[0];
+          return selected ? <aside className="patient-directory-detail" aria-labelledby="patient-directory-detail-title">
+            <p className="section-label">Ficha seleccionada</p>
+            <h2 id="patient-directory-detail-title">{selected.fullName}</h2>
+            <dl><div><dt>Edad</dt><dd>{formatAge(selected.dateOfBirth) !== null ? `${formatAge(selected.dateOfBirth)} años` : 'Sin registrar'}</dd></div><div><dt>Identificador</dt><dd>{selected.externalIdentifier ?? 'Sin registrar'}</dd></div><div><dt>Estado</dt><dd>{selected.isArchived ? 'Archivado' : 'Activo'}</dd></div></dl>
+            <Link className="btn btn-primary" href={`/patients/${selected.id}`}>Abrir expediente</Link>
+            {!selected.isArchived ? <Link className="btn btn-secondary" href={`/patients/${selected.id}/consultas/nueva`}>Nueva consulta</Link> : null}
+          </aside> : null;
+        })()}
         </div>
       )}
     </>

@@ -1,5 +1,9 @@
 # Testing and Verification
 
+## Proposal 2 patient directory and registration — 2026-11-12
+
+Production registry now displays API-backed selectable patient cards and a demographics-only preview panel. Selecting a record does not change route; opening the expediente or starting a consultation are explicit actions. `Nuevo paciente` routes to the existing persisted form page and includes an internal return path preserving registry search/filter on cancel. The return path accepts only `/patients` paths. Typecheck, web 44/44, lint and `git diff --check` pass. Production build and browser inspection remain pending. No patient records were changed.
+
 ## Proposal 2 application shell — 2026-11-12
 
 Implemented role-aware global sidebar, retained patient section navigation/session actions, and applied shared cool-white, midnight/cobalt, typography and control tokens. Web 44/44, typecheck, lint (existing missing Pages-directory and `window.location.assign` notices), production build, and `git diff --check` pass. The build needed a rerun outside the sandbox because the sandbox blocked parsing Next's TypeScript subprocess output. No API suite was needed or run. Browser rendering/workflow review is pending because the local dev server was unavailable. Existing page-specific screens have not all been visually converted; this is the first rollout slice, not completion.
