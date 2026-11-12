@@ -30,12 +30,14 @@ export default async function NewPatientPage({
   // Duplicate detection is a convenience; its absence must not block creation.
 
   return (
-    <>
-      <div className="page-head">
+    <section className="patient-registration-page">
+      <div className="patient-registration-heading">
+        <p className="section-label">Alta de paciente</p>
         <h1>Nuevo paciente</h1>
+        <p className="muted">Registra sus datos de identificación y contacto. La historia clínica se documenta después.</p>
       </div>
       <NewPatientForm prefillName={prefillName} existingPatients={existing} returnTo={returnTo} />
-    </>
+    </section>
   );
 }
 

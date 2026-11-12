@@ -1,8 +1,13 @@
 # UI Specification — Medical Platform MVP
 
+
+### Proposal 2 production visual rules
+
+The reference iteration is now the production visual direction per D-051. Use the midnight `#142644` global rail, cobalt `#244abd` primary action, page background `#f2f5fb`, ink `#172947`, secondary text `#52617a`, and visible `#ccd6e6` / `#7d8ca7` boundaries. Use system sans fonts only. Global patient/application content uses 16px body, 17px note/input text where long reading is needed, 18px patient names, 14px labeled section headers and a 52px default action/control. Compact secondary actions may use 44px when not the only way to complete a task. Keep original print document styling. Reception/calendar remain information-dense lists/grids where that best represents time and status; apply the visual system without converting schedule data into unrelated decorative cards. These sizes are implementation targets, not evidence of intended-user testing.
+
 ## Application-wide Proposal 2 adoption — 2026-11-12
 
-Owner authorizes applying Proposal 2 across the application (D-051). The [rollout plan](UI_ROLLOUT_PLAN.md) defines current implementation order, navigation, form placement and acceptance journeys. This supersedes the sample-only review boundaries below for product integration. Sample verification remains historical; rollout is not yet implemented.
+Owner authorizes applying Proposal 2 across the application (D-051). The [rollout plan](UI_ROLLOUT_PLAN.md) defines implementation order, navigation, form placement and acceptance journeys. The production screens now use the shared direction; sample verification remains historical and separate from production workflow evidence.
 
 ## Iteration 2 — separate alternative, 2026-11-12
 

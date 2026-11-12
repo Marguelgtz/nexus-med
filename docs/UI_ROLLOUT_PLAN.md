@@ -1,6 +1,6 @@
 # Proposal 2 — application rollout plan
 
-**Owner request:** 2026-11-12. **State:** planned, no product implementation yet. Visual reference: `/exploracion-ui-2`, commit `4fb3557`. Adoption decision: D-051. Readability: D-050. ACTION_PLAN.md tracks execution; this document defines the rollout contract.
+**Owner request:** 2026-11-12. **State:** implemented in the open stacked UI PRs #32 and #34–#37. Visual reference: `/exploracion-ui-2`, commit `4fb3557`. Adoption decision: D-051. Readability: D-050. `ACTION_PLAN.md` tracks live execution; this document records the rollout contract and acceptance journeys.
 
 ## Intended outcome and boundaries
 
@@ -15,40 +15,40 @@ Retain both sample routes for comparison. The live app remains available through
 - **Global navigation:** permanent desktop sidebar with Recepción, Pacientes, Calendario and Estudios, using existing permission/session rules. Secretary sees authorized administrative destinations. Account, demo-view selection, access management and logout remain available. Never expose a clinical destination merely by restyling the secretary view.
 - **Patient navigation:** identity strip above Resumen, Citas y consultas, Estudios, Recetas e informes. Use a compact section row on desktop rather than a second large sidebar. Wrap or disclose sections on small screens. Keep patient identity visible in long forms without consuming the entire mobile viewport.
 - **Active states:** highlight one global destination and the relevant patient section, including nested study details, appointment details, consultation create/edit, prescriptions and reports. Global Estudios and a patient's Estudios have distinct context labels. Preserve existing legacy redirects and hash entry points.
-- **Mobile navigation:** labeled menu button opens an accessible drawer with visible close, Escape, focus containment/restoration and current location. Closing the menu does not navigate or discard work. No hover-only actions or icon-only primary destinations.
+- **Responsive navigation:** desktop retains the persistent labeled sidebar. At widths up to 900px it becomes a compact header with labeled global destinations; at 600px and below those links wrap into two columns. Patient-section links remain direct on desktop and use a native disclosure at narrow widths. Do not shrink labels or use icon-only primary destinations. No route change occurs by dismissing the patient disclosure.
 - **Directory:** production search/filter use the existing API. Cards and a demographic preview follow Proposal 2. Preview selection has an explicit Abrir expediente action to the real patient route; clinical history stays in the patient workspace. Preserve query/filter in the URL so returning restores the list. Avoid automatic navigation when selecting a card.
-- **Registration:** Nuevo paciente opens the real full-page form. Save persists through the current typed API client, then returns to the initiating workflow with the new patient selected, or opens the patient summary from the registry. Cancel returns to a validated internal origin; dirty input requires confirmation. Reuse demographic fields and validation, not the transient preview form.
+- **Registration:** the directory's Nuevo paciente action opens the real full-page form. Save persists through the current typed API client and opens the new patient's summary; cancel returns to a validated internal directory URL, preserving search/filter. Existing short contextual entry dialogs remain in their workflows. Reuse demographic fields and validation, not the transient preview form.
 - **Contextual actions:** keep small appointment/study actions in accessible dialogs when that preserves the consultation draft. Long clinical notes, registration, full document editors and historical records use pages. Do not replace clinical shortcuts with navigation that silently loses work.
 - **Return paths:** use explicit internal destinations for Volver/Cancelar; never rely solely on browser history. Retain patient, appointment and encounter association through create/edit/detail/save. Validate any return parameter as an allowed internal route; refresh/direct entry must have a sensible fallback.
 - **Feedback:** consistent primary action per task; busy/disabled states; announced success/errors; field errors and first-invalid focus. Failed writes retain values and do not show success. Destructive/archive actions remain explicit and separate from navigation.
 
 ## Ordered implementation slices
 
-### 1. Shared visual foundation and shell
+### 1. Shared visual foundation and shell — delivered in PR #34
 
 Move the approved palette/spacing into authoritative app tokens, then update shared buttons, inputs, badges, empty/error/loading states and dialogs. Replace TopBar/AppFrame global navigation with the sidebar; retain skip link, session controls and guards. Use Segoe UI/Verdana local fallback; 18px primary content and inputs, 16px functional labels, 14px auxiliary copy only, firm weights and generally 52px primary controls. Keep contrast/focus boundaries visible. Scope print rules explicitly.
 
 **Deliverable:** working authenticated shell across current routes with sidebar and responsive navigation. **Gate:** role/view switching, logout, active nested routes, keyboard drawer behavior and dirty navigation work; no broken main-content layout. Fix inherited nested-study active-state gap during navigation migration.
 
-### 2. Patient directory and patient workspace
+### 2. Patient directory and patient workspace — delivered in PR #35
 
 Implement API-backed cards/preview/search/filter, page registration and demographic/background edits. Establish patient identity/section navigation and migrate summary, activity and archive controls. Preserve unknown versus negative findings and archived restrictions.
 
 **Deliverable:** complete find → register/open → edit → activity journey. **Gate:** real saves survive reload; returning preserves directory search; registration from reception/consultation selection resumes the correct workflow; direct links and legacy routes still resolve.
 
-### 3. Practice operations
+### 3. Practice operations — delivered in PR #36
 
 Migrate reception date/list/actions, secretary contact/arrival/receipt workflows and day/week/month calendar. Keep dense chronological/schedule information in aligned lists or calendar grids rather than forcing every screen into patient cards. Retain explicit start/arrival/completion and cross-view refresh behavior.
 
 **Deliverable:** coherent operational workspace. **Gate:** found and newly registered patients can be scheduled/seen; arrival and consultation start remain role-appropriate; changing date/view does not invent status transitions or lose context.
 
-### 4. Clinical workspace and follow-through
+### 4. Clinical workspace and follow-through — delivered in PR #37
 
 Migrate consultation stages, read-only safety context, historical note detail/edit, staged studies, global/patient study lists/details, receipt attachment workflows and physician review. Then migrate prescriptions/reports, medication rows, follow-up shortcuts and print layouts. Preserve all seven note fields, atomic note/study creation, independent follow-up, same-patient associations and explicit appointment completion/linking.
 
 **Deliverable:** complete clinical journey with the approved visual system. **Gate:** unsaved protection works across sidebar, sections, shortcuts, history and unload; failed saves keep notes/studies; receipt upload never implies physician review; printed documents retain authored content and exclude navigation.
 
-### 5. Account screens and integrated finish
+### 5. Account screens and integrated finish — delivered in PR #37
 
 Apply the same form system to auth/invitation/verification/password recovery and access management. Preserve current account eligibility and error behavior. Audit every route, transient state, mobile layout and print output; remove obsolete product styles after all consumers migrate. Reconcile UI_SPEC, WORKFLOWS and TESTING with actual behavior.
 
@@ -76,3 +76,7 @@ Shell/tokens precede screen migration; patient identity and return behavior prec
 Run typecheck, lint, existing web tests and production build at relevant slice boundaries; API tests when a contract/domain interaction changes, and focused integration tests for affected persistence behavior. Add regression tests only for meaningful navigation/data-loss risks. Exercise browser journeys with deterministic synthetic data and inspect persisted results, not just screen rendering.
 
 Inspect 320/390/768/1024/1440px, 200% browser zoom, keyboard-only navigation, focus restoration, dialog/drawer semantics, accessible labels/announcements and contrast. Allow local scroll for genuine calendar/table structures where necessary, not page-wide overflow. Record screenshots of directory, patient summary, long consultation, reception, secretary, calendar, studies, document editor and print. Intended-user comfort still needs feedback from users in the target age range; automated checks cannot establish that.
+
+## Delivery and evidence status — 2026-11-12
+
+The shared shell, patient directory/registration, operations, and clinical/auth presentation are implemented on `codex/proposal-2-auth`; follow-up browser review corrected app-main spacing so all application routes keep a readable gutter beside the fixed sidebar. No API, persistence, role, appointment, clinical, or print behavior changed. Browser evidence covers the global sidebar, registry selection and search, query-preserving registration cancel, calendar navigation, patient summary and patient-scoped activity/history navigation. Automated web checks and production build are recorded in `TESTING.md` after the final rerun. Full intended-user testing, 200% zoom, exhaustive keyboard/screen-reader checks, and a print regression walkthrough remain unverified. PRs remain open and unmerged; deployment is out of scope.
