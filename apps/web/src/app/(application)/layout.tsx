@@ -28,9 +28,12 @@ export default async function ApplicationLayout({ children }: { children: ReactN
       <main className="auth-status-page">
         <section className="auth-card">
           <p className="eyebrow">Nexus Med</p>
-          <h1>No se pudo validar la sesión</h1>
-          <p>La aplicación no pudo confirmar tu acceso. Intenta de nuevo en unos momentos.</p>
-          <a className="btn btn-primary" href={returnTo}>Reintentar</a>
+          <h1>No pudimos conectar con la aplicación</h1>
+          <p>No fue posible confirmar tu acceso. Intenta de nuevo o vuelve al inicio de sesión.</p>
+          <div className="actions">
+            <a className="btn btn-primary" href={returnTo}>Reintentar</a>
+            <a className="btn btn-secondary" href={`/login?returnTo=${encodeURIComponent(returnTo)}`}>Volver a iniciar sesión</a>
+          </div>
         </section>
       </main>
     );

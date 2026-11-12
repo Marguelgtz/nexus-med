@@ -58,7 +58,15 @@ export function currentPrincipal(): AuthPrincipal | null {
 }
 
 export async function resolvePrincipal(auth: BetterAuthInstance, headers: Headers): Promise<AuthPrincipal | null> {
-  const result = await auth.api.getSession({ headers });
+  let result: unknown;
+  try {
+    result = await auth.api.getSession({ headers });
+  } catch {
+    // A session lookup failure must never authorize a request. Treat it as
+    // anonymous so public sign-in/demo routes can recover from stale cookies;
+    // protected routes will still fail closed in requireAuthentication.
+    return null;
+  }
   if (!result || typeof result !== 'object' || !('session' in result) || !('user' in result)) return null;
 
   const { session, user } = result as {

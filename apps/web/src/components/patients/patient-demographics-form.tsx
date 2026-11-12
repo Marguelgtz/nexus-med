@@ -18,6 +18,7 @@ export type DemographicsProps = {
   existingPatients?: SavedPatient[];
   administrative?: boolean;
   onSaved?: (patient: SavedPatient) => void;
+  onOpenExisting?: (patient: SavedPatient) => void;
   onCancel?: () => void;
   dialogTitle?: string;
 };
@@ -30,7 +31,7 @@ const FIELDS = [
 ] as const;
 
 /** Shared by registration, demographic edits, and administrative dialogs. */
-export function PatientDemographicsForm({ patientId, initial, prefillName, existingPatients = [], administrative, onSaved, onCancel, dialogTitle }: DemographicsProps) {
+export function PatientDemographicsForm({ patientId, initial, prefillName, existingPatients = [], administrative, onSaved, onOpenExisting, onCancel, dialogTitle }: DemographicsProps) {
   const router = useRouter();
   const pristine = { fullName: initial?.fullName ?? prefillName ?? '', dateOfBirth: initial?.dateOfBirth ?? '', phone: initial?.phone ?? '', email: initial?.email ?? '', externalIdentifier: initial?.externalIdentifier ?? '', appointmentEmailConsent: initial?.appointmentEmailConsent ?? false };
   const [values, setValues] = useState(pristine);
@@ -43,6 +44,14 @@ export function PatientDemographicsForm({ patientId, initial, prefillName, exist
   function close() {
     if (saving || (dirty && !window.confirm('Hay datos sin guardar. ¿Descartar los cambios?'))) return;
     onCancel?.();
+  }
+  function openDuplicate() {
+    if (!duplicate || (dirty && !window.confirm('Al abrir este registro se descartarán los datos sin guardar. ¿Continuar?'))) return;
+    if (onOpenExisting) {
+      onOpenExisting(duplicate);
+      return;
+    }
+    router.push(administrative ? '/secretaria?seccion=pacientes' : `/patients/${duplicate.id}`);
   }
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -73,7 +82,7 @@ export function PatientDemographicsForm({ patientId, initial, prefillName, exist
       setSaving(false);
     }
   }
-  const form = <form onSubmit={submit} noValidate aria-busy={saving}>
+  const form = <form className={dialogTitle ? 'dialog-form' : undefined} onSubmit={submit} noValidate aria-busy={saving}>
     <div className={dialogTitle ? 'demographics-fields' : 'card'}>
       {FIELDS.map(field => <div className="field" key={field.key}>
         <label htmlFor={`demographic-${field.key}`}>{field.label}{'required' in field ? ' *' : ''}</label>
@@ -95,7 +104,9 @@ export function PatientDemographicsForm({ patientId, initial, prefillName, exist
         <p className="faint">El correo solo incluye información de coordinación; no contiene notas ni datos clínicos. Si cambias el correo, confirma el permiso de nuevo.</p>
       </div>
     </div>
-    {duplicate ? <p className="notice">Ya existe un paciente con este nombre: {duplicate.fullName}. Revisa antes de crear otro registro.</p> : null}
+    {duplicate ? <div className="notice" aria-live="polite"><p>Ya existe un paciente con este nombre: {duplicate.fullName}. Revisa antes de crear otro registro.</p>
+      <button className="btn btn-secondary btn-sm" type="button" onClick={openDuplicate}>Abrir registro existente</button>
+    </div> : null}
     {error ? <p role="alert" className="error">{error}</p> : null}
     <div className="btn-row"><button className="btn btn-primary" disabled={saving}>{saving ? 'Guardando…' : patientId ? 'Guardar cambios' : 'Guardar paciente'}</button>
       {onCancel ? <button className="btn btn-ghost" type="button" disabled={saving} onClick={close}>Cancelar</button>

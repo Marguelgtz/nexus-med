@@ -2686,6 +2686,15 @@ body:has(.app-dialog[open]) { overflow: hidden; }
 .app-dialog-close { flex: 0 0 auto; padding: 0; font-size: 24px; line-height: 1; }
 .app-dialog-content { min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: var(--s-4); }
 .app-dialog-content > .field-hint:first-child { margin-top: 0; }
+.app-dialog-content > .dialog-form > .btn-row {
+  position: sticky;
+  bottom: 0;
+  z-index: 1;
+  margin: var(--s-4) calc(-1 * var(--s-4)) calc(-1 * var(--s-4));
+  padding: var(--s-3) var(--s-4);
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+}
 @media print { .app-dialog { display: none !important; } }
 
 .consultation-step-nav { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s-2); margin-bottom: var(--s-4); }
@@ -3003,6 +3012,8 @@ body:has(.app-dialog[open]) { overflow: hidden; }
 .auth-form input:disabled { color: var(--text-muted); background: #f3f5f7; }
 .auth-submit, .auth-google { width: 100%; min-height: 46px; }
 .auth-google { color: var(--text); }
+.auth-recovery-state { display: grid; gap: 12px; }
+.auth-recovery-state > p:not(.auth-message) { margin: 0; color: var(--text-muted); line-height: 1.5; }
 .auth-demo { display: grid; gap: 8px; padding: 14px; border: 1px solid #d4e1e8; border-radius: 12px; background: #f4f8fa; }
 .auth-demo p { margin: 0; color: var(--text-muted); font-size: 12px; line-height: 1.45; }
 .auth-divider { display: flex; align-items: center; gap: 12px; color: var(--text-faint); font-size: 12px; }
