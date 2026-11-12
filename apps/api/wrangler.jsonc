@@ -11,13 +11,13 @@
     {
       "binding": "DB",
       "database_name": "nexus-med-practice",
-      "database_id": "00000000000000000000000000000000",
+      "database_id": "02ea089b-9bdc-4ee6-b0d1-f6cf8731ee8c",
       "migrations_dir": "../../prisma/cloudflare-migrations"
     },
     {
       "binding": "DEMO_DB",
       "database_name": "nexus-med-demo",
-      "database_id": "00000000000000000000000000000000",
+      "database_id": "be80713a-a400-4204-99c5-39ad238f54bf",
       "migrations_dir": "../../prisma/cloudflare-migrations"
     }
   ],
