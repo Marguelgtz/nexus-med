@@ -2,15 +2,15 @@
 
 ## Proposal 2 operations styling — 2026-11-12
 
-Applied the new surface, type, action, card, reception metric, secretary tab, and calendar treatment to the shared operations views. Week layout uses an internal horizontal scroll area at narrow widths. These are CSS-only changes; interaction and API workflow code is unchanged. Web 44/44, typecheck, lint (inherited notices), build and diff check pass across shell/patient/operations stack. Integrated browser check is pending along with later clinical/auth migration.
+Applied the new surface, type, action, card, reception metric, secretary tab, and calendar treatment to the shared operations views. Week layout uses an internal horizontal scroll area at narrow widths. These are CSS-only changes; interaction and API workflow code is unchanged. Slice checks passed: web 44/44, typecheck, lint (inherited notices), build and diff check. The final integrated browser pass is recorded below.
 
 ## Proposal 2 patient directory and registration — 2026-11-12
 
-Production registry now displays API-backed selectable patient cards and a demographics-only preview panel. Selecting a record does not change route; opening the expediente or starting a consultation are explicit actions. `Nuevo paciente` routes to the existing persisted form page and includes an internal return path preserving registry search/filter on cancel. The return path accepts only `/patients` paths. Typecheck, web 44/44, lint and `git diff --check` pass. Production build and browser inspection remain pending. No patient records were changed.
+Production registry now displays API-backed selectable patient cards and a demographics-only preview panel. Selecting a record does not change route; opening the expediente or starting a consultation are explicit actions. `Nuevo paciente` routes to the existing persisted form page and includes an internal return path preserving registry search/filter on cancel. The return path accepts only `/patients` paths. Typecheck, web 44/44, lint, production build and final browser inspection pass. No patient records were changed.
 
 ## Proposal 2 application shell — 2026-11-12
 
-Implemented role-aware global sidebar, retained patient section navigation/session actions, and applied shared cool-white, midnight/cobalt, typography and control tokens. Web 44/44, typecheck, lint (existing missing Pages-directory and `window.location.assign` notices), production build, and `git diff --check` pass. The build needed a rerun outside the sandbox because the sandbox blocked parsing Next's TypeScript subprocess output. No API suite was needed or run. Browser rendering/workflow review is pending because the local dev server was unavailable. Existing page-specific screens have not all been visually converted; this is the first rollout slice, not completion.
+Implemented role-aware global sidebar, retained patient section navigation/session actions, and applied shared cool-white, midnight/cobalt, typography and control tokens. Web 44/44, typecheck, lint (existing missing Pages-directory and `window.location.assign` notices), production build, and `git diff --check` pass. The build needed a rerun outside the sandbox because the sandbox blocked parsing Next's TypeScript subprocess output. No API suite was needed or run. The integrated browser pass and final application-wide presentation migration are recorded below.
 
 ## Separate UI iteration 2 — 2026-11-12
 
@@ -240,4 +240,12 @@ Clinical page styles now use the larger field and section labels, readable note 
 
 ## Proposal 2 auth and access presentation — 2026-11-12
 
-Login, invitation, recovery, verification, demo entry and access-management pages now use the same square white/cool surface treatment, navy identity, cobalt controls and larger labels/inputs. Existing auth behavior is unchanged. Browser verification is in the final integrated pass.
+Login, invitation, recovery, verification, demo entry and access-management pages now use the same square white/cool surface treatment, navy identity, cobalt controls and larger labels/inputs. Existing auth behavior is unchanged.
+
+## Proposal 2 integrated application review — 2026-11-12
+
+Final visual pass found that the application shell places a semantic `<main>` directly inside `.app-main`, while the earlier spacing rule targeted a child `.container` that does not exist. The rule now pads the actual main element and retains the corresponding compact tablet/mobile gutters. Directory consultation actions are kept at 15px and 44px high. Browser capture confirms the patient directory sits clear of the sidebar and viewport edges. Full-page screenshot is saved, ignored by Git, at `.local/ui-exploration/proposal-2-rollout/patient-directory.png`.
+
+Using the existing local application and synthetic demo account, browser review confirmed the global sidebar links to the patient directory and calendar; registry patient selection updates the preview; search by `NM-001` returns Juan Pérez; `Nuevo paciente` opens the real page-based form; Cancel returns to `/patients?q=NM-001` with the search/filter retained; calendar exposes the seeded appointments; and opening Carlos Hernández's record then `Citas y consultas` shows the pending appointment and chronological history under the same patient context. No form was submitted and no patient/API record was created or edited. No runtime error was observed during this navigation pass.
+
+Final checks after the spacing fix: web 44/44; web TypeScript typecheck; ESLint exits 0 with the existing missing-Pages-directory notice and `window.location.assign()` warning in `top-bar.tsx`; production build passes after a sandbox retry outside the TypeScript subprocess restriction; `git diff --check` passes. API tests were not rerun because no API/domain/contracts code changed. The build lists all current application and comparison routes. Intended-user testing, 200% zoom, exhaustive route/role/print regression, and assistive-technology validation remain outstanding; the browser walkthrough covers primary navigation and patient continuity rather than every acceptance row.

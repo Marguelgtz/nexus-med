@@ -7,7 +7,7 @@ The reference iteration is now the production visual direction per D-051. Use th
 
 ## Application-wide Proposal 2 adoption — 2026-11-12
 
-Owner authorizes applying Proposal 2 across the application (D-051). The [rollout plan](UI_ROLLOUT_PLAN.md) defines current implementation order, navigation, form placement and acceptance journeys. This supersedes the sample-only review boundaries below for product integration. Sample verification remains historical; rollout is not yet implemented.
+Owner authorizes applying Proposal 2 across the application (D-051). The [rollout plan](UI_ROLLOUT_PLAN.md) defines implementation order, navigation, form placement and acceptance journeys. The production screens now use the shared direction; sample verification remains historical and separate from production workflow evidence.
 
 ## Iteration 2 — separate alternative, 2026-11-12
 
