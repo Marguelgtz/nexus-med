@@ -1,5 +1,9 @@
 # Testing and Verification
 
+## Proposal 2 application shell — 2026-11-12
+
+Implemented role-aware global sidebar, retained patient section navigation/session actions, and applied shared cool-white, midnight/cobalt, typography and control tokens. Web 44/44, typecheck, lint (existing missing Pages-directory and `window.location.assign` notices), production build, and `git diff --check` pass. The build needed a rerun outside the sandbox because the sandbox blocked parsing Next's TypeScript subprocess output. No API suite was needed or run. Browser rendering/workflow review is pending because the local dev server was unavailable. Existing page-specific screens have not all been visually converted; this is the first rollout slice, not completion.
+
 ## Separate UI iteration 2 — 2026-11-12
 
 The current application, proposal 1 and proposal 2 remain at `/patients`, `/exploracion-ui` and `/exploracion-ui-2`. The prior sample stylesheet is unchanged; only its comparison navigation and shared registration import changed. Both previews share the original registration rendering/validation through `preview-registration.tsx`; all shared CSS class references exist in both modules.

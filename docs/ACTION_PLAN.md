@@ -4,7 +4,7 @@
 
 **Outcome:** Owner selects Proposal 2 for application-wide adoption, preserving working workflows and improving navigation. D-051 supersedes the earlier sample-only review boundary. Detailed ordered scope, navigation rules and acceptance journeys: [rollout plan](UI_ROLLOUT_PLAN.md). Existing sample verification below is historical, not evidence for a completed rollout.
 
-**Status:** Planning complete; product implementation has not started. Inventory includes authenticated physician/secretary/demo views, registry and patient subroutes, reception/calendar, studies/receipts, prescriptions/reports, account/access and authentication screens. Current role/session behavior in source takes precedence over historical documentation claiming auth is absent.
+**Status:** Shell slice implemented on `codex/proposal-2-shell`: global tokens (cool page, midnight/cobalt, readable type/control sizing), persistent role-aware global sidebar, nested patient navigation and session actions retained. Patient, operations, clinical and auth screens still need visual migration and browser verification. Inventory includes authenticated physician/secretary/demo views, registry and patient subroutes, reception/calendar, studies/receipts, prescriptions/reports, account/access and authentication screens. Current role/session behavior in source takes precedence over historical documentation claiming auth is absent.
 
 **Sequence:** (1) Shared tokens, controls and application sidebar. (2) Persisted patient directory, full-page registration and patient workspace navigation. (3) Reception, secretary and calendar. (4) Consultation/context, studies/receipts and printable documents. (5) Auth/access screens and integrated responsive/keyboard/workflow regression. Each slice includes focused verification before the next.
 
@@ -12,9 +12,11 @@
 
 **Deliverables/acceptance:** Complete production UI using Proposal 2, working existing routes and contextual returns, persisted mutations, unsaved-work protection, readable keyboard/mobile layouts and unchanged print meaning. Verify acceptance journeys and errors from the rollout plan; reconcile actual evidence in TESTING.md. Historical 44/44 sample tests do not establish rollout correctness.
 
-**Branch strategy:** Plan on `codex/proposal-2-rollout-plan` based on `4fb3557`; implementation starts on a dependent `codex/proposal-2-shell` branch, followed by coherent patient, operations and clinical slices. Commit at verified boundaries; optional stacked PRs; no feature merge without owner authorization.
+**Branch strategy:** Plan commit `5784266` on `codex/proposal-2-rollout-plan`, based on `4fb3557`; shell is first dependent branch `codex/proposal-2-shell`, followed by coherent patient, operations and clinical slices. Keep PR changes focused (target 3–8 files, split when above ~12); commit at verified boundaries; no feature merge without owner authorization.
 
-**Next action:** Implement shared shell/tokens, replacing global top navigation with the Proposal 2 sidebar while preserving session actions, role restrictions, active states, patient context and unsaved navigation guards. Keep both isolated previews for comparison. No implementation or deployment in this planning session.
+**Shell verification:** Web 44/44, typecheck, lint (inherited missing Pages-directory and `window.location.assign` notices) and production build pass. Initial sandbox build could not parse TypeScript subprocess output; permitted rerun passed. `git diff --check` passes. No API changes or patient mutations. Browser visual verification remains to be done; local port 3000 was not running during this check.
+
+**Next action:** Commit and publish the shell PR for review, then branch the patient directory/registration integration from it. Keep both isolated previews for comparison. No deployment.
 
 ## Previous objective — Alternative UI exploration (2026-11-12)
 
