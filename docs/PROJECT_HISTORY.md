@@ -454,3 +454,10 @@ The sample uses only checked-in fictional demographics and transient component s
 The owner found the isolated direction better but rejected thin lettering, emphasizing working users aged 60–70. That audience constraint is now explicit in PRODUCT and DECISIONS. The sample keeps its separate route and color direction while replacing fine serif headings with sturdy sans-serif text, raising main text/names to 18px and functional data to 16px, strengthening contrast and controls, exposing row-action labels and removing decorative copy. Small layouts reorganize instead of shrinking text. The sample remains a reversible proposal, without broader rollout or data/API changes.
 
 Frontend checks and focused browser measurements pass; exact evidence and limits are in TESTING. Actual comfort for the intended age group is still untested and must not be inferred from passing technical checks. Work stays local on `codex/ui-editorial-exploration`, with no push, merge or deployment.
+
+
+## 2026-11-12 — Preserve three designs for comparison
+
+The owner clarified that typography fixes did not resolve rejection of the sample's overall design. They requested a new iteration alongside the previous sample and current product, and explicitly liked the side navigation. Proposal 2 therefore has a separate development-only route, a solid midnight-blue sidebar, cool white workspace, cobalt actions, patient cards and a dedicated identity/contact pane. Both samples expose comparison links; the existing application and prior sample stylesheet remain intact.
+
+The two previews share registration/validation instead of copying it, while retaining independent transient state and exact fictional demographics. Frontend checks, browser checks in both versions, narrow-layout measurements and production 404 checks pass; details and limitations are in TESTING. The design remains a proposal, not approval for application-wide replacement. Work stays local on `codex/ui-second-direction`, based on `be0339a`; no push, PR, merge or deployment.

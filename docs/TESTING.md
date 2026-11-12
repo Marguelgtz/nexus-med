@@ -1,5 +1,15 @@
 # Testing and Verification
 
+## Separate UI iteration 2 — 2026-11-12
+
+The current application, proposal 1 and proposal 2 remain at `/patients`, `/exploracion-ui` and `/exploracion-ui-2`. The prior sample stylesheet is unchanged; only its comparison navigation and shared registration import changed. Both previews share the original registration rendering/validation through `preview-registration.tsx`; all shared CSS class references exist in both modules.
+
+Final frontend typecheck, lint (inherited TopBar/Pages notices only), 44/44 existing web tests, production build and diff whitespace check pass. The first extraction check failed on an old unused form copy; it was removed before the successful final typecheck/lint/build. No new unit tests were added; API tests were not rerun because no API/domain code changed.
+
+Chrome passed proposal navigation, previous-sample form open/required-name focus/clean cancellation, new patient selection, Escape/focus return, archived filtering, no-results/reset, required-name and invalid-email validation, retained values, temporary registration and reset to the original fixtures on reload. New directory and registration fit 320/390/768/1440px; at 320px no input extends past the viewport. Names are 18px/700; card actions 16px and 54px high; mobile navigation 16px and 56px high; new-form inputs 18px and >=56px high. Selected contrast pairs: text/white 14.54:1, secondary/white 6.27:1, white/primary 7.53:1, sidebar text/background 12.64:1, field border/white 3.40:1. These are focused checks, not accessibility certification or intended-user testing. Native dirty-confirm interaction retains the earlier tooling limitation; its shared implementation is unchanged.
+
+A temporary local production server returned HTTP 404 for both preview routes and was stopped. No patient API writes or stored records were created by the previews. Evidence is ignored under `.local/ui-exploration/iteration-2/`; desktop/form screenshots show the separate card-and-detail composition. No deployment was performed.
+
 ## Readability follow-up — 2026-11-12 (D-050)
 
 Only the isolated UI sample changed. Frontend typecheck, lint (the same inherited warnings) and production build pass. No new tests were added, and the existing behavior/API suites were not rerun for CSS and visible-label changes.

@@ -1,5 +1,13 @@
 # UI Specification — Medical Platform MVP
 
+## Iteration 2 — separate alternative, 2026-11-12
+
+Owner explicitly requests keeping the current app, the previous example and a new iteration, and confirms a preference for side navigation. The prior sample is not an accepted visual design; retain it at `/exploracion-ui` for comparison. Add `/exploracion-ui-2`, development-only with the same synthetic-only, in-memory preview boundary.
+
+**Direction:** A clinical workbench with a solid midnight-blue sidebar, white/cool-gray work area, cobalt actions, a prominent labeled search, a patient-card grid and a distinct patient-preview column. This replaces the warm-paper/terracotta directory-table composition in the new version only. Keep D-050 readable type: 18px main copy, >=16px functional labels/data, firm headings, visible focus and >=52px controls. At narrow widths use two-column navigation and stack results/preview; never shrink text to force the desktop composition to fit.
+
+**Interaction:** Existing filtering and temporary registration semantics remain; a card opens identity/contact in the preview, with Escape/focus return. Registration stays on a complete work surface. Share the existing preview registration renderer/validation between iterations, styled through each version's CSS module. Add direct `App actual`, `Propuesta 1` and `Propuesta 2` navigation to both samples. No patient API calls, clinical information or production exposure. The actual product remains unchanged. This is a visual alternative for owner review, not a broad rollout.
+
 ## Alternative direction sample — 2026-11-12
 
 **Owner readability correction (2026-11-12):** The first sample's fine serif strokes and 9–13px metadata were rejected for working users aged 60–70. Keep the sample isolated, but replace editorial typography with a sturdy locally available sans-serif stack. Use relative sizes: 1.125rem main text (18px at the default root), 1rem functional data/labels (16px), and at least .875rem auxiliary copy (14px). Use 600–700 weight for names, headings and controls; stronger secondary text and input boundaries; controls at least 52px high; and visible `Ver datos` row actions. Small viewports must reorganize into readable rows and a two-column navigation rather than shrink text. Remove decorative slogans and the paper illustration. This supersedes the original typography/compact-control details below, not the existing prototype's no-persistence boundary.
