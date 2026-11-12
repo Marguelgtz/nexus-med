@@ -8,6 +8,10 @@
 
 Secretary global navigation exposes only **Citas**, administrative **Pacientes**, and **Estudios**, all under `/secretaria`; `Pacientes` opens the existing name/identifier search and contact-card list. Physician navigation adds **Citas** at `/recepcion?seccion=citas`, highlights it on that section, and keeps Recepción and Citas links on the selected agenda date. Helper tests cover role destinations, active selection, and absence of the physician `/patients` link for secretary. Web tests pass **49/49**, typecheck passes, lint exits 0 with the existing Pages-directory notice and TopBar navigation warning, production build succeeds on the unsandboxed rerun, and `git diff --check` passes. Browser confirmed both role routes and patient search without making record changes. No API tests were needed.
 
+## Proposal 2 patient-card expediente navigation — 2026-11-12
+
+The main identity area of each patient card opens the expediente with a visible `Abrir expediente` cue; an active patient has a distinct `Nueva consulta` link below it, while archived cards have no consultation action. A validated `/patients` return path carries only the current search and status filter. Web tests pass **52/52**, typecheck passes, lint exits 0 with the same existing notices, production build passes on the unsandboxed rerun, and `git diff --check` passes. Browser verified the separate card destinations, opened an archived synthetic record, and returned to `/patients?q=Elena&status=archived` with the search and filter intact. No records were changed and no API tests were needed. Screenshot: ignored `.local/ui-exploration/proposal-2-rollout/patient-directory-navigation.png`.
+
 ## Proposal 2 operations styling — 2026-11-12
 
 Applied the new surface, type, action, card, reception metric, secretary tab, and calendar treatment to the shared operations views. Week layout uses an internal horizontal scroll area at narrow widths. These are CSS-only changes; interaction and API workflow code is unchanged. Slice checks passed: web 44/44, typecheck, lint (inherited notices), build and diff check. The final integrated browser pass is recorded below.

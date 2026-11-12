@@ -2918,25 +2918,19 @@ body:has(.app-dialog[open]) { overflow: hidden; }
 .app-main .document-form-section { padding: 20px; border: 1px solid var(--border); border-radius: 12px; background: #fff; }
 .app-main .document-form-section h2 { font-size: 20px; line-height: 28px; }
 .app-main .context-strip { min-height: 54px; padding: 10px 14px; border: 1px solid var(--border); border-radius: 8px; background: #fff; font-size: 16px; }
-.patient-directory-layout { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(260px, .75fr); align-items: start; gap: 20px; }
 .patient-card-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
 .patient-directory-card { min-width: 0; border: 1px solid var(--border); border-radius: 12px; background: var(--surface); }
-.patient-directory-card.selected { border: 2px solid #244abd; }
-.patient-card-select { width: 100%; min-height: 148px; display: grid; grid-template-columns: auto 1fr; align-content: start; align-items: center; gap: 5px 12px; padding: 16px; border: 0; border-radius: 12px 12px 0 0; background: transparent; color: var(--text); text-align: left; cursor: pointer; font: inherit; }
-.patient-card-select:hover { background: #f7f9fd; }
-.patient-card-select:focus-visible { outline: 3px solid #244abd; outline-offset: -3px; }
-.patient-card-select .patient-avatar { grid-row: span 3; width: 48px; height: 48px; display: grid; place-items: center; border-radius: 50%; background: #e4ebfb; color: #142644; font-size: 18px; font-weight: 700; }
+.patient-directory-card:hover { border-color: #244abd; }
+.patient-card-open { width: 100%; min-height: 148px; display: grid; grid-template-columns: auto minmax(0, 1fr); align-content: start; align-items: center; gap: 12px; padding: 16px; border-radius: 12px 12px 0 0; color: var(--text); text-decoration: none; }
+.patient-card-open:hover { background: #f7f9fd; }
+.patient-card-open:focus-visible { outline: 3px solid #244abd; outline-offset: -3px; }
+.patient-card-open .patient-avatar { width: 48px; height: 48px; display: grid; place-items: center; border-radius: 50%; background: #e4ebfb; color: #142644; font-size: 18px; font-weight: 700; }
+.patient-card-details { display: grid; gap: 5px; min-width: 0; }
 .patient-card-name { font-size: 18px; line-height: 24px; font-weight: 700; }
 .patient-card-meta { color: var(--text-muted); font-size: 15px; }
+.patient-card-open-cue { grid-column: 1 / -1; display: flex; justify-content: flex-end; align-items: center; gap: 8px; color: #244abd; font-size: 16px; font-weight: 700; }
 .patient-directory-card .registry-actions { justify-content: flex-start; padding: 0 12px 12px; }
-.app-main .registry-actions .btn { min-height: 44px; font-size: 15px; font-weight: 650; }
-.patient-directory-detail { position: sticky; top: 16px; display: grid; gap: 12px; padding: 20px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface); }
-.patient-directory-detail h2 { font-size: 21px; line-height: 28px; }
-.patient-directory-detail dl { display: grid; gap: 10px; margin: 0; }
-.patient-directory-detail dl > div { display: grid; grid-template-columns: 110px minmax(0, 1fr); gap: 10px; }
-.patient-directory-detail dt { color: var(--text-muted); font-weight: 600; }
-.patient-directory-detail dd { margin: 0; overflow-wrap: anywhere; }
-.patient-directory-detail .btn { width: 100%; }
+.app-main .registry-actions .btn { min-height: 48px; font-size: 16px; font-weight: 650; }
 .app-main .registry-search { position: relative; display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 0 10px; margin: 20px 0 14px; padding: 0; border: 0; background: transparent; box-shadow: none; }
 .registry-search-label { grid-column: 1 / -1; margin-bottom: 6px; color: var(--text); font-size: 16px; font-weight: 650; }
 .app-main .registry-search > .ui-icon { position: static; z-index: 1; grid-column: 1; grid-row: 2; margin-left: 14px; pointer-events: none; }
@@ -2954,8 +2948,6 @@ body:has(.app-dialog[open]) { overflow: hidden; }
   .app-sidebar .topbar-user { display: none; }
   .app-sidebar .sidebar-account { flex-wrap: wrap; justify-content: flex-end; }
   .app-main > main, .app-main > .container { padding: 20px 20px 36px; }
-  .patient-directory-layout { grid-template-columns: 1fr; }
-  .patient-directory-detail { position: static; }
 }
 @media (max-width: 600px) {
   .app-sidebar { padding: 10px 12px; }

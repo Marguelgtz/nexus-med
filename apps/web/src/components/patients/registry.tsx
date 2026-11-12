@@ -15,6 +15,7 @@ import { formatAge } from '../../lib/format';
 import { NewPatientButton } from './patient-task-button';
 import { EmptyState, ErrorBanner, Skeleton } from '../primitives';
 import { Icon } from '../icon';
+import { buildPatientDirectoryHref, buildPatientExpedienteHref } from './patient-directory-navigation';
 
 const SEARCH_DEBOUNCE_MS = 300;
 
@@ -24,19 +25,21 @@ const TABS: { value: 'active' | 'archived' | 'all'; label: string }[] = [
   { value: 'all', label: 'Todos' },
 ];
 
-function PatientCard({ patient, selected, onSelect }: { patient: PatientSummary; selected: boolean; onSelect: () => void }) {
+function PatientCard({ patient, directoryHref }: { patient: PatientSummary; directoryHref: string }) {
   const age = formatAge(patient.dateOfBirth);
   return (
-    <article className={`patient-directory-card${selected ? ' selected' : ''}`}>
-      <button type="button" className="patient-card-select" aria-pressed={selected} onClick={onSelect}>
+    <article className="patient-directory-card">
+      <Link href={buildPatientExpedienteHref(patient.id, directoryHref)} className="patient-card-open">
         <span className="patient-avatar" aria-hidden="true">{patient.fullName.trim().split(/\s+/).slice(0, 2).map(part => part[0]).join('')}</span>
-        <span className="patient-card-name">{patient.fullName}</span>
-        <span className="patient-card-meta">{age !== null ? `${age} años` : 'Edad sin registrar'}</span>
-        <span className="patient-card-meta">{patient.externalIdentifier ?? 'Sin identificador'}</span>
-        {patient.isArchived ? <span className="badge badge-archived">Archivado</span> : null}
-      </button>
-      <div className="registry-actions">
-        {!patient.isArchived ? (
+        <span className="patient-card-details">
+          <span className="patient-card-name">{patient.fullName}</span>
+          <span className="patient-card-meta">{age !== null ? `${age} años` : 'Edad sin registrar'}</span>
+          <span className="patient-card-meta">{patient.externalIdentifier ?? 'Sin identificador'}</span>
+          {patient.isArchived ? <span className="badge badge-archived">Archivado</span> : null}
+        </span>
+        <span className="patient-card-open-cue">Abrir expediente <Icon name="arrow" /></span>
+      </Link>
+      {!patient.isArchived ? <div className="registry-actions">
           <Link
             href={`/patients/${patient.id}/consultas/nueva`}
             className="btn btn-secondary btn-sm"
@@ -44,8 +47,7 @@ function PatientCard({ patient, selected, onSelect }: { patient: PatientSummary;
           >
             Nueva consulta <Icon name="arrow" />
           </Link>
-        ) : null}
-      </div>
+      </div> : null}
     </article>
   );
 }
@@ -61,7 +63,6 @@ export function PatientRegistry({ initialPatients }: { initialPatients: PatientS
     return s === 'archived' || s === 'all' ? s : 'active';
   });
   const [patients, setPatients] = useState<PatientSummary[]>(initialPatients);
-  const [selectedPatientId, setSelectedPatientId] = useState<string | null>(initialPatients.find((patient) => !patient.isArchived)?.id ?? initialPatients[0]?.id ?? null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [hasSearched, setHasSearched] = useState(false);
@@ -132,6 +133,7 @@ export function PatientRegistry({ initialPatients }: { initialPatients: PatientS
 
   const noResults = !loading && error === null && patients.length === 0;
   const hasSearch = query.trim().length > 0;
+  const directoryHref = buildPatientDirectoryHref(query, status);
 
   return (
     <>
@@ -192,22 +194,10 @@ export function PatientRegistry({ initialPatients }: { initialPatients: PatientS
           </EmptyState>
         )
       ) : (
-        <div className="patient-directory-layout">
         <div className="patient-card-grid">
           {patients.map((p) => (
-            <PatientCard key={p.id} patient={p} selected={p.id === (patients.some((patient) => patient.id === selectedPatientId) ? selectedPatientId : patients.find((patient) => !patient.isArchived)?.id ?? patients[0]?.id)} onSelect={() => setSelectedPatientId(p.id)} />
+            <PatientCard key={p.id} patient={p} directoryHref={directoryHref} />
           ))}
-        </div>
-        {(() => {
-          const selected = patients.find((patient) => patient.id === selectedPatientId) ?? patients.find((patient) => !patient.isArchived) ?? patients[0];
-          return selected ? <aside className="patient-directory-detail" aria-labelledby="patient-directory-detail-title">
-            <p className="section-label">Ficha seleccionada</p>
-            <h2 id="patient-directory-detail-title">{selected.fullName}</h2>
-            <dl><div><dt>Edad</dt><dd>{formatAge(selected.dateOfBirth) !== null ? `${formatAge(selected.dateOfBirth)} años` : 'Sin registrar'}</dd></div><div><dt>Identificador</dt><dd>{selected.externalIdentifier ?? 'Sin registrar'}</dd></div><div><dt>Estado</dt><dd>{selected.isArchived ? 'Archivado' : 'Activo'}</dd></div></dl>
-            <Link className="btn btn-primary" href={`/patients/${selected.id}`}>Abrir expediente</Link>
-            {!selected.isArchived ? <Link className="btn btn-secondary" href={`/patients/${selected.id}/consultas/nueva`}>Nueva consulta</Link> : null}
-          </aside> : null;
-        })()}
         </div>
       )}
     </>

@@ -10,6 +10,7 @@ import { PatientSectionHeader } from '../../../../components/patients/patient-se
 import { ErrorBanner } from '../../../../components/primitives';
 import { fetchServer } from '../../../../lib/api/server';
 import { formatDate, formatAge, formatDateTime, localDateOfInstant, practiceToday } from '../../../../lib/format';
+import { safePatientDirectoryHref } from '../../../../components/patients/patient-directory-navigation';
 const BACKGROUND_FIELDS = [
   { key: 'allergies', label: 'Alergias' },
   { key: 'currentMedications', label: 'Medicamentos actuales' },
@@ -20,8 +21,13 @@ export const dynamic = 'force-dynamic';
 function SublineItem({ label, value }: { label: string; value: string | null }) {
   return <span className="subline-item"><span className="faint">{label}:</span>{' '}{value ?? <em className="faint">No registrado</em>}</span>;
 }
-export default async function PatientPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function PatientPage({ params, searchParams }: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ returnTo?: string | string[] }>;
+}) {
   const { id } = await params;
+  const requestedReturnTo = (await searchParams).returnTo;
+  const directoryHref = safePatientDirectoryHref(requestedReturnTo);
   const [patientRes, apptsRes, studiesRes] = await Promise.all([
     fetchServer(`/api/patients/${encodeURIComponent(id)}`, patientDetailSchema),
     fetchServer(`/api/patients/${encodeURIComponent(id)}/appointments`, z.array(appointmentSchema)),
@@ -45,7 +51,7 @@ export default async function PatientPage({ params }: { params: Promise<{ id: st
   const pendingStudies = studiesRes.data.filter((study) => PENDING_STUDY_STATUSES.some((status) => status === study.status));
   return <>
       <PatientSectionHeader
-        patient={patient} title="Resumen" overview>
+        patient={patient} title="Resumen" overview patientDirectoryHref={directoryHref}>
           <Link href={`/patients/${patient.id}/consultas/nueva`} className="btn btn-primary">
             Nueva consulta
           </Link>
