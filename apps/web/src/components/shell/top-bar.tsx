@@ -19,7 +19,8 @@ export function TopBar({ session }: { session: AuthSession }) {
   const administrative = pathname.startsWith('/secretaria');
   const patientsActive = pathname === '/patients' || pathname.startsWith('/patients/');
   const calendarActive = pathname === '/calendar' || pathname.startsWith('/calendar');
-  const links = administrative ? [{ href: '/secretaria', label: 'Secretaría', active: true }] : [
+  const secretary = session.user.role === 'secretary' || (session.user.role === 'demo' && session.activeView === 'secretary') || administrative;
+  const links = secretary ? [{ href: '/secretaria', label: 'Secretaría', active: true }] : [
     { href: '/recepcion', label: 'Recepción', active: pathname === '/recepcion' },
     { href: '/estudios', label: 'Estudios', active: pathname === '/estudios' },
     { href: '/patients', label: 'Pacientes', active: patientsActive },
@@ -32,15 +33,16 @@ export function TopBar({ session }: { session: AuthSession }) {
   ));
 
   return (
-    <header className="topbar">
-      <div className="topbar-inner">
+    <aside className="app-sidebar" aria-label="Nexus Med">
+      <div className="sidebar-inner">
         <Link href={administrative ? '/secretaria' : '/patients'} className="topbar-brand">
           <span className="brand-symbol" aria-hidden="true"><Icon name="activity" /></span>
           Nexus Med
         </Link>
-        <nav className="topbar-nav" aria-label="Navegación principal">
+        <nav className="sidebar-nav" aria-label="Navegación principal">
           {renderLinks()}
         </nav>
+        <div className="sidebar-account">
         {session.user.role === 'demo' ? (
           <label className="view-selector"><span className="sr-only">Vista de demostración</span>
             <select aria-label="Vista de demostración" disabled={changingView} value={session.activeView ?? 'doctor'} onChange={async (event) => {
@@ -82,21 +84,9 @@ export function TopBar({ session }: { session: AuthSession }) {
           const response = await fetch('/api/auth/sign-out', { method: 'POST', cache: 'no-store' });
           if (response.ok) window.location.assign('/login');
           else setError('No se pudo cerrar la sesión. Intenta de nuevo.');
-        }}>Salir</button>
-        <details className="topbar-mobile-menu">
-          <summary aria-label="Navegación principal">
-            <span className="topbar-menu-icon" aria-hidden="true">
-              <span />
-              <span />
-              <span />
-            </span>
-          </summary>
-          <nav className="topbar-mobile-panel" aria-label="Navegación principal">
-            {renderLinks()}
-          </nav>
-        </details>
+        }}>Salir</button></div>
       </div>
       {error ? <p className="topbar-feedback" role="status">{error}</p> : null}
-    </header>
+    </aside>
   );
 }

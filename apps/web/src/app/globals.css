@@ -5,20 +5,20 @@
 
 :root {
   /* Surfaces */
-  --bg: #f4f6fa;
+  --bg: #f2f5fb;
   --surface: #ffffff;
   --surface-hover: #edf3f8;
-  --border: #dce3ec;
-  --border-strong: #9aaabc;
+  --border: #ccd6e6;
+  --border-strong: #7d8ca7;
 
   /* Text */
-  --text: #182b3a;
-  --text-muted: #506479;
-  --text-faint: #5c6e80;
+  --text: #172947;
+  --text-muted: #52617a;
+  --text-faint: #52617a;
 
   /* Brand / action */
-  --primary: #176887;
-  --primary-hover: #10516b;
+  --primary: #244abd;
+  --primary-hover: #1d3d9f;
   --primary-contrast: #ffffff;
 
   /* Semantic */
@@ -47,8 +47,8 @@
   --s-7: 48px;
 
   /* Radii */
-  --radius-sm: 10px;
-  --radius-md: 16px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
 
   --shadow-surface: 0 2px 8px rgb(24 43 58 / 3%), 0 12px 32px rgb(24 43 58 / 3%);
 
@@ -57,12 +57,12 @@
   --topbar-h: 56px;
 
   /* UI v0 typography and control geometry */
-  --font-size-body: 14px;
-  --line-height-body: 22px;
-  --font-size-page-title: 28px;
-  --line-height-page-title: 36px;
-  --button-height: 42px;
-  --control-height: 44px;
+  --font-size-body: 16px;
+  --line-height-body: 24px;
+  --font-size-page-title: 32px;
+  --line-height-page-title: 40px;
+  --button-height: 52px;
+  --control-height: 52px;
 }
 
 * {
@@ -2801,6 +2801,60 @@ body:has(.app-dialog[open]) { overflow: hidden; }
 .received-studies { margin: var(--s-5) 0 var(--s-6); }
 .receipt-list { display: grid; gap: var(--s-4); }
 .receipt-list > li { padding: var(--s-4); border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--surface); }
+
+/* Proposal 2 application frame: fixed global destinations, open work surface. */
+.app-layout { min-height: 100dvh; display: grid; grid-template-columns: 252px minmax(0, 1fr); }
+.app-sidebar { position: sticky; top: 0; z-index: 20; height: 100dvh; overflow-y: auto; padding: 24px 16px; background: #142644; color: #fff; }
+.sidebar-inner { min-height: 100%; display: flex; flex-direction: column; gap: 28px; }
+.app-sidebar .topbar-brand { color: #fff; font-size: 22px; letter-spacing: 0; }
+.app-sidebar .brand-symbol { width: 38px; height: 38px; border-radius: 9px; background: #244abd; }
+.sidebar-nav { display: grid; gap: 8px; }
+.sidebar-nav a { min-height: 54px; display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-radius: 8px; color: #e4ebfb; font-size: 17px; font-weight: 650; text-decoration: none; }
+.sidebar-nav a:hover { color: #fff; background: #20395e; }
+.sidebar-nav a.active { color: #fff; background: #244abd; }
+.sidebar-nav svg { width: 22px; height: 22px; flex: none; }
+.app-sidebar .sidebar-account { margin-top: auto; display: grid; gap: 10px; border-top: 1px solid #405271; padding-top: 18px; }
+.app-sidebar .topbar-user { max-width: none; color: #e4ebfb; font-size: 16px; }
+.app-sidebar .topbar-signout, .app-sidebar .view-selector select, .app-sidebar .topbar-account-link { min-height: 48px; padding: 9px 12px; border: 1px solid #71809a; border-radius: 8px; color: #fff; background: #142644; font-size: 16px; }
+.app-sidebar .topbar-account-link { display: flex; align-items: center; }
+.app-sidebar .topbar-signout:hover, .app-sidebar .topbar-account-link:hover { background: #20395e; }
+.app-sidebar .view-selector select { max-width: 100%; width: 100%; }
+.app-sidebar .topbar-feedback { position: static; color: #ffb4b4; font-size: 14px; }
+.app-main { min-width: 0; }
+.app-main > .container { width: 100%; max-width: none; margin: 0; padding: 28px clamp(20px, 3vw, 48px) 48px; }
+.app-main .demo-notice { margin: 0 0 20px; }
+.app-main .patient-workspace-shell:has(.patient-workflow-nav) { grid-template-columns: 220px minmax(0, 1fr); gap: 24px; }
+.app-main .patient-workspace-shell:has(.patient-workflow-nav) > .patient-workflow-nav { border-radius: 12px; }
+.app-main .patient-nav-links a { min-height: 48px; color: #52617a; font-size: 16px; font-weight: 600; }
+.app-main .patient-nav-links a.active { color: #1d3d9f; background: #e4ebfb; }
+.app-main input, .app-main select, .app-main textarea { font-size: 16px; }
+.app-main button, .app-main .btn { font-weight: 650; }
+.app-main :focus-visible, .app-sidebar :focus-visible { outline: 3px solid #f2b544; outline-offset: 3px; }
+
+@media (max-width: 900px) {
+  .app-layout { display: block; }
+  .app-sidebar { position: static; width: 100%; height: auto; overflow: visible; padding: 12px 16px; }
+  .sidebar-inner { min-height: 0; display: grid; grid-template-columns: 1fr auto; gap: 12px 20px; align-items: center; }
+  .app-sidebar .topbar-brand { grid-column: 1; grid-row: 1; }
+  .sidebar-nav { grid-column: 1 / -1; grid-row: 2; display: flex; overflow-x: auto; }
+  .sidebar-nav a { flex: 0 0 auto; min-height: 48px; }
+  .app-sidebar .sidebar-account { grid-column: 2; grid-row: 1; display: flex; align-items: center; gap: 8px; margin: 0; border: 0; padding: 0; }
+  .app-sidebar .topbar-user { display: none; }
+  .app-sidebar .sidebar-account { flex-wrap: wrap; justify-content: flex-end; }
+  .app-main > .container { padding: 20px 20px 36px; }
+}
+@media (max-width: 600px) {
+  .app-sidebar { padding: 10px 12px; }
+  .sidebar-inner { grid-template-columns: 1fr auto; }
+  .app-sidebar .topbar-brand { font-size: 19px; }
+  .app-sidebar .sidebar-account { max-width: 190px; gap: 6px; }
+  .app-sidebar .topbar-account-link { min-height: 42px; padding: 6px 9px; font-size: 14px; }
+  .app-sidebar .topbar-signout { min-height: 42px; padding: 6px 9px; font-size: 14px; }
+  .app-sidebar .view-selector select { min-height: 42px; padding: 6px; font-size: 13px; }
+  .sidebar-nav { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+  .sidebar-nav a { min-height: 48px; padding: 8px 10px; font-size: 15px; }
+  .app-main > .container { padding: 16px 12px 28px; }
+}
 .receipt-heading { display: flex; justify-content: space-between; align-items: start; flex-wrap: wrap; gap: var(--s-2); }
 .receipt-heading h3 { margin: 0 0 var(--s-1); font-size: 17px; }
 .receipt-heading p { margin-bottom: var(--s-2); }

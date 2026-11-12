@@ -8,8 +8,9 @@ export function AppFrame({ session, children }: { session: AuthSession; children
   return (
     <>
       <a href="#main-content" className="skip-link">Ir al contenido</a>
-      <TopBar session={session} />
-      <div className="container">
+      <div className="app-layout">
+        <TopBar session={session} />
+        <div className="app-main">
         {session.user.role === 'demo' ? (
           <div className="demo-notice" role="status">
             <strong>Demostración compartida.</strong> Los cambios se conservan para las siguientes visitas.
@@ -21,6 +22,7 @@ export function AppFrame({ session, children }: { session: AuthSession; children
             <div className="patient-workspace-content">{children}</div>
           </div>
         </main>
+        </div>
       </div>
     </>
   );
