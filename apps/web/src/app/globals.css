@@ -2830,6 +2830,36 @@ body:has(.app-dialog[open]) { overflow: hidden; }
 .app-main input, .app-main select, .app-main textarea { font-size: 16px; }
 .app-main button, .app-main .btn { font-weight: 650; }
 .app-main :focus-visible, .app-sidebar :focus-visible { outline: 3px solid #f2b544; outline-offset: 3px; }
+.app-main .page-head { align-items: center; margin-bottom: 24px; }
+.app-main .page-head h1, .app-main > main h1 { font-weight: 750; letter-spacing: -0.025em; }
+.app-main .muted, .app-main .field-hint, .app-main .faint { color: #52617a; font-size: 15px; line-height: 1.5; }
+.app-main .card, .app-main .row, .app-main .reception-agenda, .app-main .reception-queue, .app-main .receipt-list > li, .app-main .calendar-outside-hours, .app-main .month-agenda, .app-main .document-card, .app-main .clinical-context-item { border-color: var(--border); border-radius: 12px; background: #fff; box-shadow: none; }
+.app-main .reception-agenda, .app-main .reception-queue { padding: 20px; }
+.app-main .reception-metric { min-height: 148px; padding: 20px; border-color: var(--border); border-radius: 12px; background: #fff; box-shadow: none; backdrop-filter: none; }
+.app-main .reception-metric > strong { color: #172947; font-size: 36px; font-weight: 750; letter-spacing: 0; }
+.app-main .metric-label, .app-main .metric-detail { font-size: 15px; }
+.app-main .metric-icon { color: #244abd; background: #e4ebfb; }
+.app-main .reception-briefing { border-color: var(--border); border-radius: 12px; background: #fff; box-shadow: none; backdrop-filter: none; }
+.app-main .reception-next h2 { font-size: 20px; line-height: 28px; font-weight: 700; }
+.app-main .reception-next .muted, .app-main .reception-progress p { font-size: 14px; }
+.app-main .reception-progress > div { font-size: 15px; }
+.app-main .reception-progress progress { height: 10px; }
+.app-main .workspace-tabs { gap: 6px; margin: 20px 0 24px; padding: 6px; border: 1px solid var(--border); border-radius: 10px; background: #fff; }
+.app-main .workspace-tabs a { min-height: 48px; padding: 8px 16px; border-radius: 7px; font-size: 16px; font-weight: 650; }
+.app-main .workspace-tabs a[aria-current] { color: #fff; background: #244abd; box-shadow: none; }
+.app-main .reception-time span, .app-main .reception-person > strong { font-size: 15px; }
+.app-main .reception-time strong { color: #172947; font-size: 20px; font-weight: 750; }
+.app-main .reception-appointments > li, .app-main .reception-waiting > li { padding-block: 16px; }
+.app-main .week-grid { width: 100%; max-width: 100%; min-width: 0; overflow-x: auto; grid-template-columns: repeat(7, minmax(112px, 1fr)); gap: 8px; }
+.app-main .cal-week-col, .app-main .cal-month-cell { border-color: var(--border); border-radius: 8px; background: #fff; }
+.app-main .cal-today-col { border: 2px solid #244abd; background: #f5f7fd; }
+.app-main .cal-col-head, .app-main .month-head span { min-height: 48px; color: #172947; font-size: 15px; font-weight: 700; }
+.app-main .cal-col-items { gap: 6px; padding: 8px; }
+.app-main .cal-chip, .app-main .cal-block { border: 1px solid #ccd6e6; border-left: 4px solid #244abd; border-radius: 7px; color: #172947; background: #eef2fc; font-size: 14px; font-weight: 650; }
+.app-main .cal-block { padding: 8px; }
+.app-main .day-grid { overflow-x: auto; }
+.app-main .cal-nav a, .app-main .view-toggle .btn { min-height: 48px; font-size: 15px; }
+.app-main .workspace-empty, .app-main .empty-state { border: 1px dashed #7d8ca7; border-radius: 12px; background: #fff; }
 .patient-directory-layout { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(260px, .75fr); align-items: start; gap: 20px; }
 .patient-card-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
 .patient-directory-card { min-width: 0; border: 1px solid var(--border); border-radius: 12px; background: var(--surface); }
@@ -2880,6 +2910,8 @@ body:has(.app-dialog[open]) { overflow: hidden; }
   .sidebar-nav a { min-height: 48px; padding: 8px 10px; font-size: 15px; }
   .app-main > .container { padding: 16px 12px 28px; }
   .patient-card-grid { grid-template-columns: 1fr; }
+  .app-main .reception-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .app-main .reception-metric { min-height: 130px; padding: 14px; }
 }
 .receipt-heading { display: flex; justify-content: space-between; align-items: start; flex-wrap: wrap; gap: var(--s-2); }
 .receipt-heading h3 { margin: 0 0 var(--s-1); font-size: 17px; }
