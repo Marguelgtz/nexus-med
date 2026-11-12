@@ -1,6 +1,22 @@
 # Living Action Plan — Medical Platform MVP
 
-## Active objective — Alternative UI exploration (2026-11-12)
+## Active objective — Proposal 2 across the application (2026-11-12)
+
+**Outcome:** Owner selects Proposal 2 for application-wide adoption, preserving working workflows and improving navigation. D-051 supersedes the earlier sample-only review boundary. Detailed ordered scope, navigation rules and acceptance journeys: [rollout plan](UI_ROLLOUT_PLAN.md). Existing sample verification below is historical, not evidence for a completed rollout.
+
+**Status:** Planning complete; product implementation has not started. Inventory includes authenticated physician/secretary/demo views, registry and patient subroutes, reception/calendar, studies/receipts, prescriptions/reports, account/access and authentication screens. Current role/session behavior in source takes precedence over historical documentation claiming auth is absent.
+
+**Sequence:** (1) Shared tokens, controls and application sidebar. (2) Persisted patient directory, full-page registration and patient workspace navigation. (3) Reception, secretary and calendar. (4) Consultation/context, studies/receipts and printable documents. (5) Auth/access screens and integrated responsive/keyboard/workflow regression. Each slice includes focused verification before the next.
+
+**Dependencies:** Shell before screen migrations; patient context before clinical screens. Shared CSS and navigation changes are sequential. No schema/API changes planned. Synthetic fixtures and existing save/authorization behavior remain authoritative. Cloudflare hostname changes are a separate pending request: the requested nested workers.dev hostname is unsupported by the documented Worker-name URL format; no routing/deployment change was made.
+
+**Deliverables/acceptance:** Complete production UI using Proposal 2, working existing routes and contextual returns, persisted mutations, unsaved-work protection, readable keyboard/mobile layouts and unchanged print meaning. Verify acceptance journeys and errors from the rollout plan; reconcile actual evidence in TESTING.md. Historical 44/44 sample tests do not establish rollout correctness.
+
+**Branch strategy:** Plan on `codex/proposal-2-rollout-plan` based on `4fb3557`; implementation starts on a dependent `codex/proposal-2-shell` branch, followed by coherent patient, operations and clinical slices. Commit at verified boundaries; optional stacked PRs; no feature merge without owner authorization.
+
+**Next action:** Implement shared shell/tokens, replacing global top navigation with the Proposal 2 sidebar while preserving session actions, role restrictions, active states, patient context and unsaved navigation guards. Keep both isolated previews for comparison. No implementation or deployment in this planning session.
+
+## Previous objective — Alternative UI exploration (2026-11-12)
 
 **Iteration 2 (implemented, owner review pending):** Owner rejects the previous sample's design, requests a genuinely new iteration alongside it, and explicitly likes side navigation. Three versions are separately reachable: existing `/patients`, prior `/exploracion-ui`, new `/exploracion-ui-2`. D-050 readability is retained. The new direction uses a solid midnight-blue sidebar, cool white workspace, cobalt actions, search-first patient cards and a dedicated patient preview pane. Both samples have direct comparison links and reuse registration/validation. Exact synthetic demographics, local-only route gating and temporary sample state remain. The previous sample's stylesheet and application product screens are unchanged. No broad rollout or deployment.
 

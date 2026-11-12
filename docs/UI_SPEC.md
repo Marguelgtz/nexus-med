@@ -1,5 +1,9 @@
 # UI Specification — Medical Platform MVP
 
+## Application-wide Proposal 2 adoption — 2026-11-12
+
+Owner authorizes applying Proposal 2 across the application (D-051). The [rollout plan](UI_ROLLOUT_PLAN.md) defines current implementation order, navigation, form placement and acceptance journeys. This supersedes the sample-only review boundaries below for product integration. Sample verification remains historical; rollout is not yet implemented.
+
 ## Iteration 2 — separate alternative, 2026-11-12
 
 Owner explicitly requests keeping the current app, the previous example and a new iteration, and confirms a preference for side navigation. The prior sample is not an accepted visual design; retain it at `/exploracion-ui` for comparison. Add `/exploracion-ui-2`, development-only with the same synthetic-only, in-memory preview boundary.
