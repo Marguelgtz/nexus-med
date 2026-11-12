@@ -30,9 +30,11 @@ async function fetchApi(path: string, cookie: string | null, appOrigin: string):
   }
 
   const { env } = await getCloudflareContext({ async: true });
-  const api = (env as CloudflareEnv & { API?: ApiService }).API;
+  const cloudflareEnv = env as CloudflareEnv & { API?: ApiService; APP_BASE_URL?: string };
+  const api = cloudflareEnv.API;
   if (!api) throw new Error('Private API service binding is unavailable.');
-  const request = new Request(new URL(path, appOrigin), { headers: requestHeaders, method: 'GET' });
+  const requestOrigin = cloudflareEnv.APP_BASE_URL ?? appOrigin;
+  const request = new Request(new URL(path, requestOrigin), { headers: requestHeaders, method: 'GET' });
   return api.fetch(request);
 }
 

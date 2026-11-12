@@ -5,6 +5,7 @@
   "compatibility_date": "2026-11-11",
   "compatibility_flags": ["nodejs_compat"],
   "workers_dev": false,
+  "vars": { "APP_BASE_URL": "https://nexus-med-app.marguel-gtz.workers.dev" },
   "triggers": { "crons": ["*/5 * * * *"] },
   "observability": { "enabled": true },
   "d1_databases": [

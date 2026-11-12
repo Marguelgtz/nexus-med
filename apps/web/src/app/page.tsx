@@ -14,9 +14,12 @@ export default async function Home() {
       <main className="auth-status-page">
         <section className="auth-card">
           <p className="eyebrow">Nexus Med</p>
-          <h1>Aplicación temporalmente no disponible</h1>
-          <p>No se pudo confirmar el acceso al espacio de trabajo.</p>
-          <a className="btn btn-primary" href="/">Reintentar</a>
+          <h1>No pudimos conectar con la aplicación</h1>
+          <p>No fue posible confirmar tu acceso. Intenta de nuevo o vuelve al inicio de sesión.</p>
+          <div className="actions">
+            <a className="btn btn-primary" href="/">Reintentar</a>
+            <a className="btn btn-secondary" href="/login">Volver a iniciar sesión</a>
+          </div>
         </section>
       </main>
     );

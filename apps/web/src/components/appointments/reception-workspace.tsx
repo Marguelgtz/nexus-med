@@ -47,7 +47,7 @@ export function ReceptionWorkspace({ appointments, queue, patients, receipts, da
     catch (err) { setError(err instanceof Error ? err.message : 'No se pudo guardar el cambio.'); }
     finally { setBusy(false); }
   }
-  async function editPatient(patient: PatientSummary) {
+  async function editPatient(patient: Pick<PatientSummary, 'id'>) {
     setBusy(true); setError(null);
     try { setDialog({ kind: 'patient', patient: await getAdministrativePatient(patient.id) }); }
     catch (err) { setError(err instanceof Error ? err.message : 'No se pudo cargar al paciente.'); }
@@ -77,7 +77,7 @@ export function ReceptionWorkspace({ appointments, queue, patients, receipts, da
     {administrative ? <nav className="workspace-tabs" aria-label="Trabajo de secretaría">{(['agenda', 'pacientes', 'estudios'] as const).map(tab => <Link key={tab} href={`${base}?seccion=${tab}&fecha=${date}`} aria-current={tab === section ? 'page' : undefined}>{tab === 'agenda' ? 'Hoy y agenda' : tab === 'pacientes' ? 'Pacientes' : 'Estudios'}</Link>)}</nav> : null}
     {error ? <p role="alert" className="error">{error}</p> : null}{message ? <p role="status" className="notice">{message}</p> : null}
     {section === 'estudios' ? <ReceivedStudies receipts={receipts} patients={patients} administrative={administrative} asOf={asOf} /> : section === 'pacientes' ? <section aria-label="Pacientes administrativos">
-      <div className="workspace-toolbar"><div className="field"><label htmlFor="admin-patient-search">Buscar paciente por nombre o identificador</label><input id="admin-patient-search" type="search" value={query} onChange={e => setQuery(e.target.value)} /></div><span className="muted">{filtered.length} pacientes</span></div>
+      <div className="workspace-toolbar"><div className="field"><label htmlFor="admin-patient-search">Buscar paciente por nombre o identificador</label><input id="admin-patient-search" type="search" value={query} onChange={e => setQuery(e.target.value)} /></div><span className="muted">{filtered.length} {filtered.length === 1 ? 'paciente' : 'pacientes'}</span></div>
       <ul className="admin-patient-list">{filtered.map(patient => <li className="admin-patient-card" key={patient.id}><div className="admin-patient-details"><strong>{patient.fullName}</strong><p className="field-hint">{patient.externalIdentifier ?? 'Sin identificador'} · {formatAge(patient.dateOfBirth) !== null ? `${formatAge(patient.dateOfBirth)} años` : 'Edad sin registro'}{patient.isArchived ? ' · Archivado' : ''}</p>{'phone' in patient ? <div className="admin-patient-contact"><span><strong>Teléfono</strong>{patient.phone ? <a href={`tel:${patient.phone}`}>{patient.phone}</a> : 'Sin registrar'}</span><span><strong>Correo</strong>{patient.email ? <a href={`mailto:${patient.email}`}>{patient.email}</a> : 'Sin registrar'}</span></div> : null}</div><div className="actions"><button className="btn btn-ghost btn-sm" disabled={disabled} onClick={() => editPatient(patient)}>Editar datos</button>{!patient.isArchived ? <button className="btn btn-secondary btn-sm" onClick={() => setDialog({ kind: 'appointment', patient })}>Nueva cita</button> : null}</div></li>)}</ul>
       {!filtered.length ? <div className="workspace-empty"><h2>No hay coincidencias</h2><p>Revisa el nombre o registra un nuevo paciente.</p></div> : null}
     </section> : <>
@@ -94,7 +94,7 @@ export function ReceptionWorkspace({ appointments, queue, patients, receipts, da
       else if (dialog.purpose === 'consultation') { setDialog(null); router.push(`/patients/${patient.id}/consultas/nueva`); }
       else { setDialog(null); router.push(`/patients/${patient.id}`); }
     }} onCreate={dialog.purpose === 'patient' ? undefined : () => setDialog({ kind: 'new', scheduleAfter: dialog.purpose === 'appointment', continueToConsultation: dialog.purpose === 'consultation' })} /> : null}
-    {dialog?.kind === 'new' ? <NewPatientForm administrative={administrative} existingPatients={patients} dialogTitle="Registrar paciente" onCancel={() => setDialog(null)} onSaved={patient => {
+    {dialog?.kind === 'new' ? <NewPatientForm administrative={administrative} existingPatients={patients} dialogTitle="Registrar paciente" onCancel={() => setDialog(null)} onOpenExisting={existing => void editPatient(existing)} onSaved={patient => {
       if (dialog.continueToConsultation) { setDialog(null); router.push(`/patients/${patient.id}/consultas/nueva`); return; }
       setMessage('Paciente registrado.'); setDialog(dialog.scheduleAfter ? { kind: 'appointment', patient } : null); refresh();
     }} /> : null}

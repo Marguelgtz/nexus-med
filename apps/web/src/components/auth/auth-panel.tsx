@@ -58,11 +58,14 @@ export function AuthPanel({ mode, returnTo = '/', notice, invitationToken, reset
   const [inviteReady, setInviteReady] = useState(mode !== 'invitation');
   const [googleEnabled, setGoogleEnabled] = useState(false);
   const [localEmailCapture, setLocalEmailCapture] = useState(false);
+  const resetUnavailable = mode === 'reset' && (!resetToken || Boolean(tokenError));
   const tokenErrorMessage = tokenError
-    ? 'El enlace venció o ya se utilizó. Solicita una nueva recuperación.'
+    ? 'El enlace de recuperación venció o ya no es válido. Solicita uno nuevo.'
     : mode === 'invitation' && !invitationToken
       ? 'El enlace de invitación no contiene un token. Solicita una nueva invitación.'
-      : '';
+      : mode === 'reset' && !resetToken
+        ? 'Este enlace no incluye el token de recuperación.'
+        : '';
 
   useEffect(() => {
     let active = true;
@@ -176,10 +179,20 @@ export function AuthPanel({ mode, returnTo = '/', notice, invitationToken, reset
         cache: 'no-store',
       });
       const body = await response.json().catch(() => null) as ApiMessage | null;
-      if (!response.ok) throw new Error(messageFrom(body, 'No se pudo abrir la demostración.'));
-      window.location.assign('/recepcion');
+      if (!response.ok) {
+        const fallback = response.status >= 500
+          ? 'La demostración no está disponible en este momento. Intenta de nuevo en unos minutos.'
+          : response.status === 429
+            ? 'Hubo demasiados intentos para abrir la demostración. Espera un momento e inténtalo de nuevo.'
+            : 'No se pudo abrir la demostración. Intenta de nuevo.';
+        throw new Error(messageFrom(body, fallback));
+      }
+      router.replace('/recepcion');
+      router.refresh();
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : 'No se pudo abrir la demostración.');
+      setError(reason instanceof TypeError
+        ? 'No se pudo conectar con la demostración. Revisa tu conexión e inténtalo de nuevo.'
+        : reason instanceof Error ? reason.message : 'No se pudo abrir la demostración. Intenta de nuevo.');
       setBusy(false);
     }
   }
@@ -201,8 +214,14 @@ export function AuthPanel({ mode, returnTo = '/', notice, invitationToken, reset
       {mode === 'login' ? <p>Entra a tu espacio de trabajo clínico.</p> : null}
       {mode === 'invitation' ? <p>El acceso se crea con una invitación del consultorio.</p> : null}
       {mode === 'reset-request' ? <p>Te enviaremos un enlace si el correo corresponde a una cuenta.</p> : null}
-      {mode === 'reset' ? <p>La contraseña debe tener entre 12 y 128 caracteres.</p> : null}
+      {mode === 'reset' && !resetUnavailable ? <p>La contraseña debe tener entre 12 y 128 caracteres.</p> : null}
       {mode === 'verification' ? <p>Vuelve a solicitar la verificación para una cuenta pendiente.</p> : null}
+
+      {resetUnavailable ? <div className="auth-recovery-state">
+        <p className="auth-message auth-error" role="alert">{tokenErrorMessage}</p>
+        <p>Los enlaces de recuperación solo se pueden usar una vez y vencen por seguridad.</p>
+        <Link className="btn btn-primary" href="/olvide-contrasena">Solicitar un enlace nuevo</Link>
+      </div> : null}
 
       {mode === 'login' && googleEnabled ? <button className="btn btn-secondary auth-google" type="button" disabled={busy} onClick={signInWithGoogle}>Continuar con Google</button> : null}
       {mode === 'invitation' && googleEnabled ? <button className="btn btn-secondary auth-google" type="button" disabled={busy || !inviteReady} onClick={signInWithGoogle}>Crear cuenta con Google</button> : null}
@@ -215,7 +234,7 @@ export function AuthPanel({ mode, returnTo = '/', notice, invitationToken, reset
         </div>
       ) : null}
 
-      <form className="auth-form" onSubmit={handleSubmit}>
+      {!resetUnavailable ? <form className="auth-form" onSubmit={handleSubmit}>
         {mode === 'invitation' ? (
           <label>Nombre completo<input name="name" type="text" autoComplete="name" required minLength={2} maxLength={100} disabled={!inviteReady || busy} /></label>
         ) : null}
@@ -240,7 +259,7 @@ export function AuthPanel({ mode, returnTo = '/', notice, invitationToken, reset
             : mode === 'reset' ? 'Guardar contraseña'
             : 'Enviar verificación'}
         </button>
-      </form>
+      </form> : null}
 
       <nav className="auth-links" aria-label="Opciones de cuenta">
         {mode === 'login' && localEmailCapture ? <Link href="/dev/correo">Correo de desarrollo</Link> : null}
