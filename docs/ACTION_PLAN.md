@@ -8,7 +8,7 @@
 
 Shell implementation details: global tokens (cool page, midnight/cobalt, readable type/control sizing), persistent role-aware global sidebar, nested patient navigation and session actions retained. Patient, operations, clinical and auth screens still need visual migration and browser verification. Inventory includes authenticated physician/secretary/demo views, registry and patient subroutes, reception/calendar, studies/receipts, prescriptions/reports, account/access and authentication screens. Current role/session behavior in source takes precedence over historical documentation claiming auth is absent.
 
-**Sequence:** (1) Shared tokens, controls and application sidebar (PR #34). (2) Persisted patient directory, full-page registration and patient workspace navigation (PR #35). (3) Reception, secretary and calendar (in progress on `codex/proposal-2-operations`). (4) Consultation/context, studies/receipts and printable documents. (5) Auth/access screens and integrated responsive/keyboard/workflow regression. Each slice includes focused verification before the next.
+**Sequence:** (1) Shared tokens, controls and application sidebar (PR #34). (2) Persisted patient directory, full-page registration and patient workspace navigation (PR #35). (3) Reception, secretary and calendar (PR #36, 3 files). (4) Consultation/context, studies/receipts, printable documents, auth and access presentation (one 4-file CSS/spec PR on `codex/proposal-2-auth`, pending publication). (5) Integrated responsive/keyboard/workflow regression. Each slice includes focused verification before the next.
 
 **Dependencies:** Shell before screen migrations; patient context before clinical screens. Shared CSS and navigation changes are sequential. No schema/API changes planned. Synthetic fixtures and existing save/authorization behavior remain authoritative. Cloudflare hostname changes are a separate pending request: the requested nested workers.dev hostname is unsupported by the documented Worker-name URL format; no routing/deployment change was made.
 
@@ -16,9 +16,9 @@ Shell implementation details: global tokens (cool page, midnight/cobalt, readabl
 
 **Branch strategy:** Plan commit `5784266` on `codex/proposal-2-rollout-plan`, based on `4fb3557`; shell is first dependent branch `codex/proposal-2-shell`, followed by coherent patient, operations and clinical slices. Keep PR changes focused (target 3–8 files, split when above ~12); commit at verified boundaries; no feature merge without owner authorization.
 
-**Shell verification:** Web 44/44, typecheck, lint (inherited missing Pages-directory and `window.location.assign` notices) and production build pass. Initial sandbox build could not parse TypeScript subprocess output; permitted rerun passed. `git diff --check` passes. No API changes or patient mutations. Browser visual verification remains to be done; local port 3000 was not running during this check.
+**Shell verification:** Web 44/44, typecheck, lint (inherited missing Pages-directory and `window.location.assign` notices) and production build pass. Initial sandbox build could not parse TypeScript subprocess output; permitted rerun passed. `git diff --check` passes. No API changes or patient mutations. Operations slice: web 44/44, typecheck, lint (inherited notices), build, diff check. Browser visual verification remains to be done in integrated walkthrough.
 
-**Next action:** Run focused checks for operations visual changes, then publish a small operations styling PR stacked on #35. Next migrate clinical and account screens, then perform integrated browser workflow checks. Keep both isolated previews for comparison. No deployment.
+**Next action:** Publish the final presentation slice stacked on #36, then run the full browser journeys across routes, roles and target viewports. Fix identified regressions and gather screenshots before calling rollout complete. Keep both isolated previews for comparison. No deployment.
 
 ## Previous objective — Alternative UI exploration (2026-11-12)
 

@@ -2820,6 +2820,25 @@ body:has(.app-dialog[open]) { overflow: hidden; }
 .app-sidebar .topbar-signout:hover, .app-sidebar .topbar-account-link:hover { background: #20395e; }
 .app-sidebar .view-selector select { max-width: 100%; width: 100%; }
 .app-sidebar .topbar-feedback { position: static; color: #ffb4b4; font-size: 14px; }
+.auth-status-page { background: #f2f5fb; }
+.auth-card { width: min(100%, 480px); padding: 32px; border-color: #ccd6e6; border-radius: 12px; background: #fff; box-shadow: none; }
+.auth-card h1 { color: #172947; font-size: 32px; line-height: 1.25; font-weight: 750; letter-spacing: -.02em; }
+.auth-card > p { color: #52617a; font-size: 16px; line-height: 1.55; }
+.auth-brand { font-size: 21px; letter-spacing: 0; }
+.auth-brand-mark { width: 40px; height: 40px; border-radius: 8px; background: #142644; font-size: 20px; font-weight: 700; }
+.auth-card .eyebrow { color: #52617a; font-size: 14px; letter-spacing: .04em; }
+.auth-form label { gap: 7px; font-size: 16px; line-height: 24px; font-weight: 650; }
+.auth-form input { min-height: 54px; border-color: #7d8ca7; border-radius: 8px; font-size: 18px; }
+.auth-form input:focus { outline: 3px solid #244abd; outline-offset: 2px; border-color: #244abd; }
+.auth-submit, .auth-google { min-height: 54px; }
+.auth-message { font-size: 15px; line-height: 1.5; }
+.auth-demo { border-color: #ccd6e6; border-radius: 10px; background: #f2f5fb; }
+.auth-demo p { color: #394b66; font-size: 14px; line-height: 1.5; }
+.auth-links { font-size: 15px; }
+.access-section, .mail-capture-item { border-color: #ccd6e6; border-radius: 12px; background: #fff; box-shadow: none; }
+.access-section h2, .mail-capture-item h2 { font-size: 20px; line-height: 28px; }
+.mail-capture-item > p { font-size: 15px; line-height: 1.5; }
+.mail-capture-meta { font-size: 13px; }
 .app-main { min-width: 0; }
 .app-main > .container { width: 100%; max-width: none; margin: 0; padding: 28px clamp(20px, 3vw, 48px) 48px; }
 .app-main .demo-notice { margin: 0 0 20px; }
@@ -2860,6 +2879,31 @@ body:has(.app-dialog[open]) { overflow: hidden; }
 .app-main .day-grid { overflow-x: auto; }
 .app-main .cal-nav a, .app-main .view-toggle .btn { min-height: 48px; font-size: 15px; }
 .app-main .workspace-empty, .app-main .empty-state { border: 1px dashed #7d8ca7; border-radius: 12px; background: #fff; }
+.app-main .section-label { color: #52617a; font-size: 14px; line-height: 20px; font-weight: 700; letter-spacing: .035em; }
+.app-main .field > label, .app-main .field > span, .app-main .study-field > span { color: #172947; font-size: 16px; line-height: 24px; font-weight: 650; }
+.app-main .field input:not([type='checkbox']), .app-main .field select, .app-main .field textarea, .app-main .study-field input:not([type='checkbox']), .app-main .study-field select { min-height: 52px; padding: 12px; border: 1px solid #7d8ca7; border-radius: 8px; background: #fff; color: #172947; font-size: 17px; }
+.app-main .field textarea { min-height: 140px; line-height: 1.55; }
+.app-main .field input:focus, .app-main .field select:focus, .app-main .field textarea:focus { outline: 3px solid #244abd; outline-offset: 2px; }
+.app-main .btn { min-height: 52px; border-radius: 8px; font-size: 16px; }
+.app-main .btn-sm { min-height: 44px; padding: 8px 12px; font-size: 15px; }
+.app-main .badge { min-height: 30px; padding: 4px 10px; font-size: 14px; font-weight: 700; }
+.app-main .timeline-item, .app-main .patient-appointment-row, .app-main .document-row, .app-main .patient-study-item { border-color: var(--border); background: #fff; }
+.app-main .timeline-item { padding: 18px; border-radius: 10px; }
+.app-main .timeline-item .reason, .app-main .timeline-item .when, .app-main .timeline-entry-meta { font-size: 15px; line-height: 1.5; }
+.app-main .consultation-note-form, .app-main .consultation-context { min-width: 0; }
+.app-main .encounter-note-card { padding: 20px; border: 1px solid var(--border); border-radius: 12px; background: #fff; box-shadow: none; }
+.app-main .note-section { padding: 18px 0; border-color: var(--border); }
+.app-main .note-section-heading .section-label { font-size: 16px; line-height: 24px; }
+.app-main .note-section .section-body { color: #172947; font-size: 17px; line-height: 1.65; }
+.app-main .clinical-context-summary, .app-main .clinical-context-item { border: 1px solid var(--border); border-radius: 10px; background: #fff; }
+.app-main .clinical-context-safety strong, .app-main .clinical-context-item > strong { font-size: 16px; }
+.app-main .clinical-context-safety span, .app-main .clinical-context-item p { font-size: 15px; line-height: 1.5; }
+.app-main .patient-study-item { border: 1px solid var(--border); border-radius: 10px; padding: 18px; }
+.app-main .study-category-label, .app-main .study-item-title > strong { color: #172947; font-size: 17px; font-weight: 700; }
+.app-main .study-description, .app-main .study-result-note, .app-main .study-status-caveat { color: #394b66; font-size: 15px; line-height: 1.55; }
+.app-main .document-form-section { padding: 20px; border: 1px solid var(--border); border-radius: 12px; background: #fff; }
+.app-main .document-form-section h2 { font-size: 20px; line-height: 28px; }
+.app-main .context-strip { min-height: 54px; padding: 10px 14px; border: 1px solid var(--border); border-radius: 8px; background: #fff; font-size: 16px; }
 .patient-directory-layout { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(260px, .75fr); align-items: start; gap: 20px; }
 .patient-card-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
 .patient-directory-card { min-width: 0; border: 1px solid var(--border); border-radius: 12px; background: var(--surface); }
@@ -3195,3 +3239,24 @@ body:has(.app-dialog[open]) { overflow: hidden; }
 @media (max-width: 480px) {
   .appointment-email-history li { align-items: flex-start; flex-direction: column; }
 }
+
+/* Shared Proposal 2 treatment for public sign-in and access management. */
+.auth-status-page { background: #f2f5fb; }
+.auth-card { width: min(100%, 480px); padding: 32px; border-color: #ccd6e6; border-radius: 12px; background: #fff; box-shadow: none; }
+.auth-card h1 { color: #172947; font-size: 32px; line-height: 1.25; font-weight: 750; letter-spacing: -.02em; }
+.auth-card > p { color: #52617a; font-size: 16px; line-height: 1.55; }
+.auth-brand { font-size: 21px; letter-spacing: 0; }
+.auth-brand-mark { width: 40px; height: 40px; border-radius: 8px; background: #142644; font-size: 20px; font-weight: 700; }
+.auth-card .eyebrow { color: #52617a; font-size: 14px; letter-spacing: .04em; }
+.auth-form label, .access-invite-form label { gap: 7px; font-size: 16px; line-height: 24px; font-weight: 650; }
+.auth-form input, .access-invite-form input { min-height: 54px; border-color: #7d8ca7; border-radius: 8px; font-size: 18px; }
+.auth-form input:focus { outline: 3px solid #244abd; outline-offset: 2px; border-color: #244abd; }
+.auth-submit, .auth-google { min-height: 54px; }
+.auth-message { font-size: 15px; line-height: 1.5; }
+.auth-demo { border-color: #ccd6e6; border-radius: 10px; background: #f2f5fb; }
+.auth-demo p { color: #394b66; font-size: 14px; line-height: 1.5; }
+.auth-links { font-size: 15px; }
+.access-section, .mail-capture-item { border-color: #ccd6e6; border-radius: 12px; background: #fff; box-shadow: none; }
+.access-section h2, .mail-capture-item h2 { font-size: 20px; line-height: 28px; }
+.mail-capture-item > p { font-size: 15px; line-height: 1.5; }
+.mail-capture-meta { font-size: 13px; }

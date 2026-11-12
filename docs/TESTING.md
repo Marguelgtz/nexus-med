@@ -2,7 +2,7 @@
 
 ## Proposal 2 operations styling — 2026-11-12
 
-Applied the new surface, type, action, card, reception metric, secretary tab, and calendar treatment to the shared operations views. Week layout uses an internal horizontal scroll area at narrow widths. These are CSS-only changes; interaction and API workflow code is unchanged. Integrated browser check is pending along with later clinical/auth migration.
+Applied the new surface, type, action, card, reception metric, secretary tab, and calendar treatment to the shared operations views. Week layout uses an internal horizontal scroll area at narrow widths. These are CSS-only changes; interaction and API workflow code is unchanged. Web 44/44, typecheck, lint (inherited notices), build and diff check pass across shell/patient/operations stack. Integrated browser check is pending along with later clinical/auth migration.
 
 ## Proposal 2 patient directory and registration — 2026-11-12
 
@@ -233,3 +233,11 @@ QA used a separate `.local/secretary-qa/medical.db`, exact seeded fixtures plus 
 Normal `npm run dev` then applied the two additive migrations to the existing local DB and seeded zero new records. A before/after digest of all original columns/rows across seven existing tables matched exactly after excluding only the two intentionally added migration-log entries. New receipt tables remained empty in the normal DB. The original `next-env.d.ts` owner bytes are preserved. Secretary route returns HTTP 200 on normal startup.
 
 Limits: this is a local synthetic-data demonstration. View selection is not authentication/authorization. These checks do not establish network deployment safety, physician policy approval, assistive-technology validation, or real medical-document validity. There is no attachment replacement/deletion UI in this slice.
+
+## Proposal 2 clinical presentation — 2026-11-12
+
+Clinical page styles now use the larger field and section labels, readable note body text, white section surfaces, visible patient context, firm controls, and low-noise study/document panels. No clinical component logic, API contract, save behavior or print-specific rules changed. Integrated clinical browser workflow verification is pending.
+
+## Proposal 2 auth and access presentation — 2026-11-12
+
+Login, invitation, recovery, verification, demo entry and access-management pages now use the same square white/cool surface treatment, navy identity, cobalt controls and larger labels/inputs. Existing auth behavior is unchanged. Browser verification is in the final integrated pass.
