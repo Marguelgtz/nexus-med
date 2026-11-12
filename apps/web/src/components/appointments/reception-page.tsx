@@ -5,11 +5,16 @@ import { addDays, instantAtLocalTime, isValidCalendarDate, practiceToday } from 
 import { fetchServer } from '../../lib/api/server';
 import { ErrorBanner } from '../primitives';
 import { ReceptionWorkspace } from './reception-workspace';
+import { resolveReceptionSection } from './reception-section';
 export async function ReceptionPage({ searchParams, administrative }: { searchParams: Promise<{ fecha?: string; seccion?: string }>; administrative: boolean }) {
   const query = await searchParams;
   const date = query.fecha ?? practiceToday();
   if (!isValidCalendarDate(date)) notFound();
-  const section = administrative && (query.seccion === 'pacientes' || query.seccion === 'estudios') ? query.seccion : 'agenda';
+  const section = resolveReceptionSection(administrative, query.seccion);
+  const retryParams = new URLSearchParams({ fecha: date });
+  if (administrative) retryParams.set('seccion', section === 'citas' ? 'agenda' : section);
+  else if (section === 'citas') retryParams.set('seccion', 'citas');
+  const retryHref = `${administrative ? '/secretaria' : '/recepcion'}?${retryParams.toString()}`;
   const range = new URLSearchParams({ from: instantAtLocalTime(date, 0, 0).toISOString(), to: instantAtLocalTime(addDays(date, 1), 0, 0).toISOString() });
   const patientListPath = administrative ? '/api/administrative/patients?status=all' : '/api/patients?status=all';
   const patientListSchema = administrative ? z.array(administrativePatientSchema) : z.array(patientSummarySchema);
@@ -20,7 +25,7 @@ export async function ReceptionPage({ searchParams, administrative }: { searchPa
     section === 'estudios' ? fetchServer('/api/study-receipts?view=administrative&review=all', z.array(studyReceiptSchema)) : Promise.resolve({ ok: true as const, data: [] }),
   ]);
   const failed = [appointments, queue, patients, receipts].find(result => !result.ok);
-  if (failed && !failed.ok) return <ErrorBanner message={failed.notFound ? 'No se pudo cargar el espacio de trabajo.' : failed.error} retryHref={administrative ? '/secretaria' : '/recepcion'} />;
+  if (failed && !failed.ok) return <ErrorBanner message={failed.notFound ? 'No se pudo cargar el espacio de trabajo.' : failed.error} retryHref={retryHref} />;
   if (!appointments.ok || !queue.ok || !patients.ok || !receipts.ok) return null;
   return <ReceptionWorkspace asOf={new Date().toISOString()} appointments={appointments.data} queue={queue.data} patients={patients.data} receipts={receipts.data} date={date} administrative={administrative} section={section} />;
 }
