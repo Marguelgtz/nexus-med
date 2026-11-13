@@ -2,7 +2,7 @@
 
 **Document type:** Chronological project archive  
 **Maintenance style:** Append-only, milestone-oriented  
-**Last updated:** 2026-11-08
+**Last updated:** 2026-11-13
 
 ## 1. Purpose
 
@@ -474,3 +474,9 @@ The owner authorized the multi-user pilot mission (D-053). Clinic membership and
 ## 2026-11-13 — Invitation concurrency and atomicity
 
 A local multi-session workerd/D1 test reproduced eight pending invitations for the same clinic and synthetic address when eight creation requests ran concurrently. The application-level precheck was insufficient. Invitation creation now rechecks eligibility in a guarded SQLite transaction / D1 batch that also writes the encrypted outbox message and audit event. Local SQLite and D1 tests verify one successful creation, conflict responses for the others, rollback of an injected outbox failure, and safe retry. The change has not been deployed; the broader pilot and independent security gates remain open.
+
+## 2026-11-13 — Atomic password reset on SQLite and D1
+
+The initial local D1 failure injection showed Better Auth's reset flow could consume a token and revoke sessions before a credential-write failure. Since the Prisma D1 adapter cannot provide transactions, `/reset-password` now validates and consumes the token, revokes sessions and updates or creates the credential inside the runtime's SQLite transaction / D1 atomic batch. Local SQLite and workerd/D1 tests inject a credential-write failure, verify token/password/session rollback, retry the same link, and race two uses of one link with one winner. API tests passed 168/168 and workspace typecheck/lint passed. This local fix is not deployed; other auth paths and deployment verification remain open.
+
+**References:** `ACTION_PLAN.md`, `SECURITY.md`, `TESTING.md`, `PILOT_READINESS.md`; local changes on `codex/pilot-clinic-foundation`.

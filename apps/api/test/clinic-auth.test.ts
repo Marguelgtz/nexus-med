@@ -202,6 +202,15 @@ describe('verified clinic onboarding and membership authorization', () => {
     const resetUrl = new URL(payload.text.match(/https?:\/\/[^\s]+/)![0]);
     const token = resetUrl.pathname.split('/').at(-1)!;
     const nextPassword = 'Changed-Synthetic-Password-2026';
+    await localPrisma.$executeRawUnsafe("CREATE TRIGGER synthetic_reset_password_failure BEFORE UPDATE OF password ON auth_accounts BEGIN SELECT RAISE(ABORT, 'synthetic password failure'); END");
+    try {
+      expect((await request('/api/auth/reset-password', { token, newPassword: nextPassword })).status).toBe(500);
+      expect((await request('/api/session', undefined, identity.cookie)).status).toBe(200);
+      expect((await request('/api/auth/sign-in/email', { email: identity.user.email, password })).status).toBe(200);
+      expect(await localPrisma.verification.count({ where: { identifier: `reset-password:${token}` } })).toBe(1);
+    } finally {
+      await localPrisma.$executeRawUnsafe('DROP TRIGGER IF EXISTS synthetic_reset_password_failure');
+    }
     expect((await request('/api/auth/reset-password', { token, newPassword: nextPassword })).status).toBe(200);
     expect((await request('/api/auth/reset-password', { token, newPassword: nextPassword })).status).toBe(400);
     expect((await request('/api/session', undefined, identity.cookie)).status).toBe(401);
@@ -212,9 +221,9 @@ describe('verified clinic onboarding and membership authorization', () => {
     expect((await request('/api/auth/sign-out', {}, cookie)).status).toBe(200);
     expect((await request('/api/session', undefined, cookie)).status).toBe(401);
 
-    const anotherLogin = await request('/api/auth/sign-in/email', { email: identity.user.email, password: nextPassword });
-    const anotherCookie = anotherLogin.headers.getSetCookie().map(value => value.split(';')[0]).join('; ');
-    const activeSession = await localPrisma.session.findFirstOrThrow({ where: { userId: identity.user.id } });
+    const anotherIdentity = await signupVerified();
+    const anotherCookie = anotherIdentity.cookie;
+    const activeSession = await localPrisma.session.findFirstOrThrow({ where: { userId: anotherIdentity.user.id } });
     await localPrisma.session.update({ where: { id: activeSession.id }, data: { createdAt: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000), expiresAt: new Date(Date.now() + 60 * 60 * 1000) } });
     expect((await request('/api/session', undefined, anotherCookie)).status).toBe(401);
   });

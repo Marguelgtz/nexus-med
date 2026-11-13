@@ -1,9 +1,11 @@
 import { betterAuth } from 'better-auth';
+import { APIError, createAuthMiddleware } from 'better-auth/api';
 import { prismaAdapter } from '@better-auth/prisma-adapter';
 import type { PrismaClient } from '../../generated/prisma/client';
 import { authEmailTemplate } from '../email/templates';
 import { enqueueEmail } from '../email/outbox';
 import { normalizeEmail, sha256 } from './invitations';
+import { executeAtomicWrite } from '../../infrastructure/database/runtime-client';
 
 const DAY_SECONDS = 24 * 60 * 60;
 const MAX_SESSION_AGE_MS = 7 * DAY_SECONDS * 1000;
@@ -77,6 +79,63 @@ export function createAuth(database: PrismaClient, config: AuthConfiguration) {
           idempotencyKey: `reset:${await sha256(token)}`,
         });
       },
+    },
+    hooks: {
+      before: createAuthMiddleware(async (ctx) => {
+        if (ctx.path !== '/reset-password') return;
+
+        const body = ctx.body as { token?: unknown; newPassword?: unknown };
+        const queryToken = ctx.query?.token;
+        const token = typeof body.token === 'string' ? body.token : typeof queryToken === 'string' ? queryToken : null;
+        const invalidToken = () => new APIError('BAD_REQUEST', { code: 'INVALID_TOKEN', message: 'Invalid or expired reset token' });
+        if (!token) throw invalidToken();
+        if (typeof body.newPassword !== 'string') throw new APIError('BAD_REQUEST', { code: 'INVALID_PASSWORD', message: 'Invalid password' });
+
+        const passwordPolicy = ctx.context.password.config;
+        if (body.newPassword.length < passwordPolicy.minPasswordLength) {
+          throw new APIError('BAD_REQUEST', { code: 'PASSWORD_TOO_SHORT', message: 'Password is too short' });
+        }
+        if (body.newPassword.length > passwordPolicy.maxPasswordLength) {
+          throw new APIError('BAD_REQUEST', { code: 'PASSWORD_TOO_LONG', message: 'Password is too long' });
+        }
+
+        const identifier = `reset-password:${token}`;
+        const verification = await ctx.context.internalAdapter.findVerificationValue(identifier);
+        if (!verification || verification.expiresAt < new Date()) throw invalidToken();
+        const user = await ctx.context.internalAdapter.findUserById(verification.value);
+        if (!user) throw new APIError('BAD_REQUEST', { code: 'USER_NOT_FOUND', message: 'User not found' });
+
+        const now = new Date().toISOString();
+        const passwordHash = await ctx.context.password.hash(body.newPassword);
+        const guardId = crypto.randomUUID();
+        try {
+          await executeAtomicWrite([
+            { sql: `INSERT INTO atomic_write_guards(id,valid) VALUES (?,CASE WHEN
+                EXISTS (SELECT 1 FROM auth_verifications WHERE identifier=? AND value=?
+                  AND julianday(expiresAt)>julianday(?))
+                AND EXISTS (SELECT 1 FROM auth_users WHERE id=?)
+                THEN 1 ELSE 0 END)`, values: [guardId, identifier, verification.value, now, verification.value] },
+            { sql: 'DELETE FROM auth_verifications WHERE identifier=? AND value=?', values: [identifier, verification.value] },
+            ...(ctx.context.options.emailAndPassword?.revokeSessionsOnPasswordReset ? [
+              { sql: 'DELETE FROM auth_sessions WHERE userId=?', values: [verification.value] },
+            ] : []),
+            { sql: `UPDATE auth_accounts SET password=?,updatedAt=?
+                WHERE userId=? AND providerId='credential' AND accountId=?`,
+              values: [passwordHash, now, verification.value, verification.value] },
+            { sql: `INSERT INTO auth_accounts(id,accountId,providerId,userId,password,createdAt,updatedAt)
+                SELECT ?,?,'credential',?,?,?,? WHERE EXISTS (SELECT 1 FROM auth_users WHERE id=?)
+                  AND NOT EXISTS (SELECT 1 FROM auth_accounts WHERE userId=? AND providerId='credential' AND accountId=?)`,
+              values: [crypto.randomUUID(), verification.value, verification.value, passwordHash, now, now, verification.value, verification.value, verification.value] },
+            { sql: 'DELETE FROM atomic_write_guards WHERE id=?', values: [guardId] },
+          ]);
+        } catch (error) {
+          if (error instanceof Error && /CHECK constraint failed.*valid/i.test(error.message)) throw invalidToken();
+          throw error;
+        }
+
+        await ctx.context.options.emailAndPassword?.onPasswordReset?.({ user }, ctx.request);
+        return ctx.json({ status: true });
+      }),
     },
     emailVerification: {
       sendOnSignUp: true,
