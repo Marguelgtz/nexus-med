@@ -33,6 +33,8 @@
 
 **D1 error-log filtering:** The API Worker now wraps only the D1 methods used by the installed Prisma adapter, replacing raw D1 exceptions with fixed error categories before Prisma logs them. Explicit application D1 batches retain the original binding and their existing conflict handling. In local workerd, a synthetic password-update failure produced only a generic D1 message, no synthetic failure text or Better Auth dump, while a real duplicate encounter link still returned 409; the multi-user journey and email scheduled-event tests passed. API tests passed 165/165 before a second focused sanitizer test was added; both current focused tests passed. The API pilot dry-run passed. This is local, version-sensitive protection; deployed behavior and other dependency/error paths still require review. D1 password-reset partial failure remains as previously documented.
 
+**Document screen check:** In the local demonstration, an existing synthetic prescription and report rendered their patient context, historical-author placeholder and document content. A report incorrectly displayed the prescription-only certification notice; the local UI now limits that sentence to prescriptions, and both variants were rechecked in the browser. The browser print-preview dialog could not be inspected, so print rendering remains unverified. No records were modified and this frontend change is not deployed.
+
 **Next action:** Finish regression checks, verify browser clinical workflows and deployed-runtime packaging, complete remote recovery rehearsal and review outstanding security findings. Preserve all existing work and avoid remote writes without a validated recovery path.
 
 ---

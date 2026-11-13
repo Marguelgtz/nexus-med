@@ -91,7 +91,8 @@ export function MedicalDocumentDetail({
 
       {!editing ? (
         <p className="document-screen-note">
-          La impresión se abre en el diálogo del navegador (también puede guardarse como PDF). Copia local; no constituye receta electrónica certificada.
+          La impresión se abre en el diálogo del navegador (también puede guardarse como PDF).
+          {document.kind === 'prescription' ? ' Copia local; no constituye receta electrónica certificada.' : null}
         </p>
       ) : null}
     </div>
