@@ -479,4 +479,4 @@ A local multi-session workerd/D1 test reproduced eight pending invitations for t
 
 The initial local D1 failure injection showed Better Auth's reset flow could consume a token and revoke sessions before a credential-write failure. Since the Prisma D1 adapter cannot provide transactions, `/reset-password` now validates and consumes the token, revokes sessions and updates or creates the credential inside the runtime's SQLite transaction / D1 atomic batch. Local SQLite and workerd/D1 tests inject a credential-write failure, verify token/password/session rollback, retry the same link, and race two uses of one link with one winner. API tests passed 168/168 and workspace typecheck/lint passed. This local fix is not deployed; other auth paths and deployment verification remain open.
 
-**References:** `ACTION_PLAN.md`, `SECURITY.md`, `TESTING.md`, `PILOT_READINESS.md`; local changes on `codex/pilot-clinic-foundation`.
+**References:** `ACTION_PLAN.md`, `SECURITY.md`, `TESTING.md`, `PILOT_READINESS.md`; commit `099088c` on `codex/pilot-clinic-foundation`.
