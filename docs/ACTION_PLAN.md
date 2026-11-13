@@ -1,3 +1,35 @@
+# NM-PILOT-001 — Active mission (2026-11-13)
+
+**Outcome:** An integrated, clinic-scoped release candidate for a controlled synthetic clinic pilot. The owner directive of 2026-11-13 supersedes the historical local-only/single-doctor exclusions. Real-patient use remains gated on independent privacy/security/clinical review; inventory is P2 and deferred until mandatory gates pass.
+
+**Baseline:** Clean `82a6baf` on `codex/patient-card-expediente`, PR #41 open with base #40. Work branch `codex/pilot-clinic-foundation`. Existing stack is retained, no merges/resets. Independent original auth/secretary monoliths are not safe to merge wholesale; current HEAD includes extracted functionality. Remote deployment/migration state is not yet verified.
+
+## Dependency-aware execution
+
+| Sequence | Objective / deliverables | Dependencies | Acceptance gate / status |
+|---|---|---|---|
+| 1 | OBJ-00: Git ancestry, implementation inventory, baseline checks | None | Typecheck PASS; lint PASS with inherited warning; API 143/143 PASS; web 52/52 PASS; production build FAIL at sandbox TypeScript subprocess parsing, investigate. Remote state NOT STARTED. |
+| 2 | OBJ-02a: Clinic/membership schema, legacy migration, scoped API, association constraints | 1 | Migration replay/preservation, isolation across all domains/files, role denial and raw-batch atomicity. NOT STARTED. |
+| 3 | OBJ-02b/04: Doctor assignment, preserved clinical authorship, version conflicts | 2 | Two doctors/two secretaries, independent schedules, historical authors, stale-write denial. NOT STARTED. |
+| 4 | OBJ-03: Verified doctor signup/bootstrap, doctor/secretary invitations, scoped administration, OAuth | 2; auth audit can run independently | Idempotent bootstrap, single-use acceptance, revocation, account lifecycle, provider-disabled startup. NOT STARTED. |
+| 5 | OBJ-01/04: Existing workflow/action audit, multi-session patient journey | 3–4 | Patient→schedule→arrival→encounter→studies→documents→completion/relogin; failures retain drafts. NOT STARTED. |
+| 6 | OBJ-05: Restrained geometric refinement and new onboarding/access screens | 4; preserve current sidebar/navigation | Readability, keyboard, 320/390/768/1024/1440px, printing and screenshots. NOT STARTED. |
+| 7 | OBJ-06: Deployment packaging, environment separation, email reliability, backup/restore | 2; queue/recovery work independent | Local + D1 runtime tests, restore drill, private file isolation. Remote/SMTP/Google checks may be BLOCKED by credentials. NOT STARTED. |
+| 8 | OBJ-07: Complete regression, browser/multi-session gates, readiness report | All P0 slices | Every gate PASS/FAIL/BLOCKED/NOT STARTED, no unverified readiness claim. NOT STARTED. |
+| 9 | OBJ-08: Inventory/consumables | Mandatory technical gates pass | DEFERRED P2; do not delay core release. |
+
+**Implementation policies:** Clinic-owned patients shared within an active clinic; administrative capability separate from doctor role; historical unknown authors stay explicit. Membership and disabled-account status rechecked server-side per request. Unassigned appointments remain explicit for legacy data; named active doctor assignment on new scheduling. Preserve explicit clinical saves/reviews and existing note semantics. Use SQLite transactions / D1 atomic batches and database constraints; no hand-rolled OAuth or stack replacement.
+
+**Parallel work:** Primary owns schema/migrations, domain scoping, concurrency and contracts outside auth. Bounded independent agents own auth implementation, email/recovery, and Luna Max mission planning/review. Shared schema/global CSS integration is serial.
+
+**Commit/PR strategy:** Foundation branch based on #41; coherent verified migration/scoping commit, then complete auth and scheduling/frontend slices in dependent branches when useful. Existing feature PRs remain open; no feature merges. Preserve owner changes and never deploy/migrate live data without validated backup and explicit authorization.
+
+**Current action:** Implement clinic foundation while auth and operational slices progress independently. Record concrete tests and exact blockers here at verified milestones. Missing external credentials do not block local code/tests or synthetic verification.
+
+---
+
+# Historical execution record (superseded current state below)
+
 # Living Action Plan — Medical Platform MVP
 
 ## Active follow-up — Patient and appointment navigation (2026-11-12)

@@ -4,6 +4,18 @@ Use `Confirmed`, `Proposed`, `Open`, or `Superseded`. Record the date and ration
 
 ## Confirmed decisions
 
+### D-053 — Clinic pilot mission and multi-user boundaries — 2026-11-13
+
+**Status:** Accepted by explicit owner directive NM-PILOT-001. Supersedes historical single-doctor, no-authentication, no-file-storage and local-only scope exclusions for this mission. Retain Next.js/Hono/Prisma/Better Auth/OpenNext/D1/private R2. Only synthetic data is authorized for engineering and pilot verification; real-patient readiness remains a separate independent review gate. Inventory is optional P2 after mandatory technical gates.
+
+**Policies:** Patients belong to one immutable clinic and are shared with active authorized clinic members. `ClinicMembership` separates clinical role (`doctor`, `secretary`, `administrator`) from `isAdmin`; administration alone never grants clinical access. Verified identities may create one primary clinic through a retry-safe bootstrap. Only clinic administrators invite doctors/secretaries and revoke clinic membership. Invitations require explicit verified acceptance bound to email, role, clinic, token and expiry; identity creation alone confers no access. Membership is resolved for every authenticated request. Multiple memberships are represented; the active session selects the working clinic.
+
+**Scheduling/authorship:** Appointments support an explicitly visible unassigned state (including legacy rows), or an active clinic doctor. Secretaries/admins manage clinic scheduling; ordinary doctors mutate their own or unassigned appointments. Overlaps remain allowed with a warning, now scoped to the selected doctor's schedule; no clinical completion is inferred. Encounters/documents retain immutable author identity and last editor separately. Unknown historical authors remain null and display explicitly. A second clinic doctor may read/edit authorized history using version checks, without rewriting its author.
+
+**Migration/concurrency:** Additive SQL preserves all old fields/timestamps/associations. Existing identities receive legacy-clinic memberships from documented prior roles; no historical clinician is invented. Existing tables use triggers for non-null default clinic ownership because SQLite/D1 cannot add a non-null REFERENCES column with a populated default. Prisma relation metadata enables traversal; the checked-in migration triggers are authoritative for these clinic relations. Do not blindly accept a schema-drift table-rebuild migration. Patient/clinic/clinical author ownership is immutable. Association/actor guards protect raw batches. Clinical/demographic/document/appointment edits use optimistic versions; replacing prescription lines uses a checked guard in the same SQLite transaction/D1 batch. Local recovery and D1 simulation do not establish remote deploy readiness.
+
+
+
 ### D-052 — Role-aware patient access and focused Reception appointments — 2026-11-12
 
 **Status:** Accepted from explicit owner feedback. The secretary sidebar exposes **Citas**, **Pacientes**, and **Estudios** and routes patient search to the existing administrative list under `/secretaria?seccion=pacientes`; secretary never enters the clinical `/patients/[id]` workspace. Physician patient-directory cards open the expediente when their main area is selected; `Nueva consulta` remains a separate, explicit action, and returning from the expediente restores the directory query/filter. Reception gains a date-driven **Citas** view at `/recepcion?seccion=citas`, distinct from its attention/queue overview; the existing `/calendar` day/week/month experience stays unchanged. No API, data, clinical, role-enforcement, or calendar behavior changes.
