@@ -480,3 +480,15 @@ A local multi-session workerd/D1 test reproduced eight pending invitations for t
 The initial local D1 failure injection showed Better Auth's reset flow could consume a token and revoke sessions before a credential-write failure. Since the Prisma D1 adapter cannot provide transactions, `/reset-password` now validates and consumes the token, revokes sessions and updates or creates the credential inside the runtime's SQLite transaction / D1 atomic batch. Local SQLite and workerd/D1 tests inject a credential-write failure, verify token/password/session rollback, retry the same link, and race two uses of one link with one winner. API tests passed 168/168 and workspace typecheck/lint passed. This local fix is not deployed; other auth paths and deployment verification remain open.
 
 **References:** `ACTION_PLAN.md`, `SECURITY.md`, `TESTING.md`, `PILOT_READINESS.md`; commit `099088c` on `codex/pilot-clinic-foundation`.
+
+## 2026-11-13 — Recoverable signup after D1 credential failure
+
+A local workerd/D1 failure injection showed that a credential insert error could leave a newly created unverified `pending` identity without an account or verification message, blocking a same-address retry. Signup now records the user created in the current request and conditionally removes that orphan after a failed response only when it remains unverified/pending and has no account, clinic membership or session. SQLite and local D1 tests verify cleanup and a successful same-email retry. Focused clinic-auth passed 9/9, the full API suite passed 169/169, the local Worker journey passed, and workspace typecheck/lint passed. This does not prove general Better Auth signup atomicity and has not been deployed.
+
+**References:** `ACTION_PLAN.md`, `SECURITY.md`, `TESTING.md`, `PILOT_READINESS.md`; local implementation and integration tests on `codex/pilot-clinic-foundation`.
+
+## 2026-11-13 — OAuth callback orphan cleanup
+
+Code review found that Google signup can leave a verified but unlinked pending identity if D1 account creation fails after Better Auth creates the user. Better Auth returns a redirect on failure, so cleanup based on `Response.ok` missed this route. The request-scoped cleanup now wraps `/callback/google` and removes only that request's pending identity when it has no account, membership or session; a verified identity is eligible because it has no established login path and is known to be new in that callback. A synthetic callback test verifies that an error 302 removes the orphan and a success 302 with an account preserves it. This is not a Google provider round trip. The local workerd/D1 journey passed, API 170/170, focused clinic-auth 10/10, workspace typecheck/lint; no migration or deployment was made.
+
+**References:** `ACTION_PLAN.md`, `SECURITY.md`, `TESTING.md`, `PILOT_READINESS.md`; `apps/api/src/domains/auth/signup-cleanup.ts` and `auth.routes.ts`.

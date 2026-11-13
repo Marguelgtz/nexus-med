@@ -6,6 +6,7 @@ import { authEmailTemplate } from '../email/templates';
 import { enqueueEmail } from '../email/outbox';
 import { normalizeEmail, sha256 } from './invitations';
 import { executeAtomicWrite } from '../../infrastructure/database/runtime-client';
+import { recordCreatedSignupUser } from './signup-cleanup';
 
 const DAY_SECONDS = 24 * 60 * 60;
 const MAX_SESSION_AGE_MS = 7 * DAY_SECONDS * 1000;
@@ -201,6 +202,9 @@ export function createAuth(database: PrismaClient, config: AuthConfiguration) {
             // Identity creation grants no clinic access. Only verified,
             // authenticated onboarding or invitation acceptance may do so.
             return { data: { ...user, email, role: 'pending' } };
+          },
+          after: async (user) => {
+            recordCreatedSignupUser(user.id);
           },
         },
         update: {

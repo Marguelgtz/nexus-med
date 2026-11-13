@@ -10,6 +10,7 @@ import { encryptEmailPayload } from '../email/outbox';
 import { DEMO_ACCOUNT_EMAIL, deriveDemoPassword, ensureDemoAccount } from './demo-password';
 import { consumeAccountRateLimit } from './auth.config';
 import { acceptClinicInvitation, bootstrapClinic, requireClinicAdmin } from './clinic-access';
+import { cleanUpOrphanedSignupIdentity } from './signup-cleanup';
 
 const invitationPrepareSchema = z.object({ token: z.string().min(32).max(128) }).strict();
 const RECENT_AUTH_MAX_AGE_MS = 10 * 60 * 1000;
@@ -283,7 +284,12 @@ authRoutes.on(['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'], '/auth/*', a
       }
     }
   }
-  const response = await getAuthRuntime().auth.handler(c.req.raw);
+  const runtime = getAuthRuntime();
+  const handle = () => runtime.auth.handler(c.req.raw);
+  const identityCreationFlow = (c.req.method === 'POST' && action === 'sign-up/email') || action === 'callback/google';
+  const response = identityCreationFlow
+    ? await cleanUpOrphanedSignupIdentity(runtime.atomicWrite, handle)
+    : await handle();
   const signupComplete = response.ok && (c.req.path.endsWith('/sign-up/email') || c.req.path.endsWith('/callback/google'));
   if (!signupComplete) return response;
   const headers = new Headers(response.headers);

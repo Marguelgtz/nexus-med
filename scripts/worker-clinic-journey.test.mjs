@@ -101,6 +101,17 @@ test('real Worker sessions preserve clinic isolation and clinical authorship on 
       assert.equal(session.clinic.id, ownerIdentity.clinicId);
     }
 
+    const failedSignupEmail = `worker-signup-failure-${randomUUID()}@example.test`;
+    await db.exec("CREATE TRIGGER synthetic_signup_account_failure BEFORE INSERT ON auth_accounts WHEN NEW.providerId='credential' BEGIN SELECT RAISE(ABORT, 'synthetic signup account failure'); END");
+    const failedSignup = await request('/api/auth/sign-up/email', { name: 'Alta sintética recuperable', email: failedSignupEmail, password });
+    await db.exec('DROP TRIGGER synthetic_signup_account_failure');
+    assert.equal(failedSignup.status, 500, 'credential-write failure must not appear successful');
+    assert.equal((await db.prepare('SELECT COUNT(*) AS count FROM auth_users WHERE email=?').bind(failedSignupEmail).first()).count, 0,
+      'failed signup must not leave an unusable identity behind');
+    assert.equal((await db.prepare('SELECT COUNT(*) AS count FROM email_outbox WHERE recipient=?').bind(failedSignupEmail).first()).count, 0);
+    assert.equal((await request('/api/auth/sign-up/email', { name: 'Alta sintética recuperable', email: failedSignupEmail, password })).status, 200,
+      'failed signup can be retried with the same address');
+
     const doctor = await owner('A');
     const secondDoctor = await signup('B');
     const secretary = await signup('C');

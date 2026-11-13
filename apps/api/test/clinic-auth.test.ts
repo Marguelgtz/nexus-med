@@ -3,6 +3,7 @@ import { createApp } from '../src/app';
 import { createAuth } from '../src/domains/auth/auth.config';
 import { resolvePrincipal, withAuthRuntime } from '../src/domains/auth/auth.context';
 import { newOpaqueToken, sha256 } from '../src/domains/auth/invitations';
+import { recordCreatedSignupUser } from '../src/domains/auth/signup-cleanup';
 import { decryptEmailPayload } from '../src/domains/email/outbox';
 import { localPrisma } from '../src/infrastructure/database/prisma';
 import { createSqliteAtomicWrite, withPrismaClient } from '../src/infrastructure/database/runtime-client';
@@ -67,6 +68,87 @@ async function inviteToken(ownerCookie: string, recipient: string, role: 'doctor
 }
 
 describe('verified clinic onboarding and membership authorization', () => {
+  it('cleans up a pending identity when credential creation fails so signup can be retried', async () => {
+    const address = email();
+    const name = 'Alta sintética recuperable';
+    await localPrisma.$executeRawUnsafe("CREATE TRIGGER synthetic_signup_account_failure BEFORE INSERT ON auth_accounts WHEN NEW.providerId='credential' BEGIN SELECT RAISE(ABORT, 'synthetic signup account failure'); END");
+    try {
+      expect((await request('/api/auth/sign-up/email', { name, email: address, password })).status).toBe(500);
+    } finally {
+      await localPrisma.$executeRawUnsafe('DROP TRIGGER IF EXISTS synthetic_signup_account_failure');
+    }
+    expect(await localPrisma.user.findUnique({ where: { email: address } })).toBeNull();
+    expect(await localPrisma.account.count({ where: { user: { email: address } } })).toBe(0);
+    expect(await localPrisma.emailOutbox.count({ where: { recipient: address } })).toBe(0);
+
+    expect((await request('/api/auth/sign-up/email', { name, email: address, password })).status).toBe(200);
+    expect(await localPrisma.account.count({ where: { user: { email: address }, providerId: 'credential' } })).toBe(1);
+    expect(await localPrisma.emailOutbox.count({ where: { recipient: address, kind: 'verify_email' } })).toBe(1);
+  });
+
+  it('cleans up a verified Google identity when account linking fails behind an OAuth redirect', async () => {
+    const address = email();
+    await localPrisma.$executeRawUnsafe("CREATE TRIGGER synthetic_google_account_failure BEFORE INSERT ON auth_accounts WHEN NEW.providerId='google' BEGIN SELECT RAISE(ABORT, 'synthetic Google account failure'); END");
+    const authWithFailedOAuthLink = {
+      api: auth.api,
+      handler: async () => {
+        const now = new Date();
+        const user = await localPrisma.user.create({ data: {
+          id: crypto.randomUUID(), name: 'Doctora Google sintética', email: address, emailVerified: true,
+          role: 'pending', createdAt: now, updatedAt: now,
+        } });
+        recordCreatedSignupUser(user.id);
+        try {
+          await localPrisma.account.create({ data: {
+            id: crypto.randomUUID(), accountId: 'google-subject-synthetic', providerId: 'google', userId: user.id,
+            createdAt: now, updatedAt: now,
+          } });
+        } catch {
+          return Response.redirect(`${origin}/error?error=unable_to_create_user`, 302);
+        }
+        return Response.redirect(origin, 302);
+      },
+    };
+    try {
+      const headers = new Headers({ origin, 'content-type': 'application/json' });
+      const response = await withAuthRuntime({
+        auth: authWithFailedOAuthLink, database: localPrisma, atomicWrite: createSqliteAtomicWrite(localPrisma),
+        secret, appBaseUrl: origin, googleEnabled: true, localRuntime: true, principal: null,
+      }, () => withPrismaClient(localPrisma, () => app.request(`${origin}/api/auth/callback/google`, { method: 'GET', headers }), createSqliteAtomicWrite(localPrisma)));
+      expect(response.status).toBe(302);
+      expect(await localPrisma.user.findUnique({ where: { email: address } })).toBeNull();
+      expect(await localPrisma.account.count({ where: { accountId: 'google-subject-synthetic', providerId: 'google' } })).toBe(0);
+    } finally {
+      await localPrisma.$executeRawUnsafe('DROP TRIGGER IF EXISTS synthetic_google_account_failure');
+    }
+
+    const successAddress = email();
+    const authWithSuccessfulOAuthLink = {
+      api: auth.api,
+      handler: async () => {
+        const now = new Date();
+        const user = await localPrisma.user.create({ data: {
+          id: crypto.randomUUID(), name: 'Doctora Google sintética', email: successAddress, emailVerified: true,
+          role: 'pending', createdAt: now, updatedAt: now,
+        } });
+        recordCreatedSignupUser(user.id);
+        await localPrisma.account.create({ data: {
+          id: crypto.randomUUID(), accountId: 'google-subject-success-synthetic', providerId: 'google', userId: user.id,
+          createdAt: now, updatedAt: now,
+        } });
+        return Response.redirect(origin, 302);
+      },
+    };
+    const headers = new Headers({ origin, 'content-type': 'application/json' });
+    const successfulResponse = await withAuthRuntime({
+      auth: authWithSuccessfulOAuthLink, database: localPrisma, atomicWrite: createSqliteAtomicWrite(localPrisma),
+      secret, appBaseUrl: origin, googleEnabled: true, localRuntime: true, principal: null,
+    }, () => withPrismaClient(localPrisma, () => app.request(`${origin}/api/auth/callback/google`, { method: 'GET', headers }), createSqliteAtomicWrite(localPrisma)));
+    expect(successfulResponse.status).toBe(302);
+    expect(await localPrisma.user.findUnique({ where: { email: successAddress } })).not.toBeNull();
+    expect(await localPrisma.account.count({ where: { accountId: 'google-subject-success-synthetic', providerId: 'google' } })).toBe(1);
+  });
+
   it('rolls back invitation revocation when its audit event fails and permits retry', async () => {
     const owner = await makeOwner();
     const invite = await inviteToken(owner.cookie, email(), 'secretary');
