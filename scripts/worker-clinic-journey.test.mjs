@@ -7,7 +7,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import test from 'node:test';
-import { symmetricDecrypt } from 'better-auth/crypto';
+import { symmetricDecrypt, verifyPassword } from 'better-auth/crypto';
 import { Miniflare, convertV4MiniflareOptions, Log, LogLevel } from 'miniflare';
 import { unstable_splitSqlQuery } from 'wrangler';
 
@@ -66,7 +66,7 @@ test('real Worker sessions preserve clinic isolation and clinical authorship on 
       return value;
     }
     async function messageUrl(email, kind) {
-      const row = await db.prepare('SELECT encryptedBody FROM email_outbox WHERE recipient=? AND kind=? ORDER BY createdAt DESC LIMIT 1').bind(email, kind).first();
+      const row = await db.prepare('SELECT encryptedBody FROM email_outbox WHERE recipient=? AND kind=? ORDER BY rowid DESC LIMIT 1').bind(email, kind).first();
       assert.ok(row, `synthetic ${kind} message`);
       const payload = JSON.parse(await symmetricDecrypt({ key: secret, data: row.encryptedBody }));
       const url = new URL(payload.text.match(/https?:\/\/[^\s]+/)[0]);
@@ -162,6 +162,42 @@ test('real Worker sessions preserve clinic isolation and clinical authorship on 
     const persisted = await json(await request(`/api/documents/${document.id}`, undefined, cookie(login)));
     assert.equal(persisted.author.id, doctor.id);
     assert.equal(persisted.encounter.id, encounter.id);
+
+    // Inject a password-write failure only into the isolated synthetic D1.
+    // D1 does not provide Prisma transaction rollback, so record the actual
+    // recovery behavior rather than assuming token/session/password atomicity.
+    await json(await request('/api/auth/request-password-reset', { email: doctor.email, redirectTo: `${origin}/restablecer-contrasena` }));
+    const failedToken = (await messageUrl(doctor.email, 'reset_password')).pathname.split('/').at(-1);
+    assert.ok(failedToken);
+    await db.exec("CREATE TRIGGER synthetic_password_failure BEFORE UPDATE OF password ON auth_accounts BEGIN SELECT RAISE(ABORT, 'synthetic password failure'); END");
+    const nextPassword = 'Synthetic-Recovered-Password-2026!';
+    const failedReset = await request('/api/auth/reset-password', { token: failedToken, newPassword: nextPassword });
+    assert.equal(failedReset.status, 500, 'injected password write failure must not appear successful');
+    assert.equal((await request('/api/session', undefined, cookie(login))).status, 401, 'old sessions were revoked');
+    assert.equal((await request('/api/auth/sign-in/email', { email: doctor.email, password })).status, 200, 'old password remains valid');
+    await db.exec('DROP TRIGGER synthetic_password_failure');
+    assert.equal((await request('/api/auth/reset-password', { token: failedToken, newPassword: nextPassword })).status, 400, 'failed reset token was consumed');
+    await json(await request('/api/auth/request-password-reset', { email: doctor.email, redirectTo: `${origin}/restablecer-contrasena` }));
+    const replacementToken = (await messageUrl(doctor.email, 'reset_password')).pathname.split('/').at(-1);
+    assert.ok(replacementToken && replacementToken !== failedToken);
+    await json(await request('/api/auth/reset-password', { token: replacementToken, newPassword: nextPassword }));
+    assert.equal((await request('/api/auth/sign-in/email', { email: doctor.email, password })).status, 401);
+    assert.equal((await request('/api/auth/sign-in/email', { email: doctor.email, password: nextPassword })).status, 200);
+
+    // Two simultaneous uses of one fresh reset token must have one winner.
+    await json(await request('/api/auth/request-password-reset', { email: doctor.email, redirectTo: `${origin}/restablecer-contrasena` }));
+    const raceToken = (await messageUrl(doctor.email, 'reset_password')).pathname.split('/').at(-1);
+    assert.ok(raceToken && raceToken !== replacementToken);
+    const candidates = ['Synthetic-Race-Password-A-2026!', 'Synthetic-Race-Password-B-2026!'];
+    const attempts = await Promise.all(candidates.map(newPassword => request('/api/auth/reset-password', { token: raceToken, newPassword })));
+    assert.deepEqual(attempts.map(response => response.status).sort(), [200, 400]);
+    const winner = attempts.findIndex(response => response.status === 200);
+    // Inspect the synthetic hash directly: repeated sign-ins here would hit the
+    // intentional per-account rate limit and obscure the token race result.
+    const credential = await db.prepare("SELECT password FROM auth_accounts WHERE userId=? AND providerId='credential'").bind(doctor.id).first();
+    assert.ok(credential?.password);
+    assert.equal(await verifyPassword({ hash: credential.password, password: candidates[winner] }), true);
+    assert.equal(await verifyPassword({ hash: credential.password, password: candidates[1 - winner] }), false);
   } finally {
     await mf.dispose();
   }
