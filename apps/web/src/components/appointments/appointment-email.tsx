@@ -31,16 +31,17 @@ export function AppointmentEmail({ appointment, compact = false, showHistory = f
   const [error, setError] = useState('');
   const [historyExpanded, setHistoryExpanded] = useState(showHistory);
   const [historyLoaded, setHistoryLoaded] = useState(false);
+  const [historyError, setHistoryError] = useState('');
   const consentReady = Boolean(appointment.patient.email && appointment.patient.appointmentEmailConsent);
 
   useEffect(() => {
-    if (!historyExpanded || historyLoaded) return;
+    if (!historyExpanded || historyLoaded || busy) return;
     let current = true;
     listAppointmentEmails(appointment.id)
-      .then(rows => { if (current) { setHistory(rows); setHistoryLoaded(true); } })
-      .catch(() => { if (current) setHistoryLoaded(true); });
+      .then(rows => { if (current) { setHistory(rows); setHistoryError(''); setHistoryLoaded(true); } })
+      .catch(() => { if (current) { setHistoryError('No se pudieron cargar los avisos.'); setHistoryLoaded(true); } });
     return () => { current = false; };
-  }, [appointment.id, historyExpanded, historyLoaded]);
+  }, [appointment.id, historyExpanded, historyLoaded, busy]);
 
   async function run(action: () => Promise<AppointmentEmailStatus>) {
     setBusy(true);
@@ -79,7 +80,10 @@ export function AppointmentEmail({ appointment, compact = false, showHistory = f
         {historyExpanded ? 'Ocultar avisos' : 'Ver avisos'}
       </button> : null}
       {error ? <p className="error" role="alert">{error}</p> : null}
-      {history.length ? <ul className="appointment-email-history" aria-label="Estado de avisos">
+      {historyExpanded && !historyLoaded && !busy ? <p role="status">Cargando avisos…</p> : null}
+      {historyExpanded && historyError ? <div role="alert"><p className="error">{historyError}</p><button type="button" className="btn btn-ghost btn-sm" disabled={busy} onClick={() => { setHistoryError(''); setHistoryLoaded(false); }}>Reintentar carga de avisos</button></div> : null}
+      {historyExpanded && historyLoaded && !historyError && history.length === 0 ? <p className="faint">Aún no hay avisos.</p> : null}
+      {historyExpanded && history.length ? <ul className="appointment-email-history" aria-label="Estado de avisos">
         {history.map(message => <li key={message.id}>
           <span><strong>{EVENT_LABEL[message.event]}</strong> · {STATUS_LABEL[message.status]}</span>
           {message.status === 'failed' || message.status === 'uncertain' ? <button type="button" className="btn btn-ghost btn-sm" disabled={busy}
