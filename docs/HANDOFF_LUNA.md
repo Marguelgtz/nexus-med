@@ -1,6 +1,6 @@
 # NM-PILOT-001 — Handoff for Luna
 
-**Prepared:** 2026-11-13. **Status:** active, incomplete. **Branch:** `codex/pilot-clinic-foundation`.
+**Prepared:** 2026-11-13. **Status:** active after owner resumed, incomplete. **Branch:** `codex/pilot-clinic-foundation`.
 
 ## Mission and authority
 
@@ -10,7 +10,8 @@ Preserve the existing Next.js/Hono/Prisma/SQLite/D1/R2/Better Auth stack. Use sy
 
 ## Git and preservation
 
-- `HEAD` when written: `f124546` (`fix(auth): create invitations and outbox atomically`), based on the integrated branch documented in `PILOT_BASELINE.md`. Recent relevant commits: `6b621b9` D1 error filtering, `66d70ba` auth error handling, `78d2181` local workerd multi-user journey, and `f95abe1` password-reset failure/race checks.
+- `HEAD` at resume: `3a8d7fc` (`fix(auth): revoke invitations and audit atomically`), based on the integrated branch documented in `PILOT_BASELINE.md`. Recent relevant commits: `f124546` atomic invitation creation, `6b621b9` D1 error filtering, `66d70ba` auth error handling, `78d2181` local workerd multi-user journey, and `f95abe1` password-reset failure/race checks.
+- Uncommitted work: `apps/web/src/components/auth/auth-panel.tsx` adds guidance after a failed reset submission; `docs/ACTION_PLAN.md` and this handoff record it. Web typecheck, lint and existing web tests passed, but the new interactive state was not browser-tested. Finish and verify it; do not mistake it for committed or deployed work.
 - Existing uncommitted `apps/web/next-env.d.ts` is generated/owner workspace state; **preserve it**. `scripts/pilot-remote-journey.ts` is an untracked, incomplete draft; preserve it, do not commit or run it without the conditions below.
 - No new push, PR or merge was made during this mission. Existing feature PRs remain open. Inspect Git and actual current state before changing anything; don't rewrite shared history.
 
@@ -22,7 +23,8 @@ Automatic approval review rejected execution of the prepared synthetic remote mu
 
 - Latest change `f124546`: eight simultaneous D1 invitation requests previously created eight grants. Invitation creation now checks administrator/recipient/membership/pending-invitation state and writes the invitation, encrypted outbox item and audit event in one SQLite transaction / D1 atomic batch. Local tests cover eight requests (one 201, seven 409), expired replacement, rollback on outbox and audit failures, retry, acceptance rollback and an accept/revoke race. No migration or deployment was made for this fix.
 - Subsequent local work makes invitation revocation and its audit event atomic after a D1 failure injection demonstrated a partial revocation. Local D1 and SQLite tests cover rollback and retry; the D1 journey also retains the acceptance/revocation race. See the current action plan and Git log for the latest verification and commit.
-- Latest relevant checks: workspace typecheck and lint passed; API **167/167** passed; focused SQLite clinic-auth **7/7** passed; `node --test scripts/worker-clinic-journey.test.mjs` passed on local workerd/D1/R2; pilot API Wrangler dry-run passed. Lint retains the existing Pages-directory notice. Run checks again after changes. `ACTION_PLAN.md` and `TESTING.md` contain exact scope and earlier results.
+- A failed password-reset submission now offers recovery guidance and a link to request a fresh token. This does not make the Better Auth D1 reset atomic; confirm the new failure state in a browser and continue investigating the underlying limitation.
+- Latest relevant checks: web typecheck and lint passed; API **167/167** passed before the latest focused test was added; focused SQLite clinic-auth **8/8** passed; web **64/64** passed without covering the new reset failure state; production web build passed outside the sandbox after an in-sandbox subprocess/config failure; `node --test scripts/worker-clinic-journey.test.mjs` passed on local workerd/D1/R2; pilot API Wrangler dry-run passed. Lint retains the existing Pages-directory notice. Run checks again after changes. `ACTION_PLAN.md` and `TESTING.md` contain exact scope and earlier results.
 - Local workerd journey uses separately verified synthetic sessions (two doctors, two secretaries and an outsider), validates onboarding/invitations, appointment/reception, 200/409 clinical concurrency, attribution, multipart attachment isolation and explicit review, prescription, logout/relogin and D1 password-reset failure/race. It is **not** a remote or browser end-to-end test.
 - D1 does not provide Prisma transaction guarantees. Injecting a password-write failure returned 500, consumed the reset token and revoked sessions while retaining the old password; a new reset link recovered the account. Two concurrent uses of a subsequent token produced one success and one rejection. This is partial failure, not atomicity; investigate other auth failure and concurrency paths before release.
 - Local D1 adapter error filtering removes raw error messages before the current Prisma adapter logs them, while preserving tested unique-constraint behavior; Better Auth unexpected errors route through Hono's category-only handler. Local workerd failure injection showed no original synthetic error text and a duplicate-link request still returned 409. These fixes are **not deployed**, are adapter-version-sensitive, and do not prove every dependency/log path safe.

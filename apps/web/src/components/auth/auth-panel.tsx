@@ -58,6 +58,7 @@ export function AuthPanel({ mode, returnTo = '/', notice, invitationToken, reset
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [resetAttemptFailed, setResetAttemptFailed] = useState(false);
   const [inviteEmail, setInviteEmail] = useState('');
   const [inviteRole, setInviteRole] = useState<'doctor' | 'secretary' | ''>('');
   const [inviteClinicName, setInviteClinicName] = useState('');
@@ -133,6 +134,7 @@ export function AuthPanel({ mode, returnTo = '/', notice, invitationToken, reset
     setBusy(true);
     setError('');
     setSuccess('');
+    setResetAttemptFailed(false);
     const form = new FormData(event.currentTarget);
     const email = String(form.get('email') ?? '').trim().toLowerCase();
     const password = String(form.get('password') ?? '');
@@ -183,7 +185,12 @@ export function AuthPanel({ mode, returnTo = '/', notice, invitationToken, reset
         if (!resetToken) throw new Error('Falta el token de recuperación. Solicita un enlace nuevo.');
         const confirmation = String(form.get('passwordConfirmation') ?? '');
         if (password !== confirmation) throw new Error('Las contraseñas no coinciden.');
-        await postAuth('reset-password', { token: resetToken, newPassword: password });
+        try {
+          await postAuth('reset-password', { token: resetToken, newPassword: password });
+        } catch (reason) {
+          setResetAttemptFailed(true);
+          throw reason;
+        }
         router.replace('/login?reset=1');
       } else {
         await postAuth('send-verification-email', { email, callbackURL: new URL('/login?verified=1', window.location.origin).toString() });
@@ -302,6 +309,10 @@ export function AuthPanel({ mode, returnTo = '/', notice, invitationToken, reset
           <label>Confirmar contraseña<input name="passwordConfirmation" type="password" autoComplete="new-password" required minLength={12} maxLength={128} disabled={busy || (mode === 'invitation' && !inviteReady)} /></label>
         ) : null}
         {error || tokenErrorMessage ? <p className="auth-message auth-error" role="alert">{error || tokenErrorMessage}</p> : null}
+        {resetAttemptFailed ? <div className="auth-recovery-state">
+          <p>No pudimos confirmar el cambio. Intenta iniciar sesión con la contraseña nueva; si no funciona, solicita otro enlace.</p>
+          <Link href="/olvide-contrasena">Solicitar un enlace nuevo</Link>
+        </div> : null}
         {success ? <p className="auth-message auth-success" role="status">{success}</p> : null}
         <button className="btn btn-primary auth-submit" type="submit" disabled={busy || (mode === 'invitation' && !inviteReady) || (mode === 'reset' && !resetToken)}>
           {busy ? 'Procesando…' : mode === 'login' ? 'Entrar'
