@@ -155,6 +155,10 @@ test('real Worker sessions preserve clinic isolation and clinical authorship on 
     assert.equal((await request(`/api/documents/${document.id}`, undefined, outsider.cookie)).status, 404);
     const completed = await json(await request(`/api/appointments/${appointment.id}/complete`, { encounterId: encounter.id }, doctor.cookie));
     assert.equal(completed.linkedEncounterId, encounter.id);
+    const duplicateLinkAppointment = await json(await request(`/api/patients/${patient.id}/appointments`, {
+      startAt: '2026-11-16T17:00:00Z', durationMinutes: 30, type: 'consulta', doctorId: doctor.id,
+    }, secretary.cookie), 201);
+    assert.equal((await request(`/api/appointments/${duplicateLinkAppointment.id}/complete`, { encounterId: encounter.id }, doctor.cookie)).status, 409, 'D1 unique conflict remains a domain conflict');
     await json(await request('/api/auth/sign-out', {}, doctor.cookie));
     assert.equal((await request(`/api/encounters/${encounter.id}`, undefined, doctor.cookie)).status, 401);
     const login = await request('/api/auth/sign-in/email', { email: doctor.email, password });

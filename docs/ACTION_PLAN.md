@@ -31,6 +31,8 @@
 
 **Authentication error handling:** Better Auth now propagates unexpected router failures to Hono’s category-only handler instead of better-call logging the complete error object. The local D1 failure-injection journey returned the generic `INTERNAL_ERROR` response and emitted no `# SERVER_ERROR` dump; the Prisma D1 adapter still logged its underlying synthetic database error, so the log-safety gate remains open. Full API tests passed 164/164, API typecheck and lint passed, and the isolated pilot API dry-run succeeded. This change is local and not deployed.
 
+**D1 error-log filtering:** The API Worker now wraps only the D1 methods used by the installed Prisma adapter, replacing raw D1 exceptions with fixed error categories before Prisma logs them. Explicit application D1 batches retain the original binding and their existing conflict handling. In local workerd, a synthetic password-update failure produced only a generic D1 message, no synthetic failure text or Better Auth dump, while a real duplicate encounter link still returned 409; the multi-user journey and email scheduled-event tests passed. API tests passed 165/165 before a second focused sanitizer test was added; both current focused tests passed. The API pilot dry-run passed. This is local, version-sensitive protection; deployed behavior and other dependency/error paths still require review. D1 password-reset partial failure remains as previously documented.
+
 **Next action:** Finish regression checks, verify browser clinical workflows and deployed-runtime packaging, complete remote recovery rehearsal and review outstanding security findings. Preserve all existing work and avoid remote writes without a validated recovery path.
 
 ---
