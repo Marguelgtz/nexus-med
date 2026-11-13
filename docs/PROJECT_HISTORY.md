@@ -498,3 +498,9 @@ Code review found that Google signup can leave a verified but unlinked pending i
 Inspection of Better Auth 1.7.21 showed `/change-password` wraps writes in an adapter transaction, but the Prisma D1 adapter ignores transactions. A local SQLite trigger reproduced the partial result: requesting revocation of other sessions deleted the user's sessions before a failed password update. The custom hook now checks the authoritative session and current password, then updates the credential and removes other sessions in one atomic write, leaving the current session active. Local SQLite and workerd/D1 tests inject failures at the password update and at the later session deletion; each preserves the prior password and sessions, and retries succeed. The workerd test also confirms the previous password stops working only after a successful change. Full API 171/171, focused auth 11/11, typecheck and lint pass. No migration, provider round trip or deployment was made.
 
 **References:** `ACTION_PLAN.md`, `SECURITY.md`, `TESTING.md`, `PILOT_AUTH.md`, `PILOT_READINESS.md`; Better Auth source `change-password` flow and Cloudflare D1 batch semantics.
+
+## 2026-11-13 — Rechecked received-study PDF rendering
+
+An earlier extension-browser check reported a blank PDF viewer. The seeded one-page synthetic PDF was later served from a temporary loopback probe with the same inline, no-store, nosniff and CSP sandbox headers as the API route, then opened in an isolated headed Chrome 157.0.8103.78 profile under Xvfb. Chrome rendered the viewer toolbar and document content; removing only the CSP sandbox header yielded the same result. The failure was not reproduced, and no response-policy change is warranted. This does not verify authenticated app-link navigation, upload or print. No application or database data changed.
+
+**References:** `ACTION_PLAN.md`, `TESTING.md`, `PILOT_READINESS.md`, `apps/api/src/domains/receipts/receipts.routes.ts`.
