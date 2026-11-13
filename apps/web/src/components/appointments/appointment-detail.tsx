@@ -8,7 +8,7 @@
 // Every action refreshes the server component after success; errors show
 // inline. No confirm() dialogs — cancellation is confirmed inline.
 
-import { useState } from 'react';
+import { useState, useTransition } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
@@ -51,6 +51,8 @@ export function AppointmentDetail({
   const [mode, setMode] = useState<Mode>('view');
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [refreshing, startTransition] = useTransition();
+  const pending = busy || refreshing;
   const [actualDuration, setActualDuration] = useState(appt.durationMinutes);
   const [encounterId, setEncounterId] = useState('');
 
@@ -60,9 +62,10 @@ export function AppointmentDetail({
     try {
       await fn();
       setMode('view');
-      router.refresh();
+      startTransition(() => router.refresh());
     } catch (err) {
       setError(err instanceof Error ? err.message : 'La operación no se pudo completar.');
+    } finally {
       setBusy(false);
     }
   };
@@ -120,7 +123,7 @@ export function AppointmentDetail({
               </Link>
             ) : (
               !isArchived && appt.status === 'completed' && mode !== 'link' && (
-                <button className="btn btn-ghost btn-sm" onClick={() => setMode('link')}>
+                <button className="btn btn-ghost btn-sm" disabled={pending} onClick={() => setMode('link')}>
                   Enlazar consulta
                 </button>
               )
@@ -148,12 +151,13 @@ export function AppointmentDetail({
                   max={480}
                   step={5}
                   value={actualDuration}
+                  disabled={pending}
                   onChange={(e) => setActualDuration(Number(e.target.value))}
                 />
               </label>
               <label>
                 Consulta (opcional)
-                <select value={encounterId} onChange={(e) => setEncounterId(e.target.value)}>
+                <select value={encounterId} disabled={pending} onChange={(e) => setEncounterId(e.target.value)}>
                   <option value="">Sin consulta</option>
                   {encounters.map((en) => (
                     <option key={en.id} value={en.id}>
@@ -166,7 +170,7 @@ export function AppointmentDetail({
             <div className="form-actions">
               <button
                 className="btn btn-primary"
-                disabled={busy || actualDuration < 1}
+                disabled={pending || actualDuration < 1}
                 onClick={() =>
                   run(() =>
                     completeAppointment(appt.id, {
@@ -178,7 +182,7 @@ export function AppointmentDetail({
               >
                 {busy ? 'Completando…' : 'Confirmar'}
               </button>
-              <button className="btn btn-ghost" onClick={close}>
+              <button className="btn btn-ghost" disabled={pending} onClick={close}>
                 Cancelar
               </button>
             </div>
@@ -192,12 +196,12 @@ export function AppointmentDetail({
             <div className="form-actions">
               <button
                 className="btn btn-danger"
-                disabled={busy}
+                disabled={pending}
                 onClick={() => run(() => cancelAppointment(appt.id))}
               >
                 {busy ? 'Cancelando…' : 'Sí, cancelar cita'}
               </button>
-              <button className="btn btn-ghost" onClick={close}>
+              <button className="btn btn-ghost" disabled={pending} onClick={close}>
                 No
               </button>
             </div>
@@ -208,7 +212,7 @@ export function AppointmentDetail({
             <div className="form-row">
               <label>
                 Consulta
-                <select value={encounterId} onChange={(e) => setEncounterId(e.target.value)}>
+                <select value={encounterId} disabled={pending} onChange={(e) => setEncounterId(e.target.value)}>
                   <option value="" disabled>
                     Elige una consulta…
                   </option>
@@ -223,12 +227,12 @@ export function AppointmentDetail({
             <div className="form-actions">
               <button
                 className="btn btn-primary"
-                disabled={busy || !encounterId}
+                disabled={pending || !encounterId}
                 onClick={() => run(() => linkEncounter(appt.id, encounterId))}
               >
                 {busy ? 'Enlazando…' : 'Enlazar'}
               </button>
-              <button className="btn btn-ghost" onClick={close}>
+              <button className="btn btn-ghost" disabled={pending} onClick={close}>
                 Cancelar
               </button>
             </div>
@@ -238,18 +242,18 @@ export function AppointmentDetail({
             <div className="appt-actions">
               {appt.status === 'scheduled' ? (
                 <>
-                  <button className="btn btn-secondary btn-sm" onClick={() => setMode('edit')}>
+                  <button className="btn btn-secondary btn-sm" disabled={pending} onClick={() => setMode('edit')}>
                     Editar
                   </button>
-                  <button className="btn btn-primary btn-sm" onClick={() => setMode('complete')}>
+                  <button className="btn btn-primary btn-sm" disabled={pending} onClick={() => setMode('complete')}>
                     Completar
                   </button>
-                  <button className="btn btn-danger btn-sm" onClick={() => setMode('cancel-confirm')}>
+                  <button className="btn btn-danger btn-sm" disabled={pending} onClick={() => setMode('cancel-confirm')}>
                     Cancelar cita
                   </button>
                 </>
               ) : appt.status === 'cancelled' ? (
-                <button className="btn btn-secondary btn-sm" onClick={() => setMode('edit')}>
+                <button className="btn btn-secondary btn-sm" disabled={pending} onClick={() => setMode('edit')}>
                   Reprogramar
                 </button>
               ) : null}
