@@ -4,6 +4,8 @@
 
 **Branch:** `codex/pilot-clinic-foundation`, based on `82a6baf`; baseline documentation `1df1580`, email queue `eb445dc`, recovery tools `b241186`, clinic API `9d4f78e`, and web integration `49c5d72` committed. Documentation and follow-up fixes are committed. Existing feature PRs remain open; only the isolated synthetic pilot was deployed, and nothing was merged.
 
+**Model handoff:** See [HANDOFF_LUNA.md](HANDOFF_LUNA.md) for the current constraints, evidence, approval rejection and ordered resumption steps.
+
 ## Execution state
 
 1. **Baseline:** Git ancestry and 39 open PR heads recorded in `PILOT_BASELINE.md`. Original API 143/143 and web 52/52 passed; production build passed outside the sandbox.
