@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { Appointment, AppointmentEmailEvent, AppointmentEmailStatus } from '@nexus-med/contracts';
 import { listAppointmentEmails, retryAppointmentEmail, sendAppointmentEmail } from '../../lib/api/client';
 
@@ -32,13 +32,23 @@ export function AppointmentEmail({ appointment, compact = false, showHistory = f
   const [historyExpanded, setHistoryExpanded] = useState(showHistory);
   const [historyLoaded, setHistoryLoaded] = useState(false);
   const [historyError, setHistoryError] = useState('');
+  const historyRevision = useRef(0);
   const consentReady = Boolean(appointment.patient.email && appointment.patient.appointmentEmailConsent);
 
   useEffect(() => {
     if (!historyExpanded || historyLoaded || busy) return;
     let current = true;
+    const revision = historyRevision.current;
     listAppointmentEmails(appointment.id)
-      .then(rows => { if (current) { setHistory(rows); setHistoryError(''); setHistoryLoaded(true); } })
+      .then(rows => { if (current) {
+        // A fast send can finish before React renders the busy state. Preserve
+        // its newer status if this older history request resolves afterwards.
+        setHistory(existing => revision === historyRevision.current ? rows : [
+          ...existing,
+          ...rows.filter(row => !existing.some(message => message.id === row.id)),
+        ]);
+        setHistoryError(''); setHistoryLoaded(true);
+      } })
       .catch(() => { if (current) { setHistoryError('No se pudieron cargar los avisos.'); setHistoryLoaded(true); } });
     return () => { current = false; };
   }, [appointment.id, historyExpanded, historyLoaded, busy]);
@@ -48,7 +58,9 @@ export function AppointmentEmail({ appointment, compact = false, showHistory = f
     setError('');
     try {
       const message = await action();
+      historyRevision.current += 1;
       setHistory(rows => [message, ...rows.filter(row => row.id !== message.id)]);
+      setHistoryExpanded(true);
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : 'No se pudo procesar el aviso.');
     } finally {
