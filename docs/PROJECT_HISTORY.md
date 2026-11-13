@@ -504,3 +504,9 @@ Inspection of Better Auth 1.7.21 showed `/change-password` wraps writes in an ad
 An earlier extension-browser check reported a blank PDF viewer. The seeded one-page synthetic PDF was later served from a temporary loopback probe with the same inline, no-store, nosniff and CSP sandbox headers as the API route, then opened in an isolated headed Chrome 157.0.8103.78 profile under Xvfb. Chrome rendered the viewer toolbar and document content; removing only the CSP sandbox header yielded the same result. The failure was not reproduced, and no response-policy change is warranted. This does not verify authenticated app-link navigation, upload or print. No application or database data changed.
 
 **References:** `ACTION_PLAN.md`, `TESTING.md`, `PILOT_READINESS.md`, `apps/api/src/domains/receipts/receipts.routes.ts`.
+
+## 2026-11-13 — Browser receipt upload and PDF readback
+
+A headed Chrome session with a fresh synthetic doctor demo account and isolated SQLite practice/demo databases completed the patient-study receipt workflow: select a PDF, save, display the new receipt, retrieve its file through the authenticated same-origin app route, and render it in Chrome's PDF viewer. The response was 200, `application/pdf`, `no-store`, and 705 bytes with a valid `%PDF-1.4` signature. A first harness selection used the extensionless internal storage key, which gave Chrome an empty MIME type; the API rejected it and created no receipt. A normal `.pdf` filename passed. The app code was unchanged; all writes were limited to the temporary synthetic environment. Remote staff isolation and print/accessibility checks remain open.
+
+**References:** `ACTION_PLAN.md`, `TESTING.md`, `PILOT_READINESS.md`, `apps/web/src/components/receipts/receipt-form.tsx`, `apps/api/src/domains/receipts/receipts.routes.ts`.
