@@ -1,5 +1,20 @@
 # Nexus Med Roadmap — Local MVP and O-005 Expansion
 
+## Current strategic phase — NM-PILOT-001
+
+The owner-authorized clinic pilot mission supersedes the older local-only/single-user/authentication/storage exclusions below. Preserve the working product and stack. This is a strategic sequence, not a progress log; actual gates and next action remain in [ACTION_PLAN](ACTION_PLAN.md).
+
+1. Establish integrated Git baseline and reproducible checks; preserve existing workflows and open PR dependencies.
+2. Extend data/API foundations with explicit clinic membership/ownership, safe legacy migration, authorization, clinical attribution and concurrency protection.
+3. Complete verified doctor signup/clinic bootstrap, doctor/secretary invitations and account lifecycle; finish conditional Google configuration and test credential-independent behavior.
+4. Integrate multi-doctor scheduling and full clinical continuity; audit navigation/actions, error recovery and restrained Proposal 2 refinement.
+5. Verify local and deployed-runtime integrity, private storage, backup/restore and representative multi-session/browser journeys; report synthetic readiness separately from real-patient review.
+6. Consider optional inventory/consumables only after mandatory release gates pass. It must not delay or weaken the core release.
+
+Acceptance is verified integrated software with no known critical isolation, authorization, data-loss or workflow defect. Passing builds/unit tests alone is insufficient. Remote operations use isolated resources; no automatic feature-PR merge or destructive live-data migration is authorized.
+
+## Historical MVP and expansion sequence
+
 The roadmap defines strategic outcomes and their order. It is not a live progress tracker or a detailed task board.
 
 - `ROADMAP.md` describes the high-level sequence.
@@ -59,14 +74,14 @@ The agreed development order is **database/API foundation → UX/UI design → p
 
 **Exit condition:** All O-006 mission acceptance criteria are met; clean and repeat startup preserve synthetic/user data; API/web tests, typecheck, lint, build, and main browser journeys pass; documentation reflects behavior; implementation PRs remain open pending review.
 
-## Deferred — not part of the prototype
+## Historical deferred boundary before clinic/auth/cloud authorization
 
 - File storage, uploads, document file management, and R2 (distinct from approved NX-004 printable records).
 - Google authentication/OAuth/OIDC and authorization.
 - Docker, CI/CD, Cloudflare connectivity, remote D1/R2, and deployment.
 - Appointment recurrence/reminders, billing, multi-user support, AI clinical features, FHIR/HL7, and external integrations. Basic scheduling is already implemented in NX-001.
 
-## Future Cloudflare evaluation
+## Historical Cloudflare evaluation sequence
 
 Only after the local MVP works:
 

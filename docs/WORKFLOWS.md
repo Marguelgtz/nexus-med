@@ -1,18 +1,33 @@
 # Product Workflows — Medical Platform MVP
 
+## Current account and multi-user workflows — NM-PILOT-001
+
+The existing clinical workflows below remain applicable under authenticated clinic scope. Older no-auth/no-file/single-doctor entry assumptions are historical and superseded here.
+
+1. **Register and establish a clinic:** `/registro` accepts doctor account details (or configured Google sign-in). Email verification precedes login/privileged access. A verified identity without clinic access reaches `/onboarding`, records the clinic name (pilot timezone `America/Mexico_City`), and receives doctor membership with administration capability. Server-generated stable bootstrap IDs make retries reuse the intended clinic; callers cannot choose an existing clinic to own. An account alone grants no clinic data access.
+2. **Invite staff:** a clinic administrator with recent authentication opens access management and chooses doctor or secretary plus email. The server binds clinic, role, expiry and issuer. New accounts register/verify, or existing accounts sign in; acceptance requires the verified matching identity and token, never an email-string match alone. Expired/revoked invitations fail; replay cannot create another membership. No arbitrary member-count cap.
+3. **Enter the workspace:** verified session membership is reloaded on each request. Doctors enter reception/clinical routes; secretaries use administrative routes. Revocation removes the clinic grant and applicable sessions while preserving authored records. Administrative capability alone does not authorize clinical notes.
+4. **Schedule and receive:** an authorized secretary/administrator selects an active clinic doctor or the explicit unassigned state. A non-administrator doctor defaults to self and cannot manage another assigned doctor's appointment. Clinic-wide views can filter by doctor. Reassignment is explicit and links must remain compatible with encounter authorship. Existing overlap warnings do not reject a doctor's deliberate overlapping schedule. Arrival and attention start do not save a note or complete the appointment.
+5. **Document and preserve continuity:** an authorized clinic doctor opens shared patient history, saves their own encounter, orders studies and creates documents. Original author survives later authorized edits; last editor is separate. Unknown legacy attribution is shown as unknown. Historical print output uses the stored author, never the currently signed-in doctor's identity. Receipt does not imply physician review.
+6. **Handle competing edits:** edit forms retain the loaded version and submit `expectedVersion` on demographics/background, notes, appointment editing and structured-document replacement. Stale writes return a conflict; preserve entered text, reload the record and reconcile intentionally. Discrete state transitions use conditional server writes. Do not retry a stale clinical write silently.
+
+A representative integrated journey is registration → assigned appointment → arrival → doctor encounter → optional study/receipt/review → prescription/report → explicit appointment completion/link → reload/new login → second doctor reviews history. Verification must use separate sessions and a second synthetic clinic; direct API requests must enforce the same policy as navigation. Current execution and unverified browser/deployment cases remain in [ACTION_PLAN](ACTION_PLAN.md)/[TESTING](TESTING.md).
+
+## Existing clinical workflow reference
+
 **Status:** Original MVP workflows plus verified NX-001…NX-004 and owner-authorized O-006 behavior (2026-11-09), with navigation corrections D-052 (2026-11-12).
-**Primary user:** One general surgeon  
+**Users:** Clinic doctors, administrative secretaries and administrators under explicit memberships
 **Interface:** Spanish (Mexico)  
 **Data:** Synthetic demo records only
 
-`PRODUCT.md` defines scope and user-story acceptance criteria. This document describes how those stories should flow through the application. Together, the workflow sections cover patient create/search/update/archive, patient context, medical-background editing, encounter creation/review, save/error behavior, and the first-run demo experience. O-005 approved appointments, encounter types, study requests, and printable documents; all four slices are implemented and verified. File uploads/storage and Google authentication remain excluded.
+`PRODUCT.md` defines scope and user-story acceptance criteria. This document describes how those stories should flow through the application. Together, the workflow sections cover patient create/search/update/archive, patient context, medical-background editing, encounter creation/review, save/error behavior, and the first-run demo experience. O-005 approved appointments, encounter types, study requests, and printable documents; all four slices are implemented and verified. Received-study attachments and conditional Google authentication are now in scope; their current boundaries are described above and in `SECURITY.md`.
 
 **Documentation boundary:** Sections 1–14 record the existing MVP/O-005 workflows. Section 15 records the implemented O-006 behavior and supersedes earlier details where stated. Q-O006 clinical questions remain open; the conservative implementation does not settle them.
 
 ## 1. Application entry and navigation
 
-- Opening `/` redirects to `/patients`.
-- The patient registry is the default working screen.
+- Opening `/` resolves the authenticated session: login, onboarding, physician reception or secretary workspace as applicable.
+- The patient registry remains a physician navigation destination; authenticated entry is role-aware.
 - On first run, six active seeded patients are visible; the one archived fixture is accessible through the archived view/filter.
 - Physician primary navigation: **Recepción**, **Citas**, **Estudios**, **Pacientes**, and **Calendario**, with contextual patient/encounter/appointment actions. **Citas** opens a selected-day list in Reception; **Calendario** remains the existing day/week/month view.
 - Secretary primary navigation: **Citas**, **Pacientes**, and **Estudios**, all within `/secretaria`. Patient search uses administrative contact data and never routes to the physician's clinical record pages.
@@ -181,7 +196,7 @@ All data in this scenario is fictional. Document upload and authentication are n
 3. Save to create a scheduled appointment; open its detail to edit/reschedule, complete (optionally recording actual duration and linking an existing encounter), or cancel.
 4. Completed/cancelled visits remain visible in the patient and calendar history. A same-patient encounter can be linked when eligible.
 
-Overlaps are allowed but visibly signaled, not resolved automatically. Appointments and encounters have independent planned/actual type fields. The calendar uses `America/Monterrey`.
+Overlaps are allowed but visibly signaled, not resolved automatically. Appointments and encounters have independent planned/actual type fields. The controlled pilot calendar uses `America/Mexico_City`.
 
 ## 12. O-005 study-request workflow (baseline behavior)
 
@@ -196,7 +211,7 @@ Overlaps are allowed but visibly signaled, not resolved automatically. Appointme
 
 ## 13. Printable documents (NX-004)
 
-The doctor can create a prescription using individual medication dialogs and expandable summary rows, or a report with a free-text narrative. The prescription has one general-instructions capture field; stored per-line instructions remain visible and preserved when editing/printing. Each document belongs to one patient and may link to one of that patient's encounters. The detail view supports editing and presents the same paper card sent to the browser print dialog. Print output contains the persistent fictional-data marker and no invented provider or legal information. Document content persists through reloads; failed validation preserves form values. The screen explains that printing is local and is not a certified electronic prescription. Uploads and stored PDFs are excluded.
+The doctor can create a prescription using individual medication dialogs and expandable summary rows, or a report with a free-text narrative. The prescription has one general-instructions capture field; stored per-line instructions remain visible and preserved when editing/printing. Each document belongs to one patient and may link to one of that patient's encounters. The detail view supports editing and presents the same paper card sent to the browser print dialog. Print output follows D-046 (no fictional-data marker), preserves stored authorship and contains no invented provider credentials or legal-validity claims. Document content persists through reloads; failed validation preserves form values. The screen explains that printing is local and is not a certified electronic prescription. Private received-study PDF/image uploads are a separate workflow; browser-printable prescriptions/reports are not stored generated PDFs.
 
 ## 14. Original MVP user story coverage
 

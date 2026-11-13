@@ -1,5 +1,16 @@
 # UI Specification — Medical Platform MVP
 
+## Current pilot UI contract — NM-PILOT-001
+
+Preserve Proposal 2 layout, midnight sidebar/cobalt actions, role-aware global destinations, patient navigation, directory cards opening expedientes with separate `Nueva consulta`, contextual returns, calendar modes, explicit saves and print isolation. The dated samples and original no-account UI below are historical; this section governs new clinic/account behavior.
+
+- `/registro`: real account form, verification feedback and conditional Google action. `/onboarding`: verified account clinic name setup with the fixed pilot timezone `America/Mexico_City`, busy/error recovery, then role-aware workspace entry. Never show clinic data before membership exists.
+- Invitation entry displays the server-defined clinic/email/role and supports new or existing accounts. Access management lets an authorized administrator invite doctors or secretaries, inspect membership and revoke access; roles cannot be escalated through UI input.
+- Scheduling shows doctor choices from the clinic API, explicit unassigned state and assignment in relevant appointment views. Non-admin doctors manage their own assigned schedule. Shared patient history retains encounter/document author labels; print uses persisted author or explicit unknown historical authorship.
+- Editing forms submit their loaded version. On conflict keep entered values and explain that another person changed the record; require refresh/reconciliation. Never disguise a conflict as a successful save.
+- The restrained visual-refinement target is smaller shared radii (roughly 4–6px controls, 6–8px panels), subtle surface transparency/borders/shadows, generous controls and readable text (roughly 18px primary content, 16px functional labels, 14px auxiliary copy and 52px primary targets). Dense clinical and medication content stays opaque. Keep focus, contrast, reflow and keyboard interaction. Changes must match actual shared CSS tokens and browser evidence before being called verified.
+
+Responsive widths 320/390/768/1024/1440, keyboard/text resizing, role navigation, complete forms, print and failure recovery remain acceptance requirements. Current source or CSS compilation alone is not evidence that those checks passed. [TESTING](TESTING.md) records actual verification; [ACTION_PLAN](ACTION_PLAN.md) owns outstanding work.
 
 ### Proposal 2 production visual rules
 
@@ -9,7 +20,7 @@ The reference iteration is now the production visual direction per D-051. Use th
 
 Owner authorizes applying Proposal 2 across the application (D-051). The [rollout plan](UI_ROLLOUT_PLAN.md) defines implementation order, navigation, form placement and acceptance journeys. The production screens now use the shared direction; sample verification remains historical and separate from production workflow evidence.
 
-Owner-approved navigation follow-up D-052: the physician sidebar has a focused **Citas** entry to the daily Reception schedule while **Calendario** remains unchanged. The secretary sidebar links to administrative **Citas**, **Pacientes**, and **Estudios** sections within `/secretaria`; it never links to clinical patient routes. In the physician directory, clicking a patient card opens the expediente, `Nueva consulta` is a distinct action, and returning to Pacientes restores the source query/filter. Signup remains a full page launched by `Nuevo paciente`, not a sidebar destination.
+Owner-approved navigation follow-up D-052: the physician sidebar has a focused **Citas** entry to the daily Reception schedule while **Calendario** remains unchanged. The secretary sidebar links to administrative **Citas**, **Pacientes**, and **Estudios** sections within `/secretaria`; it never links to clinical patient routes. In the physician directory, clicking a patient card opens the expediente, `Nueva consulta` is a distinct action, and returning to Pacientes restores the source query/filter. Patient registration remains a full page launched by `Nuevo paciente`; account signup is the distinct `/registro` flow.
 
 ## Iteration 2 — separate alternative, 2026-11-12
 

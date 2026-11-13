@@ -1,5 +1,12 @@
 # Testing and Verification
 
+
+## Pilot integration evidence — 2026-11-13
+
+Workspace typecheck and lint pass (the existing missing-Pages notice remains). The integrated suite passed API 159/159 and web 60/60; the subsequent focused isolation suite passed 7/7, including cross-clinic appointment-email retry. The actual-session API journey covers two clinics, two doctors and two secretaries, clinical attribution, attachment access, conflicts and logout/relogin. Separate migration tests passed on SQLite and local workerd D1; local recovery tests passed 7/7 including WAL and attachment bytes.
+
+A fresh isolated local startup seeded synthetic data. Browser checks covered demo sign-in/sign-out, registration, local email verification, login and new clinic setup; reception was inspected at five widths from 320 to 1440px. These do not constitute a complete browser workflow or accessibility audit. OpenNext production bundling and web/API Wrangler dry-runs pass; OpenNext warns that Node middleware support is experimental. Real Google OAuth, SMTP delivery, deployed runtime and full browser workflows remain unverified. Both remote D1 databases report the clinic migration pending; no remote writes were made.
+
 ## Proposal 2 daily Citas view — 2026-11-12
 
 `/recepcion?seccion=citas` renders a focused agenda for the selected date, with the same appointment statuses and existing start/reschedule/cancel actions as Recepción. Its Recepción/Citas tabs and previous/today/next controls preserve the selected section and date. `/calendar` is unchanged, and administrative section resolution cannot select the physician Citas view. Web tests pass **46/46**, web typecheck passes, lint exits 0 with the inherited missing-Pages notice and TopBar `window.location.assign()` warning, production build passes after a sandbox-only `--showConfig` subprocess parsing failure (the unsandboxed rerun succeeded), and `git diff --check` passes. Browser inspection confirmed the focused heading, selected date, seeded appointment and actions, then navigation back to Recepción; no records were changed. No API tests were needed because the API and persistence contract did not change.

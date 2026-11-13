@@ -461,3 +461,12 @@ Frontend checks and focused browser measurements pass; exact evidence and limits
 The owner clarified that typography fixes did not resolve rejection of the sample's overall design. They requested a new iteration alongside the previous sample and current product, and explicitly liked the side navigation. Proposal 2 therefore has a separate development-only route, a solid midnight-blue sidebar, cool white workspace, cobalt actions, patient cards and a dedicated identity/contact pane. Both samples expose comparison links; the existing application and prior sample stylesheet remain intact.
 
 The two previews share registration/validation instead of copying it, while retaining independent transient state and exact fictional demographics. Frontend checks, browser checks in both versions, narrow-layout measurements and production 404 checks pass; details and limitations are in TESTING. The design remains a proposal, not approval for application-wide replacement. Work stays local on `codex/ui-second-direction`, based on `be0339a`; no push, PR, merge or deployment.
+
+
+### 2026-11-13 — Clinic-scoped pilot foundation
+
+**Type:** Scope change / implementation milestone
+
+The owner authorized the multi-user pilot mission (D-053). Clinic membership and ownership, scoped API access, attribution, conflict detection and safe additive SQLite/D1 migrations were implemented over the existing feature stack. Synthetic migration, isolation and multi-session API checks passed; local backup and restore were exercised. The pilot remains gated on integrated browser and deployed-runtime verification and independent reviews. Existing remote databases still await the new migration; no remote migration was applied.
+
+**References:** `ACTION_PLAN.md`, `PILOT_BASELINE.md`, `PILOT_AUTH.md`, `PILOT_OPERATIONS.md`; commits `9d4f78e`, `49c5d72`, `b241186`.

@@ -1,30 +1,19 @@
 # NM-PILOT-001 — Active mission (2026-11-13)
 
-**Outcome:** An integrated, clinic-scoped release candidate for a controlled synthetic clinic pilot. The owner directive of 2026-11-13 supersedes the historical local-only/single-doctor exclusions. Real-patient use remains gated on independent privacy/security/clinical review; inventory is P2 and deferred until mandatory gates pass.
+**Outcome:** A clinic-scoped release candidate for a controlled synthetic pilot. Real-patient use remains gated on independent privacy, security and clinical review. Inventory is deferred until the mandatory gates pass.
 
-**Baseline:** Clean `82a6baf` on `codex/patient-card-expediente`, PR #41 open with base #40. Work branch `codex/pilot-clinic-foundation`. Existing stack is retained, no merges/resets. Independent original auth/secretary monoliths are not safe to merge wholesale; current HEAD includes extracted functionality. Remote deployment/migration state is not yet verified.
+**Branch:** `codex/pilot-clinic-foundation`, based on `82a6baf`; baseline documentation `1df1580`, email queue `eb445dc`, recovery tools `b241186`, clinic API `9d4f78e`, and web integration `49c5d72` committed. Documentation reconciliation remains uncommitted. Existing feature PRs remain open; no deployment or merge has been performed.
 
-## Dependency-aware execution
+## Execution state
 
-| Sequence | Objective / deliverables | Dependencies | Acceptance gate / status |
-|---|---|---|---|
-| 1 | OBJ-00: Git ancestry, implementation inventory, baseline checks | None | Typecheck PASS; lint PASS with inherited warning; API 143/143 PASS; web 52/52 PASS; production build FAIL at sandbox TypeScript subprocess parsing, investigate. Remote state NOT STARTED. |
-| 2 | OBJ-02a: Clinic/membership schema, legacy migration, scoped API, association constraints | 1 | Migration replay/preservation, isolation across all domains/files, role denial and raw-batch atomicity. NOT STARTED. |
-| 3 | OBJ-02b/04: Doctor assignment, preserved clinical authorship, version conflicts | 2 | Two doctors/two secretaries, independent schedules, historical authors, stale-write denial. NOT STARTED. |
-| 4 | OBJ-03: Verified doctor signup/bootstrap, doctor/secretary invitations, scoped administration, OAuth | 2; auth audit can run independently | Idempotent bootstrap, single-use acceptance, revocation, account lifecycle, provider-disabled startup. NOT STARTED. |
-| 5 | OBJ-01/04: Existing workflow/action audit, multi-session patient journey | 3–4 | Patient→schedule→arrival→encounter→studies→documents→completion/relogin; failures retain drafts. NOT STARTED. |
-| 6 | OBJ-05: Restrained geometric refinement and new onboarding/access screens | 4; preserve current sidebar/navigation | Readability, keyboard, 320/390/768/1024/1440px, printing and screenshots. NOT STARTED. |
-| 7 | OBJ-06: Deployment packaging, environment separation, email reliability, backup/restore | 2; queue/recovery work independent | Local + D1 runtime tests, restore drill, private file isolation. Remote/SMTP/Google checks may be BLOCKED by credentials. NOT STARTED. |
-| 8 | OBJ-07: Complete regression, browser/multi-session gates, readiness report | All P0 slices | Every gate PASS/FAIL/BLOCKED/NOT STARTED, no unverified readiness claim. NOT STARTED. |
-| 9 | OBJ-08: Inventory/consumables | Mandatory technical gates pass | DEFERRED P2; do not delay core release. |
+1. **Baseline:** Git ancestry and 39 open PR heads recorded in `PILOT_BASELINE.md`. Original API 143/143 and web 52/52 passed; production build passed outside the sandbox.
+2. **Clinic foundation:** Additive SQLite and D1 migrations, clinic ownership, memberships, scoped queries, doctor assignment, attribution and version conflicts implemented. Representative migration preservation, D1 atomicity and isolation tests passed. Independent security review identified an appointment email retry lookup that revealed cross-clinic row state; its scope was corrected; a focused regression verifies 404 for another clinic and no mutation (clinic isolation 7/7).
+3. **Authentication:** Verified signup, clinic bootstrap, invitations, revocation, role checks and session lifecycle implemented. Synthetic multi-session API journey passed. Google and SMTP live integrations remain unverified pending real configuration.
+4. **Workflow and interface:** Scheduling, clinical author labels, onboarding and access screens integrated. Browser demo sign-in and sign-out pass; reception reflow checked at 320, 390, 768, 1024 and 1440 pixels. Browser signup, local email verification, login and clinic creation passed with a synthetic account; the clinic opened with doctor-administrator context. Browser clinical workflow checks remain outstanding.
+5. **Operations:** Local backup/restore and representative SQLite and local D1 migration drills passed. API Worker dry-run, local OpenNext production bundle, and web Wrangler dry-run passed (web bundle 7,297.83 KiB; gzip 1,473.53 KiB). OpenNext warns that Node middleware support is experimental; deployed-runtime verification remains required. Wrangler read-only status reports D1 and R2 accessible. Both remote D1 databases list 0004_clinic_ownership.sql as pending. Current API, web and marketing deployments date from 2026-11-12 and do not establish deployment of this branch. The Cloudflare connector lacks resource-read scopes; Wrangler OAuth provided the metadata. No remote migration or deployment was performed.
+6. **Final gate:** After timezone and isolation corrections, workspace typecheck and lint passed (lint retains the existing Pages-directory notice); API 159/159 and web 60/60 passed. The focused cross-clinic email retry regression passes. Complete browser and deployment packaging verification, reconcile TESTING and history, inspect and commit coherent slices, and prepare an accurate readiness report. No real-patient readiness claim until all mandatory gates and external reviews pass.
 
-**Implementation policies:** Clinic-owned patients shared within an active clinic; administrative capability separate from doctor role; historical unknown authors stay explicit. Membership and disabled-account status rechecked server-side per request. Unassigned appointments remain explicit for legacy data; named active doctor assignment on new scheduling. Preserve explicit clinical saves/reviews and existing note semantics. Use SQLite transactions / D1 atomic batches and database constraints; no hand-rolled OAuth or stack replacement.
-
-**Parallel work:** Primary owns schema/migrations, domain scoping, concurrency and contracts outside auth. Bounded independent agents own auth implementation, email/recovery, and Luna Max mission planning/review. Shared schema/global CSS integration is serial.
-
-**Commit/PR strategy:** Foundation branch based on #41; coherent verified migration/scoping commit, then complete auth and scheduling/frontend slices in dependent branches when useful. Existing feature PRs remain open; no feature merges. Preserve owner changes and never deploy/migrate live data without validated backup and explicit authorization.
-
-**Current action:** Implement clinic foundation while auth and operational slices progress independently. Record concrete tests and exact blockers here at verified milestones. Missing external credentials do not block local code/tests or synthetic verification.
+**Next action:** Finish regression checks, verify browser clinical workflows and deployed-runtime packaging, resolve independent security review findings, then review and commit the integrated changes. Preserve all existing work and avoid remote writes without a validated recovery path.
 
 ---
 

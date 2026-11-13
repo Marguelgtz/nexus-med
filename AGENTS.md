@@ -1,5 +1,7 @@
 # AGENTS.md — Project Instructions
 
+**Current owner-authorized mission — NM-PILOT-001 (2026-11-13):** Build on the integrated application for a controlled **synthetic-data** clinic pilot. Multiple doctors and secretaries, clinic ownership/membership, verified signup and invitations, Better Auth/conditional Google OIDC, private study attachments and the existing Cloudflare OpenNext/Hono/D1/R2 deployment architecture are explicitly authorized. These requirements supersede conflicting single-doctor, no-authentication, no-storage and local-only scope exclusions in the historical MVP instructions below. Local development remains loopback-only; do not mutate live deployments/data as a test. Real-patient use remains gated on independent review. Inventory is optional P2 after core gates. Existing engineering, documentation, Git/merge and data-safety instructions still apply. Read `docs/ACTION_PLAN.md`, `docs/PILOT_BASELINE.md` and current sections of the product/architecture/security documents for actual state. The original project/agent/model metadata and narrower scope below are retained as history, not a mandate to replace the current stack.
+
 **Project:** Medical Platform MVP  
 **Primary agent:** Hermes Agent  
 **Working model:** ThinkingCap Qwen3.8-27B  
