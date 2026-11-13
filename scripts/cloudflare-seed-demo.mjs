@@ -1,4 +1,5 @@
 import { spawnSync } from 'node:child_process';
+import { randomUUID } from 'node:crypto';
 import { mkdir, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -7,8 +8,13 @@ import { createDemoReceiptPdf, getCloudflareDemoSeedData } from '../prisma/seed.
 
 const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const wranglerEntrypoint = path.join(projectRoot, 'node_modules/wrangler/bin/wrangler.js');
-const wranglerConfig = 'apps/api/wrangler.jsonc';
-const receiptBucket = 'nexus-med-study-files';
+const args = process.argv.slice(2);
+if (args.length > 1 || (args.length === 1 && args[0] !== '--pilot')) {
+  throw new Error('Usage: cloudflare-seed-demo.mjs [--pilot]');
+}
+const pilot = args[0] === '--pilot';
+const wranglerConfig = pilot ? 'apps/api/wrangler.pilot.jsonc' : 'apps/api/wrangler.jsonc';
+const receiptBucket = pilot ? 'nexus-med-pilot-001-study-files' : 'nexus-med-study-files';
 
 function wrangler(args) {
   const result = spawnSync(process.execPath, [wranglerEntrypoint, ...args], {
@@ -153,7 +159,9 @@ async function main() {
     requireSuccess(check, 'Check the existing demo receipt');
     const receiptExists = parseBooleanColumn(check.stdout, 'fixture_exists');
     const fileExists = parseBooleanColumn(check.stdout, 'file_exists');
-    const storageKey = `demo-fixture/${receipt.fileId}.pdf`;
+    // The file API accepts opaque UUID keys only. Existing metadata is never
+    // rewritten; generate a new key only when the fixture file is missing.
+    const storageKey = randomUUID();
     let receiptSize = null;
     if (!fileExists) {
       const bytes = createDemoReceiptPdf(receipt.title);
