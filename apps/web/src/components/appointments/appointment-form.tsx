@@ -19,7 +19,7 @@ import {
   isValidCalendarDate,
   localDateOfInstant,
 } from '../../lib/format';
-import { overlappingScheduledAppointments } from '../../lib/calendar';
+import { overlappingScheduledAppointments, overlapCheckFeedback, type OverlapCheckResult } from '../../lib/calendar';
 import { Modal } from '../modal';
 import { useBeforeUnloadGuard } from '../../lib/use-before-unload-guard';
 import { createAppointment, listAppointmentsInRange, listClinicDoctors, updateAppointment } from '../../lib/api/client';
@@ -59,13 +59,16 @@ export function AppointmentForm({ patientId, initial, onSaved, onCreated, return
   const [doctorId, setDoctorId] = useState(initial?.doctor?.id ?? '');
   const [doctors, setDoctors] = useState<ClinicDoctor[]>([]);
   const [doctorsError, setDoctorsError] = useState<string | null>(null);
+  const [doctorsLoading, setDoctorsLoading] = useState(true);
+  const [doctorsAttempt, setDoctorsAttempt] = useState(0);
   useEffect(() => {
     let active = true;
-    listClinicDoctors().then(value => { if (active) setDoctors(value); }).catch(() => { if (active) setDoctorsError('No se pudo cargar la lista de médicos. Vuelve a abrir el formulario.'); });
+    listClinicDoctors().then(value => { if (active) setDoctors(value); }).catch(() => { if (active) setDoctorsError('No se pudo cargar la lista de médicos.'); }).finally(() => { if (active) setDoctorsLoading(false); });
     return () => { active = false; };
-  }, []);
+  }, [doctorsAttempt]);
   const [error, setError] = useState<string | null>(null);
-  const [overlap, setOverlap] = useState<string[]>([]);
+  const [overlapResult, setOverlapResult] = useState<OverlapCheckResult | null>(null);
+  const [overlapAttempt, setOverlapAttempt] = useState(0);
   const [busy, setBusy] = useState(false);
 
   const dirty = doctorId !== (initial?.doctor?.id ?? '') || date !== initialDate || time !== initialTime ||
@@ -79,8 +82,9 @@ export function AppointmentForm({ patientId, initial, onSaved, onCreated, return
   // Non-blocking overlap check, debounced: candidate [start, start+duration)
   // against that patient's appointments that day.
   const candidateStart = useMemo(() => isValidCalendarDate(date) && /^([01]\d|2[0-3]):[0-5]\d$/.test(time) ? toIso(date, time) : null, [date, time]);
+  const overlapKey = candidateStart ? JSON.stringify([candidateStart, duration, doctorId, patientId, initial?.id ?? null, overlapAttempt]) : null;
   useEffect(() => {
-    if (!candidateStart) return;
+    if (!candidateStart || !overlapKey) return;
     let cancelled = false;
     const timer = setTimeout(async () => {
       try {
@@ -93,21 +97,22 @@ export function AppointmentForm({ patientId, initial, onSaved, onCreated, return
         if (cancelled) return;
         const hits = overlappingScheduledAppointments(range, candidateStart, duration, initial?.id)
           .map((a) => `${formatTime(a.startAt)} (${a.patient.fullName})`);
-        setOverlap(hits);
+        setOverlapResult({ key: overlapKey, hits, failed: false });
       } catch {
-        if (!cancelled) setOverlap([]);
+        if (!cancelled) setOverlapResult({ key: overlapKey, hits: [], failed: true });
       }
     }, 250);
     return () => {
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [candidateStart, duration, patientId, initial?.id, doctorId]);
+  }, [candidateStart, duration, patientId, initial?.id, doctorId, overlapKey]);
+  const overlapFeedback = overlapCheckFeedback(overlapKey, overlapResult);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
-    if (doctorsError) { setError(doctorsError); return; }
+    if (doctorsLoading || doctorsError) { setError(doctorsError ?? 'Espera a que cargue la lista de médicos.'); return; }
     if (!candidateStart) { setError('Revisa la fecha y hora de la cita.'); return; }
     if (initial?.arrivedAt && !window.confirm('Reprogramar reinicia la recepción de esta cita. ¿Continuar?')) return;
     setBusy(true);
@@ -144,13 +149,14 @@ export function AppointmentForm({ patientId, initial, onSaved, onCreated, return
   const form = (
     <form className="appt-form" onSubmit={handleSubmit} aria-busy={busy}>
       <label>Médico asignado
-        <select value={doctorId} disabled={busy || Boolean(doctorsError)} onChange={event => setDoctorId(event.target.value)}>
+        <select value={doctorId} disabled={busy || doctorsLoading || Boolean(doctorsError)} onChange={event => setDoctorId(event.target.value)}>
           <option value="">Sin asignar</option>
           {initial?.doctor && !doctors.some(doctor => doctor.id === initial.doctor?.id) ? <option value={initial.doctor.id}>{initial.doctor.name} (sin acceso activo)</option> : null}
           {doctors.map(doctor => <option key={doctor.id} value={doctor.id}>{doctor.name}</option>)}
         </select>
       </label>
-      {doctorsError ? <p className="error" role="alert">{doctorsError}</p> : null}
+      {doctorsLoading ? <p role="status">Cargando médicos…</p> : null}
+      {doctorsError ? <div role="alert"><p className="error">{doctorsError}</p><button type="button" className="btn btn-ghost" onClick={() => { setDoctorsError(null); setDoctorsLoading(true); setDoctorsAttempt(value => value + 1); }}>Reintentar carga de médicos</button></div> : null}
       <div className="form-row">
         <label>
           Fecha
@@ -196,15 +202,12 @@ export function AppointmentForm({ patientId, initial, onSaved, onCreated, return
         </label>
       </div>
 
-      {candidateStart && overlap.length > 0 ? (
-        <p className="notice">
-          Se superpone con: {overlap.join(', ')}. Puedes guardar igualmente.
-        </p>
-      ) : null}
+      {overlapFeedback ? <p className="notice" role="status">{overlapFeedback}</p> : null}
+      {overlapResult?.key === overlapKey && overlapResult.failed ? <button type="button" className="btn btn-ghost" disabled={busy} onClick={() => setOverlapAttempt(value => value + 1)}>Reintentar comprobación</button> : null}
       {error ? <p className="error" role="alert">{error}</p> : null}
 
       <div className="form-actions">
-        <button type="submit" className="btn btn-primary" disabled={busy || !date || !time}>
+        <button type="submit" className="btn btn-primary" disabled={busy || doctorsLoading || Boolean(doctorsError) || !date || !time}>
           {busy
             ? 'Guardando…'
             : initial?.status === 'cancelled'

@@ -6,6 +6,7 @@ import {
   CALENDAR_HOUR_HEIGHT_PX,
   CALENDAR_MAX_CHIPS_PER_DAY,
   overlappingScheduledAppointments,
+  overlapCheckFeedback,
   splitDayAppointments,
   visibleAppointmentSlice,
 } from '../src/lib/calendar';
@@ -73,5 +74,14 @@ describe('calendar view acceptance', () => {
       'editing',
     );
     expect(matches.map((item) => item.id)).toEqual(['other-patient']);
+  });
+
+  it('reports a failed overlap check and does not reuse results for a changed candidate', () => {
+    const oldResult = { key: 'old', hits: ['09:00 (Paciente sintético)'], failed: false };
+    expect(overlapCheckFeedback('new', oldResult)).toBe('Comprobando superposiciones…');
+    expect(overlapCheckFeedback('new', { key: 'new', hits: [], failed: true })).toContain('No se pudieron comprobar');
+    expect(overlapCheckFeedback('new', { key: 'new', hits: ['09:00 (Paciente sintético)'], failed: false })).toContain('Se superpone con:');
+    expect(overlapCheckFeedback('new', { key: 'new', hits: [], failed: false })).toBeNull();
+    expect(overlapCheckFeedback(null, oldResult)).toBeNull();
   });
 });

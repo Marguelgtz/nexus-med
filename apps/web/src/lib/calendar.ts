@@ -14,6 +14,15 @@ export function calendarViewHref(vista: 'dia' | 'mes', fecha: string, doctorId?:
   return `/calendar?${params}`;
 }
 
+export type OverlapCheckResult = { key: string; hits: string[]; failed: boolean };
+
+export function overlapCheckFeedback(key: string | null, result: OverlapCheckResult | null): string | null {
+  if (!key) return null;
+  if (!result || result.key !== key) return 'Comprobando superposiciones…';
+  if (result.failed) return 'No se pudieron comprobar superposiciones. Revisa la agenda antes de guardar.';
+  return result.hits.length ? `Se superpone con: ${result.hits.join(', ')}. Puedes guardar igualmente.` : null;
+}
+
 function minuteOfPracticeDay(instant: string): number {
   const time = formatTime(instant);
   const [hour = 0, minute = 0] = time.split(':').map(Number);
