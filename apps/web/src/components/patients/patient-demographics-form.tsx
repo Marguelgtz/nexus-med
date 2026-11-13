@@ -33,7 +33,8 @@ const FIELDS = [
 /** Shared by registration, demographic edits, and administrative dialogs. */
 export function PatientDemographicsForm({ patientId, initial, prefillName, existingPatients = [], administrative, onSaved, onOpenExisting, onCancel, dialogTitle }: DemographicsProps) {
   const router = useRouter();
-  const pristine = { fullName: initial?.fullName ?? prefillName ?? '', dateOfBirth: initial?.dateOfBirth ?? '', phone: initial?.phone ?? '', email: initial?.email ?? '', externalIdentifier: initial?.externalIdentifier ?? '', appointmentEmailConsent: initial?.appointmentEmailConsent ?? false };
+  const [pristine] = useState(() => ({ fullName: initial?.fullName ?? prefillName ?? '', dateOfBirth: initial?.dateOfBirth ?? '', phone: initial?.phone ?? '', email: initial?.email ?? '', externalIdentifier: initial?.externalIdentifier ?? '', appointmentEmailConsent: initial?.appointmentEmailConsent ?? false }));
+  const [editVersion] = useState(() => initial?.version);
   const [values, setValues] = useState(pristine);
   const [errors, setErrors] = useState<Record<string, string[]>>({});
   const [error, setError] = useState<string | null>(null);
@@ -56,7 +57,7 @@ export function PatientDemographicsForm({ patientId, initial, prefillName, exist
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(null);
-    const candidate = { ...(patientId ? { expectedVersion: initial?.version } : {}), fullName: values.fullName.trim(), dateOfBirth: values.dateOfBirth || null,
+    const candidate = { ...(patientId ? { expectedVersion: editVersion } : {}), fullName: values.fullName.trim(), dateOfBirth: values.dateOfBirth || null,
       appointmentEmailConsent: values.appointmentEmailConsent,
       ...(patientId ? { phone: values.phone.trim() || null, email: values.email.trim() || null, externalIdentifier: values.externalIdentifier.trim() || null }
         : { ...(values.phone.trim() ? { phone: values.phone.trim() } : {}), ...(values.email.trim() ? { email: values.email.trim() } : {}), ...(values.externalIdentifier.trim() ? { externalIdentifier: values.externalIdentifier.trim() } : {}) }) };

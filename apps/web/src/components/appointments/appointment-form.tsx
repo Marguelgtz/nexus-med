@@ -50,13 +50,16 @@ function toIso(dateStr: string, timeStr: string): string {
 
 export function AppointmentForm({ patientId, initial, onSaved, onCreated, returnTo, onCancel, dialogTitle, defaultDate }: Props) {
   const router = useRouter();
-  const [initialDate] = useState(() => initial ? localDateOfInstant(initial.startAt) : defaultDate ?? localDateOfInstant(new Date().toISOString()));
-  const [initialTime] = useState(() => initial ? formatTime(initial.startAt) : '09:00');
-  const [date, setDate] = useState(initialDate);
-  const [time, setTime] = useState(initialTime);
-  const [duration, setDuration] = useState(initial?.durationMinutes ?? 30);
-  const [type, setType] = useState<AppointmentType>(initial?.type ?? 'consulta');
-  const [doctorId, setDoctorId] = useState(initial?.doctor?.id ?? '');
+  const [baseline] = useState(() => ({
+    date: initial ? localDateOfInstant(initial.startAt) : defaultDate ?? localDateOfInstant(new Date().toISOString()),
+    time: initial ? formatTime(initial.startAt) : '09:00', duration: initial?.durationMinutes ?? 30,
+    type: initial?.type ?? 'consulta', doctorId: initial?.doctor?.id ?? '', version: initial?.version,
+  }));
+  const [date, setDate] = useState(baseline.date);
+  const [time, setTime] = useState(baseline.time);
+  const [duration, setDuration] = useState(baseline.duration);
+  const [type, setType] = useState<AppointmentType>(baseline.type);
+  const [doctorId, setDoctorId] = useState(baseline.doctorId);
   const [doctors, setDoctors] = useState<ClinicDoctor[]>([]);
   const [doctorsError, setDoctorsError] = useState<string | null>(null);
   const [doctorsLoading, setDoctorsLoading] = useState(true);
@@ -71,8 +74,8 @@ export function AppointmentForm({ patientId, initial, onSaved, onCreated, return
   const [overlapAttempt, setOverlapAttempt] = useState(0);
   const [busy, setBusy] = useState(false);
 
-  const dirty = doctorId !== (initial?.doctor?.id ?? '') || date !== initialDate || time !== initialTime ||
-    duration !== (initial?.durationMinutes ?? 30) || type !== (initial?.type ?? 'consulta');
+  const dirty = doctorId !== baseline.doctorId || date !== baseline.date || time !== baseline.time ||
+    duration !== baseline.duration || type !== baseline.type;
   useBeforeUnloadGuard(dirty && !busy);
   function cancel() {
     if (busy || (dirty && !window.confirm('Hay una cita sin guardar. ¿Descartar los cambios?'))) return;
@@ -120,7 +123,7 @@ export function AppointmentForm({ patientId, initial, onSaved, onCreated, return
     try {
       if (initial) {
         await updateAppointment(initial.id, {
-          expectedVersion: initial.version, doctorId: doctorId || null,
+          expectedVersion: baseline.version, doctorId: doctorId || null,
           startAt,
           durationMinutes: duration,
           type,
