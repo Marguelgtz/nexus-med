@@ -11,7 +11,7 @@ Preserve the existing Next.js/Hono/Prisma/SQLite/D1/R2/Better Auth stack. Use sy
 ## Git and preservation
 
 - `HEAD` at handoff: `099088c` (`fix(auth): reset passwords atomically on D1`), based on the integrated branch documented in `PILOT_BASELINE.md`. Preceding relevant commits: `72b469b` reset UI recovery guidance, `3a8d7fc` atomic invitation revocation, `f124546` atomic invitation creation, `6b621b9` D1 error filtering, and `78d2181` local workerd multi-user journey.
-- Atomic reset backend and UI recovery guidance are committed locally and remain undeployed. API **168/168**, SQLite clinic-auth **8/8**, web **64/64**, workspace typecheck/lint and the local workerd D1/R2 journey passed. The reset failure UI state has not been browser-tested.
+- Atomic reset backend and UI recovery guidance are committed locally and remain undeployed. API **168/168**, SQLite clinic-auth **8/8**, web **64/64**, workspace typecheck/lint and the local workerd D1/R2 journey passed. A temporary headless Chrome check simulated an API 500 on the built reset page and confirmed its recovery message and resend link; no API/account data was connected for that browser check.
 - `apps/web/next-env.d.ts` was modified on arrival; Next's production build regenerated it to the tracked version, and it is clean at this handoff. `scripts/pilot-remote-journey.ts` is an untracked, incomplete draft; preserve it, do not commit or run it without the conditions below.
 - No new push, PR or merge was made during this mission. Existing feature PRs remain open. Inspect Git and actual current state before changing anything; don't rewrite shared history.
 
