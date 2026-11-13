@@ -1,5 +1,5 @@
 import { betterAuth } from 'better-auth';
-import { APIError, createAuthMiddleware } from 'better-auth/api';
+import { APIError, createAuthMiddleware, getAuthoritativeSessionFromCtx } from 'better-auth/api';
 import { prismaAdapter } from '@better-auth/prisma-adapter';
 import type { PrismaClient } from '../../generated/prisma/client';
 import { authEmailTemplate } from '../email/templates';
@@ -83,6 +83,60 @@ export function createAuth(database: PrismaClient, config: AuthConfiguration) {
     },
     hooks: {
       before: createAuthMiddleware(async (ctx) => {
+        if (ctx.path === '/change-password') {
+          const session = await getAuthoritativeSessionFromCtx(ctx);
+          if (!session?.session) {
+            throw new APIError('UNAUTHORIZED', { code: 'UNAUTHORIZED', message: 'Unauthorized' });
+          }
+          const body = ctx.body as { currentPassword?: unknown; newPassword?: unknown; revokeOtherSessions?: unknown };
+          if (typeof body.currentPassword !== 'string' || typeof body.newPassword !== 'string') return;
+
+          const passwordPolicy = ctx.context.password.config;
+          if (body.newPassword.length < passwordPolicy.minPasswordLength) {
+            throw new APIError('BAD_REQUEST', { code: 'PASSWORD_TOO_SHORT', message: 'Password is too short' });
+          }
+          if (body.newPassword.length > passwordPolicy.maxPasswordLength || body.currentPassword.length > passwordPolicy.maxPasswordLength) {
+            throw new APIError('BAD_REQUEST', { code: 'PASSWORD_TOO_LONG', message: 'Password is too long' });
+          }
+
+          const account = await ctx.context.internalAdapter.findCredentialAccount(session.user.id);
+          if (!account?.password) {
+            throw new APIError('BAD_REQUEST', { code: 'CREDENTIAL_ACCOUNT_NOT_FOUND', message: 'Credential account not found' });
+          }
+          if (!await ctx.context.password.verify({ hash: account.password, password: body.currentPassword })) {
+            throw new APIError('BAD_REQUEST', { code: 'INVALID_PASSWORD', message: 'Invalid password' });
+          }
+
+          const now = new Date().toISOString();
+          const passwordHash = await ctx.context.password.hash(body.newPassword);
+          const guardId = crypto.randomUUID();
+          try {
+            await executeAtomicWrite([
+              { sql: `INSERT INTO atomic_write_guards(id,valid) VALUES (?,CASE WHEN
+                  EXISTS (SELECT 1 FROM auth_accounts WHERE id=? AND userId=? AND providerId='credential'
+                    AND accountId=? AND password=?)
+                  AND EXISTS (SELECT 1 FROM auth_sessions WHERE id=? AND userId=? AND julianday(expiresAt)>julianday(?))
+                  THEN 1 ELSE 0 END)`,
+                values: [guardId, account.id, session.user.id, session.user.id, account.password, session.session.id, session.user.id, now] },
+              { sql: `UPDATE auth_accounts SET password=?,updatedAt=?
+                  WHERE id=? AND userId=? AND providerId='credential' AND accountId=? AND password=?`,
+                values: [passwordHash, now, account.id, session.user.id, session.user.id, account.password] },
+              ...(body.revokeOtherSessions === true ? [
+                { sql: 'DELETE FROM auth_sessions WHERE userId=? AND id<>?', values: [session.user.id, session.session.id] },
+              ] : []),
+              { sql: 'DELETE FROM atomic_write_guards WHERE id=?', values: [guardId] },
+            ]);
+          } catch (error) {
+            if (error instanceof Error && /CHECK constraint failed.*valid/i.test(error.message)) {
+              throw new APIError('BAD_REQUEST', { code: 'INVALID_PASSWORD', message: 'Password or session changed; sign in again and retry' });
+            }
+            throw error;
+          }
+
+          // Keep the authenticated session and revoke only the other sessions.
+          return ctx.json({ token: null, user: session.user });
+        }
+
         if (ctx.path !== '/reset-password') return;
 
         const body = ctx.body as { token?: unknown; newPassword?: unknown };

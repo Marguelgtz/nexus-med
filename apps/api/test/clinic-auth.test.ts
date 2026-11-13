@@ -149,6 +149,33 @@ describe('verified clinic onboarding and membership authorization', () => {
     expect(await localPrisma.account.count({ where: { accountId: 'google-subject-success-synthetic', providerId: 'google' } })).toBe(1);
   });
 
+  it('preserves the current session when a D1-compatible password change fails before credential update', async () => {
+    const identity = await signupVerified('Doctora para cambio de contraseña');
+    const secondLogin = await request('/api/auth/sign-in/email', { email: identity.user.email, password });
+    expect(secondLogin.status).toBe(200);
+    const secondCookie = secondLogin.headers.getSetCookie().map(value => value.split(';')[0]).join('; ');
+    expect(await localPrisma.session.count({ where: { userId: identity.user.id } })).toBe(2);
+
+    const nextPassword = 'Synthetic-Changed-Password-2026!';
+    await localPrisma.$executeRawUnsafe("CREATE TRIGGER synthetic_password_change_failure BEFORE UPDATE ON auth_accounts WHEN NEW.providerId='credential' BEGIN SELECT RAISE(ABORT, 'synthetic password change failure'); END");
+    try {
+      expect((await request('/api/auth/change-password', { currentPassword: password, newPassword: nextPassword, revokeOtherSessions: true }, identity.cookie)).status).toBe(500);
+    } finally {
+      await localPrisma.$executeRawUnsafe('DROP TRIGGER IF EXISTS synthetic_password_change_failure');
+    }
+
+    expect(await localPrisma.session.count({ where: { userId: identity.user.id } })).toBe(2);
+    expect((await request('/api/session', undefined, identity.cookie)).status).toBe(200);
+    expect((await request('/api/session', undefined, secondCookie)).status).toBe(200);
+
+    expect((await request('/api/auth/change-password', { currentPassword: password, newPassword: nextPassword, revokeOtherSessions: true }, identity.cookie)).status).toBe(200);
+    expect(await localPrisma.session.count({ where: { userId: identity.user.id } })).toBe(1);
+    expect((await request('/api/session', undefined, identity.cookie)).status).toBe(200);
+    expect((await request('/api/session', undefined, secondCookie)).status).toBe(401);
+    expect((await request('/api/auth/sign-in/email', { email: identity.user.email, password })).status).toBe(401);
+    expect((await request('/api/auth/sign-in/email', { email: identity.user.email, password: nextPassword })).status).toBe(200);
+  });
+
   it('rolls back invitation revocation when its audit event fails and permits retry', async () => {
     const owner = await makeOwner();
     const invite = await inviteToken(owner.cookie, email(), 'secretary');

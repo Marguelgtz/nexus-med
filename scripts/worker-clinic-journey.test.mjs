@@ -112,6 +112,67 @@ test('real Worker sessions preserve clinic isolation and clinical authorship on 
     assert.equal((await request('/api/auth/sign-up/email', { name: 'Alta sintética recuperable', email: failedSignupEmail, password })).status, 200,
       'failed signup can be retried with the same address');
 
+    const passwordChangeIdentity = await signup('cambio de contraseña');
+    const secondPasswordSession = await request('/api/auth/sign-in/email', { email: passwordChangeIdentity.email, password });
+    assert.equal(secondPasswordSession.status, 200);
+    const secondPasswordCookie = cookie(secondPasswordSession);
+    assert.equal((await db.prepare('SELECT COUNT(*) AS count FROM auth_sessions WHERE userId=?').bind(passwordChangeIdentity.id).first()).count, 2);
+    const oldCredential = await db.prepare("SELECT password FROM auth_accounts WHERE userId=? AND providerId='credential'").bind(passwordChangeIdentity.id).first();
+    const changedPassword = 'Synthetic-Changed-Password-2026!';
+    await db.exec("CREATE TRIGGER synthetic_password_change_failure BEFORE UPDATE OF password ON auth_accounts WHEN NEW.providerId='credential' BEGIN SELECT RAISE(ABORT, 'synthetic password change failure'); END");
+    let failedPasswordChange;
+    try {
+      failedPasswordChange = await request('/api/auth/change-password', {
+        currentPassword: password, newPassword: changedPassword, revokeOtherSessions: true,
+      }, passwordChangeIdentity.cookie);
+    } finally {
+      await db.exec('DROP TRIGGER IF EXISTS synthetic_password_change_failure');
+    }
+    assert.equal(failedPasswordChange.status, 500, 'failed credential update must be reported');
+    assert.equal((await db.prepare('SELECT COUNT(*) AS count FROM auth_sessions WHERE userId=?').bind(passwordChangeIdentity.id).first()).count, 2,
+      'failed password change must preserve every session');
+    const credentialAfterFailure = await db.prepare("SELECT password FROM auth_accounts WHERE userId=? AND providerId='credential'").bind(passwordChangeIdentity.id).first();
+    assert.equal(credentialAfterFailure.password, oldCredential.password, 'failed password change must retain the prior credential');
+    assert.equal((await request('/api/auth/change-password', {
+      currentPassword: password, newPassword: changedPassword, revokeOtherSessions: true,
+    }, passwordChangeIdentity.cookie)).status, 200, 'password change can be retried');
+    assert.equal((await db.prepare('SELECT COUNT(*) AS count FROM auth_sessions WHERE userId=?').bind(passwordChangeIdentity.id).first()).count, 1,
+      'successful password change revokes other sessions and keeps the current session');
+    assert.equal((await request('/api/session', undefined, passwordChangeIdentity.cookie)).status, 200);
+    assert.equal((await request('/api/session', undefined, secondPasswordCookie)).status, 401);
+    const credentialAfterFirstChange = await db.prepare("SELECT password FROM auth_accounts WHERE userId=? AND providerId='credential'").bind(passwordChangeIdentity.id).first();
+    assert.equal(await verifyPassword({ hash: credentialAfterFirstChange.password, password: changedPassword }), true);
+    assert.equal(await verifyPassword({ hash: credentialAfterFirstChange.password, password }), false);
+    const changedPasswordSession = await request('/api/auth/sign-in/email', { email: passwordChangeIdentity.email, password: changedPassword });
+    assert.equal(changedPasswordSession.status, 200);
+    const changedPasswordCookie = cookie(changedPasswordSession);
+    const secondNewPassword = 'Synthetic-Second-Changed-Password-2026!';
+    await db.exec(`CREATE TRIGGER synthetic_password_change_session_failure BEFORE DELETE ON auth_sessions WHEN OLD.userId='${passwordChangeIdentity.id}' BEGIN SELECT RAISE(ABORT, 'synthetic session revoke failure'); END`);
+    let failedSessionRevoke;
+    try {
+      failedSessionRevoke = await request('/api/auth/change-password', {
+        currentPassword: changedPassword, newPassword: secondNewPassword, revokeOtherSessions: true,
+      }, passwordChangeIdentity.cookie);
+    } finally {
+      await db.exec('DROP TRIGGER IF EXISTS synthetic_password_change_session_failure');
+    }
+    assert.equal(failedSessionRevoke.status, 500, 'failed session revocation must fail the password change');
+    assert.equal((await db.prepare('SELECT COUNT(*) AS count FROM auth_sessions WHERE userId=?').bind(passwordChangeIdentity.id).first()).count, 2,
+      'failed session revocation rolls back without deleting any session');
+    const credentialAfterRevokeFailure = await db.prepare("SELECT password FROM auth_accounts WHERE userId=? AND providerId='credential'").bind(passwordChangeIdentity.id).first();
+    assert.equal(await verifyPassword({ hash: credentialAfterRevokeFailure.password, password: changedPassword }), true,
+      'failed session revocation rolls back the password update');
+    assert.equal(await verifyPassword({ hash: credentialAfterRevokeFailure.password, password: secondNewPassword }), false);
+    assert.equal((await request('/api/auth/change-password', {
+      currentPassword: changedPassword, newPassword: secondNewPassword, revokeOtherSessions: true,
+    }, passwordChangeIdentity.cookie)).status, 200, 'failed session revocation can be retried');
+    assert.equal((await db.prepare('SELECT COUNT(*) AS count FROM auth_sessions WHERE userId=?').bind(passwordChangeIdentity.id).first()).count, 1);
+    assert.equal((await request('/api/session', undefined, changedPasswordCookie)).status, 401);
+    assert.equal((await request('/api/session', undefined, passwordChangeIdentity.cookie)).status, 200);
+    const credentialAfterRetry = await db.prepare("SELECT password FROM auth_accounts WHERE userId=? AND providerId='credential'").bind(passwordChangeIdentity.id).first();
+    assert.equal(await verifyPassword({ hash: credentialAfterRetry.password, password: secondNewPassword }), true);
+    assert.equal(await verifyPassword({ hash: credentialAfterRetry.password, password: changedPassword }), false);
+
     const doctor = await owner('A');
     const secondDoctor = await signup('B');
     const secretary = await signup('C');
