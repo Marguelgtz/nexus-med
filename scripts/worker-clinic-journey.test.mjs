@@ -1,0 +1,168 @@
+// Full local Worker/D1 journey: no remote Cloudflare resources or real data.
+import assert from 'node:assert/strict';
+import { execFileSync } from 'node:child_process';
+import { randomUUID } from 'node:crypto';
+import { mkdtemp, readFile, readdir, rm } from 'node:fs/promises';
+import os from 'node:os';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import test from 'node:test';
+import { symmetricDecrypt } from 'better-auth/crypto';
+import { Miniflare, convertV4MiniflareOptions, Log, LogLevel } from 'miniflare';
+import { unstable_splitSqlQuery } from 'wrangler';
+
+const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const origin = 'https://nexus-local.example.test';
+const secret = 'synthetic-worker-journey-secret-'.repeat(3);
+const password = 'Synthetic-Worker-Journey-2026!';
+
+test('real Worker sessions preserve clinic isolation and clinical authorship on local D1', { timeout: 90_000 }, async t => {
+  const directory = await mkdtemp(path.join(os.tmpdir(), 'nexus-worker-journey-'));
+  t.after(() => rm(directory, { recursive: true, force: true }));
+  const bundle = path.join(directory, 'bundle');
+  execFileSync(process.execPath, [path.join(root, 'node_modules/wrangler/bin/wrangler.js'), 'deploy', '--dry-run', '--config', 'apps/api/wrangler.pilot.jsonc', '--outdir', bundle], {
+    cwd: root, env: { ...process.env, WRANGLER_WRITE_LOGS: 'false', WRANGLER_SEND_METRICS: 'false', CLOUDFLARE_LOAD_DEV_VARS_FROM_DOT_ENV: 'false' }, stdio: 'pipe',
+  });
+  const wasm = (await readdir(bundle)).find(name => name.endsWith('-query_compiler_fast_bg.wasm'));
+  assert.ok(wasm);
+  const mf = new Miniflare(convertV4MiniflareOptions({
+    modules: [{ type: 'ESModule', path: path.join(bundle, 'worker.js') }, { type: 'CompiledWasm', path: path.join(bundle, wasm) }],
+    rootPath: bundle, modulesRoot: bundle, compatibilityDate: '2026-11-11', compatibilityFlags: ['nodejs_compat'],
+    d1Databases: ['DB', 'DEMO_DB'], r2Buckets: ['STUDY_FILES'],
+    bindings: { BETTER_AUTH_SECRET: secret, APP_BASE_URL: origin, EMAIL_DELIVERY_DISABLED: 'true' },
+    host: '127.0.0.1', port: 0, cf: false, enableDevRegistry: false, telemetry: { enabled: false },
+    resourcePersistencePath: path.join(directory, 'storage'), log: new Log(LogLevel.NONE),
+  }));
+  try {
+    const db = await mf.getD1Database('DB');
+    const migrations = path.join(root, 'prisma/cloudflare-migrations');
+    for (const name of (await readdir(migrations)).filter(name => name.endsWith('.sql')).sort()) {
+      await db.batch(unstable_splitSqlQuery(await readFile(path.join(migrations, name), 'utf8')).map(sql => db.prepare(sql)));
+    }
+    let sequence = 0;
+    async function request(route, body, cookie = '', method = body === undefined ? 'GET' : 'POST') {
+      const headers = new Headers({ origin, cookie, 'cf-connecting-ip': `192.0.2.${++sequence % 250 + 1}` });
+      let payload;
+      if (body instanceof FormData) {
+        const encoded = new Response(body);
+        headers.set('content-type', encoded.headers.get('content-type'));
+        payload = await encoded.arrayBuffer();
+      } else if (body !== undefined) {
+        headers.set('content-type', 'application/json');
+        payload = JSON.stringify(body);
+      }
+      return mf.dispatchFetch(`${origin}${route}`, { method, headers, redirect: 'manual', ...(payload === undefined ? {} : { body: payload }) });
+    }
+    async function json(response, status = 200) {
+      if (response.status !== status) {
+        const error = await response.json().catch(() => ({}));
+        assert.fail(`expected HTTP ${status}, received ${response.status}: ${error.error?.message ?? 'no error detail'}`);
+      }
+      return response.json();
+    }
+    function cookie(response) {
+      const value = response.headers.getSetCookie().map(item => item.split(';', 1)[0]).find(item => item.includes('session_token='));
+      assert.ok(value, 'session cookie');
+      return value;
+    }
+    async function messageUrl(email, kind) {
+      const row = await db.prepare('SELECT encryptedBody FROM email_outbox WHERE recipient=? AND kind=? ORDER BY createdAt DESC LIMIT 1').bind(email, kind).first();
+      assert.ok(row, `synthetic ${kind} message`);
+      const payload = JSON.parse(await symmetricDecrypt({ key: secret, data: row.encryptedBody }));
+      const url = new URL(payload.text.match(/https?:\/\/[^\s]+/)[0]);
+      assert.equal(url.origin, origin);
+      return url;
+    }
+    async function signup(label) {
+      const email = `worker-${randomUUID()}@example.test`;
+      await json(await request('/api/auth/sign-up/email', { name: `Identidad sintética ${label}`, email, password }));
+      const link = await messageUrl(email, 'verify_email');
+      const verification = await request(`${link.pathname}${link.search}`);
+      assert.ok([200, 302].includes(verification.status), `email verification returned ${verification.status}`);
+      const login = await request('/api/auth/sign-in/email', { email, password });
+      assert.equal(login.status, 200, 'verified sign-in');
+      const authCookie = cookie(login);
+      const session = await json(await request('/api/session', undefined, authCookie));
+      assert.equal(session.onboardingRequired, true);
+      return { email, cookie: authCookie, id: session.user.id };
+    }
+    async function owner(label) {
+      const identity = await signup(label);
+      const session = await json(await request('/api/onboarding/clinic', { name: `Clínica sintética ${label}` }, identity.cookie));
+      assert.equal(session.canManageAccess, true);
+      return { ...identity, clinicId: session.clinic.id };
+    }
+    async function invite(ownerIdentity, identity, role) {
+      await json(await request('/api/access/invitations', { email: identity.email, role }, ownerIdentity.cookie), 201);
+      const token = (await messageUrl(identity.email, 'invitation')).searchParams.get('token');
+      assert.ok(token);
+      const session = await json(await request('/api/invitations/accept', { token }, identity.cookie));
+      assert.equal(session.user.role, role);
+      assert.equal(session.clinic.id, ownerIdentity.clinicId);
+    }
+
+    const doctor = await owner('A');
+    const secondDoctor = await signup('B');
+    const secretary = await signup('C');
+    const secondSecretary = await signup('E');
+    await invite(doctor, secondDoctor, 'doctor');
+    await invite(doctor, secretary, 'secretary');
+    await invite(doctor, secondSecretary, 'secretary');
+    const outsider = await owner('D');
+    assert.notEqual(doctor.clinicId, outsider.clinicId);
+    const patient = await json(await request('/api/administrative/patients', { fullName: 'Paciente sintético local' }, secretary.cookie), 201);
+    assert.equal((await request(`/api/patients/${patient.id}`, undefined, secretary.cookie)).status, 403);
+    assert.equal((await request(`/api/patients/${patient.id}`, undefined, outsider.cookie)).status, 404);
+    const appointment = await json(await request(`/api/patients/${patient.id}/appointments`, {
+      startAt: '2026-11-16T16:00:00Z', durationMinutes: 30, type: 'consulta', doctorId: doctor.id,
+    }, secretary.cookie), 201);
+    assert.equal(appointment.doctor.id, doctor.id);
+    assert.equal((await request(`/api/appointments/${appointment.id}/reception`, { action: 'start' }, secondDoctor.cookie)).status, 403);
+    await json(await request(`/api/appointments/${appointment.id}/reception`, { action: 'arrive' }, secondSecretary.cookie));
+    await json(await request(`/api/appointments/${appointment.id}/reception`, { action: 'start' }, doctor.cookie));
+    const encounter = await json(await request(`/api/patients/${patient.id}/encounters`, {
+      occurredAt: '2026-11-16T16:00:00Z', reason: 'Nota sintética local',
+      studies: [{ category: 'laboratorio', name: 'Estudio sintético local' }],
+    }, doctor.cookie), 201);
+    assert.equal(encounter.author.id, doctor.id);
+    const concurrent = await Promise.all([doctor, secondDoctor].map((actor, index) => request(`/api/encounters/${encounter.id}`, { expectedVersion: encounter.version, assessment: `Edición sintética ${index}` }, actor.cookie, 'PATCH')));
+    assert.deepEqual(concurrent.map(response => response.status).sort(), [200, 409]);
+    const readback = await json(await request(`/api/encounters/${encounter.id}`, undefined, secondDoctor.cookie));
+    assert.equal(readback.author.id, doctor.id);
+    assert.equal(readback.version, encounter.version + 1);
+    assert.equal((await request(`/api/encounters/${encounter.id}`, undefined, outsider.cookie)).status, 404);
+    assert.equal((await request(`/api/encounters/${encounter.id}`, undefined, secretary.cookie)).status, 403);
+    const studies = await json(await request(`/api/encounters/${encounter.id}/studies`, undefined, secondDoctor.cookie));
+    assert.equal(studies.length, 1);
+    const bytes = Uint8Array.from(Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aNfoAAAAASUVORK5CYII=', 'base64'));
+    const upload = new FormData();
+    upload.set('metadata', JSON.stringify({ title: 'Estudio sintético', encounterId: encounter.id, requestId: studies[0].id }));
+    upload.append('files', new File([bytes], 'synthetic.png', { type: 'image/png' }));
+    const receipt = await json(await request(`/api/patients/${patient.id}/study-receipts`, upload, secretary.cookie), 201);
+    assert.equal(receipt.reviewedAt, null);
+    const file = await request(`/api/study-receipt-files/${receipt.files[0].id}`, undefined, secondSecretary.cookie);
+    assert.equal(file.status, 200);
+    assert.deepEqual(new Uint8Array(await file.arrayBuffer()), bytes);
+    assert.equal((await request(`/api/study-receipt-files/${receipt.files[0].id}`, undefined, outsider.cookie)).status, 404);
+    assert.equal((await request(`/api/study-receipts/${receipt.id}/review`, {}, secretary.cookie)).status, 403);
+    const reviewed = await json(await request(`/api/study-receipts/${receipt.id}/review`, { reviewNote: 'Revisión sintética' }, secondDoctor.cookie));
+    assert.ok(reviewed.reviewedAt);
+    const document = await json(await request(`/api/patients/${patient.id}/documents`, {
+      kind: 'prescription', encounterId: encounter.id, lines: [{ medication: 'Medicamento ficticio' }],
+    }, doctor.cookie), 201);
+    assert.equal(document.author.id, doctor.id);
+    assert.equal((await request(`/api/documents/${document.id}`, undefined, secretary.cookie)).status, 403);
+    assert.equal((await request(`/api/documents/${document.id}`, undefined, outsider.cookie)).status, 404);
+    const completed = await json(await request(`/api/appointments/${appointment.id}/complete`, { encounterId: encounter.id }, doctor.cookie));
+    assert.equal(completed.linkedEncounterId, encounter.id);
+    await json(await request('/api/auth/sign-out', {}, doctor.cookie));
+    assert.equal((await request(`/api/encounters/${encounter.id}`, undefined, doctor.cookie)).status, 401);
+    const login = await request('/api/auth/sign-in/email', { email: doctor.email, password });
+    assert.equal(login.status, 200);
+    const persisted = await json(await request(`/api/documents/${document.id}`, undefined, cookie(login)));
+    assert.equal(persisted.author.id, doctor.id);
+    assert.equal(persisted.encounter.id, encounter.id);
+  } finally {
+    await mf.dispose();
+  }
+});
