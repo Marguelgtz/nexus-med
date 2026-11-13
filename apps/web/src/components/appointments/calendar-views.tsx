@@ -10,6 +10,7 @@ import {
   CALENDAR_DAY_START_HOUR,
   CALENDAR_HOUR_HEIGHT_PX,
   CALENDAR_MAX_CHIPS_PER_DAY,
+  calendarViewHref,
   splitDayAppointments,
   visibleAppointmentSlice,
 } from '../../lib/calendar';
@@ -154,13 +155,13 @@ export function DayView({ fecha, appointments }: { fecha: string; appointments: 
   );
 }
 
-function WeekColumn({ day, appointments }: { day: string; appointments: Appointment[] }) {
+function WeekColumn({ day, appointments, doctorId }: { day: string; appointments: Appointment[]; doctorId?: string }) {
   const today = practiceToday();
   const items = appointments.filter((a) => localDateOfInstant(a.startAt) === day);
   const { visible, remaining } = visibleAppointmentSlice(items, CALENDAR_MAX_CHIPS_PER_DAY);
   return (
     <div className={`cal-week-col${day === today ? ' cal-today-col' : ''}`}>
-      <Link href={`/calendar?vista=dia&fecha=${day}`} className="cal-col-head">
+      <Link href={calendarViewHref('dia', day, doctorId)} className="cal-col-head">
         {formatDayHeader(day)}
       </Link>
       <div className="cal-col-items">
@@ -170,7 +171,7 @@ function WeekColumn({ day, appointments }: { day: string; appointments: Appointm
           </Link>
         ))}
         {remaining > 0 ? (
-          <Link href={`/calendar?vista=dia&fecha=${day}`} className="cal-more">
+          <Link href={calendarViewHref('dia', day, doctorId)} className="cal-more">
             +{remaining} más
           </Link>
         ) : null}
@@ -180,21 +181,22 @@ function WeekColumn({ day, appointments }: { day: string; appointments: Appointm
   );
 }
 
-export function WeekView({ fecha, appointments }: { fecha: string; appointments: Appointment[] }) {
+export function WeekView({ fecha, appointments, doctorId }: { fecha: string; appointments: Appointment[]; doctorId?: string }) {
   return (
     <div className="week-grid">
       {weekDays(fecha).map((day) => (
-        <WeekColumn key={day} day={day} appointments={appointments} />
+        <WeekColumn key={day} day={day} appointments={appointments} doctorId={doctorId} />
       ))}
     </div>
   );
 }
 
-function MonthCell({ day, month, selectedDay, appointments }: {
+function MonthCell({ day, month, selectedDay, appointments, doctorId }: {
   day: string;
   month: string;
   selectedDay: string;
   appointments: Appointment[];
+  doctorId?: string;
 }) {
   const today = practiceToday();
   const items = appointments.filter((a) => localDateOfInstant(a.startAt) === day);
@@ -204,11 +206,11 @@ function MonthCell({ day, month, selectedDay, appointments }: {
   const monthForSelection = sameMonth(day, month) ? month : day;
   return (
     <div className={`cal-month-cell${day === today ? ' cal-today-col' : ''}${isSelected ? ' cal-month-selected' : ''}`}>
-      <Link href={`/calendar?vista=dia&fecha=${day}`} aria-label={`Ver citas del ${formatDate(day)}`} className="cal-month-daynum cal-month-open-day">
+      <Link href={calendarViewHref('dia', day, doctorId)} aria-label={`Ver citas del ${formatDate(day)}`} className="cal-month-daynum cal-month-open-day">
         {dayNumber}
       </Link>
       <Link
-        href={`/calendar?vista=mes&fecha=${monthForSelection}&dia=${day}`}
+        href={calendarViewHref('mes', monthForSelection, doctorId, day)}
         aria-label={`Seleccionar ${formatDate(day)}${items.length ? `, ${items.length} ${items.length === 1 ? 'cita' : 'citas'}` : ', sin citas'}`}
         aria-current={isSelected ? 'date' : undefined}
         className="cal-month-daynum cal-month-select-day"
@@ -225,7 +227,7 @@ function MonthCell({ day, month, selectedDay, appointments }: {
           </Link>
         ))}
         {remaining > 0 ? (
-          <Link href={`/calendar?vista=dia&fecha=${day}`} className="cal-more">
+          <Link href={calendarViewHref('dia', day, doctorId)} className="cal-more">
             +{remaining}
           </Link>
         ) : null}
@@ -265,10 +267,11 @@ function MonthAgenda({ selectedDay, appointments }: { selectedDay: string; appoi
   );
 }
 
-export function MonthView({ fecha, appointments, selectedDay }: {
+export function MonthView({ fecha, appointments, selectedDay, doctorId }: {
   fecha: string;
   appointments: Appointment[];
   selectedDay: string;
+  doctorId?: string;
 }) {
   return (
     <>
@@ -282,7 +285,7 @@ export function MonthView({ fecha, appointments, selectedDay }: {
         </div>
         {monthGrid(fecha).map((day) => (
           <div className={`cal-month-wrap${sameMonth(day, fecha) ? '' : ' dimmed'}`} key={day}>
-            <MonthCell day={day} month={fecha} selectedDay={selectedDay} appointments={appointments} />
+            <MonthCell day={day} month={fecha} selectedDay={selectedDay} appointments={appointments} doctorId={doctorId} />
           </div>
         ))}
       </div>

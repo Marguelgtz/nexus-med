@@ -7,6 +7,13 @@ export const CALENDAR_DAY_END_HOUR = 22;
 export const CALENDAR_HOUR_HEIGHT_PX = 48;
 export const CALENDAR_MAX_CHIPS_PER_DAY = 3;
 
+export function calendarViewHref(vista: 'dia' | 'mes', fecha: string, doctorId?: string, dia?: string): string {
+  const params = new URLSearchParams({ vista, fecha });
+  if (dia) params.set('dia', dia);
+  if (doctorId) params.set('doctorId', doctorId);
+  return `/calendar?${params}`;
+}
+
 function minuteOfPracticeDay(instant: string): number {
   const time = formatTime(instant);
   const [hour = 0, minute = 0] = time.split(':').map(Number);
