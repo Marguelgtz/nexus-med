@@ -8,12 +8,11 @@
   ],
   "workers_dev": false,
   "vars": {
-    "APP_BASE_URL": "https://nexus-med-pilot-001-web.marguel-gtz.workers.dev"
+    "APP_BASE_URL": "https://nexus-med-pilot-001-web.marguel-gtz.workers.dev",
+    "EMAIL_DELIVERY_DISABLED": "true"
   },
   "triggers": {
-    "crons": [
-      "*/5 * * * *"
-    ]
+    "crons": []
   },
   "observability": {
     "enabled": true,
