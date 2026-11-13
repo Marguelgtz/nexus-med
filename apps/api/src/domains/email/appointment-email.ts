@@ -1,3 +1,4 @@
+import { clinicScope } from '../../shared/clinic';
 import { Hono } from 'hono';
 import {
   appointmentEmailStatusSchema,
@@ -78,7 +79,7 @@ function normalizeEmail(email: string): string {
 
 async function sendAppointmentEmail(appointmentId: string, event: AppointmentEmailEvent): Promise<AppointmentEmailStatus> {
   const appointment = await prisma.appointment.findUnique({
-    where: { id: appointmentId },
+    where: { id: appointmentId, ...clinicScope() },
     select: {
       id: true,
       startAt: true,
@@ -131,7 +132,7 @@ async function sendAppointmentEmail(appointmentId: string, event: AppointmentEma
 }
 
 async function listAppointmentEmails(appointmentId: string): Promise<AppointmentEmailStatus[]> {
-  const exists = await prisma.appointment.findUnique({ where: { id: appointmentId }, select: { id: true } });
+  const exists = await prisma.appointment.findUnique({ where: { id: appointmentId, ...clinicScope() }, select: { id: true } });
   if (!exists) throw new NotFoundError('Cita no encontrada.');
   const rows = await prisma.emailOutbox.findMany({
     where: { appointmentId },
@@ -144,7 +145,7 @@ async function listAppointmentEmails(appointmentId: string): Promise<Appointment
 
 async function retryAppointmentEmail(appointmentId: string, emailId: string, acknowledgePossibleDuplicate: boolean): Promise<AppointmentEmailStatus> {
   const row = await prisma.emailOutbox.findFirst({
-    where: { id: emailId, appointmentId },
+    where: { id: emailId, appointmentId, appointment: { is: clinicScope() } },
     select: { id: true, appointmentVersion: true, appointmentEvent: true, recipient: true, status: true, subject: true, attempts: true, createdAt: true, sentAt: true, lastError: true },
   });
   if (!row || !row.appointmentEvent) throw new NotFoundError('Aviso de cita no encontrado.');
@@ -153,7 +154,7 @@ async function retryAppointmentEmail(appointmentId: string, emailId: string, ack
     throw new ValidationError('Confirma que revisaste si el correo pudo haberse enviado.');
   }
   const appointment = await prisma.appointment.findUnique({
-    where: { id: appointmentId },
+    where: { id: appointmentId, ...clinicScope() },
     select: {
       status: true,
       updatedAt: true,

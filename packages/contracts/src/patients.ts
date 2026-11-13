@@ -17,6 +17,7 @@ export const backgroundFieldSchema = z.string().trim().max(5000).nullable().opti
 
 export const medicalBackgroundInputSchema = z
   .object({
+    expectedVersion: z.number().int().positive().optional(),
     medicalConditions: backgroundFieldSchema,
     previousSurgeries: backgroundFieldSchema,
     allergies: backgroundFieldSchema,
@@ -45,6 +46,7 @@ export type CreatePatientInput = z.infer<typeof createPatientInputSchema>;
 
 export const updatePatientInputSchema = z
   .object({
+    expectedVersion: z.number().int().positive().optional(),
     fullName: fullNameSchema.optional(),
     // nullable so a date of birth can be cleared explicitly.
     dateOfBirth: dateSchema.nullable().optional(),
@@ -75,6 +77,7 @@ export const patientListQuerySchema = z
 export type PatientListQuery = z.infer<typeof patientListQuerySchema>;
 
 export const patientSummarySchema = z.object({
+  version: z.number().int().positive().optional(),
   id: idSchema,
   fullName: z.string(),
   dateOfBirth: dateSchema.nullable(),
@@ -85,6 +88,7 @@ export const patientSummarySchema = z.object({
 export type PatientSummary = z.infer<typeof patientSummarySchema>;
 
 export const patientDetailSchema = z.object({
+  version: z.number().int().positive().optional(),
   id: idSchema,
   fullName: z.string(),
   dateOfBirth: dateSchema.nullable(),

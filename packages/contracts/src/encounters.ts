@@ -48,6 +48,7 @@ export type CreateEncounterInput = z.infer<typeof createEncounterInputSchema>;
 
 export const updateEncounterInputSchema = z
   .object({
+    expectedVersion: z.number().int().positive().optional(),
     occurredAt: isoDateTimeSchema.optional(),
     // What actually happened (default `consulta`, D-024).
     type: encounterTypeSchema.optional(),
@@ -62,6 +63,8 @@ export type UpdateEncounterInput = z.infer<typeof updateEncounterInputSchema>;
 
 /** One row in the patient's chronological clinical timeline. */
 export const encounterSummarySchema = z.object({
+  version: z.number().int().positive().optional(),
+  author: z.object({ id: idSchema, name: z.string() }).nullable().optional(),
   id: idSchema,
   patientId: idSchema,
   occurredAt: isoDateTimeSchema,

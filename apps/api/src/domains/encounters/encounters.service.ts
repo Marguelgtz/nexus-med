@@ -1,3 +1,5 @@
+import { checkVersion } from '../../shared/version';
+import { clinicScope, currentClinicId, currentActorId } from '../../shared/clinic';
 // Encounter (consultation) domain operations.
 //
 // Business rules (docs/WORKFLOWS.md):
@@ -26,6 +28,8 @@ const PATIENT_NOT_FOUND = 'Paciente no encontrado';
 // @nexus-med/contracts.
 interface EncounterRow {
   id: string;
+  version: number;
+  author: { id: string; name: string } | null;
   patientId: string;
   occurredAt: Date;
   type: string;
@@ -36,7 +40,7 @@ interface EncounterRow {
 
 function toSummary(row: EncounterRow): EncounterSummary {
   return {
-    id: row.id,
+    id: row.id, version: row.version, author: row.author,
     patientId: row.patientId,
     occurredAt: row.occurredAt.toISOString(),
     // Only ever written through the validated API boundary.
@@ -68,7 +72,10 @@ function toDetail(
   };
 }
 
+const authorInclude = { author: { select: { id: true, name: true } } } as const;
+
 const summarySelect = {
+  version: true, ...authorInclude,
   id: true,
   patientId: true,
   occurredAt: true,
@@ -80,7 +87,7 @@ const summarySelect = {
 
 async function requirePatient(patientId: string): Promise<void> {
   const patient = await prisma.patient.findUnique({
-    where: { id: patientId },
+    where: { ...clinicScope(), id: patientId },
     select: { id: true },
   });
   if (!patient) throw new NotFoundError(PATIENT_NOT_FOUND);
@@ -89,7 +96,7 @@ async function requirePatient(patientId: string): Promise<void> {
 export async function listEncounters(patientId: string): Promise<EncounterSummary[]> {
   await requirePatient(patientId);
   const rows = await prisma.encounter.findMany({
-    where: { patientId },
+    where: { ...clinicScope(), patientId },
     orderBy: [{ occurredAt: 'desc' }, { id: 'asc' }],
     select: summarySelect,
   });
@@ -103,7 +110,7 @@ export async function createEncounter(
   await requirePatient(patientId);
   const { studies, ...note } = input;
   if (!studies || studies.length === 0) {
-    return toDetail(await prisma.encounter.create({ data: { ...note, patientId } }));
+    return toDetail(await prisma.encounter.create({ data: { ...note, patientId, ...clinicScope(), authorId: currentActorId(), lastEditedById: currentActorId() }, include: authorInclude }));
   }
   // IDs and timestamps are generated before the batch so the same ordered
   // write set runs atomically in SQLite and D1.
@@ -115,8 +122,8 @@ export async function createEncounter(
       sql: `INSERT INTO encounters (
         id, patientId, occurredAt, type, reason, historyOfPresentIllness,
         relevantHistory, physicalExamination, assessment, plan, followUp,
-        createdAt, updatedAt
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        createdAt, updatedAt, clinicId, authorId, lastEditedById
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       values: [
         encounterId,
         patientId,
@@ -130,7 +137,7 @@ export async function createEncounter(
         note.plan ?? null,
         note.followUp ?? null,
         createdAt,
-        createdAt,
+        createdAt, currentClinicId(), currentActorId(), currentActorId(),
       ],
     },
     ...studies.map((study, index) => {
@@ -138,8 +145,8 @@ export async function createEncounter(
       return {
         sql: `INSERT INTO study_requests (
           id, patientId, encounterId, category, name, description, status,
-          resultNote, createdAt, updatedAt
-        ) VALUES (?, ?, ?, ?, ?, ?, 'ordered', NULL, ?, ?)`,
+          resultNote, createdAt, updatedAt, clinicId, orderedById
+        ) VALUES (?, ?, ?, ?, ?, ?, 'ordered', NULL, ?, ?, ?, ?)`,
         values: [
           randomUUID(),
           patientId,
@@ -148,18 +155,18 @@ export async function createEncounter(
           study.name,
           study.description?.trim() || null,
           studyTimestamp,
-          studyTimestamp,
+          studyTimestamp, currentClinicId(), currentActorId(),
         ],
       };
     }),
   ]);
 
-  const created = await prisma.encounter.findUniqueOrThrow({ where: { id: encounterId } });
+  const created = await prisma.encounter.findUniqueOrThrow({ where: { ...clinicScope(), id: encounterId }, include: authorInclude });
   return toDetail(created);
 }
 
 export async function getEncounter(encounterId: string): Promise<EncounterDetail> {
-  const encounter = await prisma.encounter.findUnique({ where: { id: encounterId } });
+  const encounter = await prisma.encounter.findUnique({ where: { ...clinicScope(), id: encounterId }, include: authorInclude });
   if (!encounter) throw new NotFoundError(ENCOUNTER_NOT_FOUND);
   return toDetail(encounter);
 }
@@ -168,7 +175,9 @@ export async function updateEncounter(
   encounterId: string,
   input: UpdateEncounterInput,
 ): Promise<EncounterDetail> {
-  const existing = await prisma.encounter.findUnique({ where: { id: encounterId } });
+  const existing = await prisma.encounter.findUnique({ where: { ...clinicScope(), id: encounterId }, include: authorInclude });
   if (!existing) throw new NotFoundError(ENCOUNTER_NOT_FOUND);
-  return toDetail(await prisma.encounter.update({ where: { id: encounterId }, data: input }));
+  const { expectedVersion, ...fields } = input;
+  checkVersion(expectedVersion, existing.version);
+  return toDetail(await prisma.encounter.update({ where: { ...clinicScope(), id: encounterId, version: existing.version }, data: { ...fields, lastEditedById: currentActorId(), version: { increment: 1 } }, include: authorInclude }));
 }

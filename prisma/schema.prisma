@@ -22,6 +22,10 @@ datasource db {
 
 // One person receiving care. The stable center of the clinical record.
 model Patient {
+  version Int @default(1)
+  clinicId String @default("legacy-clinic")
+  clinic Clinic @relation(fields: [clinicId], references: [id], onDelete: Restrict)
+
   id                 String  @id @default(uuid())
   fullName           String
   // Date-only value stored as YYYY-MM-DD to avoid timezone shifts.
@@ -53,12 +57,21 @@ model Patient {
 
   @@index([fullName])
   @@map("patients")
+  @@index([clinicId])
 }
 
 // One consultation belonging to exactly one patient.
 // Note content is attached to the encounter; it is never rewritten when the
 // patient's demographics or medical background change.
 model Encounter {
+  authorId String?
+  author User? @relation("EncounterAuthor", fields: [authorId], references: [id], onDelete: Restrict)
+  lastEditedById String?
+  lastEditedBy User? @relation("EncounterEditor", fields: [lastEditedById], references: [id], onDelete: Restrict)
+  version Int @default(1)
+  clinicId String @default("legacy-clinic")
+  clinic Clinic @relation(fields: [clinicId], references: [id], onDelete: Restrict)
+
   // Server-generated id (uuid); the client never supplies encounter ids.
   id                      String   @id @default(uuid())
   patientId               String
@@ -91,6 +104,7 @@ model Encounter {
 
   @@index([patientId, occurredAt(sort: Desc)])
   @@map("encounters")
+  @@index([clinicId])
 }
 
 // One scheduled visit belonging to exactly one patient (UI_SPEC §7.1).
@@ -99,6 +113,12 @@ model Encounter {
 // (scheduled → completed | cancelled; cancelled → scheduled via
 // reschedule); `completed` is final.
 model Appointment {
+  doctorId String?
+  doctor User? @relation("AppointmentDoctor", fields: [doctorId], references: [id], onDelete: Restrict)
+  version Int @default(1)
+  clinicId String @default("legacy-clinic")
+  clinic Clinic @relation(fields: [clinicId], references: [id], onDelete: Restrict)
+
   id                    String     @id @default(uuid())
   patientId             String
   patient               Patient    @relation(fields: [patientId], references: [id], onDelete: Restrict)
@@ -123,9 +143,11 @@ model Appointment {
   createdAt             DateTime   @default(now())
   updatedAt             DateTime   @updatedAt
 
+  @@index([clinicId, doctorId, startAt])
   @@index([startAt])
   @@index([patientId, startAt])
   @@map("appointments")
+  @@index([clinicId])
 }
 
 // One specific study request belonging to a patient. A request may be made
@@ -133,6 +155,13 @@ model Appointment {
 // the same patient (validated by Hono). Existing encounter links are kept.
 // No edit, no delete (no permanent-delete rule).
 model StudyRequest {
+  orderedById String?
+  orderedBy User? @relation("StudyOrderer", fields: [orderedById], references: [id], onDelete: Restrict)
+  reviewedById String?
+  reviewedBy User? @relation("StudyReviewer", fields: [reviewedById], references: [id], onDelete: Restrict)
+  clinicId String @default("legacy-clinic")
+  clinic Clinic @relation(fields: [clinicId], references: [id], onDelete: Restrict)
+
   id          String    @id @default(uuid())
   patientId   String
   patient     Patient   @relation(fields: [patientId], references: [id], onDelete: Restrict)
@@ -159,11 +188,20 @@ model StudyRequest {
   @@index([patientId, status])
   @@index([encounterId])
   @@map("study_requests")
+  @@index([clinicId])
 }
 
 // Doctor-authored structured documents; body is report narrative or general
 // prescription instructions. Files and generated clinical content are out of scope.
 model MedicalDocument {
+  authorId String?
+  author User? @relation("DocumentAuthor", fields: [authorId], references: [id], onDelete: Restrict)
+  lastEditedById String?
+  lastEditedBy User? @relation("DocumentEditor", fields: [lastEditedById], references: [id], onDelete: Restrict)
+  version Int @default(1)
+  clinicId String @default("legacy-clinic")
+  clinic Clinic @relation(fields: [clinicId], references: [id], onDelete: Restrict)
+
   id          String             @id @default(uuid())
   patientId   String
   patient     Patient            @relation(fields: [patientId], references: [id], onDelete: Restrict)
@@ -179,6 +217,7 @@ model MedicalDocument {
   @@index([patientId, createdAt(sort: Desc)])
   @@index([encounterId])
   @@map("medical_documents")
+  @@index([clinicId])
 }
 
 model PrescriptionLine {
@@ -199,6 +238,13 @@ model PrescriptionLine {
 
 // Received evidence is distinct from a physician-authored study order.
 model StudyReceipt {
+  receivedById String?
+  receivedBy User? @relation("StudyReceiver", fields: [receivedById], references: [id], onDelete: Restrict)
+  reviewedById String?
+  reviewedBy User? @relation("ReceiptReviewer", fields: [reviewedById], references: [id], onDelete: Restrict)
+  clinicId String @default("legacy-clinic")
+  clinic Clinic @relation(fields: [clinicId], references: [id], onDelete: Restrict)
+
   id          String @id @default(uuid())
   patientId   String
   patient     Patient @relation(fields: [patientId], references: [id], onDelete: Restrict)
@@ -217,6 +263,7 @@ model StudyReceipt {
   @@index([patientId, receivedAt])
   @@index([reviewedAt, receivedAt])
   @@map("study_receipts")
+  @@index([clinicId])
 }
 model StudyReceiptFile {
   id          String @id @default(uuid())
@@ -245,6 +292,16 @@ model User {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
+  memberships          ClinicMembership[]
+  authoredEncounters   Encounter[] @relation("EncounterAuthor")
+  editedEncounters     Encounter[] @relation("EncounterEditor")
+  authoredDocuments    MedicalDocument[] @relation("DocumentAuthor")
+  editedDocuments      MedicalDocument[] @relation("DocumentEditor")
+  assignedAppointments Appointment[] @relation("AppointmentDoctor")
+  orderedStudies       StudyRequest[] @relation("StudyOrderer")
+  reviewedStudies      StudyRequest[] @relation("StudyReviewer")
+  receivedStudies      StudyReceipt[] @relation("StudyReceiver")
+  reviewedReceipts     StudyReceipt[] @relation("ReceiptReviewer")
   sessions             Session[]
   accounts             Account[]
   createdInvitations   Invitation[]    @relation("InvitationCreator")
@@ -256,6 +313,7 @@ model User {
 }
 
 model Session {
+  activeClinicId String?
   id        String   @id
   expiresAt DateTime
   token     String   @unique
@@ -306,6 +364,9 @@ model Verification {
 }
 
 model Invitation {
+  clinicId String @default("legacy-clinic")
+  clinic Clinic @relation(fields: [clinicId], references: [id], onDelete: Restrict)
+
   id             String    @id @default(uuid())
   email          String
   role           String    @default("secretary")
@@ -321,6 +382,7 @@ model Invitation {
 
   @@index([email, expiresAt, revokedAt, acceptedAt])
   @@map("auth_invitations")
+  @@index([clinicId])
 }
 
 model SecurityEvent {
@@ -372,4 +434,47 @@ model EmailOutbox {
   @@index([status, availableAt])
   @@index([appointmentId, createdAt])
   @@map("email_outbox")
+}
+
+
+model Clinic {
+  id String @id @default(uuid())
+  name String
+  timezone String @default("America/Mexico_City")
+  isActive Boolean @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  memberships ClinicMembership[]
+  patients Patient[]
+  encounters Encounter[]
+  appointments Appointment[]
+  studyRequests StudyRequest[]
+  medicalDocuments MedicalDocument[]
+  studyReceipts StudyReceipt[]
+  invitations Invitation[]
+  @@map("clinics")
+}
+
+model ClinicMembership {
+  id String @id @default(uuid())
+  clinicId String
+  clinic Clinic @relation(fields: [clinicId], references: [id], onDelete: Restrict)
+  userId String
+  user User @relation(fields: [userId], references: [id], onDelete: Restrict)
+  role String
+  isAdmin Boolean @default(false)
+  status String @default("active")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@unique([clinicId, userId])
+  @@index([userId, status])
+  @@index([clinicId, role, status])
+  @@map("clinic_memberships")
+}
+
+// Empty outside an atomic batch; CHECK(valid=1) in the migration aborts stale writes.
+model AtomicWriteGuard {
+  id String @id
+  valid Int
+  @@map("atomic_write_guards")
 }

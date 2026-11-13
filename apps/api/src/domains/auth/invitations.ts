@@ -39,7 +39,8 @@ export async function findValidInvitation(
     where: {
       tokenHash,
       email: normalizeEmail(email),
-      role: 'secretary',
+      role: { in: ['doctor', 'secretary'] },
+      clinic: { isActive: true },
       acceptedAt: null,
       revokedAt: null,
       expiresAt: { gt: new Date() },
@@ -52,12 +53,13 @@ export async function findInvitationByToken(database: PrismaClient, token: strin
   return database.invitation.findFirst({
     where: {
       tokenHash,
-      role: 'secretary',
+      role: { in: ['doctor', 'secretary'] },
+      clinic: { isActive: true },
       acceptedAt: null,
       revokedAt: null,
       expiresAt: { gt: new Date() },
     },
-    select: { id: true, email: true, expiresAt: true },
+    select: { id: true, email: true, role: true, clinicId: true, expiresAt: true, clinic: { select: { name: true } } },
   });
 }
 

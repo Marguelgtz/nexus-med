@@ -76,8 +76,11 @@ export function onErrorHandler(error: Error, c: Context): Response {
     );
   }
 
-  // Log enough to debug, never request bodies (clinical content).
-  console.error(`[api] unhandled error ${c.req.method} ${c.req.path}`, error);
+  if ('code' in error && error.code === 'P2025') {
+    return c.json({ error: { code: 'CONFLICT', message: 'El registro cambió. Conserva tus cambios y actualiza antes de guardar.' } }, 409);
+  }
+  // Prisma errors can embed SQL arguments and clinical text. Log categories only.
+  console.error(`[api] unhandled ${c.req.method}`, { category: error.name });
   return c.json(
     { error: { code: 'INTERNAL_ERROR', message: 'Error inesperado del servidor' } },
     500,

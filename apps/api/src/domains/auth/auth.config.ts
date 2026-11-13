@@ -3,7 +3,7 @@ import { prismaAdapter } from '@better-auth/prisma-adapter';
 import type { PrismaClient } from '../../generated/prisma/client';
 import { authEmailTemplate } from '../email/templates';
 import { enqueueEmail } from '../email/outbox';
-import { findValidInvitation, normalizeEmail, sha256 } from './invitations';
+import { normalizeEmail, sha256 } from './invitations';
 
 const DAY_SECONDS = 24 * 60 * 60;
 const MAX_SESSION_AGE_MS = 7 * DAY_SECONDS * 1000;
@@ -117,14 +117,10 @@ export function createAuth(database: PrismaClient, config: AuthConfiguration) {
         role: { type: 'string', input: false, returned: true, required: true, defaultValue: 'pending' },
         disabledAt: { type: 'date', input: false, returned: true, required: false },
       },
-      validateUserInfo: async ({ user, source }, context) => {
+      validateUserInfo: async ({ user, source }) => {
         if (source.action !== 'create-user') return;
-        const email = typeof user.email === 'string' ? user.email : '';
-        if (!email || !await findValidInvitation(database, email, context.request?.headers)) {
-          return {
-            error: 'invitation_required',
-            errorDescription: 'Se requiere una invitación válida para crear una cuenta.',
-          };
+        if (normalizeEmail(typeof user.email === 'string' ? user.email : '') === 'demo@example.test') {
+          return { error: 'reserved_identity', errorDescription: 'Usa el acceso de demostración para esta cuenta.' };
         }
       },
     },
@@ -134,24 +130,18 @@ export function createAuth(database: PrismaClient, config: AuthConfiguration) {
       cookieCache: { enabled: false },
       additionalFields: {
         demoView: { type: 'string', input: false, returned: true, required: true, defaultValue: 'doctor' },
+        activeClinicId: { type: 'string', input: false, returned: true, required: false },
       },
     },
     databaseHooks: {
       user: {
         create: {
-          before: async (user, context) => {
-            const email = typeof user.email === 'string' ? user.email : '';
-            const invite = email ? await findValidInvitation(database, email, context?.request?.headers) : null;
-            if (!invite) return false;
-            return { data: { ...user, email: normalizeEmail(email), role: 'secretary' } };
-          },
-          after: async (user, context) => {
-            const invite = await findValidInvitation(database, user.email, context?.request?.headers);
-            if (!invite) return;
-            await database.invitation.updateMany({
-              where: { id: invite.id, acceptedAt: null, revokedAt: null, expiresAt: { gt: new Date() } },
-              data: { acceptedAt: new Date(), acceptedUserId: user.id },
-            });
+          before: async (user) => {
+            const email = typeof user.email === 'string' ? normalizeEmail(user.email) : '';
+            if (!email || email === 'demo@example.test') return false;
+            // Identity creation grants no clinic access. Only verified,
+            // authenticated onboarding or invitation acceptance may do so.
+            return { data: { ...user, email, role: 'pending' } };
           },
         },
         update: {
@@ -167,16 +157,19 @@ export function createAuth(database: PrismaClient, config: AuthConfiguration) {
               where: { id: session.userId },
               select: { role: true, disabledAt: true, emailVerified: true },
             });
-            if (!user || user.disabledAt || user.role === 'pending' || !user.emailVerified) return false;
+            if (!user || user.disabledAt || !user.emailVerified) return false;
             const maximumExpiry = new Date(session.createdAt.getTime() + MAX_SESSION_AGE_MS);
             return { data: { ...session, expiresAt: session.expiresAt > maximumExpiry ? maximumExpiry : session.expiresAt } };
           },
         },
         update: {
-          before: async (session) => {
-            if (!session.id) return false;
+          before: async (session, context) => {
+            // Better Auth refresh passes only expiresAt/updatedAt. The loaded
+            // session identifier is supplied by its endpoint context.
+            const sessionId = session.id ?? context?.context.session?.session.id;
+            if (!sessionId) return false;
             const existing = await database.session.findUnique({
-              where: { id: session.id },
+              where: { id: sessionId },
               select: { createdAt: true, userId: true },
             });
             if (!existing) return false;
@@ -184,8 +177,9 @@ export function createAuth(database: PrismaClient, config: AuthConfiguration) {
               where: { id: existing.userId },
               select: { role: true, disabledAt: true },
             });
-            if (!user || user.disabledAt || user.role === 'pending') return false;
+            if (!user || user.disabledAt) return false;
             const maximumExpiry = new Date(existing.createdAt.getTime() + MAX_SESSION_AGE_MS);
+            if (maximumExpiry.getTime() <= Date.now()) return false;
             if (session.expiresAt && session.expiresAt > maximumExpiry) {
               return { data: { ...session, expiresAt: maximumExpiry } };
             }
@@ -208,6 +202,10 @@ export function createAuth(database: PrismaClient, config: AuthConfiguration) {
       },
     },
     advanced: {
+      // Keep origin/CSRF protection enabled in controlled tests as well as
+      // deployed runtimes; Better Auth otherwise skips origin checks in test.
+      disableOriginCheck: false,
+      disableCSRFCheck: false,
       cookiePrefix: 'nexus-med',
       ipAddress: { ipAddressHeaders: ['cf-connecting-ip', 'x-forwarded-for'] },
       useSecureCookies: config.production,

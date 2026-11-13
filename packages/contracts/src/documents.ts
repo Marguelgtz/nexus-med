@@ -42,8 +42,11 @@ export const createMedicalDocumentInputSchema = z.discriminatedUnion('kind', [
   createReportInputSchema,
 ]);
 export type CreateMedicalDocumentInput = z.infer<typeof createMedicalDocumentInputSchema>;
-export const updateMedicalDocumentInputSchema = createMedicalDocumentInputSchema;
-export type UpdateMedicalDocumentInput = CreateMedicalDocumentInput;
+export const updateMedicalDocumentInputSchema = z.discriminatedUnion('kind', [
+  createPrescriptionInputSchema.extend({ expectedVersion: z.number().int().positive().optional() }),
+  createReportInputSchema.extend({ expectedVersion: z.number().int().positive().optional() }),
+]);
+export type UpdateMedicalDocumentInput = z.infer<typeof updateMedicalDocumentInputSchema>;
 
 const documentPatientSchema = z.object({
   id: idSchema,
@@ -67,6 +70,8 @@ const documentLineSchema = z.object({
 });
 
 const documentBaseSchema = z.object({
+  version: z.number().int().positive().optional(),
+  author: z.object({ id: idSchema, name: z.string() }).nullable().optional(),
   id: idSchema,
   patientId: idSchema,
   patient: documentPatientSchema,
