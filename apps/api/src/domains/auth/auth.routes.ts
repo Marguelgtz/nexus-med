@@ -197,12 +197,32 @@ authRoutes.post('/access/invitations', async (c) => {
 authRoutes.post('/access/invitations/:id/revoke', async (c) => {
   const principal = requireClinicAdmin();
   requireRecentAuthentication(principal.session.createdAt);
-  const database = getAuthRuntime().database;
-  const result = await database.invitation.updateMany({
-    where: { id: c.req.param('id'), clinicId: principal.clinicId, acceptedAt: null, revokedAt: null }, data: { revokedAt: new Date() },
-  });
-  if (result.count !== 1) throw new NotFoundError('Invitación pendiente no encontrada.');
-  await database.securityEvent.create({ data: { actorId: principal.user.id, event: 'invitation.revoked', targetId: c.req.param('id'), outcome: 'success' } });
+  const runtime = getAuthRuntime();
+  const invitationId = c.req.param('id');
+  const guardId = crypto.randomUUID();
+  const now = new Date().toISOString();
+  try {
+    await runtime.atomicWrite([
+      { sql: `INSERT INTO atomic_write_guards(id,valid) VALUES (?,CASE WHEN
+          EXISTS (SELECT 1 FROM auth_invitations i WHERE i.id=? AND i.clinicId=?
+            AND i.acceptedAt IS NULL AND i.revokedAt IS NULL)
+          AND EXISTS (SELECT 1 FROM clinic_memberships m JOIN clinics c ON c.id=m.clinicId
+            JOIN auth_users actor ON actor.id=m.userId
+            WHERE m.id=? AND m.userId=? AND m.clinicId=? AND m.status='active' AND m.isAdmin=1
+              AND c.isActive=1 AND actor.emailVerified=1 AND actor.disabledAt IS NULL)
+          THEN 1 ELSE 0 END)`,
+        values: [guardId, invitationId, principal.clinicId, principal.membership.id, principal.user.id, principal.clinicId] },
+      { sql: 'UPDATE auth_invitations SET revokedAt=? WHERE id=? AND clinicId=?', values: [now, invitationId, principal.clinicId] },
+      { sql: `INSERT INTO security_events(id,actorId,event,targetId,outcome,createdAt)
+          VALUES (?,?,'invitation.revoked',?,'success',?)`, values: [crypto.randomUUID(), principal.user.id, invitationId, now] },
+      { sql: 'DELETE FROM atomic_write_guards WHERE id=?', values: [guardId] },
+    ]);
+  } catch (error) {
+    if (error instanceof Error && /CHECK constraint failed.*valid/i.test(error.message)) {
+      throw new NotFoundError('Invitación pendiente no encontrada.');
+    }
+    throw error;
+  }
   return c.json({ revoked: true });
 });
 

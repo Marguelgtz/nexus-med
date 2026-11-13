@@ -124,6 +124,17 @@ test('real Worker sessions preserve clinic isolation and clinical authorship on 
     const acceptedAfterRetry = await json(await request('/api/invitations/accept', { token: rollbackToken }, rollbackIdentity.cookie));
     assert.equal(acceptedAfterRetry.clinic.id, doctor.clinicId);
 
+    // Revocation and its security event must either both persist or both roll back.
+    const revokeFailureEmail = `worker-revoke-failure-${randomUUID()}@example.test`;
+    const revokeFailureInvite = await json(await request('/api/access/invitations', { email: revokeFailureEmail, role: 'secretary' }, doctor.cookie), 201);
+    await db.exec("CREATE TRIGGER synthetic_revoke_audit_failure BEFORE INSERT ON security_events WHEN NEW.event='invitation.revoked' BEGIN SELECT RAISE(ABORT, 'synthetic audit failure'); END");
+    assert.equal((await request(`/api/access/invitations/${revokeFailureInvite.id}/revoke`, {}, doctor.cookie)).status, 500);
+    assert.equal((await db.prepare('SELECT revokedAt FROM auth_invitations WHERE id=?').bind(revokeFailureInvite.id).first()).revokedAt, null);
+    assert.equal((await db.prepare('SELECT COUNT(*) AS count FROM atomic_write_guards').first()).count, 0);
+    await db.exec('DROP TRIGGER synthetic_revoke_audit_failure');
+    assert.equal((await request(`/api/access/invitations/${revokeFailureInvite.id}/revoke`, {}, doctor.cookie)).status, 200);
+    assert.equal((await db.prepare("SELECT COUNT(*) AS count FROM security_events WHERE event='invitation.revoked' AND targetId=?").bind(revokeFailureInvite.id).first()).count, 1);
+
     // Revoking and accepting the same pending invitation concurrently must
     // leave either one accepted grant or a revoked invitation with no grant.
     const raceIdentity = await signup('carrera de invitación');

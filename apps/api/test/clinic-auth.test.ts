@@ -67,6 +67,23 @@ async function inviteToken(ownerCookie: string, recipient: string, role: 'doctor
 }
 
 describe('verified clinic onboarding and membership authorization', () => {
+  it('rolls back invitation revocation when its audit event fails and permits retry', async () => {
+    const owner = await makeOwner();
+    const invite = await inviteToken(owner.cookie, email(), 'secretary');
+    await localPrisma.$executeRawUnsafe("CREATE TRIGGER synthetic_revoke_audit_failure BEFORE INSERT ON security_events WHEN NEW.event='invitation.revoked' BEGIN SELECT RAISE(ABORT, 'synthetic audit failure'); END");
+    try {
+      expect((await request(`/api/access/invitations/${invite.id}/revoke`, {}, owner.cookie)).status).toBe(500);
+      expect((await localPrisma.invitation.findUniqueOrThrow({ where: { id: invite.id } })).revokedAt).toBeNull();
+      expect(await localPrisma.securityEvent.count({ where: { event: 'invitation.revoked', targetId: invite.id } })).toBe(0);
+    } finally {
+      await localPrisma.$executeRawUnsafe('DROP TRIGGER synthetic_revoke_audit_failure');
+    }
+    expect((await request(`/api/access/invitations/${invite.id}/revoke`, {}, owner.cookie)).status).toBe(200);
+    expect((await localPrisma.invitation.findUniqueOrThrow({ where: { id: invite.id } })).revokedAt).not.toBeNull();
+    expect(await localPrisma.securityEvent.count({ where: { event: 'invitation.revoked', targetId: invite.id } })).toBe(1);
+    expect((await request(`/api/access/invitations/${invite.id}/revoke`, {}, owner.cookie)).status).toBe(404);
+  });
+
   it('creates one pending invitation under concurrency and rolls back a failed outbox write', async () => {
     const owner = await makeOwner();
     const address = email();
