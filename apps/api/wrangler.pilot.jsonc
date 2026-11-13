@@ -16,7 +16,9 @@
     ]
   },
   "observability": {
-    "enabled": true
+    "enabled": true,
+    "redact_query_string": true,
+    "logs": { "enabled": true, "invocation_logs": false }
   },
   "d1_databases": [
     {
