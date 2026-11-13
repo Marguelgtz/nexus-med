@@ -9,7 +9,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
-import type { Appointment, AppointmentType } from '@nexus-med/contracts';
+import type { Appointment, AppointmentType, ClinicDoctor } from '@nexus-med/contracts';
 
 import {
   addDays,
@@ -22,7 +22,7 @@ import {
 import { overlappingScheduledAppointments } from '../../lib/calendar';
 import { Modal } from '../modal';
 import { useBeforeUnloadGuard } from '../../lib/use-before-unload-guard';
-import { createAppointment, listAppointmentsInRange, updateAppointment } from '../../lib/api/client';
+import { createAppointment, listAppointmentsInRange, listClinicDoctors, updateAppointment } from '../../lib/api/client';
 
 const DURATIONS = [15, 20, 30, 45, 60, 90, 120];
 const TYPES = Object.keys(APPOINTMENT_TYPE_LABELS);
@@ -56,11 +56,19 @@ export function AppointmentForm({ patientId, initial, onSaved, onCreated, return
   const [time, setTime] = useState(initialTime);
   const [duration, setDuration] = useState(initial?.durationMinutes ?? 30);
   const [type, setType] = useState<AppointmentType>(initial?.type ?? 'consulta');
+  const [doctorId, setDoctorId] = useState(initial?.doctor?.id ?? '');
+  const [doctors, setDoctors] = useState<ClinicDoctor[]>([]);
+  const [doctorsError, setDoctorsError] = useState<string | null>(null);
+  useEffect(() => {
+    let active = true;
+    listClinicDoctors().then(value => { if (active) setDoctors(value); }).catch(() => { if (active) setDoctorsError('No se pudo cargar la lista de médicos. Vuelve a abrir el formulario.'); });
+    return () => { active = false; };
+  }, []);
   const [error, setError] = useState<string | null>(null);
   const [overlap, setOverlap] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
 
-  const dirty = date !== initialDate || time !== initialTime ||
+  const dirty = doctorId !== (initial?.doctor?.id ?? '') || date !== initialDate || time !== initialTime ||
     duration !== (initial?.durationMinutes ?? 30) || type !== (initial?.type ?? 'consulta');
   useBeforeUnloadGuard(dirty && !busy);
   function cancel() {
@@ -80,6 +88,7 @@ export function AppointmentForm({ patientId, initial, onSaved, onCreated, return
         const range = await listAppointmentsInRange({
           from: instantAtLocalTime(day, 0, 0).toISOString(),
           to: instantAtLocalTime(addDays(day, 1), 0, 0).toISOString(),
+          ...(doctorId ? { doctorId } : {}),
         });
         if (cancelled) return;
         const hits = overlappingScheduledAppointments(range, candidateStart, duration, initial?.id)
@@ -93,11 +102,12 @@ export function AppointmentForm({ patientId, initial, onSaved, onCreated, return
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [candidateStart, duration, patientId, initial?.id]);
+  }, [candidateStart, duration, patientId, initial?.id, doctorId]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+    if (doctorsError) { setError(doctorsError); return; }
     if (!candidateStart) { setError('Revisa la fecha y hora de la cita.'); return; }
     if (initial?.arrivedAt && !window.confirm('Reprogramar reinicia la recepción de esta cita. ¿Continuar?')) return;
     setBusy(true);
@@ -105,6 +115,7 @@ export function AppointmentForm({ patientId, initial, onSaved, onCreated, return
     try {
       if (initial) {
         await updateAppointment(initial.id, {
+          expectedVersion: initial.version, doctorId: doctorId || null,
           startAt,
           durationMinutes: duration,
           type,
@@ -113,6 +124,7 @@ export function AppointmentForm({ patientId, initial, onSaved, onCreated, return
         router.refresh();
       } else {
         const appt = await createAppointment(patientId, {
+          doctorId: doctorId || null,
           startAt,
           durationMinutes: duration,
           type,
@@ -131,6 +143,14 @@ export function AppointmentForm({ patientId, initial, onSaved, onCreated, return
 
   const form = (
     <form className="appt-form" onSubmit={handleSubmit} aria-busy={busy}>
+      <label>Médico asignado
+        <select value={doctorId} disabled={busy || Boolean(doctorsError)} onChange={event => setDoctorId(event.target.value)}>
+          <option value="">Sin asignar</option>
+          {initial?.doctor && !doctors.some(doctor => doctor.id === initial.doctor?.id) ? <option value={initial.doctor.id}>{initial.doctor.name} (sin acceso activo)</option> : null}
+          {doctors.map(doctor => <option key={doctor.id} value={doctor.id}>{doctor.name}</option>)}
+        </select>
+      </label>
+      {doctorsError ? <p className="error" role="alert">{doctorsError}</p> : null}
       <div className="form-row">
         <label>
           Fecha

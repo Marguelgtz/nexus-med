@@ -8,9 +8,10 @@ interface AccessManagementProps {
   initialInvitations: Invitation[];
   initialMembers: AuthMember[];
   nowMs: number;
+  currentUserId: string;
 }
 
-export function AccessManagement({ initialInvitations, initialMembers, nowMs }: AccessManagementProps) {
+export function AccessManagement({ initialInvitations, initialMembers, nowMs, currentUserId }: AccessManagementProps) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState('');
@@ -27,7 +28,7 @@ export function AccessManagement({ initialInvitations, initialMembers, nowMs }: 
       const response = await fetch('/api/access/invitations', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: String(form.get('email') ?? '').trim() }),
+        body: JSON.stringify({ email: String(form.get('email') ?? '').trim(), role: String(form.get('role') ?? 'secretary') }),
         cache: 'no-store',
       });
       if (!response.ok) throw new Error(await apiMessage(response));
@@ -60,9 +61,10 @@ export function AccessManagement({ initialInvitations, initialMembers, nowMs }: 
   return (
     <div className="access-management">
       <section className="access-section">
-        <div className="page-head"><div><h2>Invitar secretaría</h2><p className="muted">La invitación vence después de 72 horas y solo funciona para el correo indicado. Para modificar accesos, inicia sesión de nuevo si llevas más de 10 minutos.</p></div></div>
+        <div className="page-head"><div><h2>Invitar a la clínica</h2><p className="muted">La invitación vence después de 72 horas y solo funciona para el correo indicado. Para modificar accesos, inicia sesión de nuevo si llevas más de 10 minutos.</p></div></div>
         <form className="access-invite-form" onSubmit={handleInvite}>
           <label>Correo electrónico<input name="email" type="email" autoComplete="email" maxLength={255} required disabled={busy} /></label>
+          <label>Rol<select name="role" defaultValue="secretary" disabled={busy}><option value="secretary">Secretaría</option><option value="doctor">Médico</option></select></label>
           <button className="btn btn-primary" type="submit" disabled={busy}>{busy ? 'Guardando…' : 'Crear invitación'}</button>
         </form>
       </section>
@@ -75,9 +77,9 @@ export function AccessManagement({ initialInvitations, initialMembers, nowMs }: 
         <div className="access-list">
           {initialMembers.map(member => (
             <article className="access-row" key={member.id}>
-              <div><strong>{member.name}</strong><span>{member.email}</span></div>
+              <div><strong>{member.name}</strong><span>{member.email}</span><span>{roleName(member.role)}{member.isAdmin ? ' · Administrador' : ''}</span></div>
               <span className={`badge ${member.active ? 'badge-success' : 'badge-neutral'}`}>{member.active ? (member.emailVerified ? 'Activa' : 'Pendiente de verificación') : 'Revocada'}</span>
-              {member.role === 'secretary' && member.active ? <button className="btn btn-secondary" type="button" disabled={busy} onClick={() => void postAction(`/api/access/members/${encodeURIComponent(member.id)}/revoke`, 'Acceso revocado.')}>Revocar acceso</button> : null}
+              {member.active && member.id !== currentUserId ? <button className="btn btn-secondary" type="button" disabled={busy} onClick={() => void postAction(`/api/access/members/${encodeURIComponent(member.id)}/revoke`, 'Acceso revocado.')}>Revocar acceso</button> : null}
             </article>
           ))}
           {initialMembers.length === 0 ? <p className="muted">No hay cuentas de equipo configuradas.</p> : null}
@@ -102,6 +104,10 @@ export function AccessManagement({ initialInvitations, initialMembers, nowMs }: 
       </section>
     </div>
   );
+}
+
+function roleName(role: AuthMember['role']): string {
+  return role === 'doctor' ? 'Médico' : role === 'secretary' ? 'Secretaría' : 'Administración';
 }
 
 async function apiMessage(response: Response): Promise<string> {

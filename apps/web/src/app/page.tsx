@@ -24,5 +24,6 @@ export default async function Home() {
       </main>
     );
   }
-  redirect(session.user.role === 'secretary' || session.activeView === 'secretary' ? '/secretaria' : '/recepcion');
+  if (session.onboardingRequired) redirect('/onboarding');
+  redirect(session.canReadClinical ? '/recepcion' : '/secretaria');
 }

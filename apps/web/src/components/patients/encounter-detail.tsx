@@ -208,7 +208,7 @@ export function EncounterDetail({
     setSaving(true);
     setBanner(null);
     try {
-      await updateEncounter(encounter.id, candidate);
+      await updateEncounter(encounter.id, { ...candidate, expectedVersion: encounter.version });
       const label = editingField === 'type'
         ? 'Tipo de atención'
         : SECTIONS.find(({ key }) => key === editingField)?.label ?? 'Campo';
@@ -233,7 +233,7 @@ export function EncounterDetail({
     <div className="consultation-workspace">
       <section className="consultation-note-form" aria-labelledby="encounter-title">
         <div className="encounter-head">
-          <h1 id="encounter-title">{formatDateTime(encounter.occurredAt)}</h1>
+          <h1 id="encounter-title">{formatDateTime(encounter.occurredAt)}</h1><p className="field-hint">Médico autor: {encounter.author?.name ?? 'Autoría histórica sin registro'}</p>
           {edited ? <Badge tone="edited">Editada el {formatDateTime(encounter.updatedAt)}</Badge> : null}
         </div>
 

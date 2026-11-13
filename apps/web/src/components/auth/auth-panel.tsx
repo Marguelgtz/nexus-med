@@ -2,10 +2,12 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { FormEvent, useEffect, useState } from 'react';
-import { safeInternalReturnPath } from '../../lib/auth/return-path';
+import { FormEvent, useEffect, useRef, useState } from 'react';
+import type { AuthSession } from '@nexus-med/contracts';
+import { applicationPathForSession, postAuthSession } from '../../lib/auth/api';
+import { invitationReturnPath, safeInternalReturnPath } from '../../lib/auth/return-path';
 
-type AuthMode = 'login' | 'invitation' | 'reset-request' | 'reset' | 'verification';
+type AuthMode = 'login' | 'signup' | 'invitation' | 'reset-request' | 'reset' | 'verification';
 
 interface AuthPanelProps {
   mode: AuthMode;
@@ -18,6 +20,8 @@ interface AuthPanelProps {
 
 interface ApiMessage {
   email?: string;
+  role?: 'doctor' | 'secretary';
+  clinicName?: string;
   message?: string;
   error?: string | { message?: string; code?: string };
   code?: string;
@@ -55,9 +59,13 @@ export function AuthPanel({ mode, returnTo = '/', notice, invitationToken, reset
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [inviteEmail, setInviteEmail] = useState('');
+  const [inviteRole, setInviteRole] = useState<'doctor' | 'secretary' | ''>('');
+  const [inviteClinicName, setInviteClinicName] = useState('');
+  const [invitationAccountMode, setInvitationAccountMode] = useState<'create' | 'login'>('create');
   const [inviteReady, setInviteReady] = useState(mode !== 'invitation');
   const [googleEnabled, setGoogleEnabled] = useState(false);
   const [localEmailCapture, setLocalEmailCapture] = useState(false);
+  const autoAcceptAttempts = useRef(new Map<string, Promise<AuthSession | null>>());
   const resetUnavailable = mode === 'reset' && (!resetToken || Boolean(tokenError));
   const tokenErrorMessage = tokenError
     ? 'El enlace de recuperación venció o ya no es válido. Solicita uno nuevo.'
@@ -89,14 +97,36 @@ export function AuthPanel({ mode, returnTo = '/', notice, invitationToken, reset
       .then((value) => {
         if (!active) return;
         setInviteEmail(typeof value.email === 'string' ? value.email : '');
+        setInviteRole(value.role === 'doctor' || value.role === 'secretary' ? value.role : '');
+        setInviteClinicName(typeof value.clinicName === 'string' ? value.clinicName : '');
         setInviteReady(true);
-        window.history.replaceState(null, '', '/aceptar-invitacion');
       })
       .catch((reason: unknown) => {
         if (active) setError(reason instanceof Error ? reason.message : 'La invitación venció o ya se utilizó.');
       });
     return () => { active = false; };
   }, [invitationToken, mode]);
+
+  useEffect(() => {
+    if (mode !== 'invitation' || !invitationToken || !inviteEmail || !inviteReady) return;
+    let active = true;
+    let attempt = autoAcceptAttempts.current.get(invitationToken);
+    if (!attempt) {
+      attempt = fetch('/api/session', { cache: 'no-store', credentials: 'same-origin' })
+        .then(response => response.ok ? postAuthSession('/api/invitations/accept', { token: invitationToken }) : null);
+      autoAcceptAttempts.current.set(invitationToken, attempt);
+    }
+    attempt
+      .then(session => {
+        if (!active || !session) return;
+        router.replace(applicationPathForSession(session));
+        router.refresh();
+      })
+      .catch((reason: unknown) => {
+        if (active) setError(reason instanceof Error ? reason.message : 'No se pudo aceptar la invitación.');
+      });
+    return () => { active = false; };
+  }, [inviteEmail, inviteReady, invitationToken, mode, router]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -113,18 +143,36 @@ export function AuthPanel({ mode, returnTo = '/', notice, invitationToken, reset
         await postAuth('sign-in/email', { email, password, callbackURL: absoluteDestination });
         router.replace(destination);
         router.refresh();
-      } else if (mode === 'invitation') {
-        if (!inviteReady || !inviteEmail) throw new Error('Primero valida el enlace de invitación.');
-        if (email !== inviteEmail.toLowerCase()) throw new Error('Usa el correo al que se envió la invitación.');
+      } else if (mode === 'signup') {
         const confirmation = String(form.get('passwordConfirmation') ?? '');
         if (password !== confirmation) throw new Error('Las contraseñas no coinciden.');
         await postAuth('sign-up/email', {
           name: String(form.get('name') ?? '').trim(),
           email,
           password,
-          callbackURL: new URL('/login?verified=1', window.location.origin).toString(),
+          callbackURL: new URL('/login?verified=1&returnTo=%2Fonboarding', window.location.origin).toString(),
         });
-        setSuccess('La cuenta quedó creada. Revisa tu correo para verificarla antes de iniciar sesión.');
+        setSuccess('Revisa tu correo para verificar la cuenta. Después podrás configurar tu consultorio.');
+      } else if (mode === 'invitation') {
+        if (!inviteReady || !inviteEmail) throw new Error('Primero valida el enlace de invitación.');
+        if (email !== inviteEmail.toLowerCase()) throw new Error('Usa el correo al que se envió la invitación.');
+        if (!invitationToken) throw new Error('Falta el token de invitación. Solicita un enlace nuevo.');
+        if (invitationAccountMode === 'login') {
+          await postAuth('sign-in/email', { email, password, callbackURL: new URL(invitationReturnPath(invitationToken), window.location.origin).toString() });
+          const session = await postAuthSession('/api/invitations/accept', { token: invitationToken });
+          router.replace(applicationPathForSession(session));
+          router.refresh();
+        } else {
+          const confirmation = String(form.get('passwordConfirmation') ?? '');
+          if (password !== confirmation) throw new Error('Las contraseñas no coinciden.');
+          await postAuth('sign-up/email', {
+            name: String(form.get('name') ?? '').trim(),
+            email,
+            password,
+            callbackURL: new URL(`/login?verified=1&returnTo=${encodeURIComponent(invitationReturnPath(invitationToken))}`, window.location.origin).toString(),
+          });
+          setSuccess('La cuenta quedó creada. Revisa tu correo para verificarla; al volver podrás aceptar esta invitación.');
+        }
       } else if (mode === 'reset-request') {
         await postAuth('request-password-reset', {
           email,
@@ -152,12 +200,13 @@ export function AuthPanel({ mode, returnTo = '/', notice, invitationToken, reset
     setBusy(true);
     setError('');
     try {
-      if (mode === 'invitation' && (!inviteReady || !inviteEmail)) throw new Error('Primero valida el enlace de invitación.');
+      if (mode === 'invitation' && (!inviteReady || !inviteEmail || !invitationToken)) throw new Error('Primero valida el enlace de invitación.');
+      const callbackPath = mode === 'invitation' && invitationToken ? invitationReturnPath(invitationToken) : mode === 'signup' ? '/onboarding' : destination;
       const result = await postAuth('sign-in/social', {
         provider: 'google',
-        callbackURL: new URL(destination, window.location.origin).toString(),
-        errorCallbackURL: new URL('/login?error=google', window.location.origin).toString(),
-        requestSignUp: mode === 'invitation',
+        callbackURL: new URL(callbackPath, window.location.origin).toString(),
+        errorCallbackURL: new URL(`/login?error=google${mode === 'invitation' && invitationToken ? `&returnTo=${encodeURIComponent(invitationReturnPath(invitationToken))}` : ''}`, window.location.origin).toString(),
+        requestSignUp: mode === 'invitation' || mode === 'signup',
       });
       if (!result.url) throw new Error('Google no devolvió la dirección de acceso.');
       window.location.assign(result.url);
@@ -198,21 +247,23 @@ export function AuthPanel({ mode, returnTo = '/', notice, invitationToken, reset
   }
 
   const heading = mode === 'login' ? 'Iniciar sesión'
-    : mode === 'invitation' ? 'Crear cuenta'
+    : mode === 'signup' ? 'Crear cuenta médica'
+    : mode === 'invitation' ? invitationAccountMode === 'login' ? 'Aceptar invitación' : 'Crear cuenta'
     : mode === 'reset-request' ? 'Recuperar contraseña'
     : mode === 'reset' ? 'Elegir contraseña nueva'
     : 'Verificar correo';
 
   return (
     <section className="auth-card">
-      <Link className="auth-brand" href="/login" aria-label="Nexus Med, inicio">
+      <Link className="auth-brand" href={mode === 'invitation' && invitationToken ? invitationReturnPath(invitationToken) : '/login'} aria-label="Nexus Med, inicio">
         <span className="auth-brand-mark" aria-hidden="true">N</span><span>Nexus Med</span>
       </Link>
       <p className="eyebrow">Acceso a la aplicación</p>
       <h1>{heading}</h1>
       {notice ? <p className="auth-message auth-success" role="status">{notice}</p> : null}
       {mode === 'login' ? <p>Entra a tu espacio de trabajo clínico.</p> : null}
-      {mode === 'invitation' ? <p>El acceso se crea con una invitación del consultorio.</p> : null}
+      {mode === 'signup' ? <p>Verifica tu correo para crear el espacio privado de tu consultorio.</p> : null}
+      {mode === 'invitation' ? <p>{inviteReady && inviteClinicName ? `Invitación de ${inviteClinicName}.` : 'El acceso se crea con una invitación del consultorio.'} {inviteRole === 'doctor' ? 'Rol: médico.' : inviteRole === 'secretary' ? 'Rol: secretaría.' : ''}</p> : null}
       {mode === 'reset-request' ? <p>Te enviaremos un enlace si el correo corresponde a una cuenta.</p> : null}
       {mode === 'reset' && !resetUnavailable ? <p>La contraseña debe tener entre 12 y 128 caracteres.</p> : null}
       {mode === 'verification' ? <p>Vuelve a solicitar la verificación para una cuenta pendiente.</p> : null}
@@ -223,10 +274,10 @@ export function AuthPanel({ mode, returnTo = '/', notice, invitationToken, reset
         <Link className="btn btn-primary" href="/olvide-contrasena">Solicitar un enlace nuevo</Link>
       </div> : null}
 
-      {mode === 'login' && googleEnabled ? <button className="btn btn-secondary auth-google" type="button" disabled={busy} onClick={signInWithGoogle}>Continuar con Google</button> : null}
-      {mode === 'invitation' && googleEnabled ? <button className="btn btn-secondary auth-google" type="button" disabled={busy || !inviteReady} onClick={signInWithGoogle}>Crear cuenta con Google</button> : null}
-      {mode === 'login' && googleEnabled ? <div className="auth-divider"><span>o usa tu correo</span></div> : null}
-      {mode === 'invitation' && googleEnabled ? <div className="auth-divider"><span>o crea una contraseña</span></div> : null}
+      {(mode === 'login' || mode === 'signup') && googleEnabled ? <button className="btn btn-secondary auth-google" type="button" disabled={busy} onClick={signInWithGoogle}>{mode === 'signup' ? 'Crear cuenta con Google' : 'Continuar con Google'}</button> : null}
+      {mode === 'invitation' && googleEnabled ? <button className="btn btn-secondary auth-google" type="button" disabled={busy || !inviteReady} onClick={signInWithGoogle}>{invitationAccountMode === 'login' ? 'Continuar con Google' : 'Crear cuenta con Google'}</button> : null}
+      {(mode === 'login' || mode === 'signup') && googleEnabled ? <div className="auth-divider"><span>o usa tu correo</span></div> : null}
+      {mode === 'invitation' && googleEnabled ? <div className="auth-divider"><span>o usa tu correo</span></div> : null}
       {mode === 'login' ? (
         <div className="auth-demo">
           <p>Explora con datos ficticios. Los cambios de la demo son compartidos y permanecen guardados.</p>
@@ -235,26 +286,27 @@ export function AuthPanel({ mode, returnTo = '/', notice, invitationToken, reset
       ) : null}
 
       {!resetUnavailable ? <form className="auth-form" onSubmit={handleSubmit}>
-        {mode === 'invitation' ? (
+        {(mode === 'signup' || (mode === 'invitation' && invitationAccountMode === 'create')) ? (
           <label>Nombre completo<input name="name" type="text" autoComplete="name" required minLength={2} maxLength={100} disabled={!inviteReady || busy} /></label>
         ) : null}
         {mode === 'reset' ? <input type="hidden" name="token" value={resetToken ?? ''} /> : null}
         {mode !== 'reset' ? (
           <label>Correo electrónico<input name="email" type="email" autoComplete="email" required maxLength={255} value={mode === 'invitation' ? inviteEmail : undefined} readOnly={mode === 'invitation'} disabled={mode === 'invitation' && !inviteReady} /></label>
         ) : null}
-        {mode === 'login' || mode === 'invitation' || mode === 'reset' ? (
-          <label>{mode === 'login' ? 'Contraseña' : 'Contraseña nueva'}
-            <input name="password" type="password" autoComplete={mode === 'login' ? 'current-password' : mode === 'invitation' ? 'new-password' : 'new-password'} required minLength={12} maxLength={128} disabled={busy || (mode === 'invitation' && !inviteReady)} />
+        {mode === 'login' || mode === 'signup' || mode === 'invitation' || mode === 'reset' ? (
+          <label>{mode === 'login' || (mode === 'invitation' && invitationAccountMode === 'login') ? 'Contraseña' : mode === 'reset' ? 'Contraseña nueva' : 'Contraseña'}
+            <input name="password" type="password" autoComplete={mode === 'login' || (mode === 'invitation' && invitationAccountMode === 'login') ? 'current-password' : 'new-password'} required minLength={12} maxLength={128} disabled={busy || (mode === 'invitation' && !inviteReady)} />
           </label>
         ) : null}
-        {mode === 'invitation' || mode === 'reset' ? (
+        {mode === 'signup' || (mode === 'invitation' && invitationAccountMode === 'create') || mode === 'reset' ? (
           <label>Confirmar contraseña<input name="passwordConfirmation" type="password" autoComplete="new-password" required minLength={12} maxLength={128} disabled={busy || (mode === 'invitation' && !inviteReady)} /></label>
         ) : null}
         {error || tokenErrorMessage ? <p className="auth-message auth-error" role="alert">{error || tokenErrorMessage}</p> : null}
         {success ? <p className="auth-message auth-success" role="status">{success}</p> : null}
         <button className="btn btn-primary auth-submit" type="submit" disabled={busy || (mode === 'invitation' && !inviteReady) || (mode === 'reset' && !resetToken)}>
           {busy ? 'Procesando…' : mode === 'login' ? 'Entrar'
-            : mode === 'invitation' ? 'Crear cuenta'
+            : mode === 'signup' ? 'Crear cuenta'
+            : mode === 'invitation' ? invitationAccountMode === 'login' ? 'Entrar y aceptar invitación' : 'Crear cuenta y aceptar invitación'
             : mode === 'reset-request' ? 'Enviar instrucciones'
             : mode === 'reset' ? 'Guardar contraseña'
             : 'Enviar verificación'}
@@ -263,8 +315,9 @@ export function AuthPanel({ mode, returnTo = '/', notice, invitationToken, reset
 
       <nav className="auth-links" aria-label="Opciones de cuenta">
         {mode === 'login' && localEmailCapture ? <Link href="/dev/correo">Correo de desarrollo</Link> : null}
-        {mode === 'login' ? <><Link href="/olvide-contrasena">Olvidé mi contraseña</Link><Link href="/verificar-correo">Verificar correo</Link><Link href="/registro">¿Necesitas acceso? Consulta cómo registrarte</Link></> : null}
-        {mode === 'invitation' ? <Link href="/login">Ya tengo cuenta</Link> : null}
+        {mode === 'login' ? <><Link href="/olvide-contrasena">Olvidé mi contraseña</Link><Link href="/verificar-correo">Verificar correo</Link><Link href="/registro">Crear cuenta de consultorio</Link></> : null}
+        {mode === 'signup' ? <Link href="/login">Ya tengo cuenta</Link> : null}
+        {mode === 'invitation' ? <button className="btn btn-secondary" type="button" disabled={busy} onClick={() => { setInvitationAccountMode(value => value === 'create' ? 'login' : 'create'); setError(''); setSuccess(''); }}>{invitationAccountMode === 'create' ? 'Ya tengo cuenta' : 'Crear una cuenta nueva'}</button> : null}
         {mode === 'reset-request' || mode === 'reset' || mode === 'verification' ? <Link href="/login">Volver a iniciar sesión</Link> : null}
       </nav>
     </section>

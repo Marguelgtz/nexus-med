@@ -10,6 +10,8 @@ import { useState } from 'react';
 import type { AuthSession } from '@nexus-med/contracts';
 import { Icon } from '../icon';
 import { confirmInAppNavigation } from '../../lib/use-before-unload-guard';
+import { currentRoleLabel, shouldUseAdministrativeNavigation } from '../../lib/auth/navigation';
+import { signOut } from '../../lib/auth/api';
 import { getPrimaryNavigationLinks } from './primary-navigation';
 
 export function TopBar({ session }: { session: AuthSession }) {
@@ -17,9 +19,10 @@ export function TopBar({ session }: { session: AuthSession }) {
   const searchParams = useSearchParams();
   const router = useRouter();
   const [changingView, setChangingView] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
   const [error, setError] = useState('');
-  const administrative = pathname.startsWith('/secretaria');
-  const secretary = session.user.role === 'secretary' || (session.user.role === 'demo' && session.activeView === 'secretary') || administrative;
+  const administrative = shouldUseAdministrativeNavigation(session, pathname);
+  const secretary = administrative;
   const links = getPrimaryNavigationLinks({
     secretary,
     pathname,
@@ -39,7 +42,11 @@ export function TopBar({ session }: { session: AuthSession }) {
           <span className="brand-symbol" aria-hidden="true"><Icon name="activity" /></span>
           Nexus Med
         </Link>
-        <nav className="sidebar-nav" aria-label="Navegación principal">
+        <div role="group" aria-label="Contexto de sesión" style={{ gridColumn: '1 / -1', gridRow: 2, display: 'grid', gap: 2, minWidth: 0, marginTop: -16, color: '#e4ebfb', fontSize: 14, lineHeight: 1.35 }}>
+          <strong title={session.clinic?.name ?? 'Sin clínica activa'} style={{ minWidth: 0, overflowWrap: 'anywhere', color: '#fff' }}>{session.clinic?.name ?? 'Sin clínica activa'}</strong>
+          <span>{currentRoleLabel(session)}</span>
+        </div>
+        <nav className="sidebar-nav" aria-label="Navegación principal" style={{ gridRow: 3 }}>
           {renderLinks()}
         </nav>
         <div className="sidebar-account">
@@ -77,14 +84,22 @@ export function TopBar({ session }: { session: AuthSession }) {
             </select>
           </label>
         ) : null}
-        {session.canManageAccess ? <Link className="topbar-account-link" href="/configuracion/accesos">Accesos</Link> : null}
+        {session.canManageAccess ? <Link className="topbar-account-link" href="/configuracion/accesos" style={{ display: 'flex', alignItems: 'center', whiteSpace: 'nowrap' }}>Accesos</Link> : null}
         <span className="topbar-user" title={session.user.name}>{session.user.name}</span>
-        <button className="topbar-signout" type="button" onClick={async () => {
+        <button className="topbar-signout" type="button" disabled={signingOut} onClick={async () => {
           if (!confirmInAppNavigation()) return;
-          const response = await fetch('/api/auth/sign-out', { method: 'POST', cache: 'no-store' });
-          if (response.ok) window.location.assign('/login');
-          else setError('No se pudo cerrar la sesión. Intenta de nuevo.');
-        }}>Salir</button></div>
+          setSigningOut(true);
+          setError('');
+          try {
+            await signOut();
+            router.replace('/login');
+            router.refresh();
+          } catch (reason) {
+            setError(reason instanceof Error ? reason.message : 'No se pudo cerrar la sesión. Intenta de nuevo.');
+          } finally {
+            setSigningOut(false);
+          }
+        }}>{signingOut ? 'Saliendo…' : 'Salir'}</button></div>
       </div>
       {error ? <p className="topbar-feedback" role="status">{error}</p> : null}
     </aside>

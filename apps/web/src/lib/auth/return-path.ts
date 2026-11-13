@@ -9,3 +9,8 @@ export function safeInternalReturnPath(value: string | null | undefined): string
   }
 }
 
+export function invitationReturnPath(token: string): string {
+  const params = new URLSearchParams({ token });
+  return `/aceptar-invitacion?${params.toString()}`;
+}
+

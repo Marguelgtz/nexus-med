@@ -6,6 +6,7 @@
 // from server components (use lib/api/server.ts there).
 
 import {
+  clinicDoctorSchema, type ClinicDoctor,
   type Appointment,
   type AppointmentEmailEvent,
   type AppointmentEmailStatus,
@@ -263,11 +264,12 @@ export function updateMedicalDocument(
 
 // ── Appointments (UI_SPEC §7.2) ──────────────────────────────────────────
 
-export type AppointmentRangeQuery = { from: string; to: string };
+export type AppointmentRangeQuery = { from: string; to: string; doctorId?: string };
 
 /** Appointments for the calendar, [from, to) ISO range. */
 export function listAppointmentsInRange(query: AppointmentRangeQuery): Promise<Appointment[]> {
   const params = new URLSearchParams({ from: query.from, to: query.to });
+  if (query.doctorId) params.set('doctorId', query.doctorId);
   return request(`/appointments?${params.toString()}`, undefined, asList(appointmentSchema));
 }
 
@@ -442,4 +444,8 @@ export function receiptFileUrl(id: string) { return `${API_BASE}/study-receipt-f
 export function createAdministrativePatient(input: CreatePatientInput) {
   createPatientInputSchema.parse(input);
   return request('/administrative/patients', { method: 'POST', body: JSON.stringify(input) }, administrativePatientSchema.safeParse.bind(administrativePatientSchema));
+}
+
+export function listClinicDoctors(): Promise<ClinicDoctor[]> {
+  return request('/clinic/doctors', undefined, asList(clinicDoctorSchema));
 }

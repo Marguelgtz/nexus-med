@@ -4,7 +4,9 @@ import { redirect } from 'next/navigation';
 
 import { authSessionSchema } from '@nexus-med/contracts';
 import { AppFrame } from '../../components/shell/app-frame';
+import { SessionKeepAlive } from '../../components/auth/session-keepalive';
 import { ApiError, apiGet } from '../../lib/api/server';
+import { applicationRedirectPath } from '../../lib/auth/navigation';
 
 export const dynamic = 'force-dynamic';
 
@@ -40,9 +42,9 @@ export default async function ApplicationLayout({ children }: { children: ReactN
   }
 
   const currentPath = safeReturnPath(requestHeaders.get('x-nexus-path')).split(/[?#]/, 1)[0] ?? '/';
-  const secretaryView = session.user.role === 'secretary' || (session.user.role === 'demo' && session.activeView === 'secretary');
-  if (secretaryView && !currentPath.startsWith('/secretaria')) redirect('/secretaria');
-  if (!secretaryView && currentPath.startsWith('/secretaria')) redirect('/recepcion');
-  return <AppFrame session={session}>{children}</AppFrame>;
+  const redirectPath = applicationRedirectPath(session, currentPath);
+  if (redirectPath) redirect(redirectPath);
+  if (session.onboardingRequired) return <><SessionKeepAlive />{children}</>;
+  return <><SessionKeepAlive /><AppFrame session={session}>{children}</AppFrame></>;
 }
 
