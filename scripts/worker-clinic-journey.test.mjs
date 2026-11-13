@@ -173,6 +173,7 @@ test('real Worker sessions preserve clinic isolation and clinical authorship on 
     const nextPassword = 'Synthetic-Recovered-Password-2026!';
     const failedReset = await request('/api/auth/reset-password', { token: failedToken, newPassword: nextPassword });
     assert.equal(failedReset.status, 500, 'injected password write failure must not appear successful');
+    assert.equal((await failedReset.json()).error.code, 'INTERNAL_ERROR');
     assert.equal((await request('/api/session', undefined, cookie(login))).status, 401, 'old sessions were revoked');
     assert.equal((await request('/api/auth/sign-in/email', { email: doctor.email, password })).status, 200, 'old password remains valid');
     await db.exec('DROP TRIGGER synthetic_password_failure');

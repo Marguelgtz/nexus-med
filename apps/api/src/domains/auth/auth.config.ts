@@ -216,6 +216,10 @@ export function createAuth(database: PrismaClient, config: AuthConfiguration) {
         path: '/',
       },
     },
+    // Unexpected errors must reach Hono's category-only error handler.
+    // Otherwise better-call logs the entire error object after this logger is
+    // disabled, potentially including database or authentication details.
+    onAPIError: { throw: true },
     logger: { disabled: true },
   });
 }

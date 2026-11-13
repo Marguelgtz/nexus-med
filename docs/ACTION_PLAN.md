@@ -29,6 +29,8 @@
 
 **D1 authentication failure injection:** The local Worker journey now injects a D1 failure on password update. The reset returned 500, the previous password remained valid, existing sessions were revoked and the token was consumed; requesting a new token then completed the reset. Two concurrent uses of a subsequent token produced one 200 and one 400, and the stored hash matched only the winning password. This confirms selected behavior, not transactional atomicity: a failed write requires a new link and forces reauthentication. The test also showed Prisma D1 and the auth error handler emitting detailed synthetic database errors in workerd despite the application’s disabled Better Auth logger. No clinical data was in the fixture, and deployed error-log behavior remains untested; audit/sanitize dependency logging before any real-data readiness claim.
 
+**Authentication error handling:** Better Auth now propagates unexpected router failures to Hono’s category-only handler instead of better-call logging the complete error object. The local D1 failure-injection journey returned the generic `INTERNAL_ERROR` response and emitted no `# SERVER_ERROR` dump; the Prisma D1 adapter still logged its underlying synthetic database error, so the log-safety gate remains open. Full API tests passed 164/164, API typecheck and lint passed, and the isolated pilot API dry-run succeeded. This change is local and not deployed.
+
 **Next action:** Finish regression checks, verify browser clinical workflows and deployed-runtime packaging, complete remote recovery rehearsal and review outstanding security findings. Preserve all existing work and avoid remote writes without a validated recovery path.
 
 ---
