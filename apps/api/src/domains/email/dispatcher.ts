@@ -141,7 +141,17 @@ export async function dispatchEmailOutbox(
 
   const allowlist = new Set(config.allowedRecipients.map(normalizeEmail).filter(Boolean));
   const candidates = await database.emailOutbox.findMany({
-    where: { status: 'queued', availableAt: { lte: now }, kind: { in: ['verify_email', 'reset_password', 'invitation', 'appointment'] } },
+    // Apply eligibility before limiting the batch. Otherwise five old,
+    // non-allowlisted appointment messages can permanently block later
+    // verification, recovery and invitation mail.
+    where: {
+      status: 'queued',
+      availableAt: { lte: now },
+      OR: [
+        { kind: { in: ['verify_email', 'reset_password', 'invitation'] } },
+        { kind: 'appointment', recipient: { in: [...allowlist] } },
+      ],
+    },
     take: BATCH_SIZE,
     orderBy: { createdAt: 'asc' },
     select: {

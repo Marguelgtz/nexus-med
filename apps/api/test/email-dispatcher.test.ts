@@ -1,7 +1,14 @@
 import { symmetricEncrypt } from 'better-auth/crypto';
+import { mkdtemp, readFile, rm } from 'node:fs/promises';
+import { createRequire } from 'node:module';
+import os from 'node:os';
+import path from 'node:path';
 import { describe, expect, it, vi } from 'vitest';
 import type { PrismaClient } from '../src/generated/prisma/client';
 import { dispatchEmailOutbox } from '../src/domains/email/dispatcher';
+import { createLocalPrismaClient } from '../src/infrastructure/database/prisma';
+
+const Database = createRequire(import.meta.url)('better-sqlite3');
 
 const secret = 'email-dispatch-test-secret-'.repeat(3);
 const recipient = 'allowed@example.test';
@@ -44,6 +51,38 @@ async function fakeDatabase(options: { kind?: string; appointment?: Record<strin
 }
 
 describe('email outbox dispatcher', () => {
+  it('delivers security mail behind five ineligible appointment messages without sending them', async () => {
+    const directory = await mkdtemp(path.join(os.tmpdir(), 'nexus-email-recovery-'));
+    const databasePath = path.join(directory, 'test.sqlite');
+    const sqlite = new Database(databasePath);
+    // Use the real committed outbox schema while keeping this regression
+    // independent from the shared integration database and clinic fixtures.
+    sqlite.exec(await readFile(new URL('../../../prisma/migrations/20261111211721_auth_email_outbox/migration.sql', import.meta.url), 'utf8'));
+    sqlite.exec('ALTER TABLE email_outbox ADD COLUMN appointmentId TEXT; ALTER TABLE email_outbox ADD COLUMN appointmentVersion TEXT; ALTER TABLE email_outbox ADD COLUMN appointmentEvent TEXT;');
+    sqlite.close();
+    const database = createLocalPrismaClient(databasePath);
+    try {
+      const encryptedBody = await symmetricEncrypt({ key: secret, data: JSON.stringify({ text: 'Aviso sintético', html: '<p>Aviso sintético</p>' }) });
+      await database.emailOutbox.createMany({ data: [
+        ...Array.from({ length: 5 }, (_, index) => ({
+          id: `blocked-${index}`, kind: 'appointment', recipient: 'not-allowlisted@example.test', subject: 'Cita sintética', encryptedBody,
+          idempotencyKey: `blocked-${index}`, createdAt: new Date(now.getTime() - 10_000 + index), availableAt: now,
+        })),
+        { id: 'verification', kind: 'verify_email', recipient, subject: 'Verificación sintética', encryptedBody, idempotencyKey: 'verification', createdAt: now, availableAt: now },
+      ] });
+      const sendEmail = vi.fn(async () => undefined);
+      const result = await dispatchEmailOutbox(database, secret, { allowedRecipients: [], sendEmail }, now);
+      expect(result.sent).toBe(1);
+      expect(sendEmail).toHaveBeenCalledOnce();
+      expect(sendEmail).toHaveBeenCalledWith(expect.objectContaining({ to: recipient }));
+      expect(await database.emailOutbox.count({ where: { kind: 'appointment', status: 'queued', attempts: 0 } })).toBe(5);
+      expect((await database.emailOutbox.findUniqueOrThrow({ where: { id: 'verification' } })).status).toBe('sent');
+    } finally {
+      await database.$disconnect();
+      await rm(directory, { recursive: true, force: true });
+    }
+  });
+
   it('sends account security mail without a patient-message allowlist', async () => {
     const fake = await fakeDatabase();
     const sendEmail = vi.fn(async () => undefined);
