@@ -12,7 +12,7 @@ Hono remains authoritative. The same API runs locally on Node and behind a priva
 | `POST /api/onboarding/clinic` | Verified non-demo identity; `{name,timezone}` (`America/Mexico_City` for this pilot); idempotent doctor/admin bootstrap; returns session DTO |
 | `POST /api/auth/prepare-invitation` | `{token}`; validates invitation and prepares its protected cookie; returns email/role/clinicName/expiry |
 | `POST /api/invitations/accept` | Verified matching identity; `{token}`; accepts the server-defined membership and returns session DTO |
-| `GET/POST /api/access/invitations` | Clinic administrator; create `{email,role:'doctor'|'secretary'}`; responses contain clinicId/role/timestamps, never token hashes |
+| `GET/POST /api/access/invitations` | Clinic administrator; creation also requires recent authentication and `{email,role:'doctor'|'secretary'}`. Concurrent requests for the same clinic/address allow at most one unexpired pending invitation; duplicates return 409. Invitation, encrypted outbox message and creation audit event commit atomically. Responses contain clinicId/role/timestamps, never token hashes. |
 | `POST /api/access/invitations/:id/revoke` | Recent-authenticated clinic administrator; pending invitation scoped to clinic |
 | `GET /api/access/members` | Clinic administrator; membershipId, user identity, role, isAdmin, verified/active state and timestamp |
 | `POST /api/access/members/:userId/revoke` | Recent-authenticated clinic administrator; cannot revoke own membership; revokes selected clinic access and applicable sessions |

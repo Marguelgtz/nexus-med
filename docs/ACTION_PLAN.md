@@ -39,6 +39,8 @@
 
 **Isolated study review:** The Chrome extension again rejected selection of a local synthetic PDF because file-URL access is disabled. In a separate in-app browser session against the same isolated demo, the physician explicitly reviewed an existing synthetic receipt with a test note; after reload the reviewed state and note persisted, and a read-only SQLite check confirmed the associated study request remained `ordered`. The in-app PDF viewer displayed a blank surface, so file rendering is not verified. Only temporary synthetic databases were modified; temporary services were stopped.
 
+**Invitation concurrency fix:** A local workerd/D1 test exposed eight simultaneous requests creating eight invitations for one clinic/address. Creation now rechecks administrator, recipient, membership and pending-invitation state inside the same SQLite transaction / D1 batch that writes the invitation, encrypted outbox message and audit event. A guard converts concurrent duplicates to 409. Local workerd/D1 and SQLite tests passed for eight simultaneous requests (one 201 and seven 409), queue-write failure with rollback and retry, expired-invitation replacement, invitation-acceptance rollback and an accept/revoke race; the local D1 test also verifies rollback when the later audit-event insert fails. Workspace typecheck, lint, API 167/167, focused SQLite 7/7 and the final pilot API Wrangler dry-run passed. This change is local; no deployment or migration is included.
+
 **Next action:** Finish regression checks, verify browser clinical workflows and deployed-runtime packaging, complete remote recovery rehearsal and review outstanding security findings. Preserve all existing work and avoid remote writes without a validated recovery path.
 
 ---

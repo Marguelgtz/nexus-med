@@ -110,6 +110,76 @@ test('real Worker sessions preserve clinic isolation and clinical authorship on 
     await invite(doctor, secondSecretary, 'secretary');
     const outsider = await owner('D');
     assert.notEqual(doctor.clinicId, outsider.clinicId);
+
+    // The membership and invitation claim must roll back together on D1.
+    const rollbackIdentity = await signup('reintento de invitación');
+    const rollbackInvite = await json(await request('/api/access/invitations', { email: rollbackIdentity.email, role: 'secretary' }, doctor.cookie), 201);
+    const rollbackToken = (await messageUrl(rollbackIdentity.email, 'invitation')).searchParams.get('token');
+    assert.ok(rollbackToken);
+    await db.exec("CREATE TRIGGER synthetic_invite_failure BEFORE UPDATE OF acceptedAt ON auth_invitations WHEN NEW.acceptedAt IS NOT NULL BEGIN SELECT RAISE(ABORT, 'synthetic invitation failure'); END");
+    assert.equal((await request('/api/invitations/accept', { token: rollbackToken }, rollbackIdentity.cookie)).status, 500);
+    assert.equal((await db.prepare('SELECT COUNT(*) AS count FROM clinic_memberships WHERE clinicId=? AND userId=?').bind(doctor.clinicId, rollbackIdentity.id).first()).count, 0);
+    assert.equal((await db.prepare('SELECT acceptedAt FROM auth_invitations WHERE id=?').bind(rollbackInvite.id).first()).acceptedAt, null);
+    await db.exec('DROP TRIGGER synthetic_invite_failure');
+    const acceptedAfterRetry = await json(await request('/api/invitations/accept', { token: rollbackToken }, rollbackIdentity.cookie));
+    assert.equal(acceptedAfterRetry.clinic.id, doctor.clinicId);
+
+    // Revoking and accepting the same pending invitation concurrently must
+    // leave either one accepted grant or a revoked invitation with no grant.
+    const raceIdentity = await signup('carrera de invitación');
+    const raceInvite = await json(await request('/api/access/invitations', { email: raceIdentity.email, role: 'secretary' }, doctor.cookie), 201);
+    const raceInviteToken = (await messageUrl(raceIdentity.email, 'invitation')).searchParams.get('token');
+    assert.ok(raceInviteToken);
+    const [acceptResponse, revokeResponse] = await Promise.all([
+      request('/api/invitations/accept', { token: raceInviteToken }, raceIdentity.cookie),
+      request(`/api/access/invitations/${raceInvite.id}/revoke`, {}, doctor.cookie),
+    ]);
+    const invitationState = await db.prepare('SELECT acceptedAt,acceptedUserId,revokedAt FROM auth_invitations WHERE id=?').bind(raceInvite.id).first();
+    const membershipState = await db.prepare('SELECT status FROM clinic_memberships WHERE clinicId=? AND userId=?').bind(doctor.clinicId, raceIdentity.id).first();
+    if (acceptResponse.status === 200) {
+      assert.equal(revokeResponse.status, 404);
+      assert.ok(invitationState.acceptedAt);
+      assert.equal(invitationState.acceptedUserId, raceIdentity.id);
+      assert.equal(invitationState.revokedAt, null);
+      assert.equal(membershipState.status, 'active');
+    } else {
+      assert.ok([400, 409].includes(acceptResponse.status), `unexpected accept status ${acceptResponse.status}`);
+      assert.equal(revokeResponse.status, 200);
+      assert.ok(invitationState.revokedAt);
+      assert.equal(invitationState.acceptedAt, null);
+      assert.equal(membershipState, null);
+    }
+
+    // Concurrent sends for one address should not create two live grants.
+    const duplicateIdentity = await signup('invitación simultánea');
+    const duplicateRequests = await Promise.all(Array.from({ length: 8 }, () => request('/api/access/invitations', {
+      email: duplicateIdentity.email, role: 'secretary',
+    }, doctor.cookie)));
+    assert.deepEqual(duplicateRequests.map(response => response.status).sort(), [201, 409, 409, 409, 409, 409, 409, 409]);
+    const duplicateCount = await db.prepare('SELECT COUNT(*) AS count FROM auth_invitations WHERE clinicId=? AND email=? AND acceptedAt IS NULL AND revokedAt IS NULL').bind(doctor.clinicId, duplicateIdentity.email).first();
+    assert.equal(duplicateCount.count, 1);
+    assert.equal((await db.prepare("SELECT COUNT(*) AS count FROM email_outbox WHERE recipient=? AND kind='invitation'").bind(duplicateIdentity.email).first()).count, 1);
+
+    // A delivery-queue failure must roll back the grant and audit event too.
+    const failureEmail = `worker-failure-${randomUUID()}@example.test`;
+    const eventsBefore = (await db.prepare("SELECT COUNT(*) AS count FROM security_events WHERE event='invitation.created'").first()).count;
+    await db.exec("CREATE TRIGGER synthetic_outbox_failure BEFORE INSERT ON email_outbox WHEN NEW.kind='invitation' BEGIN SELECT RAISE(ABORT, 'synthetic outbox failure'); END");
+    assert.equal((await request('/api/access/invitations', { email: failureEmail, role: 'secretary' }, doctor.cookie)).status, 500);
+    assert.equal((await db.prepare('SELECT COUNT(*) AS count FROM auth_invitations WHERE clinicId=? AND email=?').bind(doctor.clinicId, failureEmail).first()).count, 0);
+    assert.equal((await db.prepare('SELECT COUNT(*) AS count FROM email_outbox WHERE recipient=?').bind(failureEmail).first()).count, 0);
+    assert.equal((await db.prepare("SELECT COUNT(*) AS count FROM security_events WHERE event='invitation.created'").first()).count, eventsBefore);
+    assert.equal((await db.prepare('SELECT COUNT(*) AS count FROM atomic_write_guards').first()).count, 0);
+    await db.exec('DROP TRIGGER synthetic_outbox_failure');
+    await json(await request('/api/access/invitations', { email: failureEmail, role: 'secretary' }, doctor.cookie), 201);
+
+    const auditFailureEmail = `worker-audit-failure-${randomUUID()}@example.test`;
+    await db.exec("CREATE TRIGGER synthetic_audit_failure BEFORE INSERT ON security_events WHEN NEW.event='invitation.created' BEGIN SELECT RAISE(ABORT, 'synthetic audit failure'); END");
+    assert.equal((await request('/api/access/invitations', { email: auditFailureEmail, role: 'secretary' }, doctor.cookie)).status, 500);
+    assert.equal((await db.prepare('SELECT COUNT(*) AS count FROM auth_invitations WHERE clinicId=? AND email=?').bind(doctor.clinicId, auditFailureEmail).first()).count, 0);
+    assert.equal((await db.prepare('SELECT COUNT(*) AS count FROM email_outbox WHERE recipient=?').bind(auditFailureEmail).first()).count, 0);
+    assert.equal((await db.prepare('SELECT COUNT(*) AS count FROM atomic_write_guards').first()).count, 0);
+    await db.exec('DROP TRIGGER synthetic_audit_failure');
+    await json(await request('/api/access/invitations', { email: auditFailureEmail, role: 'secretary' }, doctor.cookie), 201);
     const patient = await json(await request('/api/administrative/patients', { fullName: 'Paciente sintético local' }, secretary.cookie), 201);
     assert.equal((await request(`/api/patients/${patient.id}`, undefined, secretary.cookie)).status, 403);
     assert.equal((await request(`/api/patients/${patient.id}`, undefined, outsider.cookie)).status, 404);

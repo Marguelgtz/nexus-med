@@ -6,7 +6,7 @@ import { acceptInvitationSchema, createClinicSchema, createInvitationSchema, upd
 import { currentPrincipal, getAuthRuntime } from './auth.context';
 import { findInvitationByToken, INVITATION_COOKIE, INVITATION_LIFETIME_MS, newOpaqueToken, normalizeEmail, sha256 } from './invitations';
 import { authEmailTemplate } from '../email/templates';
-import { enqueueEmail } from '../email/outbox';
+import { encryptEmailPayload } from '../email/outbox';
 import { DEMO_ACCOUNT_EMAIL, deriveDemoPassword, ensureDemoAccount } from './demo-password';
 import { consumeAccountRateLimit } from './auth.config';
 import { acceptClinicInvitation, bootstrapClinic, requireClinicAdmin } from './clinic-access';
@@ -152,20 +152,45 @@ authRoutes.post('/access/invitations', async (c) => {
   if (activeInvitation) throw new ConflictError('Ya existe una invitación vigente para ese correo.');
   const token = newOpaqueToken();
   const tokenHash = await sha256(token);
-  const invitation = await database.invitation.create({
-    data: { email, clinicId: principal.clinicId, role: input.role, tokenHash, expiresAt: new Date(now.getTime() + INVITATION_LIFETIME_MS), createdById: principal.user.id },
-    select: invitationSelect,
-  });
   const invitationUrl = new URL('/aceptar-invitacion', runtime.appBaseUrl);
   invitationUrl.searchParams.set('token', token);
   const message = authEmailTemplate('invitation', 'colaborador', invitationUrl.toString());
+  const encryptedBody = await encryptEmailPayload(runtime.secret, message.payload);
+  const invitationId = crypto.randomUUID();
+  const guardId = crypto.randomUUID();
+  const nowIso = now.toISOString();
+  const expiresAt = new Date(now.getTime() + INVITATION_LIFETIME_MS).toISOString();
   try {
-    await enqueueEmail(database, runtime.secret, { kind: 'invitation', recipient: email, subject: message.subject, payload: message.payload, idempotencyKey: `invitation:${tokenHash}` });
-  } catch {
-    await database.invitation.update({ where: { id: invitation.id }, data: { revokedAt: new Date() } });
-    throw new Error('No se pudo preparar el correo de invitación.');
+    // Check and write within one SQLite transaction / D1 batch. The earlier
+    // reads improve feedback, but cannot protect concurrent submissions.
+    await runtime.atomicWrite([
+      { sql: `INSERT INTO atomic_write_guards(id,valid) VALUES (?,CASE WHEN
+          EXISTS (SELECT 1 FROM clinic_memberships m JOIN clinics c ON c.id=m.clinicId
+            JOIN auth_users actor ON actor.id=m.userId
+            WHERE m.id=? AND m.userId=? AND m.clinicId=? AND m.status='active' AND m.isAdmin=1
+              AND c.isActive=1 AND actor.emailVerified=1 AND actor.disabledAt IS NULL)
+          AND NOT EXISTS (SELECT 1 FROM auth_users u WHERE u.email=? AND (u.disabledAt IS NOT NULL OR u.role='demo'))
+          AND NOT EXISTS (SELECT 1 FROM clinic_memberships m JOIN auth_users u ON u.id=m.userId
+            WHERE m.clinicId=? AND u.email=? AND m.status='active')
+          AND NOT EXISTS (SELECT 1 FROM auth_invitations i WHERE i.clinicId=? AND i.email=?
+            AND i.acceptedAt IS NULL AND i.revokedAt IS NULL AND i.expiresAt>?)
+          THEN 1 ELSE 0 END)`,
+        values: [guardId, principal.membership.id, principal.user.id, principal.clinicId, email, principal.clinicId, email, principal.clinicId, email, nowIso] },
+      { sql: `INSERT INTO auth_invitations(id,email,role,tokenHash,expiresAt,createdById,createdAt,clinicId)
+          VALUES (?,?,?,?,?,?,?,?)`, values: [invitationId, email, input.role, tokenHash, expiresAt, principal.user.id, nowIso, principal.clinicId] },
+      { sql: `INSERT INTO email_outbox(id,kind,recipient,subject,encryptedBody,idempotencyKey,status,attempts,availableAt,createdAt,updatedAt)
+          VALUES (?,'invitation',?,?,?,?,'queued',0,?,?,?)`, values: [crypto.randomUUID(), email, message.subject, encryptedBody, `invitation:${tokenHash}`, nowIso, nowIso, nowIso] },
+      { sql: `INSERT INTO security_events(id,actorId,event,targetId,outcome,createdAt)
+          VALUES (?,?,'invitation.created',?,'success',?)`, values: [crypto.randomUUID(), principal.user.id, invitationId, nowIso] },
+      { sql: 'DELETE FROM atomic_write_guards WHERE id=?', values: [guardId] },
+    ]);
+  } catch (error) {
+    if (error instanceof Error && /CHECK constraint failed.*valid/i.test(error.message)) {
+      throw new ConflictError('La invitación o el acceso cambió. Actualiza e intenta de nuevo.');
+    }
+    throw error;
   }
-  await database.securityEvent.create({ data: { actorId: principal.user.id, event: 'invitation.created', targetId: invitation.id, outcome: 'success' } });
+  const invitation = await database.invitation.findUniqueOrThrow({ where: { id: invitationId }, select: invitationSelect });
   return c.json(invitationDto(invitation), 201);
 });
 

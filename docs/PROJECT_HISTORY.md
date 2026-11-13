@@ -470,3 +470,7 @@ The two previews share registration/validation instead of copying it, while reta
 The owner authorized the multi-user pilot mission (D-053). Clinic membership and ownership, scoped API access, attribution, conflict detection and safe additive SQLite/D1 migrations were implemented over the existing feature stack. Synthetic migration, isolation and multi-session API checks passed; local backup and restore were exercised. The pilot remains gated on integrated browser and deployed-runtime verification and independent reviews. Existing remote databases still await the new migration; no remote migration was applied.
 
 **References:** `ACTION_PLAN.md`, `PILOT_BASELINE.md`, `PILOT_AUTH.md`, `PILOT_OPERATIONS.md`; commits `9d4f78e`, `49c5d72`, `b241186`.
+
+## 2026-11-13 — Invitation concurrency and atomicity
+
+A local multi-session workerd/D1 test reproduced eight pending invitations for the same clinic and synthetic address when eight creation requests ran concurrently. The application-level precheck was insufficient. Invitation creation now rechecks eligibility in a guarded SQLite transaction / D1 batch that also writes the encrypted outbox message and audit event. Local SQLite and D1 tests verify one successful creation, conflict responses for the others, rollback of an injected outbox failure, and safe retry. The change has not been deployed; the broader pilot and independent security gates remain open.

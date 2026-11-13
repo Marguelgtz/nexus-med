@@ -67,6 +67,34 @@ async function inviteToken(ownerCookie: string, recipient: string, role: 'doctor
 }
 
 describe('verified clinic onboarding and membership authorization', () => {
+  it('creates one pending invitation under concurrency and rolls back a failed outbox write', async () => {
+    const owner = await makeOwner();
+    const address = email();
+    const attempts = await Promise.all(Array.from({ length: 8 }, () => request('/api/access/invitations', { email: address, role: 'secretary' }, owner.cookie)));
+    expect(attempts.map(response => response.status).sort()).toEqual([201, 409, 409, 409, 409, 409, 409, 409]);
+    expect(await localPrisma.invitation.count({ where: { clinicId: owner.clinicId, email: address, acceptedAt: null, revokedAt: null } })).toBe(1);
+    expect(await localPrisma.emailOutbox.count({ where: { recipient: address, kind: 'invitation' } })).toBe(1);
+
+    const failedAddress = email();
+    const eventsBefore = await localPrisma.securityEvent.count({ where: { event: 'invitation.created' } });
+    await localPrisma.$executeRawUnsafe("CREATE TRIGGER synthetic_invite_outbox_failure BEFORE INSERT ON email_outbox WHEN NEW.kind='invitation' BEGIN SELECT RAISE(ABORT, 'synthetic outbox failure'); END");
+    try {
+      expect((await request('/api/access/invitations', { email: failedAddress, role: 'secretary' }, owner.cookie)).status).toBe(500);
+      expect(await localPrisma.invitation.count({ where: { clinicId: owner.clinicId, email: failedAddress } })).toBe(0);
+      expect(await localPrisma.emailOutbox.count({ where: { recipient: failedAddress } })).toBe(0);
+      expect(await localPrisma.securityEvent.count({ where: { event: 'invitation.created' } })).toBe(eventsBefore);
+    } finally {
+      await localPrisma.$executeRawUnsafe('DROP TRIGGER synthetic_invite_outbox_failure');
+    }
+    expect((await request('/api/access/invitations', { email: failedAddress, role: 'secretary' }, owner.cookie)).status).toBe(201);
+
+    const expiredAddress = email();
+    await localPrisma.invitation.create({ data: {
+      clinicId: owner.clinicId, createdById: owner.user.id, email: expiredAddress,
+      role: 'secretary', tokenHash: await sha256(newOpaqueToken()), expiresAt: new Date(Date.now() - 60_000),
+    } });
+    expect((await request('/api/access/invitations', { email: expiredAddress, role: 'secretary' }, owner.cookie)).status).toBe(201);
+  });
   it('creates only a pending identity until verified, then bootstraps one retry-safe owner/doctor clinic', async () => {
     const { user, cookie } = await signupVerified();
     const pending = await request('/api/session', undefined, cookie);
