@@ -1,0 +1,41 @@
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "nexus-med-pilot-001-api",
+  "main": "src/worker.ts",
+  "compatibility_date": "2026-11-11",
+  "compatibility_flags": [
+    "nodejs_compat"
+  ],
+  "workers_dev": false,
+  "vars": {
+    "APP_BASE_URL": "https://nexus-med-pilot-001-web.marguel-gtz.workers.dev"
+  },
+  "triggers": {
+    "crons": [
+      "*/5 * * * *"
+    ]
+  },
+  "observability": {
+    "enabled": true
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "nexus-med-pilot-001-practice",
+      "database_id": "00346f91-cfac-468e-adee-dc09a0e28328",
+      "migrations_dir": "../../prisma/cloudflare-migrations"
+    },
+    {
+      "binding": "DEMO_DB",
+      "database_name": "nexus-med-pilot-001-demo",
+      "database_id": "a05c328f-32c4-4f17-9c52-088e732ebfe7",
+      "migrations_dir": "../../prisma/cloudflare-migrations"
+    }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "STUDY_FILES",
+      "bucket_name": "nexus-med-pilot-001-study-files"
+    }
+  ]
+}
