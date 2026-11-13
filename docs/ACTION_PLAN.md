@@ -17,6 +17,8 @@
 
 **Packaging and email follow-up:** A fresh OpenNext production build and pilot web Wrangler dry-run passed against the current local source (7,301.16 KiB; gzip 1,474.40 KiB); OpenNext still warns that Node middleware support is experimental. A fast email action may finish before React renders the busy state, so history loading now preserves a newer action result in that race and successful actions expand the compact history to show their status. Web typecheck, 64/64 tests, lint and the production build passed; the race, error/retry and compact interactions have not been exercised in a browser because the browser controller again timed out. The build and configuration remain local.
 
+**Local application recovery smoke:** With the synthetic source services stopped, separate practice and demo SQLite databases and their attachment directories were backed up and restored to new temporary directories. The API started against the restored copies on loopback. An unauthenticated patient request returned 401; demo sign-in returned 200, the restored registry returned six synthetic patients, and the restored attachment downloaded with identical bytes and `no-store`. The same restored session and registry remained usable after restarting the API. Demo sign-in writes only to the isolated restored practice copy. The API was stopped afterwards. This is local recovery evidence; the remote restored application, separate-clinic authorization, recovery timing and cutover remain unverified.
+
 **Next action:** Finish regression checks, verify browser clinical workflows and deployed-runtime packaging, complete remote recovery rehearsal and review outstanding security findings. Preserve all existing work and avoid remote writes without a validated recovery path.
 
 ---
