@@ -17,6 +17,8 @@ export function PatientPicker({ patients, title, anchor, searchContacts = false,
   const [query, setQuery] = useState('');
   const [position, setPosition] = useState<Position | null>(null);
   const root = useRef<HTMLDivElement>(null);
+  const searchInput = useRef<HTMLInputElement>(null);
+  const autoFocused = useRef(false);
   const onCloseRef = useRef(onClose);
   const searchId = useId();
   const titleId = useId();
@@ -49,7 +51,6 @@ export function PatientPicker({ patients, title, anchor, searchContacts = false,
       onCloseRef.current();
     };
     place();
-    requestAnimationFrame(() => root.current?.querySelector<HTMLInputElement>('input')?.focus());
     window.addEventListener('resize', place);
     window.addEventListener('scroll', place, true);
     document.addEventListener('pointerdown', closeOnOutsidePointer);
@@ -63,6 +64,12 @@ export function PatientPicker({ patients, title, anchor, searchContacts = false,
     };
   }, [anchor]);
 
+  useEffect(() => {
+    if (!position || autoFocused.current || !searchInput.current) return;
+    searchInput.current.focus();
+    autoFocused.current = document.activeElement === searchInput.current;
+  }, [position]);
+
   if (!position) return null;
   return createPortal(
     <div ref={root} className="patient-picker" role="dialog" aria-labelledby={titleId}
@@ -75,7 +82,7 @@ export function PatientPicker({ patients, title, anchor, searchContacts = false,
       <div className="patient-picker-divider" />
       <div className="field patient-picker-search">
         <label htmlFor={searchId}>Buscar paciente</label>
-        <input id={searchId} type="search" value={query} onChange={event => setQuery(event.target.value)}
+        <input ref={searchInput} id={searchId} type="search" value={query} onChange={event => setQuery(event.target.value)}
           placeholder={searchContacts ? 'Nombre, identificador, teléfono o correo' : 'Nombre o identificador'} autoComplete="off" />
       </div>
       {normalized.length < 2 ? <p className="field-hint patient-picker-hint">Escribe al menos 2 caracteres para ver coincidencias.</p>

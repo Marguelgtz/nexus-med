@@ -262,7 +262,7 @@ export function AuthPanel({ mode, returnTo = '/', notice, invitationToken, reset
 
   return (
     <section className="auth-card">
-      <Link className="auth-brand" href={mode === 'invitation' && invitationToken ? invitationReturnPath(invitationToken) : '/login'} aria-label="Nexus Med, inicio">
+      <Link className="auth-brand" href={mode === 'invitation' && invitationToken ? invitationReturnPath(invitationToken) : '/login'}>
         <span className="auth-brand-mark" aria-hidden="true">N</span><span>Nexus Med</span>
       </Link>
       <p className="eyebrow">Acceso a la aplicación</p>
