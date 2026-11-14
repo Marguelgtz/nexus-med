@@ -89,7 +89,7 @@ This section describes the **original P0 MVP**. O-005 subsequently approved appo
 - Keep patient and encounter data after application restarts.
 - Seed the database with clearly fictional demo patients and encounter records on first setup.
 - Open the patient registry by default with demo records visible.
-- D-046: omit demonstration labels from the application and printed documents.
+- D-054: show a persistent Spanish synthetic-data warning in authenticated controlled-pilot views. D-046 still excludes a generated label from startup output and printed documents.
 
 ### Original MVP exclusions and updated O-005 boundary
 
@@ -262,7 +262,7 @@ Acceptance criteria:
 - The browser opens to the patient registry by default.
 - At least six active synthetic patients are visible in the default list; the archived demo patient is accessible through archived records.
 - Encounter history is present for multiple patients; at least one patient has no encounters to demonstrate the empty state.
-- D-046 removes visible demonstration labeling; development remains local with synthetic records.
+- D-054 supersedes D-046 for authenticated controlled-pilot chrome; startup output and printed documents retain the no-label rule. All engineering and pilot data remain synthetic.
 
 ## 7. Product and UX principles
 

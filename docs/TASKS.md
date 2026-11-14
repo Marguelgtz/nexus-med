@@ -187,7 +187,7 @@ At a phase boundary, reconcile the work packages for the next phase using actual
 
 **T-017 — First-run demo presentation**
 - Redirect `/` to `/patients`.
-- Show the populated synthetic registry without a visible demo warning or fictional-data label (superseded by D-046).
+- Show the populated synthetic registry and persistent authenticated synthetic-data warning per D-054; keep startup output and printable documents unlabelled per D-046.
 - Confirm the exact fixture appears in active/archive views and patient timelines.
 
 **T-018 — Startup and persistence verification**

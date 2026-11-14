@@ -8,6 +8,7 @@ import { withStudyFileStorage } from './infrastructure/storage/runtime-study-fil
 import { createAuth } from './domains/auth/auth.config';
 import { resolvePrincipal, withAuthRuntime } from './domains/auth/auth.context';
 import { dispatchEmailOutbox } from './domains/email/dispatcher';
+import { safeD1ForPrisma } from './infrastructure/database/safe-d1-for-prisma';
 
 type PrismaD1Argument = ConstructorParameters<typeof PrismaD1>[0];
 type D1Binding = Exclude<
@@ -62,8 +63,8 @@ const worker = {
       return new Response('Service configuration is incomplete.', { status: 503 });
     }
     const appBaseUrl = (env.APP_BASE_URL ?? new URL(request.url).origin).replace(/\/$/, '');
-    const practicePrisma = new PrismaClient({ adapter: new PrismaD1(env.DB) });
-    const demoPrisma = new PrismaClient({ adapter: new PrismaD1(env.DEMO_DB) });
+    const practicePrisma = new PrismaClient({ adapter: new PrismaD1(safeD1ForPrisma(env.DB)) });
+    const demoPrisma = new PrismaClient({ adapter: new PrismaD1(safeD1ForPrisma(env.DEMO_DB)) });
     const auth = createAuth(practicePrisma as unknown as NodePrismaClient, {
       secret: env.BETTER_AUTH_SECRET,
       appBaseUrl,
@@ -110,7 +111,7 @@ const worker = {
     // SMTP credentials are accidentally added later.
     if (env.EMAIL_DELIVERY_DISABLED === 'true') return;
     if (!env.BETTER_AUTH_SECRET || env.BETTER_AUTH_SECRET.length < 32) return;
-    const practicePrisma = new PrismaClient({ adapter: new PrismaD1(env.DB) });
+    const practicePrisma = new PrismaClient({ adapter: new PrismaD1(safeD1ForPrisma(env.DB)) });
     try {
       const result = await dispatchEmailOutbox(practicePrisma as unknown as NodePrismaClient, env.BETTER_AUTH_SECRET, {
         senderEmail: env.SMTP_SENDER_EMAIL,

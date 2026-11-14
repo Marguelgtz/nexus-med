@@ -2,7 +2,7 @@
 
 **Document type:** Chronological project archive  
 **Maintenance style:** Append-only, milestone-oriented  
-**Last updated:** 2026-11-08
+**Last updated:** 2026-11-13
 
 ## 1. Purpose
 
@@ -470,3 +470,55 @@ The two previews share registration/validation instead of copying it, while reta
 The owner authorized the multi-user pilot mission (D-053). Clinic membership and ownership, scoped API access, attribution, conflict detection and safe additive SQLite/D1 migrations were implemented over the existing feature stack. Synthetic migration, isolation and multi-session API checks passed; local backup and restore were exercised. The pilot remains gated on integrated browser and deployed-runtime verification and independent reviews. Existing remote databases still await the new migration; no remote migration was applied.
 
 **References:** `ACTION_PLAN.md`, `PILOT_BASELINE.md`, `PILOT_AUTH.md`, `PILOT_OPERATIONS.md`; commits `9d4f78e`, `49c5d72`, `b241186`.
+
+## 2026-11-13 — Invitation concurrency and atomicity
+
+A local multi-session workerd/D1 test reproduced eight pending invitations for the same clinic and synthetic address when eight creation requests ran concurrently. The application-level precheck was insufficient. Invitation creation now rechecks eligibility in a guarded SQLite transaction / D1 batch that also writes the encrypted outbox message and audit event. Local SQLite and D1 tests verify one successful creation, conflict responses for the others, rollback of an injected outbox failure, and safe retry. The change has not been deployed; the broader pilot and independent security gates remain open.
+
+## 2026-11-13 — Atomic password reset on SQLite and D1
+
+The initial local D1 failure injection showed Better Auth's reset flow could consume a token and revoke sessions before a credential-write failure. Since the Prisma D1 adapter cannot provide transactions, `/reset-password` now validates and consumes the token, revokes sessions and updates or creates the credential inside the runtime's SQLite transaction / D1 atomic batch. Local SQLite and workerd/D1 tests inject a credential-write failure, verify token/password/session rollback, retry the same link, and race two uses of one link with one winner. API tests passed 168/168 and workspace typecheck/lint passed. This local fix is not deployed; other auth paths and deployment verification remain open.
+
+**References:** `ACTION_PLAN.md`, `SECURITY.md`, `TESTING.md`, `PILOT_READINESS.md`; commit `099088c` on `codex/pilot-clinic-foundation`.
+
+## 2026-11-13 — Recoverable signup after D1 credential failure
+
+A local workerd/D1 failure injection showed that a credential insert error could leave a newly created unverified `pending` identity without an account or verification message, blocking a same-address retry. Signup now records the user created in the current request and conditionally removes that orphan after a failed response only when it remains unverified/pending and has no account, clinic membership or session. SQLite and local D1 tests verify cleanup and a successful same-email retry. Focused clinic-auth passed 9/9, the full API suite passed 169/169, the local Worker journey passed, and workspace typecheck/lint passed. This does not prove general Better Auth signup atomicity and has not been deployed.
+
+**References:** `ACTION_PLAN.md`, `SECURITY.md`, `TESTING.md`, `PILOT_READINESS.md`; local implementation and integration tests on `codex/pilot-clinic-foundation`.
+
+## 2026-11-13 — OAuth callback orphan cleanup
+
+Code review found that Google signup can leave a verified but unlinked pending identity if D1 account creation fails after Better Auth creates the user. Better Auth returns a redirect on failure, so cleanup based on `Response.ok` missed this route. The request-scoped cleanup now wraps `/callback/google` and removes only that request's pending identity when it has no account, membership or session; a verified identity is eligible because it has no established login path and is known to be new in that callback. A synthetic callback test verifies that an error 302 removes the orphan and a success 302 with an account preserves it. This is not a Google provider round trip. The local workerd/D1 journey passed, API 170/170, focused clinic-auth 10/10, workspace typecheck/lint; no migration or deployment was made.
+
+**References:** `ACTION_PLAN.md`, `SECURITY.md`, `TESTING.md`, `PILOT_READINESS.md`; `apps/api/src/domains/auth/signup-cleanup.ts` and `auth.routes.ts`.
+
+## 2026-11-13 — Atomic password change on D1
+
+Inspection of Better Auth 1.7.21 showed `/change-password` wraps writes in an adapter transaction, but the Prisma D1 adapter ignores transactions. A local SQLite trigger reproduced the partial result: requesting revocation of other sessions deleted the user's sessions before a failed password update. The custom hook now checks the authoritative session and current password, then updates the credential and removes other sessions in one atomic write, leaving the current session active. Local SQLite and workerd/D1 tests inject failures at the password update and at the later session deletion; each preserves the prior password and sessions, and retries succeed. The workerd test also confirms the previous password stops working only after a successful change. Full API 171/171, focused auth 11/11, typecheck and lint pass. No migration, provider round trip or deployment was made.
+
+**References:** `ACTION_PLAN.md`, `SECURITY.md`, `TESTING.md`, `PILOT_AUTH.md`, `PILOT_READINESS.md`; Better Auth source `change-password` flow and Cloudflare D1 batch semantics.
+
+## 2026-11-13 — Rechecked received-study PDF rendering
+
+An earlier extension-browser check reported a blank PDF viewer. The seeded one-page synthetic PDF was later served from a temporary loopback probe with the same inline, no-store, nosniff and CSP sandbox headers as the API route, then opened in an isolated headed Chrome 157.0.8103.78 profile under Xvfb. Chrome rendered the viewer toolbar and document content; removing only the CSP sandbox header yielded the same result. The failure was not reproduced, and no response-policy change is warranted. This does not verify authenticated app-link navigation, upload or print. No application or database data changed.
+
+**References:** `ACTION_PLAN.md`, `TESTING.md`, `PILOT_READINESS.md`, `apps/api/src/domains/receipts/receipts.routes.ts`.
+
+## 2026-11-13 — Browser receipt upload and PDF readback
+
+A headed Chrome session with a fresh synthetic doctor demo account and isolated SQLite practice/demo databases completed the patient-study receipt workflow: select a PDF, save, display the new receipt, retrieve its file through the authenticated same-origin app route, and render it in Chrome's PDF viewer. The response was 200, `application/pdf`, `no-store`, and 705 bytes with a valid `%PDF-1.4` signature. A first harness selection used the extensionless internal storage key, which gave Chrome an empty MIME type; the API rejected it and created no receipt. A normal `.pdf` filename passed. The app code was unchanged; all writes were limited to the temporary synthetic environment. Remote staff isolation and print/accessibility checks remain open.
+
+**References:** `ACTION_PLAN.md`, `TESTING.md`, `PILOT_READINESS.md`, `apps/web/src/components/receipts/receipt-form.tsx`, `apps/api/src/domains/receipts/receipts.routes.ts`.
+
+## 2026-11-13 — Rechecked official Mexican privacy and clinical-system sources
+
+The current Cámara de Diputados LFPDPPP compilation lists its latest reform as 2025-11-14. The 2024 DOF/SIDOF status notice lists NOM-004-SSA3-2012 and NOM-024-SSA3-2012 among standards that remain in effect until modified or cancelled. The 2026 National Infrastructure Quality Program lists planned modifications to both standards, with estimated work during 2026. A program entry is not a final standard or an applicability finding; `SECURITY.md` now requires a current publication check and qualified independent review before real-patient use. No compliance conclusion was made.
+
+**References:** [LFPDPPP](https://www.diputados.gob.mx/LeyesBiblio/pdf/LFPDPPP.pdf), [2024 NOM status notice](https://sidof.segob.gob.mx/notas/docFuente/5736794), [2026 National Infrastructure Quality Program](https://dof.gob.mx/nota_detalle.php?codigo=5780781&fecha=24/02/2026), `SECURITY.md`, `PILOT_READINESS.md`.
+
+## 2026-11-13 — Current-source browser print rendering
+
+An isolated headless Chrome run used backup copies of the local synthetic databases and a disposable frontend cache. Both seeded document kinds rendered as one-page PDFs with patient, author and body content. Visual inspection and PDF extraction confirmed the shell, controls, screen-only note and D-054 notice do not print. The shared local database was not changed. This verifies local rendering only; deployed pilot output and physical printing remain open.
+
+**References:** `ACTION_PLAN.md`, `TESTING.md`, `PILOT_READINESS.md`, `apps/web/src/components/documents/medical-document-detail.tsx`, `apps/web/src/app/globals.css`.

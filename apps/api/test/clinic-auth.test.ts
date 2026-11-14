@@ -3,6 +3,7 @@ import { createApp } from '../src/app';
 import { createAuth } from '../src/domains/auth/auth.config';
 import { resolvePrincipal, withAuthRuntime } from '../src/domains/auth/auth.context';
 import { newOpaqueToken, sha256 } from '../src/domains/auth/invitations';
+import { recordCreatedSignupUser } from '../src/domains/auth/signup-cleanup';
 import { decryptEmailPayload } from '../src/domains/email/outbox';
 import { localPrisma } from '../src/infrastructure/database/prisma';
 import { createSqliteAtomicWrite, withPrismaClient } from '../src/infrastructure/database/runtime-client';
@@ -67,6 +68,159 @@ async function inviteToken(ownerCookie: string, recipient: string, role: 'doctor
 }
 
 describe('verified clinic onboarding and membership authorization', () => {
+  it('cleans up a pending identity when credential creation fails so signup can be retried', async () => {
+    const address = email();
+    const name = 'Alta sintética recuperable';
+    await localPrisma.$executeRawUnsafe("CREATE TRIGGER synthetic_signup_account_failure BEFORE INSERT ON auth_accounts WHEN NEW.providerId='credential' BEGIN SELECT RAISE(ABORT, 'synthetic signup account failure'); END");
+    try {
+      expect((await request('/api/auth/sign-up/email', { name, email: address, password })).status).toBe(500);
+    } finally {
+      await localPrisma.$executeRawUnsafe('DROP TRIGGER IF EXISTS synthetic_signup_account_failure');
+    }
+    expect(await localPrisma.user.findUnique({ where: { email: address } })).toBeNull();
+    expect(await localPrisma.account.count({ where: { user: { email: address } } })).toBe(0);
+    expect(await localPrisma.emailOutbox.count({ where: { recipient: address } })).toBe(0);
+
+    expect((await request('/api/auth/sign-up/email', { name, email: address, password })).status).toBe(200);
+    expect(await localPrisma.account.count({ where: { user: { email: address }, providerId: 'credential' } })).toBe(1);
+    expect(await localPrisma.emailOutbox.count({ where: { recipient: address, kind: 'verify_email' } })).toBe(1);
+  });
+
+  it('cleans up a verified Google identity when account linking fails behind an OAuth redirect', async () => {
+    const address = email();
+    await localPrisma.$executeRawUnsafe("CREATE TRIGGER synthetic_google_account_failure BEFORE INSERT ON auth_accounts WHEN NEW.providerId='google' BEGIN SELECT RAISE(ABORT, 'synthetic Google account failure'); END");
+    const authWithFailedOAuthLink = {
+      api: auth.api,
+      handler: async () => {
+        const now = new Date();
+        const user = await localPrisma.user.create({ data: {
+          id: crypto.randomUUID(), name: 'Doctora Google sintética', email: address, emailVerified: true,
+          role: 'pending', createdAt: now, updatedAt: now,
+        } });
+        recordCreatedSignupUser(user.id);
+        try {
+          await localPrisma.account.create({ data: {
+            id: crypto.randomUUID(), accountId: 'google-subject-synthetic', providerId: 'google', userId: user.id,
+            createdAt: now, updatedAt: now,
+          } });
+        } catch {
+          return Response.redirect(`${origin}/error?error=unable_to_create_user`, 302);
+        }
+        return Response.redirect(origin, 302);
+      },
+    };
+    try {
+      const headers = new Headers({ origin, 'content-type': 'application/json' });
+      const response = await withAuthRuntime({
+        auth: authWithFailedOAuthLink, database: localPrisma, atomicWrite: createSqliteAtomicWrite(localPrisma),
+        secret, appBaseUrl: origin, googleEnabled: true, localRuntime: true, principal: null,
+      }, () => withPrismaClient(localPrisma, () => app.request(`${origin}/api/auth/callback/google`, { method: 'GET', headers }), createSqliteAtomicWrite(localPrisma)));
+      expect(response.status).toBe(302);
+      expect(await localPrisma.user.findUnique({ where: { email: address } })).toBeNull();
+      expect(await localPrisma.account.count({ where: { accountId: 'google-subject-synthetic', providerId: 'google' } })).toBe(0);
+    } finally {
+      await localPrisma.$executeRawUnsafe('DROP TRIGGER IF EXISTS synthetic_google_account_failure');
+    }
+
+    const successAddress = email();
+    const authWithSuccessfulOAuthLink = {
+      api: auth.api,
+      handler: async () => {
+        const now = new Date();
+        const user = await localPrisma.user.create({ data: {
+          id: crypto.randomUUID(), name: 'Doctora Google sintética', email: successAddress, emailVerified: true,
+          role: 'pending', createdAt: now, updatedAt: now,
+        } });
+        recordCreatedSignupUser(user.id);
+        await localPrisma.account.create({ data: {
+          id: crypto.randomUUID(), accountId: 'google-subject-success-synthetic', providerId: 'google', userId: user.id,
+          createdAt: now, updatedAt: now,
+        } });
+        return Response.redirect(origin, 302);
+      },
+    };
+    const headers = new Headers({ origin, 'content-type': 'application/json' });
+    const successfulResponse = await withAuthRuntime({
+      auth: authWithSuccessfulOAuthLink, database: localPrisma, atomicWrite: createSqliteAtomicWrite(localPrisma),
+      secret, appBaseUrl: origin, googleEnabled: true, localRuntime: true, principal: null,
+    }, () => withPrismaClient(localPrisma, () => app.request(`${origin}/api/auth/callback/google`, { method: 'GET', headers }), createSqliteAtomicWrite(localPrisma)));
+    expect(successfulResponse.status).toBe(302);
+    expect(await localPrisma.user.findUnique({ where: { email: successAddress } })).not.toBeNull();
+    expect(await localPrisma.account.count({ where: { accountId: 'google-subject-success-synthetic', providerId: 'google' } })).toBe(1);
+  });
+
+  it('preserves the current session when a D1-compatible password change fails before credential update', async () => {
+    const identity = await signupVerified('Doctora para cambio de contraseña');
+    const secondLogin = await request('/api/auth/sign-in/email', { email: identity.user.email, password });
+    expect(secondLogin.status).toBe(200);
+    const secondCookie = secondLogin.headers.getSetCookie().map(value => value.split(';')[0]).join('; ');
+    expect(await localPrisma.session.count({ where: { userId: identity.user.id } })).toBe(2);
+
+    const nextPassword = 'Synthetic-Changed-Password-2026!';
+    await localPrisma.$executeRawUnsafe("CREATE TRIGGER synthetic_password_change_failure BEFORE UPDATE ON auth_accounts WHEN NEW.providerId='credential' BEGIN SELECT RAISE(ABORT, 'synthetic password change failure'); END");
+    try {
+      expect((await request('/api/auth/change-password', { currentPassword: password, newPassword: nextPassword, revokeOtherSessions: true }, identity.cookie)).status).toBe(500);
+    } finally {
+      await localPrisma.$executeRawUnsafe('DROP TRIGGER IF EXISTS synthetic_password_change_failure');
+    }
+
+    expect(await localPrisma.session.count({ where: { userId: identity.user.id } })).toBe(2);
+    expect((await request('/api/session', undefined, identity.cookie)).status).toBe(200);
+    expect((await request('/api/session', undefined, secondCookie)).status).toBe(200);
+
+    expect((await request('/api/auth/change-password', { currentPassword: password, newPassword: nextPassword, revokeOtherSessions: true }, identity.cookie)).status).toBe(200);
+    expect(await localPrisma.session.count({ where: { userId: identity.user.id } })).toBe(1);
+    expect((await request('/api/session', undefined, identity.cookie)).status).toBe(200);
+    expect((await request('/api/session', undefined, secondCookie)).status).toBe(401);
+    expect((await request('/api/auth/sign-in/email', { email: identity.user.email, password })).status).toBe(401);
+    expect((await request('/api/auth/sign-in/email', { email: identity.user.email, password: nextPassword })).status).toBe(200);
+  });
+
+  it('rolls back invitation revocation when its audit event fails and permits retry', async () => {
+    const owner = await makeOwner();
+    const invite = await inviteToken(owner.cookie, email(), 'secretary');
+    await localPrisma.$executeRawUnsafe("CREATE TRIGGER synthetic_revoke_audit_failure BEFORE INSERT ON security_events WHEN NEW.event='invitation.revoked' BEGIN SELECT RAISE(ABORT, 'synthetic audit failure'); END");
+    try {
+      expect((await request(`/api/access/invitations/${invite.id}/revoke`, {}, owner.cookie)).status).toBe(500);
+      expect((await localPrisma.invitation.findUniqueOrThrow({ where: { id: invite.id } })).revokedAt).toBeNull();
+      expect(await localPrisma.securityEvent.count({ where: { event: 'invitation.revoked', targetId: invite.id } })).toBe(0);
+    } finally {
+      await localPrisma.$executeRawUnsafe('DROP TRIGGER synthetic_revoke_audit_failure');
+    }
+    expect((await request(`/api/access/invitations/${invite.id}/revoke`, {}, owner.cookie)).status).toBe(200);
+    expect((await localPrisma.invitation.findUniqueOrThrow({ where: { id: invite.id } })).revokedAt).not.toBeNull();
+    expect(await localPrisma.securityEvent.count({ where: { event: 'invitation.revoked', targetId: invite.id } })).toBe(1);
+    expect((await request(`/api/access/invitations/${invite.id}/revoke`, {}, owner.cookie)).status).toBe(404);
+  });
+
+  it('creates one pending invitation under concurrency and rolls back a failed outbox write', async () => {
+    const owner = await makeOwner();
+    const address = email();
+    const attempts = await Promise.all(Array.from({ length: 8 }, () => request('/api/access/invitations', { email: address, role: 'secretary' }, owner.cookie)));
+    expect(attempts.map(response => response.status).sort()).toEqual([201, 409, 409, 409, 409, 409, 409, 409]);
+    expect(await localPrisma.invitation.count({ where: { clinicId: owner.clinicId, email: address, acceptedAt: null, revokedAt: null } })).toBe(1);
+    expect(await localPrisma.emailOutbox.count({ where: { recipient: address, kind: 'invitation' } })).toBe(1);
+
+    const failedAddress = email();
+    const eventsBefore = await localPrisma.securityEvent.count({ where: { event: 'invitation.created' } });
+    await localPrisma.$executeRawUnsafe("CREATE TRIGGER synthetic_invite_outbox_failure BEFORE INSERT ON email_outbox WHEN NEW.kind='invitation' BEGIN SELECT RAISE(ABORT, 'synthetic outbox failure'); END");
+    try {
+      expect((await request('/api/access/invitations', { email: failedAddress, role: 'secretary' }, owner.cookie)).status).toBe(500);
+      expect(await localPrisma.invitation.count({ where: { clinicId: owner.clinicId, email: failedAddress } })).toBe(0);
+      expect(await localPrisma.emailOutbox.count({ where: { recipient: failedAddress } })).toBe(0);
+      expect(await localPrisma.securityEvent.count({ where: { event: 'invitation.created' } })).toBe(eventsBefore);
+    } finally {
+      await localPrisma.$executeRawUnsafe('DROP TRIGGER synthetic_invite_outbox_failure');
+    }
+    expect((await request('/api/access/invitations', { email: failedAddress, role: 'secretary' }, owner.cookie)).status).toBe(201);
+
+    const expiredAddress = email();
+    await localPrisma.invitation.create({ data: {
+      clinicId: owner.clinicId, createdById: owner.user.id, email: expiredAddress,
+      role: 'secretary', tokenHash: await sha256(newOpaqueToken()), expiresAt: new Date(Date.now() - 60_000),
+    } });
+    expect((await request('/api/access/invitations', { email: expiredAddress, role: 'secretary' }, owner.cookie)).status).toBe(201);
+  });
   it('creates only a pending identity until verified, then bootstraps one retry-safe owner/doctor clinic', async () => {
     const { user, cookie } = await signupVerified();
     const pending = await request('/api/session', undefined, cookie);
@@ -157,6 +311,15 @@ describe('verified clinic onboarding and membership authorization', () => {
     const resetUrl = new URL(payload.text.match(/https?:\/\/[^\s]+/)![0]);
     const token = resetUrl.pathname.split('/').at(-1)!;
     const nextPassword = 'Changed-Synthetic-Password-2026';
+    await localPrisma.$executeRawUnsafe("CREATE TRIGGER synthetic_reset_password_failure BEFORE UPDATE OF password ON auth_accounts BEGIN SELECT RAISE(ABORT, 'synthetic password failure'); END");
+    try {
+      expect((await request('/api/auth/reset-password', { token, newPassword: nextPassword })).status).toBe(500);
+      expect((await request('/api/session', undefined, identity.cookie)).status).toBe(200);
+      expect((await request('/api/auth/sign-in/email', { email: identity.user.email, password })).status).toBe(200);
+      expect(await localPrisma.verification.count({ where: { identifier: `reset-password:${token}` } })).toBe(1);
+    } finally {
+      await localPrisma.$executeRawUnsafe('DROP TRIGGER IF EXISTS synthetic_reset_password_failure');
+    }
     expect((await request('/api/auth/reset-password', { token, newPassword: nextPassword })).status).toBe(200);
     expect((await request('/api/auth/reset-password', { token, newPassword: nextPassword })).status).toBe(400);
     expect((await request('/api/session', undefined, identity.cookie)).status).toBe(401);
@@ -167,9 +330,9 @@ describe('verified clinic onboarding and membership authorization', () => {
     expect((await request('/api/auth/sign-out', {}, cookie)).status).toBe(200);
     expect((await request('/api/session', undefined, cookie)).status).toBe(401);
 
-    const anotherLogin = await request('/api/auth/sign-in/email', { email: identity.user.email, password: nextPassword });
-    const anotherCookie = anotherLogin.headers.getSetCookie().map(value => value.split(';')[0]).join('; ');
-    const activeSession = await localPrisma.session.findFirstOrThrow({ where: { userId: identity.user.id } });
+    const anotherIdentity = await signupVerified();
+    const anotherCookie = anotherIdentity.cookie;
+    const activeSession = await localPrisma.session.findFirstOrThrow({ where: { userId: anotherIdentity.user.id } });
     await localPrisma.session.update({ where: { id: activeSession.id }, data: { createdAt: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000), expiresAt: new Date(Date.now() + 60 * 60 * 1000) } });
     expect((await request('/api/session', undefined, anotherCookie)).status).toBe(401);
   });

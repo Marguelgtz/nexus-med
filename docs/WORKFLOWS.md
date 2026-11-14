@@ -31,7 +31,7 @@ A representative integrated journey is registration → assigned appointment →
 - On first run, six active seeded patients are visible; the one archived fixture is accessible through the archived view/filter.
 - Physician primary navigation: **Recepción**, **Citas**, **Estudios**, **Pacientes**, and **Calendario**, with contextual patient/encounter/appointment actions. **Citas** opens a selected-day list in Reception; **Calendario** remains the existing day/week/month view.
 - Secretary primary navigation: **Citas**, **Pacientes**, and **Estudios**, all within `/secretaria`. Patient search uses administrative contact data and never routes to the physician's clinical record pages.
-- Do not show demonstration or fictional-data labels in the application (D-046); the synthetic-data restriction remains a development boundary.
+- Show the persistent Spanish synthetic-data warning in the authenticated controlled-pilot shell (D-054). Printable documents retain D-046's no-marker rule.
 - Keep the active patient's name and internal identifier visible on patient-specific screens.
 
 ## 2. Find or create a patient
@@ -160,7 +160,7 @@ Archiving never deletes encounters or history. No permanent delete workflow is p
 5. The Prisma seed command is invoked explicitly.
 6. The idempotent seed creates any missing demo records without overwriting existing data.
 7. Next.js and Hono start together.
-8. Browser opens to `/patients` and displays the seeded records. Per D-046, the application does not add a visible demonstration label.
+8. After authentication, the browser opens the role-appropriate workspace and displays the persistent synthetic-data warning required by D-054. Printable documents keep D-046's no-marker rule.
 
 On later starts, existing database contents and user edits must be preserved. Normal startup must never reset the database. See `DEMO_DATA.md` and `ARCHITECTURE.md`.
 

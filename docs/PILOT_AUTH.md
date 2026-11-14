@@ -102,6 +102,13 @@ Rate limits use persistent hashed keys. Auth emails use the encrypted durable
 outbox. Password-reset tokens are short-lived and single-use; reset revokes old
 sessions. Tokens, passwords and clinical text are not included in auth logs.
 
+The Better Auth `change-password` endpoint is also intercepted: after checking
+the authoritative session and current password, it changes the credential and,
+when requested, removes other sessions in one SQLite transaction or D1 batch.
+The current session stays active. Local SQLite and workerd/D1 failure injection
+covers rollback at the password write and at the later session-revocation step.
+This endpoint has no current pilot UI workflow; its API behavior is still tested.
+
 ## Google configuration and verification boundary
 
 Google is conditionally enabled only when both provider variables are present.

@@ -7,6 +7,10 @@ export interface EmailPayload {
   html: string;
 }
 
+export async function encryptEmailPayload(secret: string, payload: EmailPayload): Promise<string> {
+  return symmetricEncrypt({ key: secret, data: JSON.stringify(payload) });
+}
+
 export interface EmailOutboxDatabase {
   emailOutbox: {
     upsert(args: {
@@ -63,10 +67,7 @@ export async function enqueueEmail(
     status?: 'queued' | 'captured' | 'simulated';
   },
 ): Promise<string> {
-  const encryptedBody = await symmetricEncrypt({
-    key: secret,
-    data: JSON.stringify(message.payload),
-  });
+  const encryptedBody = await encryptEmailPayload(secret, message.payload);
 
   const row = await database.emailOutbox.upsert({
     where: { idempotencyKey: message.idempotencyKey },
