@@ -21,7 +21,7 @@ import { useBeforeUnloadGuard } from '../../lib/use-before-unload-guard';
 
 type FieldErrors = Record<string, string[]>;
 
-const FIELDS: { key: keyof MedicalBackgroundInput; label: string; rows: number }[] = [
+const FIELDS: { key: keyof Omit<MedicalBackgroundInput, 'expectedVersion'>; label: string; rows: number }[] = [
   { key: 'medicalConditions', label: 'Afecciones', rows: 3 },
   { key: 'previousSurgeries', label: 'Cirugías previas', rows: 3 },
   { key: 'allergies', label: 'Alergias', rows: 2 },
@@ -33,7 +33,7 @@ export function BackgroundForm({
   initial, onSaved, onCancel, dialogTitle,
 }: {
   patientId: string;
-  initial: MedicalBackgroundInput;
+  initial: MedicalBackgroundInput & { version?: number };
   onSaved?: () => void;
   onCancel?: () => void;
   dialogTitle?: string;
@@ -73,6 +73,7 @@ export function BackgroundForm({
     setBanner(null);
 
     const candidate: MedicalBackgroundInput = {
+      expectedVersion: initial.version,
       medicalConditions: values.medicalConditions.trim() || null,
       previousSurgeries: values.previousSurgeries.trim() || null,
       allergies: values.allergies.trim() || null,
@@ -101,7 +102,7 @@ export function BackgroundForm({
       } else {
         setBanner(
           err instanceof Error
-            ? 'No se pudieron guardar los antecedentes. Tu texto se conserva.'
+            ? `${err.message} Tu texto se conserva.`
             : 'No se pudieron guardar los antecedentes.',
         );
       }

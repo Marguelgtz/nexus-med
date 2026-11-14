@@ -135,7 +135,7 @@ export function MedicalDocumentForm({
     setSaving(true);
     try {
       const saved = initial
-        ? await updateMedicalDocument(initial.id, parsed.data)
+        ? await updateMedicalDocument(initial.id, { ...parsed.data, expectedVersion: initial.version })
         : await createMedicalDocument(patientId, parsed.data);
       setDirty(false);
       if (onSaved) onSaved(saved);

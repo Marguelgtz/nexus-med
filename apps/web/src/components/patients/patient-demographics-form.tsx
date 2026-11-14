@@ -9,7 +9,7 @@ import { practiceToday } from '../../lib/format';
 import { useBeforeUnloadGuard } from '../../lib/use-before-unload-guard';
 import { Modal } from '../modal';
 
-export type DemographicValues = Pick<AdministrativePatient, 'fullName' | 'dateOfBirth' | 'phone' | 'email' | 'externalIdentifier' | 'appointmentEmailConsent'>;
+export type DemographicValues = Pick<AdministrativePatient, 'fullName' | 'dateOfBirth' | 'phone' | 'email' | 'externalIdentifier' | 'appointmentEmailConsent' | 'version'>;
 type SavedPatient = { id: string; fullName: string };
 export type DemographicsProps = {
   patientId?: string;
@@ -56,7 +56,7 @@ export function PatientDemographicsForm({ patientId, initial, prefillName, exist
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(null);
-    const candidate = { fullName: values.fullName.trim(), dateOfBirth: values.dateOfBirth || null,
+    const candidate = { ...(patientId ? { expectedVersion: initial?.version } : {}), fullName: values.fullName.trim(), dateOfBirth: values.dateOfBirth || null,
       appointmentEmailConsent: values.appointmentEmailConsent,
       ...(patientId ? { phone: values.phone.trim() || null, email: values.email.trim() || null, externalIdentifier: values.externalIdentifier.trim() || null }
         : { ...(values.phone.trim() ? { phone: values.phone.trim() } : {}), ...(values.email.trim() ? { email: values.email.trim() } : {}), ...(values.externalIdentifier.trim() ? { externalIdentifier: values.externalIdentifier.trim() } : {}) }) };

@@ -3269,3 +3269,59 @@ body:has(.app-dialog[open]) { overflow: hidden; }
 .access-section h2, .mail-capture-item h2 { font-size: 20px; line-height: 28px; }
 .mail-capture-item > p { font-size: 15px; line-height: 1.5; }
 .mail-capture-meta { font-size: 13px; }
+
+/* NM-PILOT-001: restrained geometry over Proposal 2. Clinical surfaces stay opaque. */
+:root {
+  --radius-control: 5px;
+  --radius-panel: 8px;
+  --radius-dialog: 8px;
+  --radius-sm: var(--radius-control);
+  --radius-md: var(--radius-panel);
+  --primary: #244abd;
+  --primary-hover: #1d3d9f;
+  --font-size-body: 18px;
+  --line-height-body: 28px;
+  --shadow-surface: 0 1px 3px rgb(20 38 68 / 4%), 0 8px 24px rgb(20 38 68 / 3%);
+  --chrome-surface: rgb(255 255 255 / 90%);
+}
+body { background: var(--bg); }
+.app-sidebar { background: linear-gradient(180deg, #142644, #11213c); }
+.app-sidebar .brand-symbol, .app-sidebar .topbar-signout,
+.app-sidebar .view-selector select, .app-sidebar .topbar-account-link,
+.sidebar-nav a, .app-main .btn, .auth-card .btn,
+.app-main input, .app-main select, .app-main textarea,
+.auth-form input, .access-invite-form input, .access-invite-form select {
+  border-radius: var(--radius-control);
+}
+.btn-primary, .sidebar-nav a.active, .app-main .workspace-tabs a[aria-current] {
+  background: var(--primary); color: var(--primary-contrast);
+}
+.btn-primary:hover { background: var(--primary-hover); }
+.app-main .card, .app-main .row, .app-main .reception-agenda, .app-main .reception-queue,
+.app-main .receipt-list > li, .app-main .calendar-outside-hours, .app-main .month-agenda,
+.app-main .document-card, .app-main .clinical-context-item, .app-main .reception-metric,
+.app-main .reception-briefing, .app-main .workspace-empty, .app-main .empty-state,
+.app-main .patient-registration-page form > .card, .auth-card, .access-section,
+.app-main .patient-workspace-shell > .patient-workflow-nav {
+  border-radius: var(--radius-panel); background: var(--surface); backdrop-filter: none;
+}
+.app-dialog, .patient-picker { border-radius: var(--radius-dialog); background: var(--surface); backdrop-filter: none; }
+.app-main .workspace-tabs { border-radius: var(--radius-panel); background: var(--chrome-surface); box-shadow: var(--shadow-surface); }
+.app-main .workspace-tabs a { border-radius: var(--radius-control); }
+.app-main .patient-nav-links a, .app-main .cal-chip, .app-main .cal-block { border-radius: var(--radius-control); }
+.demo-notice { border-radius: var(--radius-control); }
+.access-invite-form select, .workspace-toolbar select {
+  min-height: var(--control-height); max-width: 100%; padding: 8px 12px;
+  color: var(--text); border: 1px solid var(--border-strong); background: var(--surface); font: inherit; font-size: 16px;
+}
+.access-invite-form label, .workspace-toolbar label { display: grid; gap: 6px; font-size: 16px; font-weight: 650; }
+.app-main .reception-person > .field-hint, .reception-waiting > li > .field-hint { display: block; }
+@supports (backdrop-filter: blur(6px)) {
+  .app-main .workspace-tabs { backdrop-filter: blur(6px); }
+}
+@media (max-width: 1024px) {
+  .app-main .reception-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media print {
+  .medical-document-paper { border-radius: 0; background: white; box-shadow: none; }
+}

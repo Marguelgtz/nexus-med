@@ -46,6 +46,7 @@ export default async function EditBackgroundPage({ params }: { params: Promise<{
       <BackgroundForm
         patientId={patient.id}
         initial={{
+          version: patient.version,
           medicalConditions: patient.medicalConditions,
           previousSurgeries: patient.previousSurgeries,
           allergies: patient.allergies,

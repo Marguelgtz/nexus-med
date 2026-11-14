@@ -7,7 +7,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { z } from 'zod';
 
-import { appointmentSchema } from '@nexus-med/contracts';
+import { appointmentSchema, clinicDoctorSchema } from '@nexus-med/contracts';
 
 import { DayView, MonthView, WeekView } from '../../../components/appointments/calendar-views';
 import { ErrorBanner } from '../../../components/primitives';
@@ -72,9 +72,9 @@ function stepDate(vista: Vista, fecha: string, dir: -1 | 1): string {
 export default async function CalendarPage({
   searchParams,
 }: {
-  searchParams: Promise<{ vista?: string; fecha?: string; dia?: string }>;
+  searchParams: Promise<{ vista?: string; fecha?: string; dia?: string; doctorId?: string }>;
 }) {
-  const { vista: vistaParam, fecha: fechaParam, dia: dayParam } = await searchParams;
+  const { vista: vistaParam, fecha: fechaParam, dia: dayParam, doctorId } = await searchParams;
   const vista: Vista = VISTAS.includes(vistaParam as Vista) ? (vistaParam as Vista) : 'semana';
   const today = practiceToday();
   if (fechaParam !== undefined && !isValidCalendarDate(fechaParam)) notFound();
@@ -86,13 +86,15 @@ export default async function CalendarPage({
         ? today
         : startOfMonth(fecha)
     : undefined;
+  const doctorFilter = doctorId ? `&doctorId=${encodeURIComponent(doctorId)}` : '';
+  const doctors = await fetchServer('/api/clinic/doctors', z.array(clinicDoctorSchema));
   const label = labelForVista(vista, fecha);
-  const hoyHref = `/calendar?vista=${vista}&fecha=${today}`;
+  const hoyHref = `/calendar?vista=${vista}&fecha=${today}${doctorFilter}`;
 
   const res = await fetchServer(
     `/api/appointments?from=${encodeURIComponent(rangeForVista(vista, fecha).from)}&to=${encodeURIComponent(
       rangeForVista(vista, fecha).to,
-    )}`,
+    )}${doctorFilter}`,
     z.array(appointmentSchema),
   );
 
@@ -109,7 +111,7 @@ export default async function CalendarPage({
     return (
       <>
         <h1>Calendario</h1>
-        <ErrorBanner message={res.error} retryHref={`/calendar?vista=${vista}&fecha=${fecha}`} />
+        <ErrorBanner message={res.error} retryHref={`/calendar?vista=${vista}&fecha=${fecha}${doctorFilter}`} />
       </>
     );
   }
@@ -125,7 +127,7 @@ export default async function CalendarPage({
             {VISTAS.map((v) => (
               <Link
                 key={v}
-                href={`/calendar?vista=${v}&fecha=${fecha}`}
+                href={`/calendar?vista=${v}&fecha=${fecha}${doctorFilter}`}
                 aria-current={v === vista ? 'page' : undefined}
                 className={`btn btn-sm ${v === vista ? 'btn-secondary active-toggle' : 'btn-ghost'}`}
               >
@@ -134,19 +136,30 @@ export default async function CalendarPage({
             ))}
           </div>
           <div className="cal-nav">
-            <Link href={`/calendar?vista=${vista}&fecha=${stepDate(vista, fecha, -1)}`} aria-label="Periodo anterior" className="btn btn-ghost btn-sm">
+            <Link href={`/calendar?vista=${vista}&fecha=${stepDate(vista, fecha, -1)}${doctorFilter}`} aria-label="Periodo anterior" className="btn btn-ghost btn-sm">
               ‹
             </Link>
             <Link href={hoyHref} className="btn btn-ghost btn-sm">
               Hoy
             </Link>
-            <Link href={`/calendar?vista=${vista}&fecha=${stepDate(vista, fecha, 1)}`} aria-label="Periodo siguiente" className="btn btn-ghost btn-sm">
+            <Link href={`/calendar?vista=${vista}&fecha=${stepDate(vista, fecha, 1)}${doctorFilter}`} aria-label="Periodo siguiente" className="btn btn-ghost btn-sm">
               ›
             </Link>
           </div>
         </div>
       </div>
 
+      <form className="workspace-toolbar" action="/calendar" method="get">
+        <input type="hidden" name="vista" value={vista} /><input type="hidden" name="fecha" value={fecha} />
+        <label>Médico
+          <select name="doctorId" defaultValue={doctorId ?? ''}>
+            <option value="">Toda la clínica</option>
+            {doctors.ok ? doctors.data.map(doctor => <option value={doctor.id} key={doctor.id}>{doctor.name}</option>) : null}
+          </select>
+        </label>
+        <button className="btn btn-secondary" type="submit">Ver agenda</button>
+        {!doctors.ok ? <p role="alert">No se pudo cargar la lista de médicos. Vuelve a intentar.</p> : null}
+      </form>
       {vista === 'dia' ? (
         <DayView fecha={fecha} appointments={appointments} />
       ) : vista === 'semana' ? (

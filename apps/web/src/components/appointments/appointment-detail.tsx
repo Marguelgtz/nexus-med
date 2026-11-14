@@ -96,7 +96,7 @@ export function AppointmentDetail({
       <div className="card">
         <div className="appt-detail-head">
           <div>
-            <strong>{formatDateTime(appt.startAt)}</strong>
+            <strong>{formatDateTime(appt.startAt)}</strong><p className="field-hint">Médico: {appt.doctor?.name ?? 'Sin asignar'}</p>
             <span className="appt-row-range">
               {' '}
               · {formatTimeRange(appt.startAt, appt.durationMinutes)} · {appt.durationMinutes} min

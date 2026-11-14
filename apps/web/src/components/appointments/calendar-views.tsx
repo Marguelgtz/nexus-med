@@ -125,7 +125,7 @@ export function DayView({ fecha, appointments }: { fecha: string; appointments: 
               className={`cal-block cal-type-${appt.type}${appt.status === 'cancelled' ? ' cal-cancelled' : ''}`}
               style={{ top, height, left: `${left}%`, width: `calc(${width}% - 4px)` }}
             >
-              <strong>{formatTime(appt.startAt)}</strong> {appt.patient.fullName}
+              <strong>{formatTime(appt.startAt)}</strong> {appt.patient.fullName} · {appt.doctor?.name ?? 'Sin asignar'}
             </Link>
           ))}
           {inGrid.length === 0 && outsideHours.length === 0 ? (
@@ -166,7 +166,7 @@ function WeekColumn({ day, appointments }: { day: string; appointments: Appointm
       <div className="cal-col-items">
         {visible.map((appt) => (
           <Link key={appt.id} href={apptHref(appt)} title={`${formatTime(appt.startAt)} ${appt.patient.fullName}`} className={chipClasses(appt, today)}>
-            {formatTime(appt.startAt)} {appt.patient.fullName}
+            {formatTime(appt.startAt)} {appt.patient.fullName} · {appt.doctor?.name ?? 'Sin asignar'}
           </Link>
         ))}
         {remaining > 0 ? (
@@ -221,7 +221,7 @@ function MonthCell({ day, month, selectedDay, appointments }: {
       <div className="cal-month-items">
         {visible.map((appt) => (
           <Link key={appt.id} href={apptHref(appt)} title={`${formatTime(appt.startAt)} ${appt.patient.fullName}`} className={chipClasses(appt, today)}>
-            {formatTime(appt.startAt)} {appt.patient.fullName}
+            {formatTime(appt.startAt)} {appt.patient.fullName} · {appt.doctor?.name ?? 'Sin asignar'}
           </Link>
         ))}
         {remaining > 0 ? (

@@ -3,9 +3,8 @@
 // depend on the host machine's timezone.
 
 // Central practice timezone (DATA_MODEL.md §6): one config, applied
-// consistently. Initially America/Monterrey unless the doctor specifies
-// otherwise.
-export const PRACTICE_TIMEZONE = 'America/Monterrey';
+// consistently for the controlled pilot.
+export const PRACTICE_TIMEZONE = 'America/Mexico_City';
 
 const dateFmt = new Intl.DateTimeFormat('es-MX', {
   day: 'numeric',

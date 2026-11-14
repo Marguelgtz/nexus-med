@@ -21,6 +21,7 @@ function PrintedDocument({ document }: { document: MedicalDocument }) {
           <p>Nacimiento: {formatDate(document.patient.dateOfBirth)}{age ? ` (${age} años)` : ''}</p>
         ) : null}
         <p>Fecha: {formatDateTime(document.createdAt)}</p>
+        <p>Médico autor: {document.author?.name ?? 'Autoría histórica sin registro'}</p>
       </header>
 
       {document.kind === 'prescription' ? (

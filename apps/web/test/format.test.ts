@@ -48,9 +48,9 @@ describe('formatDate (date-only, practice timezone)', () => {
 });
 
 describe('formatDateTime (instant, practice timezone)', () => {
-  it('renders the instant in America/Monterrey, not the host timezone', () => {
+  it('renders the instant in America/Mexico_City, not the host timezone', () => {
     // 04:30 UTC is 22:30 CST (UTC-6, no DST since 2022) the PREVIOUS day in
-    // Monterrey. A UTC-host would render Sep 5 04:30 — a different day.
+    // Mexico City. A UTC-host would render Sep 5 04:30 — a different day.
     expect(formatDateTime('2026-09-05T04:30:00Z')).toBe('4 de septiembre de 2026 a las 10:30 p.m.');
   });
 
@@ -82,14 +82,14 @@ describe('formatAge (practice "today")', () => {
   });
 
   it('counts the birthday itself as completed in the practice timezone', () => {
-    // 06:30 UTC = 01:30 on Sep 5 in Monterrey → birthday day.
+    // 06:30 UTC = 01:30 on Sep 5 in Mexico City → birthday day.
     vi.useFakeTimers();
     vi.setSystemTime(new Date('2026-09-05T06:30:00Z'));
     expect(formatAge('1958-09-05')).toBe('68');
   });
 
   it('stays one year under just before the practice birthday', () => {
-    // 23:00 UTC on Sep 4 = 18:00 on Sep 4 in Monterrey → birthday not yet.
+    // 23:00 UTC on Sep 4 = 18:00 on Sep 4 in Mexico City → birthday not yet.
     vi.useFakeTimers();
     vi.setSystemTime(new Date('2026-09-04T23:00:00Z'));
     expect(formatAge('1958-09-05')).toBe('67');
@@ -125,7 +125,7 @@ describe('wasEdited', () => {
 describe('PRACTICE_TIMEZONE', () => {
   it('is a valid IANA zone (single source of truth)', () => {
     expect(() => new Intl.DateTimeFormat('es-MX', { timeZone: PRACTICE_TIMEZONE })).not.toThrow();
-    expect(PRACTICE_TIMEZONE).toBe('America/Monterrey');
+    expect(PRACTICE_TIMEZONE).toBe('America/Mexico_City');
   });
 });
 
@@ -195,17 +195,17 @@ describe('calendar date math (UI_SPEC §7.1)', () => {
 
   it('practiceToday reflects the practice timezone, not the host', () => {
     vi.useFakeTimers();
-    // 23:30 UTC on Sep 4 = 17:30 on Sep 4 in Monterrey (host in a far
+    // 23:30 UTC on Sep 4 = 17:30 on Sep 4 in Mexico City (host in a far
     // timezone might already be on Sep 5).
     vi.setSystemTime(new Date('2026-09-04T23:30:00Z'));
     expect(practiceToday()).toBe('2026-09-04');
-    vi.setSystemTime(new Date('2026-09-05T03:00:00Z')); // 21:00 Sep 4 in Monterrey
+    vi.setSystemTime(new Date('2026-09-05T03:00:00Z')); // 21:00 Sep 4 in Mexico City
     expect(practiceToday()).toBe('2026-09-04');
   });
 });
 
 describe('practice-timezone instants (UI_SPEC §7.1)', () => {
-  it('instantAtLocalTime resolves wall-clock time in America/Monterrey (UTC-6, no DST)', () => {
+  it('instantAtLocalTime resolves wall-clock time in America/Mexico_City (UTC-6, no DST)', () => {
     // 10:30 wall time on Sep 5 → 16:30 UTC.
     expect(instantAtLocalTime('2026-09-05', 10, 30).toISOString()).toBe('2026-09-05T16:30:00.000Z');
     // Midnight boundary.
@@ -214,7 +214,7 @@ describe('practice-timezone instants (UI_SPEC §7.1)', () => {
 
   it('localDateOfInstant maps instants back to the practice calendar date', () => {
     expect(localDateOfInstant('2026-09-05T16:30:00Z')).toBe('2026-09-05');
-    // 05:59 UTC is still 23:59 on Sep 4 in Monterrey — the previous day.
+    // 05:59 UTC is still 23:59 on Sep 4 in Mexico City — the previous day.
     expect(localDateOfInstant('2026-09-05T05:59:00Z')).toBe('2026-09-04');
     // 06:00 UTC is 00:00 on Sep 5 — the next day.
     expect(localDateOfInstant('2026-09-05T06:00:00Z')).toBe('2026-09-05');
