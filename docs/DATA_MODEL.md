@@ -1,7 +1,30 @@
 # Data Model — Nexus Med Local Prototype
 
-**Status:** O-005 baseline plus the owner-authorized O-006 patient-study association migration; migration and API behavior are integrated-verified on `feat/o006-clinical-workflows` (PR #7 open for owner review, 2026-11-09).
-**Persistence:** Prisma 7 + local SQLite, database access exclusively through Hono.
+## Current clinic and attribution model — NM-PILOT-001
+
+The clinical entities below remain the core model. The following additions supersede the old exclusions of accounts, clinics, private storage and D1.
+
+| Entity / field | Current meaning |
+| --- | --- |
+| `Clinic` | Stable ID, name, stored timezone (`America/Mexico_City` for this pilot), active flag and timestamps |
+| `ClinicMembership` | Clinic/user unique pair; `doctor`, `secretary` or `administrator`; independent `isAdmin`; active/revoked status; timestamps |
+| `User`, `Session`, `Account`, `Verification` | Existing Better Auth identities/credentials and server sessions; `Session.activeClinicId` selects clinic context; pending identities have no automatic clinical access |
+| `Invitation` | Clinic, normalized email, doctor/secretary role, issuer, hashed one-time token, expiry and acceptance/revocation metadata |
+| Clinic-owned records | `Patient`, `Encounter`, `Appointment`, `StudyRequest`, `StudyReceipt`, `MedicalDocument`, `Invitation` carry explicit clinic ownership |
+| `Encounter`, `MedicalDocument` | Nullable historical `authorId`, separate `lastEditedById`; original author remains immutable |
+| `Appointment.doctorId` | Active clinic doctor or explicit unassigned state; independent from encounter author |
+| Study actor fields | Request ordering/review and receipt receiving/reviewing identities remain distinct |
+| `version` | Starts at 1 on patient/encounter/appointment/document; conditional updates increment it |
+| `SecurityEvent`, `AuthRateLimit`, `EmailOutbox` | Existing security administration, persistent throttling and encrypted durable email delivery state |
+
+Patients are shared among authorized clinicians within one clinic; identifiers/names/contact values are not globally unique. Secretary DTOs expose administrative fields only. Prescription lines inherit ownership through the document; attachment metadata inherits it through its receipt. Every nested association must match both patient and clinic. The application imposes no arbitrary staff-count limit.
+
+Migration `20261113000000_clinic_ownership` (D1 `0004_clinic_ownership.sql`) preserves original columns/timestamps and assigns existing records to `legacy-clinic`. Existing doctor/secretary identities receive deterministic memberships; disabled identities receive revoked membership. Existing clinical authors, study actors and appointment assignments remain null when unknown; no physician is fabricated. Clinic columns on existing tables intentionally use trigger-backed referential constraints; see [architecture](ARCHITECTURE.md) before schema-drift/migration tooling. New nullable actor references and new membership tables use ordinary FKs. `atomic_write_guards` is an implementation table with a checked validity value, emptied within each successful document write batch.
+
+SQLite and D1 are distinct migration histories. Run [migration-preservation and workerd tests](PILOT_OPERATIONS.md) after SQL changes. Current Prisma schema and shared DTOs are authoritative for field details. The clinical description below is retained with its original verification date; it is not current remote-deployment evidence.
+
+**Historical clinical baseline:** O-005/O-006 description and verification date 2026-11-09; current clinic additions above.
+**Persistence:** Prisma 7 + local SQLite / deployed-runtime D1; all product database access remains in Hono.
 
 ## 1. Implemented entities
 
@@ -51,7 +74,7 @@ All three child entities belong to a patient. The API validates same-patient app
 
 Current schema indexes: `Patient(fullName)`; `Encounter(patientId, occurredAt DESC)`; `Appointment(startAt)`, `Appointment(patientId, startAt)`; `StudyRequest(patientId, status)`, `StudyRequest(encounterId)`; `MedicalDocument(patientId, createdAt DESC)`, `MedicalDocument(encounterId)`, `PrescriptionLine(documentId, position)`. The model does not impose uniqueness on patient names, phone or email.
 
-Date of birth uses date-only semantics. `occurredAt`, `startAt`, `createdAt`, and `updatedAt` are instants rendered using the practice timezone `America/Monterrey`.
+Date of birth uses date-only semantics. `occurredAt`, `startAt`, `createdAt`, and `updatedAt` are instants rendered using the fixed pilot timezone `America/Mexico_City` (earlier local fixtures used the equivalent Monterrey wall-time convention).
 
 ## 4. Committed migrations
 
@@ -72,7 +95,7 @@ The SQLite database lives in `.local/data/medical.db`; the development orchestra
 
 `MedicalDocument` belongs to one patient and may link to one of that patient's encounters. Its `kind` is validated as `prescription` or `report`; `title` is optional; `body` stores a report narrative or prescription general instructions. Prescription lines are ordered by `position` and store doctor-entered medication and optional free-text fields. Patient and encounter deletes are restricted; prescription lines cascade only if a document is removed at the database layer. The API exposes no delete endpoint. The API verifies that the linked encounter belongs to the same patient.
 
-This is separate from excluded file uploads and R2 storage. User/account/session, clinic/organization, and billing models remain excluded. The browser forms, detail/edit workflow, patient overview, and CSS print presentation are implemented and browser-verified.
+Structured medical documents remain separate from received-study attachments. Accounts, clinics and private attachment storage are now implemented; billing remains excluded. The browser forms, detail/edit workflow, patient overview, and CSS print presentation are implemented and browser-verified.
 
 Open questions: procedure lifecycle (Q-NX-01); study-category validation (Q-NX-02); minimum source/reason and the difference between clinical order time and record-entry time for standalone studies (Q-O006-01); meaning of `completed`, result arrival, and review timestamps (Q-O006-02/03); future Cloudflare D1 transaction guarantees and SSR adapter selection remain deployment decisions. Standalone requests use `createdAt` as entry time only; no clinical order time is inferred.
 
@@ -80,4 +103,4 @@ Open questions: procedure lifecycle (Q-NX-01); study-category validation (Q-NX-0
 
 `Appointment.arrivedAt` and `attentionStartedAt` are nullable instants, separate from scheduled/completed/cancelled. Existing rows migrate to null. Arrival requires scheduled with no prior arrival; start requires arrival and no prior start; undo arrival is only available before attention. Conditional writes reject stale/duplicate transitions. Reschedule resets both markers; cancellation/completion preserve timestamps but remove the visit from active reception.
 
-`StudyReceipt` contains id, patientId (required/restrict), encounterId and requestId (optional/restrict), title, optional studyDate/receiptNote, receivedAt, nullable reviewedAt/reviewNote. `StudyReceiptFile` contains id, receiptId (restrict), unique opaque storageKey, original display name, validated mimeType, and byte size. Patient/request/encounter association is validated by Hono. Nested receipt/file metadata creation is atomic; filesystem writes are cleaned if database creation fails. Existing study requests and printable MedicalDocuments are separate entities. No seed receipts are invented.
+`StudyReceipt` contains id, patientId (required/restrict), encounterId and requestId (optional/restrict), title, optional studyDate/receiptNote, receivedAt, nullable reviewedAt/reviewNote. `StudyReceiptFile` contains id, receiptId (restrict), unique opaque storageKey, original display name, validated mimeType, and byte size. Patient/request/encounter association is validated by Hono. Nested receipt/file metadata creation is atomic; filesystem writes are cleaned if database creation fails. Existing study requests and printable MedicalDocuments are separate entities. The exact fixture now includes the approved synthetic receipt example described in `DEMO_DATA.md`; do not invent replacement clinical fixtures.

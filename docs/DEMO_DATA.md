@@ -1,5 +1,13 @@
 # Demo Data and First-Run Experience
 
+## Current clinic/demo separation — NM-PILOT-001
+
+The exact checked-in `demo-dataset.json` remains authoritative; do not invent replacements or use real patient data. Existing sample clinical records migrate to the explicit legacy clinic with unknown historical authors; migration must not manufacture a doctor. New clinic onboarding creates its own empty workspace, not copies of the clinical fixture. The normal local demo continues to use separate persistent demo storage; demo writes and attachment namespaces must never affect clinic practice records.
+
+Identity/session state is kept in the practice database. Demo identity grants only the selected doctor/secretary demonstration view and cannot administer clinic access. New synthetic accounts created by tests are explicitly isolated fixtures, separate from the exact first-run clinical dataset. Tests must use temporary storage or the documented isolated harness; never seed or reset a live environment merely to verify migration.
+
+The current seed includes the approved third study request and received-study example with a synthetic PDF. That example is receipt evidence, not an invented clinical result or physician review. All repeated seeds remain create-if-missing and must preserve edited content, timestamps, user-created records and stored attachment bytes. See [DATA_MODEL](DATA_MODEL.md) for ownership and [operations](PILOT_OPERATIONS.md) for coordinated database/file recovery. D-046's no-visible-demo-label presentation decision does not authorize real-data use.
+
 **Status:** Required for prototype completion  
 **Data classification:** Entirely fictional synthetic data  
 **Locale:** Spanish (Mexico)
@@ -26,7 +34,7 @@ Seed at least:
 - At least **1 archived patient** to demonstrate active/archive behavior.
 - A mix of populated and unrecorded optional medical-background fields.
 
-Printable prescription/report records contain no real medication, dose, findings, or recommendations. File storage and uploads remain separately excluded.
+Printable prescription/report records contain no real medication, dose, findings, or recommendations. Private PDF/PNG/JPEG receipt attachments are separately approved; they are not medical-document generation.
 
 ## 3. Suggested deterministic fixture composition
 
@@ -42,13 +50,13 @@ The exact checked-in fixture payload is `docs/demo-dataset.json`; use it as the 
 | `Sofía Torres` (`NM-006`) | 1 | Demonstrates a simple patient record |
 | `Lucía Gómez` (`NM-007`) | 1 | Demonstrates another active patient record |
 
-On a clean database, this fixture produces exactly seven demo patients (six active and one archived), nine demo encounters, nine demo appointments, and two demo study requests. All seven fixture patient IDs, nine fixture encounter IDs, and the four fixture appointment IDs must be inserted. Keep all note text visibly marked as fictional. The agent may add more fixtures when useful, but must preserve these UI states.
+On a clean database, this fixture produces seven demo patients (six active and one archived), nine demo encounters, nine demo appointments and three demo study requests, plus the approved receipt/PDF example. All seven fixture patient IDs, nine fixture encounter IDs, and the four fixture appointment IDs must be inserted. Preserve the exact approved fixture text and D-046 presentation; synthetic classification remains documented here. Add independent synthetic test records only in isolated verification storage; do not alter the exact clinical fixture without an approved change.
 
 ### Appointment fixtures (NX-001)
 
 **Fixed past appointments** (in `docs/demo-dataset.json`, deterministic like the encounters):
 
-| Seed appointment | Patient | startAt (America/Monterrey) | State / purpose |
+| Seed appointment | Patient | startAt (historical America/Monterrey; current pilot America/Mexico_City) | State / purpose |
 |---|---|---|---|
 | `demo-appt-past-001` | `Juan Pérez` | 2026-09-04 12:00 | Completed, linked to `demo-encounter-001a` (actual 35 min) |
 | `demo-appt-past-002` | `Mariana López` | 2026-10-08 10:00 | Completed, linked to `demo-encounter-002b` (actual 40 min) |
@@ -57,7 +65,7 @@ On a clean database, this fixture produces exactly seven demo patients (six acti
 
 **Upcoming appointments** (computed in `prisma/seed.ts`, deliberately NOT in the fixture file): five `scheduled` appointments for demo patients at practice-timezone wall times — anchor +1 d 09:00 (consulta), +3 d 10:30 (procedimiento), +6 d 12:00 (consulta), +10 d 16:00 (visita_domicilio), +14 d 11:00 (urgencia).
 
-**Anchor behavior (D-029/U-14):** `anchor` is the date of the **first seed run** that created the upcoming appointments (practice timezone, `America/Monterrey`). The seed computes each instant once and stores it under a stable ID; because seeding is create-if-missing, later runs — including days or weeks later — never recompute, move, or duplicate the anchor. A calendar demo whose dates all predate "today" would demonstrate nothing, so this is the one documented exception to fixed-timestamp seeding.
+**Anchor behavior (D-029/U-14):** `anchor` is the date of the **first seed run** that created the upcoming appointments (practice timezone, historically `America/Monterrey`; the pilot uses `America/Mexico_City`). The seed computes each instant once and stores it under a stable ID; because seeding is create-if-missing, later runs — including days or weeks later — never recompute, move, or duplicate the anchor. A calendar demo whose dates all predate "today" would demonstrate nothing, so this is the one documented exception to fixed-timestamp seeding.
 
 ### Study-request fixtures (NX-003 implementation)
 

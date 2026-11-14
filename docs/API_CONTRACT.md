@@ -1,8 +1,36 @@
 # API Contract — Medical Platform MVP
 
-**Status:** O-001 contract, verified NX-001…NX-004 addenda, and O-006 patient-study API changes; see §11 and the O-006 contract addendum below.
+## Current authentication, clinic and concurrency contract — NM-PILOT-001
+
+Hono remains authoritative. The same API runs locally on Node and behind a private Cloudflare Worker service binding. All `/api/*` data responses are `no-store`; browser and SSR calls forward the authenticated session. Unsafe requests require an allowed Origin. A URL ID never substitutes for clinic ownership. Missing session is 401; disallowed role/capability is 403; unavailable cross-clinic resources use scoped not-found behavior. Keep existing error envelopes.
+
+| Method / route | Input / response and authorization |
+| --- | --- |
+| `GET /api/options` | Public `{googleEnabled,localEmailCapture}`; provider availability, not credentials |
+| `/api/auth/*` | Existing Better Auth signup/sign-in/verification/recovery/logout/provider routes; server-owned account role |
+| `GET /api/session` | User, demo active view, `onboardingRequired`, nullable `{id,name,timezone}` clinic and explicit capability booleans |
+| `POST /api/onboarding/clinic` | Verified non-demo identity; `{name,timezone}` (`America/Mexico_City` for this pilot); idempotent doctor/admin bootstrap; returns session DTO |
+| `POST /api/auth/prepare-invitation` | `{token}`; validates invitation and prepares its protected cookie; returns email/role/clinicName/expiry |
+| `POST /api/invitations/accept` | Verified matching identity; `{token}`; accepts the server-defined membership and returns session DTO |
+| `GET/POST /api/access/invitations` | Clinic administrator; create `{email,role:'doctor'|'secretary'}`; responses contain clinicId/role/timestamps, never token hashes |
+| `POST /api/access/invitations/:id/revoke` | Recent-authenticated clinic administrator; pending invitation scoped to clinic |
+| `GET /api/access/members` | Clinic administrator; membershipId, user identity, role, isAdmin, verified/active state and timestamp |
+| `POST /api/access/members/:userId/revoke` | Recent-authenticated clinic administrator; cannot revoke own membership; revokes selected clinic access and applicable sessions |
+| `GET /api/clinic/doctors` | Authorized clinic staff; active verified doctor `{id,name}` choices |
+| `GET /api/appointments?from=&to=&doctorId=` | Clinic-scoped range; optional doctor filter |
+| Existing appointment create/edit | `doctorId` may be active clinic doctor or null; non-admin doctor restricted to self/own assignments |
+
+Patient, encounter, appointment and document DTOs include the persisted `version`. Encounter/document DTOs include nullable `{id,name}` `author`; appointment DTOs include nullable `{id,name}` `doctor`. Clinical author/clinic/last-editor identities are server-owned, not accepted privilege assertions from callers. Existing clinical field schemas and administrative projections remain in `packages/contracts`.
+
+Authenticated edit operations for demographics/background, encounter content, appointment rescheduling/editing and document replacement require `expectedVersion`; its optional transport-schema shape retains the isolated legacy domain-test harness, not a production bypass. Missing version is a validation error; stale version returns `409 CONFLICT`. Discrete archive/cancel/reception/completion/link/status actions preserve their existing state rules; applicable transitions use conditional persisted state/version checks rather than accepting `expectedVersion` on every action. Archiving remains an idempotent organization/history action, not a new clinical finalization policy. Document guard + body + prescription child replacement are atomic on SQLite and D1, so stale failure leaves both unchanged.
+
+All domain resources and nested associations are checked for patient/clinic scope. Secretary/administrative roles use reduced contact/scheduling/receipt DTOs and cannot access protected notes, order/review studies or author documents. Administration is independent from doctor role; access routes additionally require `isAdmin`. Demo may exercise doctor/secretary views only against the separate demo dataset and cannot manage membership.
+
+The detailed clinical routes below remain the foundation. Their original unauthenticated transport examples are illustrative payloads only; current session/origin/version requirements above apply. See [DATA_MODEL](DATA_MODEL.md), [SECURITY](SECURITY.md) and [operations](PILOT_OPERATIONS.md) for migration, provider and recovery boundaries.
+
+**Status:** Current clinic/account/version contract above, with historical O-001/O-005/O-006 clinical route reference below.
 **Owner:** Hono API (`apps/api`)  
-**Transport:** HTTP + JSON over local Node.js  
+**Transport:** HTTP + JSON through local Node.js or private Cloudflare service binding
 **Audience:** Next.js frontend, API tests, future maintainers
 
 ---
@@ -17,7 +45,7 @@
 - Use consistent HTTP status codes and a consistent error envelope.
 - Use ISO-8601 strings for timestamps and `YYYY-MM-DD` for date-only values.
 - Keep IDs opaque to the frontend.
-- Authentication, billing, uploads, and other deferred endpoints remain excluded. Appointments, study requests, and structured medical-document endpoints are implemented.
+- Authentication, clinic membership and private received-study uploads are implemented. Billing and unrelated integrations remain excluded.
 - The contract is versioned with the application and tests. A URL `/v1` prefix is not necessary for this single internal prototype unless a concrete compatibility need appears.
 - This is a starting contract, not an immutable freeze. Revise it when real workflow requirements justify a change; update API tests and this document together.
 

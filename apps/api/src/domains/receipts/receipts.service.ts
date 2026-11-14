@@ -62,9 +62,16 @@ export async function createReceipt(patientId: string, input: CreateStudyReceipt
         values: [randomUUID(), receiptId, file.storageKey, file.name, file.mimeType, file.size],
       })),
     ]);
-    const row = await prisma.studyReceipt.findUniqueOrThrow({ where: { ...clinicScope(), id: receiptId }, include });
-    return dto(row, true);
-  } catch (error) { await removeStudyFiles(stored.map(file => file.storageKey)); throw error; }
+  } catch (error) {
+    // A transport error may arrive after the database committed. Delete the
+    // files only when a successful lookup proves that no receipt exists;
+    // on an uncertain lookup, an orphan is safer than a broken clinical record.
+    const persisted = await prisma.studyReceipt.findUnique({ where: { ...clinicScope(), id: receiptId }, select: { id: true } }).catch(() => undefined);
+    if (persisted === null) await removeStudyFiles(stored.map(file => file.storageKey));
+    throw error;
+  }
+  const row = await prisma.studyReceipt.findUniqueOrThrow({ where: { ...clinicScope(), id: receiptId }, include });
+  return dto(row, true);
 }
 export async function reviewReceipt(id: string, reviewNote?: string) {
   const existing = await prisma.studyReceipt.findUnique({ where: { ...clinicScope(), id } });

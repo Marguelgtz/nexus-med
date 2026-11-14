@@ -1,14 +1,30 @@
 # Product Definition — Medical Platform MVP
 
-**2026-11-10 extension — D-044/D-045:** The owner authorizes a secretary administrative workspace without authentication, patient/contact and appointment management, shared reception/waiting queue, and locally stored PDF/PNG/JPEG study receipts. This supersedes earlier staff/file exclusions only for these workflows; one treating surgeon, synthetic data, local loopback runtime, and no accounts remain. Study receipt can be added by either view, with required patient and optional consultation/order. Receipt and physician review are distinct from historical study-request statuses.
+## Current product boundary — NM-PILOT-001 (2026-11-13)
+
+Nexus Med is being extended from the working local MVP into a controlled **synthetic-data clinic pilot**. This mission supersedes the older single-surgeon/no-account/no-cloud/no-file exclusions preserved below. The application remains a focused clinic workflow product, not a hospital ERP or a certified clinical system.
+
+A verified doctor can register, create a clinic and become its doctor/administrator. Clinic administrators invite doctors and secretaries and revoke clinic access. Administration is a capability independent from clinical role; an administrative member does not automatically acquire note, study-review or document-authoring powers. The application model places no arbitrary staff-count limit. Multiple memberships are representable; the current product uses one session-selected clinic without a general clinic-switching/configuration suite.
+
+Patients belong to a clinic and are shared for authorized longitudinal clinical continuity. Each saved consultation and structured document retains its original doctor author; later editors remain separate. Appointments carry a doctor assignment or visible unassigned state. Secretary operations cover administrative patient data, scheduling, reception and study receipt; protected clinical content and physician-only actions remain denied by Hono.
+
+Preserve all existing patient, calendar, reception, consultation, study and printable-document workflows and accepted global/patient navigation. Saves, appointment completion and physician review remain explicit. Concurrent edits must report conflicts rather than silently overwrite a newer version. No generated diagnoses, clinical recommendations, invented professional credentials or claims of legally valid electronic prescriptions are introduced.
+
+Local development stays loopback-only/offline for core workflows after dependencies are installed; the existing separate Next.js/OpenNext, Hono Worker, D1 and private R2 architecture is retained for environment-specific deployment testing. Google and SMTP require configured external services. Inventory/consumables/itemized charges are **P2 deferred** until core release gates pass. Billing/payment/tax engines, patient portals, AI clinical content and interoperability projects remain excluded.
+
+Actual release evidence and outstanding gates belong to [ACTION_PLAN](ACTION_PLAN.md), [TESTING](TESTING.md) and [operations](PILOT_OPERATIONS.md). Real-patient readiness is separate and remains subject to [security/privacy/clinical review](SECURITY.md). Historical browser results do not establish the new multi-user release.
+
+## Historical MVP definition and accepted clinical foundation
+
+**Historical 2026-11-10 extension — D-044/D-045:** The owner authorizes a secretary administrative workspace without authentication, patient/contact and appointment management, shared reception/waiting queue, and locally stored PDF/PNG/JPEG study receipts. This supersedes earlier staff/file exclusions only for these workflows; one treating surgeon, synthetic data, local loopback runtime, and no accounts remain. Study receipt can be added by either view, with required patient and optional consultation/order. Receipt and physician review are distinct from historical study-request statuses.
 
 
-**Status:** MVP/O-005 scope confirmed; owner-authorized O-006 implementation complete and pending owner review. Clinical semantics remain open where noted.
+**Historical status:** MVP/O-005/O-006 baseline before NM-PILOT-001. Clinical semantics remain open where noted.
 **Version:** 1.0  
-**Primary user:** One general surgeon  
-**Readability requirement (owner, 2026-11-12 — D-050):** Design for working professionals aged 60–70 as part of the intended audience. Favor clearly legible default text, firm strokes, strong contrast, visibly labeled actions and comfortably sized controls. Do not shrink essential text to maintain density or fit a narrow screen. Actual readability still needs intended-user review; the current implementation trial is isolated to `/exploracion-ui`.
+**Original primary user:** One general surgeon
+**Readability requirement (owner, 2026-11-12 — D-050):** Design for working professionals aged 60–70 as part of the intended audience. Favor clearly legible default text, firm strokes, strong contrast, visibly labeled actions and comfortably sized controls. Do not shrink essential text to maintain density or fit a narrow screen. The readability correction started in the historical `/exploracion-ui` trial and applies to the current product; intended-user review remains separate.
 **Interface language:** Spanish (Mexico)  
-**Prototype:** Local-only, offline at runtime, synthetic data only
+**Original prototype:** Local-only/offline core; synthetic-data restriction continues under the clinic pilot.
 
 ---
 
@@ -89,7 +105,7 @@ These exclusions were drafted before the accepted O-005 expansion. They remain h
 - DICOM viewing, OCR, automated document interpretation, or analytics.
 - Docker, CI/CD, remote Cloudflare resources, and production deployment.
 
-These remaining exclusions must not be implemented as speculative scaffolding. File storage and Google authentication are **pending future decisions**, not abandoned ideas. For implemented workflows see `WORKFLOWS.md`; for missing NX-004 work see `TASKS.md` / `UI_SPEC.md`.
+These remaining exclusions must not be implemented as speculative scaffolding. Those former exclusions are historical: current clinic/authentication/private-storage scope is specified above. For implemented workflows see `WORKFLOWS.md`; for missing NX-004 work see `TASKS.md` / `UI_SPEC.md`.
 
 ## 5. Consultation note structure
 

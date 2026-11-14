@@ -1,6 +1,45 @@
 # Architecture — Medical Platform MVP
 
-**Status:** Confirmed local architecture; NX-001…NX-004 implemented and browser-verified on `feat/nx-expansion-complete` as of 2026-11-08. Cloudflare remains future-only.
+## Current architecture — NM-PILOT-001 (2026-11-13)
+
+**Authority:** This section supersedes older local-only/single-doctor/authentication exclusions below. Earlier sections preserve the original design rationale and phase inventories; their dated scope/verification statements are historical. Current execution/evidence are in [ACTION_PLAN](ACTION_PLAN.md), [baseline](PILOT_BASELINE.md), [TESTING](TESTING.md) and [operations](PILOT_OPERATIONS.md). Code availability does not establish a successful live deployment.
+
+- `apps/web`: Next.js App Router/React/TypeScript, request-time SSR, shared clinical workflow components and existing Proposal 2 UI. Server Components retrieve API DTOs with `no-store`; browser mutations use the same-origin `/api/*` proxy. No Prisma, database or authoritative domain logic in the frontend.
+- `apps/api`: Hono owns validation, authorization, clinic scope and persistence. Node bootstrap serves loopback locally; `src/worker.ts` supplies the Cloudflare runtime. Keep the existing Better Auth, Prisma 7 and adapter choices.
+- Local: separate practice/demo SQLite databases and attachment directories. Remote configuration: separate practice/demo D1 bindings, private R2 namespace prefixes `practice/` and `demo/`, private API Worker, frontend API service binding, separate marketing Worker. The checked-in resource IDs name existing resources, not isolated staging.
+- Identity/session data live in the practice database. Membership resolves server-side on each request; selected clinic is session-owned. Demo identity selects the separate demo database and cannot administer clinic membership. The view selector is available only for demo sessions.
+- Clinic-owned domain reads/writes explicitly constrain `clinicId`; nested references, doctor assignment and attachment access are checked against the same clinic/patient. `isAdmin` is independent from clinical role; administrative ownership does not grant clinical authorship.
+- SQLite uses transactions; D1 uses binding `batch()` for multi-write atomic operations. Document version guards and child-line replacement share the same batch. Conditional updates reject stale writes. Historical author is immutable; editor and appointment doctor remain distinct.
+
+### Current code ownership map (extends §8)
+
+| Path | Responsibility |
+| --- | --- |
+| `apps/api/src/domains/auth/` | Better Auth configuration, sessions, clinic bootstrap/membership and invitation authorization |
+| `apps/api/src/domains/email/` | Encrypted durable outbox, account messages and explicit appointment mail |
+| `apps/api/src/domains/{patients,encounters,appointments,studies,receipts,documents}/` | Existing domain operations with clinic scope and explicit actor association |
+| `apps/api/src/shared/{clinic,version,versioned-write}.ts` | Request clinic/actor scope and optimistic update guards |
+| `apps/api/src/infrastructure/{database,storage,auth}/` | Runtime-owned Prisma/atomic writes, private local/R2 storage and local secret loading |
+| `apps/web/src/app/(application)/` | Authenticated SSR workflow routes; existing clinical/navigation composition |
+| `apps/web/src/app/{registro,onboarding,aceptar-invitacion}/` | Account signup, verified clinic setup and invitation entry |
+| `apps/web/src/components/auth/` | Account, onboarding, membership and session interfaces |
+| `apps/marketing/` | Independently configured public marketing Worker and local static assets |
+| `packages/contracts/` | Browser-safe DTOs/Zod schemas; no Prisma or database implementation |
+| `prisma/{migrations,cloudflare-migrations}/` | Reviewed SQLite and D1 migration histories; exact fixture seed remains separate |
+| `scripts/local-{backup,restore,recovery}.mjs` | Local-only checked snapshot/isolated restore; never overwrite live data |
+| `scripts/clinic-migration.test.mjs` | Temporary SQLite/workerd D1 preservation, constraints and atomic-write verification |
+
+The controlled pilot uses `America/Mexico_City` consistently for clinic scheduling. A stored timezone field permits future expansion but does not claim support for arbitrary operational timezones.
+
+### Deliberately additive clinic migration
+
+`20261113000000_clinic_ownership` / D1 `0004_clinic_ownership.sql` create the legacy clinic, deterministic memberships and nullable historical actor fields without rebuilding existing clinical tables or rewriting their original columns/timestamps. Existing `clinicId` ownership uses database triggers because SQLite/D1 cannot add a non-null reference column with a non-null default. Triggers enforce clinic existence, immutable ownership and same-clinic associations; ordinary FKs remain on newly added nullable actor fields and new tables.
+
+Prisma relation metadata expresses clinic traversal for queries. A schema-drift comparison may propose rebuilding legacy tables to materialize equivalent physical clinic FKs. **Do not blindly run `prisma migrate dev`, reset the database or accept that rebuild.** Evolve reviewed SQL deliberately and rerun preservation tests. Recovery pairs a coordinated database/attachment snapshot with its matching application commit; [operations](PILOT_OPERATIONS.md) distinguishes local evidence from unverified remote restore.
+
+## Historical local-MVP architecture and rationale
+
+**Historical status (2026-11-08):** Confirmed local architecture on `feat/nx-expansion-complete`; the current clinic/Cloudflare architecture is specified above.
 **Version:** 0.4  
 **Product:** Single-doctor medical practice platform  
 **Immediate target:** Fully local, offline-capable prototype using synthetic data  
@@ -8,7 +47,7 @@
 
 ---
 
-## Current Phase 4 code map (2026-11-08)
+## Historical Phase 4 code map (2026-11-08)
 
 **Local UI exploration (2026-11-12):** `apps/web/src/app/exploracion-ui/page.tsx` composes a standalone design sample, backed only by the checked-in synthetic demographic fixture. `components/patients/ui-exploration.tsx` and its CSS module own the sample's presentation and transient interactions. The server page returns not-found outside development. This is outside the authenticated application shell; it performs no API/database reads or writes and changes no application ownership boundary. No clinical fixture notes are passed to the client. It is not a second implementation of patient persistence.
 
@@ -329,7 +368,7 @@ The repository structure is part of the architecture. It should communicate the 
 
 Optimize for **clear ownership, discoverability, and structured growth**. Do not optimize for the maximum number of folders or architectural layers.
 
-### 8.1 Target repository tree
+### 8.1 Historical target repository tree (current extensions above)
 
 The following is the intended structure as the application is implemented. It is a target map, not an instruction to create empty directories or placeholder files. Add a directory when it has real contents.
 

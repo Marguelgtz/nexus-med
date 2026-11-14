@@ -1,4 +1,5 @@
 import { getCloudflareContext } from '@opennextjs/cloudflare';
+import { forwardToApiService } from '../../../lib/api/service-forward';
 
 export const dynamic = 'force-dynamic';
 
@@ -36,7 +37,7 @@ async function forward(request: Request): Promise<Response> {
   const { env } = await getCloudflareContext({ async: true });
   const api = (env as CloudflareEnv & { API?: ApiService }).API;
   if (!api) return Response.json({ error: { code: 'INTERNAL_ERROR', message: 'La API no está disponible.' } }, { status: 503 });
-  return api.fetch(request);
+  return forwardToApiService(api, request);
 }
 
 export const GET = forward;

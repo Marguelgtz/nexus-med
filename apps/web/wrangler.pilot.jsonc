@@ -1,0 +1,28 @@
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "nexus-med-pilot-001-web",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2026-11-11",
+  "compatibility_flags": [
+    "nodejs_compat",
+    "global_fetch_strictly_public"
+  ],
+  "workers_dev": true,
+  "vars": {
+    "APP_BASE_URL": "https://nexus-med-pilot-001-web.marguel-gtz.workers.dev"
+  },
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "services": [
+    {
+      "binding": "API",
+      "service": "nexus-med-pilot-001-api"
+    },
+    {
+      "binding": "WORKER_SELF_REFERENCE",
+      "service": "nexus-med-pilot-001-web"
+    }
+  ]
+}

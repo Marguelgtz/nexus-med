@@ -1,5 +1,22 @@
 # Phase Task Plan — Medical Platform MVP
 
+## NM-PILOT-001 — approved phase work packages
+
+This approved material scope change adds the following stable work definitions. Earlier phase scopes/exclusions are retained as historical context; they do not prohibit clinic membership, authentication, private received-study attachments or the existing Cloudflare architecture. Progress/status belongs exclusively in [ACTION_PLAN](ACTION_PLAN.md).
+
+| Work package | Outcome / deliverables | Dependencies and acceptance |
+| --- | --- | --- |
+| NM-BASE (OBJ-00) | Integrated ancestry inventory, reproducible baseline, remaining-gap record | Inspect actual implementation head and independent PRs; record tests/builds honestly |
+| NM-CLINIC (OBJ-02) | Clinic/membership schema, additive legacy migration, scoped domain operations, actors, doctor assignment and concurrency guards | Foundation first; preserve every original record/timestamp/link; SQLite and workerd D1 migration/FK/rollback/isolation tests |
+| NM-ACCESS (OBJ-03) | Verified signup/bootstrap, doctor/secretary invitations, admin capability, revocation and conditional Google lifecycle | Clinic foundation; matching verified invitation identity, no role injection, idempotency, session invalidation, disabled/unverified denial; document provider-dependent checks |
+| NM-WORKFLOW (OBJ-01/04) | Complete existing actions and multi-session patient/reception/encounter/study/document journeys | Data/access contracts; preserve explicit clinical semantics, author attribution, save failure recovery and navigation |
+| NM-UI (OBJ-05) | Restrained shared-token refinement and new access/scheduling interfaces | Existing Proposal 2 retained; responsive/keyboard/text/print evidence without clinical regressions |
+| NM-OPS (OBJ-06) | Environment separation, private storage, deploy packaging, coordinated backups and tested recovery | No destructive live operations; local/D1 behaviors differentiated; safe isolated restore and residual risks recorded |
+| NM-RELEASE (OBJ-07) | Integrated acceptance evidence and reviewable release branch/PR stack | All mandatory gates assessed as PASS/FAIL/BLOCKED/NOT STARTED/DEFERRED; no false synthetic/real-patient readiness claim |
+| NM-INVENTORY (OBJ-08, P2) | Optional durable movements/consumption/price snapshots if later undertaken | Deferred until core gates; never substitute a disconnected form or expand into accounting |
+
+Schema, shared authorization/contracts and global CSS changes integrate serially; independent research/review and isolated tests can run in parallel. Keep coherent verified commits, explicit PR dependencies and the existing restricted merge policy. Tests and browser/deployment evidence must correspond to the actual integrated head.
+
 **Document type:** Phase-level work definition  
 **Update cadence:** At phase boundaries or after an approved material scope change  
 **Not a live progress tracker:** See `docs/ACTION_PLAN.md` for the current execution state.
@@ -243,7 +260,7 @@ Acceptance: doctor-authored content persists and reopens from patient context; p
 - All existing available tests plus relevant new tests pass; typecheck, lint, and production build pass; no new runtime dependencies and no excluded capability introduced.
 - Documentation reconciled (`TASKS.md`, `ACTION_PLAN.md`, `DATA_MODEL.md`, `API_CONTRACT.md`, `UI_SPEC.md`, `WORKFLOWS.md`, `DEMO_DATA.md`, `TESTING.md`, `DECISIONS.md`); no product-feature PR merged without explicit owner approval.
 
-## 7. Deferred scope — not part of this prototype
+## 7. Historical deferred scope before clinic/auth/cloud authorization
 
 - File storage, document uploads/downloads, document management, and R2.
 - Google authentication/OAuth/OIDC and authorization.
