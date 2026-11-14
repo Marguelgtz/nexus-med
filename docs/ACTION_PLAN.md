@@ -2,9 +2,9 @@
 
 **Outcome:** A clinic-scoped release candidate for a controlled synthetic pilot. Real-patient use remains gated on independent privacy, security and clinical review. Inventory is deferred until the mandatory gates pass.
 
-**Branch:** `codex/pilot-clinic-foundation`, based on `82a6baf`; baseline documentation `1df1580`, email queue `eb445dc`, recovery tools `b241186`, clinic API `9d4f78e`, and web integration `49c5d72` committed. Earlier fixes are committed. Current D-054 UI/documentation changes and the remote journey script are uncommitted; this branch has no upstream or pilot PR. Existing feature PRs remain open; only the isolated synthetic pilot was deployed, and nothing was merged.
+**Branch:** `codex/pilot-clinic-foundation`, based on `82a6baf`; baseline documentation `1df1580`, email queue `eb445dc`, recovery tools `b241186`, clinic API `9d4f78e`, web integration `49c5d72`, and mission slice `3a7e221` committed. The mission slice records D-054, the resumable remote journey and current evidence. This branch has no upstream or pilot PR. Existing feature PRs remain open; only the isolated synthetic pilot was deployed, and nothing was merged.
 
-**Execution status:** ACTIVE. The owner resumed this mission and explicitly authorized the isolated synthetic remote journey. Current code and documentation changes remain uncommitted. The existing journey process is running and honoring the password-reset rate limit. No handoff file is requested.
+**Execution status:** ACTIVE. The owner resumed this mission and explicitly authorized the isolated synthetic remote journey. Current mission slice is committed locally as `3a7e221`, with no push or PR yet. The existing journey process is running and honoring the password-reset rate limit. No handoff file is requested.
 
 ## Execution state
 
