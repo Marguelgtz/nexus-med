@@ -3322,6 +3322,18 @@ body { background: var(--bg); }
 @media (max-width: 1024px) {
   .app-main .reception-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
+@media screen and (max-width: 639px) {
+  .app-main .workspace-tabs { width: 100%; gap: 2px; }
+  .app-main .workspace-tabs a {
+    flex: 1 1 0;
+    min-width: 0;
+    justify-content: center;
+    padding-inline: 4px;
+    font-size: 13px;
+    white-space: nowrap;
+    overflow-wrap: normal;
+  }
+}
 @media print {
   .medical-document-paper { border-radius: 0; background: white; box-shadow: none; }
 }
