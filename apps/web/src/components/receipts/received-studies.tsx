@@ -85,7 +85,13 @@ export function ReceivedStudies({ receipts, patients, administrative = false, fi
       <p className="field-hint">Recibido: {formatDateTime(row.receivedAt)}{row.studyDate ? ` · Fecha del estudio: ${formatDate(row.studyDate)}` : ''}</p>
       <p className="field-hint">{row.encounter ? `Consulta: ${formatDateTime(row.encounter.occurredAt)}` : 'Asociado al paciente, sin consulta'}{row.requestId ? ' · Con solicitud relacionada' : ' · Sin solicitud previa'}</p>
       {row.receiptNote ? <p className="receipt-note">{row.receiptNote}</p> : null}
-      <ul className="receipt-files">{row.files.map(file => <li key={file.id}><a href={receiptFileUrl(file.id)} target="_blank" rel="noreferrer" className="btn btn-secondary btn-sm" aria-label={`Abrir ${file.name} en otra pestaña`}>{file.mimeType === 'application/pdf' ? 'PDF' : 'Imagen'} · {file.name} ↗</a><span className="field-hint">{Math.ceil(file.size / 1024)} KB</span></li>)}</ul>
+      <ul className="receipt-files">{row.files.map(file => <li key={file.id}>
+        <a href={receiptFileUrl(file.id)} target="_blank" rel="noreferrer" className="btn btn-secondary btn-sm">
+          {file.mimeType === 'application/pdf' ? 'PDF' : 'Imagen'} · {file.name} <span aria-hidden="true">↗</span>
+          <span className="sr-only"> (se abre en una pestaña nueva)</span>
+        </a>
+        <span className="field-hint">{Math.ceil(file.size / 1024)} KB</span>
+      </li>)}</ul>
       {!administrative && row.reviewNote ? <p className="receipt-note"><strong>Nota del médico: </strong>{row.reviewNote}</p> : null}
       {row.reviewedAt ? <p className="field-hint">Revisión registrada: {formatDateTime(row.reviewedAt)}</p> : !administrative ? <button className="btn btn-ghost" onClick={() => setReview(row)}>Registrar revisión</button> : null}
     </li>)}</ul>}
