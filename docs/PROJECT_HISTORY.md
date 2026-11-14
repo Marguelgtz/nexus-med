@@ -529,4 +529,10 @@ The authorized resumable journey completed successfully against the isolated syn
 
 The tested API/web deployment versions predate the current checkout. This milestone does not clear release readiness: remote revocation, report authoring/print, current-source deployment verification, remote browser/accessibility, restored-app cutover and measured RTO/RPO remain open. The evidence is recorded in `ACTION_PLAN.md`, `PILOT_READINESS.md`, and `TESTING.md`.
 
-The mission branch was pushed as `origin/codex/pilot-clinic-foundation`, and draft PR [#42](https://github.com/Marguelgtz/nexus-med/pull/42) was opened on top of #41. It is a broad 118-file cross-layer review boundary; GitHub reported it mergeable at creation/read-back. It remains a draft and unmerged while the owner/reviewer examines the stack and readiness evidence.
+The mission branch was pushed as `origin/codex/pilot-clinic-foundation`, and draft PR [#42](https://github.com/Marguelgtz/nexus-med/pull/42) was opened on top of #41. It is a broad 119-file cross-layer review boundary after the revocation runner was added; GitHub reported it mergeable at read-back. It remains a draft and unmerged while the owner/reviewer examines the stack and readiness evidence.
+
+## 2026-11-13 local / 2026-11-14 UTC — Remote synthetic membership revocation verified
+
+A separate synthetic-only journey against the isolated pilot created a new clinic, invited a doctor, and had that doctor author a patient encounter before the owner revoked membership. The existing session then received 401; a fresh login remained possible but carried no clinic and received 403 when requesting the prior encounter. The owner could still read the patient and encounter with the original physician author intact. Read-only D1 confirmed revoked membership, one `member.revoked` event and retained authorship. Three verification/invitation messages remained queued to `example.test`, none sent. The runner removed its restricted temporary credential state after success; synthetic records remain in the isolated pilot. This tested the deployed API/web versions, not the current checkout.
+
+**References:** `scripts/pilot-remote-revocation.ts`, `TESTING.md`, `PILOT_READINESS.md`, `ACTION_PLAN.md`.
