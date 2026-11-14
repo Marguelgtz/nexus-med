@@ -529,7 +529,7 @@ The authorized resumable journey completed successfully against the isolated syn
 
 The tested API/web deployment versions predate the current checkout. This milestone does not clear release readiness: remote revocation, report authoring/print, current-source deployment verification, remote browser/accessibility, restored-app cutover and measured RTO/RPO remain open. The evidence is recorded in `ACTION_PLAN.md`, `PILOT_READINESS.md`, and `TESTING.md`.
 
-The mission branch was pushed as `origin/codex/pilot-clinic-foundation`, and draft PR [#42](https://github.com/Marguelgtz/nexus-med/pull/42) was opened on top of #41. It is a broad 119-file cross-layer review boundary after the revocation runner was added; GitHub reported it mergeable at read-back. It remains a draft and unmerged while the owner/reviewer examines the stack and readiness evidence.
+The mission branch was pushed as `origin/codex/pilot-clinic-foundation`. To reduce review size, the cumulative 119-file PR was split into a dependency-aware stack on #41: [#43 API foundation](https://github.com/Marguelgtz/nexus-med/pull/43) (46 files), [#44 web integration](https://github.com/Marguelgtz/nexus-med/pull/44) (30), [#45 pilot operations](https://github.com/Marguelgtz/nexus-med/pull/45) (26), [#46 workflow/email reliability](https://github.com/Marguelgtz/nexus-med/pull/46) (25), [#47 auth hardening](https://github.com/Marguelgtz/nexus-med/pull/47) (32), and [#42 remote verification evidence](https://github.com/Marguelgtz/nexus-med/pull/42) (5). All six PRs remain open drafts and unmerged; GitHub's latest reads report each mergeable. The order is #41 → #43 → #44 → #45 → #46 → #47 → #42.
 
 ## 2026-11-13 local / 2026-11-14 UTC — Remote synthetic membership revocation verified
 
