@@ -731,7 +731,7 @@ The final prototype must not open to an empty shell. After a clean local setup:
 - The root route `/` redirects to `/patients`.
 - On a clean database, the checked-in fixture inserts exactly seven demo patients (six active and one archived) and nine demo encounters; user-created records may increase the total later.
 - The fixture set includes at least two patients with multiple encounters, one patient with no encounters, and one archived patient.
-- The application displays the seeded records without a demonstration label (D-046).
+- The authenticated controlled-pilot shell displays the persistent synthetic-data warning (D-054); startup output and printed documents remain unlabelled under D-046.
 - Seed records have stable identifiers and visibly synthetic names/content.
 - Running startup or `npm run db:seed` again must not duplicate records or overwrite edits made during testing.
 
@@ -850,7 +850,7 @@ Do not implement these as part of the current prototype:
 - [ ] The browser cannot access SQLite or Prisma directly.
 - [ ] Hono uses Prisma ORM 7 with a local SQLite file.
 - [ ] Local SQLite migrations and Prisma 7 explicit seeding are reproducible.
-- [ ] The clean first run seeds the required synthetic dataset and opens `/patients` without a demonstration label (D-046).
+- [ ] The clean first run seeds the required synthetic dataset; authenticated controlled-pilot views show the persistent warning required by D-054 (D-046 still governs startup output and print).
 - [ ] Repeated seed/startup creates no duplicates and does not overwrite existing edits or user-created records.
 - [ ] Prisma transactions work for local SQLite operations that require atomic multi-write behavior.
 - [ ] Restarting both applications does not delete local data.

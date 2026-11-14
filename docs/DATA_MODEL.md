@@ -89,7 +89,7 @@ The SQLite database lives in `.local/data/medical.db`; the development orchestra
 
 ## 5. Current synthetic dataset
 
-`docs/demo-dataset.json` and `prisma/seed.ts` define seven patients (six active), nine encounters, four fixed historic appointments, five upcoming first-seed-anchored appointments, two study requests, and two medical documents. Clean migration/seed, repeat startup, idempotency and preservation of edited document content were reported verified at the O-005 exit. See `DEMO_DATA.md` and `TESTING.md` for evidence.
+`docs/demo-dataset.json` and `prisma/seed.ts` define seven patients (six active), nine encounters, nine appointments (four fixed historic plus five first-seed-anchored upcoming), three study requests, two medical documents and one received-study/PDF example. Clean migration/seed, repeat startup, idempotency and preservation of edited document content were reported verified at the O-005 exit. See `DEMO_DATA.md` and `TESTING.md` for evidence.
 
 ## 6. Medical documents
 

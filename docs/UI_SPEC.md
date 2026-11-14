@@ -53,7 +53,7 @@ Owner authorizes a distinct interactive example, not an application-wide replace
 **Status:** O-002/O-005 baseline, owner-authorized O-006 implementation contract (§8), and verified O-007 UI v0 presentation conventions (§9). Implementation PRs remain unmerged for owner review.
 **Owner:** `apps/web` (Next.js App Router)  
 **Interface language:** Spanish (Mexico) — all UI strings below are the canonical copy; technical prose stays in English.  
-**Data:** Synthetic demo records only. D-046 removes demonstration labeling from screens and printable documents.
+**Data:** Synthetic records only. D-054 requires a persistent warning in the authenticated controlled-pilot shell; D-046 still excludes a generated marker from printable documents.
 
 This spec follows `TASKS.md` work packages T-007–T-011: it reconciles workflows with the implemented API (Section 1), defines the information architecture (Section 2), specifies every screen and interaction (Sections 3–4), the states and visual system (Section 5), and closes with story coverage and recorded decisions (Section 6).
 
@@ -83,7 +83,7 @@ Gaps and decisions recorded here (no API/data changes required; per D-017 the AP
 2. **No unarchive.** One-way archive is by design (no permanent delete, no restore, in this prototype). The confirmation dialog copy makes this explicit.
 3. **Age display.** `dateOfBirth` is a `YYYY-MM-DD` string. Age is computed client-side and shown as `edad` next to the date; never stored.
 4. **Dates and times.** All ISO 8601 values render with `Intl` in `es-MX` in the local practice timezone: dates as `d 'de' MMMM yyyy`, datetimes as `d 'de' MMMM yyyy, HH:mm`. No UTC display anywhere.
-5. **No auth, no multi-user.** Single-doctor local tool; no login screen or user management. Synthetic seed data is a development boundary, not a visible UI label (D-046).
+5. **Historical O-001 boundary, superseded by D-053.** The current controlled pilot uses authenticated clinic membership. D-054 requires a persistent synthetic-data notice in the authenticated shell.
 6. **Form submission style.** Per `ARCHITECTURE.md`, browser mutations use the typed API client (contract zod schemas validate in the browser first, then the API re-validates authoritatively). After a successful mutation, the page re-renders server-side so the visible state always matches the database.
 
 ---
@@ -137,7 +137,7 @@ Navigation rules:
 
 ## 3. Screen specifications (T-009)
 
-Common to all screens: top bar, container `max-width: 1120px`, content left-aligned. All text in Spanish (Mexico). No demonstration or fictional-data labels are shown (D-046).
+Common to all screens: top bar, container `max-width: 1120px`, content left-aligned. All text in Spanish (Mexico). The authenticated controlled-pilot shell displays the persistent synthetic-data warning defined by D-054. Printable documents retain the no-marker rule in D-046.
 
 ### 3.1 Registro de pacientes — `/patients`
 
@@ -292,7 +292,7 @@ Carried from `WORKFLOWS.md` §9 and made concrete:
 - **No shared caching** of patient/encounter data across sessions; each SSR render fetches fresh (per `ARCHITECTURE.md`).
 - **Identify the patient** on every patient-specific screen (context strip) and on every encounter form.
 - **One-way archive** with explicit, unhiding confirmation copy.
-- **Presentation:** do not show demonstration or fictional-data labels (D-046); keep the synthetic-data boundary in development documentation.
+- **Presentation:** show the persistent synthetic-data notice in the authenticated controlled-pilot shell (D-054); do not add a marker to printable documents (D-046).
 
 ---
 
@@ -370,9 +370,9 @@ Type scale: H1 24/32 semibold · H2 18/26 medium · body 15/24 regular · small 
 | **Skeleton** | 8 px radius bars in `--surface-hover` with a subtle shimmer; registry: 3 rows; overview: header + 2 cards. |
 | **Inline confirm** | Bordered panel (`--warning-bg` header strip for archive), message + `Cancelar`/action buttons right-aligned. |
 
-### 5.4 Demonstration labels (superseded by D-046)
+### 5.4 Synthetic-data pilot notice (D-054)
 
-Do not render a demonstration banner, fictional-data notice, or equivalent label in application chrome.
+Render a persistent Spanish warning in the authenticated shell across doctor, secretary, administrator and demonstration views. State that the controlled pilot uses fictitious data, changes are saved, and changes may be visible to clinic members according to their permissions. Do not add the warning to startup output or printable documents; D-046 remains in force there.
 
 ### 5.5 State matrix
 
@@ -416,7 +416,7 @@ Semantic landmarks (`header`, `main`, `nav`); one H1 per page; labels programmat
 | US-011 Maintain clinical continuity | 3.3 (context strip, timeline, `Editada` badge) |
 | US-012 Know whether information was saved | §4 (state separation, banners, navigation-as-confirmation) |
 | US-013 Resume after restart | §2 (URL-driven navigation), §1.4 (local dates), O-004 persistence |
-| US-014 Open a populated prototype | 3.1 (populated registry; no visible demo label per D-046) |
+| US-014 Open a populated prototype | 3.1 (populated registry; persistent authenticated synthetic-data notice per D-054) |
 
 All 14 stories are covered by observable behavior in this spec. No story requires a capability the API lacks; the two heuristic/one-way decisions in §1 (duplicate notice, one-way archive) are design-level and change no API or data assumptions.
 
@@ -787,7 +787,7 @@ Glass uses sufficiently opaque light surfaces over soft blue/lilac background il
 
 ## Reception overview and presentation policy — 2026-11-10
 
-D-046 supersedes older banner/watermark requirements in this document. Application chrome and printable documents do not display demonstration/fictional-data labels. Existing clinical text and fixture records are preserved.
+D-054 supersedes D-046 for authenticated application chrome in the controlled synthetic pilot. D-046 still excludes labels from startup output and printable documents. Existing clinical text and fixture records are preserved.
 
 Reception and secretary agenda show date-scoped non-cancelled appointment totals, completed appointments, cancellations and planned minutes. Waiting and in-attention totals use the shared queue across all dates and explicitly label that scope. The next appointment is the earliest scheduled, unarrived appointment at or after the server-rendered snapshot time in the selected date. No next patient is inferred from overdue appointments. The overview refreshes with the existing reception data; progress derives from completed/non-cancelled appointments. Empty days display zero counts and an explicit empty next-appointment state.
 

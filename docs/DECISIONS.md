@@ -14,6 +14,10 @@ Use `Confirmed`, `Proposed`, `Open`, or `Superseded`. Record the date and ration
 
 **Migration/concurrency:** Additive SQL preserves all old fields/timestamps/associations. Existing identities receive legacy-clinic memberships from documented prior roles; no historical clinician is invented. Existing tables use triggers for non-null default clinic ownership because SQLite/D1 cannot add a non-null REFERENCES column with a populated default. Prisma relation metadata enables traversal; the checked-in migration triggers are authoritative for these clinic relations. Do not blindly accept a schema-drift table-rebuild migration. Patient/clinic/clinical author ownership is immutable. Association/actor guards protect raw batches. Clinical/demographic/document/appointment edits use optimistic versions; replacing prescription lines uses a checked guard in the same SQLite transaction/D1 batch. Local recovery and D1 simulation do not establish remote deploy readiness.
 
+### D-054 — Persistent synthetic-data notice for the controlled pilot — 2026-11-13
+
+**Status:** Accepted by the explicit owner instructions supplied with NM-PILOT-001. Every authenticated application view in the controlled synthetic pilot displays a persistent Spanish warning that the data are fictitious and changes are saved and may be visible to clinic members according to their permissions. This supersedes D-046 only for the authenticated application chrome. Startup output and printable documents retain D-046's no-label behavior. The notice describes the synthetic pilot boundary; it does not claim the app is ready for real-patient use.
+
 
 
 ### D-052 — Role-aware patient access and focused Reception appointments — 2026-11-12
@@ -44,7 +48,7 @@ Use `Confirmed`, `Proposed`, `Open`, or `Superseded`. Record the date and ration
 | D-011 | Docker and CI/CD are excluded from the prototype. | Use local scripts and one-command startup. |
 | D-012 | Professional commits, remote PRs, and selective merging are allowed under a restricted merge policy. | Pushes and remote PR creation are allowed when useful. PRs/stacks may remain open and ready to merge; keeping them open is optional. Only an exceptionally solid foundational/base PR may be merged autonomously after all acceptance criteria and checks pass with no blockers. Feature/UI PRs remain open unless the owner explicitly authorizes their merge. |
 | D-013 | Future API runtime target is Cloudflare Workers; D1 is a future database candidate. | Validate adapter, transactions, limits, and critical workflows before deployment. |
-| D-014 | First-run experience must include synthetic records. | Seven patients (six active, one archived) and nine encounters; no visible demo label per D-046; root redirects to `/patients`; seed is idempotent and does not overwrite local edits. |
+| D-014 | First-run experience must include synthetic records. | Seven patients (six active, one archived) and nine encounters; authenticated views show the persistent synthetic-data notice per D-054; root redirects to `/patients`; seed is idempotent and does not overwrite local edits. |
 | D-015 | Local `npm run dev` is the intended single startup command. | Implemented in O-001 (`scripts/dev.mjs`): migrates, explicitly seeds, and starts both services. |
 | D-016 | Development order is database/API foundation, then UX/UI design, then product implementation. | Establish and test the data model and Hono API before feature UI design. Produce and review `docs/UI_SPEC.md` before implementing product screens. |
 | D-017 | Database and API remain revisable during UX design and product implementation. | The initial foundation is not a freeze. Change Prisma schema through migrations and update Hono contracts, validation, tests, and docs when actual workflows justify it. |
@@ -155,7 +159,7 @@ The owner explicitly selected local PDF/image storage. A received study has a pa
 
 ## D-046 — Presentation without demonstration labels — 2026-11-10
 
-**Status:** Accepted, explicit owner instruction. Remove demonstration/fictional-data labels from application chrome, startup output, and printable documents. This supersedes earlier requirements for visible demonstration labels only. Preserve exact seed fixtures, existing records, local-only operation and the synthetic-data development boundary. The owner also approves an operational reception overview derived from existing appointments and queue data; no invented activity or new clinical states.
+**Status:** Partially superseded by D-054 for authenticated application chrome in the controlled pilot. The original explicit decision removes demonstration/fictional-data labels from startup output and printable documents. Preserve exact seed fixtures and the synthetic-data development boundary. The owner also approves an operational reception overview derived from existing appointments and queue data; no invented activity or new clinical states.
 
 ## D-047 — Secretary patient cards and shared-study synchronization — 2026-11-11
 

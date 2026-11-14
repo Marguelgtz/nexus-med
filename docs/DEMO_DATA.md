@@ -6,7 +6,7 @@ The exact checked-in `demo-dataset.json` remains authoritative; do not invent re
 
 Identity/session state is kept in the practice database. Demo identity grants only the selected doctor/secretary demonstration view and cannot administer clinic access. New synthetic accounts created by tests are explicitly isolated fixtures, separate from the exact first-run clinical dataset. Tests must use temporary storage or the documented isolated harness; never seed or reset a live environment merely to verify migration.
 
-The current seed includes the approved third study request and received-study example with a synthetic PDF. That example is receipt evidence, not an invented clinical result or physician review. All repeated seeds remain create-if-missing and must preserve edited content, timestamps, user-created records and stored attachment bytes. See [DATA_MODEL](DATA_MODEL.md) for ownership and [operations](PILOT_OPERATIONS.md) for coordinated database/file recovery. D-046's no-visible-demo-label presentation decision does not authorize real-data use.
+The current seed includes the approved third study request and received-study example with a synthetic PDF. That example is receipt evidence, not an invented clinical result or physician review. All repeated seeds remain create-if-missing and must preserve edited content, timestamps, user-created records and stored attachment bytes. See [DATA_MODEL](DATA_MODEL.md) for ownership and [operations](PILOT_OPERATIONS.md) for coordinated database/file recovery. The authenticated warning required by D-054 does not authorize real-data use.
 
 **Status:** Required for prototype completion  
 **Data classification:** Entirely fictional synthetic data  
@@ -22,7 +22,7 @@ This is a development fixture dataset, not medical guidance and not a substitute
 
 Seed at least:
 
-- **7 patients** with plausible synthetic Spanish names. The local development boundary and this document identify the dataset as synthetic; the application has no visible demo banner (D-046).
+- **7 patients** with plausible synthetic Spanish names. The persistent authenticated warning identifies the controlled pilot as synthetic (D-054); startup output and printable documents retain D-046's no-label behavior.
 - **9 encounters** distributed across at least four patients.
 - **9 appointments**: 4 fixed past appointments (3 completed — two linked to demo encounters, one `procedimiento` — and 1 cancelled) plus 5 upcoming appointments anchored to the first seed run (see Section 3).
 - **3 study requests**: two attached to `demo-encounter-002b` / `demo-patient-002`, and one chest X-ray request attached to `demo-encounter-005b` / `demo-patient-005`, created on the first seed run's practice-local date.
@@ -50,7 +50,7 @@ The exact checked-in fixture payload is `docs/demo-dataset.json`; use it as the 
 | `Sofía Torres` (`NM-006`) | 1 | Demonstrates a simple patient record |
 | `Lucía Gómez` (`NM-007`) | 1 | Demonstrates another active patient record |
 
-On a clean database, this fixture produces seven demo patients (six active and one archived), nine demo encounters, nine demo appointments and three demo study requests, plus the approved receipt/PDF example. All seven fixture patient IDs, nine fixture encounter IDs, and the four fixture appointment IDs must be inserted. Preserve the exact approved fixture text and D-046 presentation; synthetic classification remains documented here. Add independent synthetic test records only in isolated verification storage; do not alter the exact clinical fixture without an approved change.
+On a clean database, this fixture produces seven demo patients (six active and one archived), nine demo encounters, nine demo appointments (four fixed historic and five anchored to the first seed date), three demo study requests, two medical documents and one received-study/PDF example. All seven fixture patient IDs, nine fixture encounter IDs and four fixed historic appointment IDs must be inserted; future appointments are derived from the first seed date. Preserve the exact approved fixture text, the D-054 authenticated warning and D-046 startup/print behavior. Add independent synthetic test records only in isolated verification storage; do not alter the exact clinical fixture without an approved change.
 
 ### Appointment fixtures (NX-001)
 
@@ -100,13 +100,13 @@ The fixture lines use stable IDs and positions. Document and line records are cr
 
 ## 5. Seeded first-run state
 
-- Do not show a demonstration or fictional-data banner in the application (D-046).
+- Show the persistent Spanish synthetic-data warning in every authenticated controlled-pilot view (D-054).
 - Patient display names and identifiers should look natural; the development environment and this document establish that the seed data is synthetic.
 - The registry should show seeded records immediately.
 - The root route `/` should redirect to `/patients`.
 - Empty states must still be reachable, including a patient with no encounters.
 
-The application should present seeded records without visible demonstration labels. The seed and migration must preserve user-created records and edited fixture values; only exact unchanged legacy note values are cleared by the note-cleanup migration.
+Authenticated controlled-pilot views must show the persistent synthetic-data warning (D-054). The seed and migration must preserve user-created records and edited fixture values; only exact unchanged legacy note values are cleared by the note-cleanup migration.
 
 ## 6. Seed implementation
 
@@ -122,7 +122,7 @@ Required behavior:
 6. New demo fixture records may be added in later revisions, but existing records should not be rewritten automatically.
 7. Normal startup runs migrations first, then the seed command, then starts both services.
 
-One owner-approved exception updates the seven untouched placeholder patient names and `DEMO-00x` identifiers once. Its migration matches each stable fixture ID plus both original placeholder values, so renamed or otherwise edited patient rows and all user-created rows remain unchanged. The fixture seeds the same plausible fictional display names on clean installs. Per D-046, preserve existing fixture and stored note text while omitting application-level demo labels.
+One owner-approved exception updates the seven untouched placeholder patient names and `DEMO-00x` identifiers once. Its migration matches each stable fixture ID plus both original placeholder values, so renamed or otherwise edited patient rows and all user-created rows remain unchanged. The fixture seeds the same plausible fictional display names on clean installs. Preserve existing fixture and stored note text; authenticated app chrome shows the warning under D-054, while startup output and printed documents retain D-046's no-label behavior.
 
 A destructive reset belongs only in an explicit local-only command (`npm run db:reset`) and must never run as part of normal startup.
 
@@ -150,7 +150,7 @@ After the developer creates or edits local patients/encounters:
 
 - Stopping and restarting the application must preserve all records.
 - Running the seed again must not reset, replace, or duplicate records.
-- The seeded synthetic records remain available without a visible demo banner (D-046).
+- The seeded synthetic records remain available with the persistent authenticated warning (D-054).
 - A database reset is explicit and destructive; provide a clear warning and require an explicit confirmation flag or interactive confirmation.
 
 ## 9. Seed verification

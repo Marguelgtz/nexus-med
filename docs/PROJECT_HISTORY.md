@@ -510,3 +510,15 @@ An earlier extension-browser check reported a blank PDF viewer. The seeded one-p
 A headed Chrome session with a fresh synthetic doctor demo account and isolated SQLite practice/demo databases completed the patient-study receipt workflow: select a PDF, save, display the new receipt, retrieve its file through the authenticated same-origin app route, and render it in Chrome's PDF viewer. The response was 200, `application/pdf`, `no-store`, and 705 bytes with a valid `%PDF-1.4` signature. A first harness selection used the extensionless internal storage key, which gave Chrome an empty MIME type; the API rejected it and created no receipt. A normal `.pdf` filename passed. The app code was unchanged; all writes were limited to the temporary synthetic environment. Remote staff isolation and print/accessibility checks remain open.
 
 **References:** `ACTION_PLAN.md`, `TESTING.md`, `PILOT_READINESS.md`, `apps/web/src/components/receipts/receipt-form.tsx`, `apps/api/src/domains/receipts/receipts.routes.ts`.
+
+## 2026-11-13 — Rechecked official Mexican privacy and clinical-system sources
+
+The current Cámara de Diputados LFPDPPP compilation lists its latest reform as 2025-11-14. The 2024 DOF/SIDOF status notice lists NOM-004-SSA3-2012 and NOM-024-SSA3-2012 among standards that remain in effect until modified or cancelled. The 2026 National Infrastructure Quality Program lists planned modifications to both standards, with estimated work during 2026. A program entry is not a final standard or an applicability finding; `SECURITY.md` now requires a current publication check and qualified independent review before real-patient use. No compliance conclusion was made.
+
+**References:** [LFPDPPP](https://www.diputados.gob.mx/LeyesBiblio/pdf/LFPDPPP.pdf), [2024 NOM status notice](https://sidof.segob.gob.mx/notas/docFuente/5736794), [2026 National Infrastructure Quality Program](https://dof.gob.mx/nota_detalle.php?codigo=5780781&fecha=24/02/2026), `SECURITY.md`, `PILOT_READINESS.md`.
+
+## 2026-11-13 — Current-source browser print rendering
+
+An isolated headless Chrome run used backup copies of the local synthetic databases and a disposable frontend cache. Both seeded document kinds rendered as one-page PDFs with patient, author and body content. Visual inspection and PDF extraction confirmed the shell, controls, screen-only note and D-054 notice do not print. The shared local database was not changed. This verifies local rendering only; deployed pilot output and physical printing remain open.
+
+**References:** `ACTION_PLAN.md`, `TESTING.md`, `PILOT_READINESS.md`, `apps/web/src/components/documents/medical-document-detail.tsx`, `apps/web/src/app/globals.css`.

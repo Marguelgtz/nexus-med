@@ -11,11 +11,9 @@ export function AppFrame({ session, children }: { session: AuthSession; children
       <div className="app-layout">
         <TopBar session={session} />
         <div className="app-main">
-        {session.user.role === 'demo' ? (
-          <div className="demo-notice" role="status">
-            <strong>Demostración compartida.</strong> Los cambios se conservan para las siguientes visitas.
-          </div>
-        ) : null}
+        <div className="demo-notice" role="status">
+          <strong>Modo demostración — datos ficticios.</strong> Esta versión usa únicamente información sintética. Los cambios se guardan y pueden ser visibles para otros miembros de tu clínica según sus permisos.
+        </div>
         <main id="main-content" tabIndex={-1}>
           <div className="patient-workspace-shell">
             <PatientWorkflowNav />
