@@ -80,9 +80,9 @@ Dependencies run from #41 through #43–#47, then #42. GitHub mergeability refle
 
 **Local data safety finding:** A separate read-only look at the owner's default `.local/data/demo.db` surfaced a contact-bearing record that may not be synthetic. The audit stopped using that database, removed temporary screenshots/profile, and left the database untouched; no values were copied to docs or commits. Keep the app loopback-only and use fresh exact-fixture copies for further verification. Owner disposition is needed before treating the default local database as synthetic-only.
 
-**Verification after mobile tab fix:** Web typecheck passed; web tests passed 64/64; `git diff --check` passed. The post-fix synthetic browser sweep confirmed intact secretary tab labels and no horizontal overflow at 320/390/768/1024/1440px; doctor and secretary skip-link focus and route guards passed. These responsive/evidence changes are still uncommitted and undeployed.
+**Verification after mobile tab fix:** Web typecheck passed; web tests passed 64/64; `git diff --check` passed. The post-fix synthetic browser sweep confirmed intact secretary tab labels and no horizontal overflow at 320/390/768/1024/1440px; doctor and secretary skip-link focus and route guards passed. The responsive/evidence change is committed and pushed as `ef9936b`; it is not deployed.
 
-**Next action:** Commit and push the mobile tab fix with its evidence. Then continue broader keyboard/accessibility and deployed browser/print checks, followed by recovery cutover/RTO/RPO, deployed-log review, Google/SMTP and independent reviews. Current-source deployment still requires separate owner authorization; keep feature PRs draft and unmerged. The default local database must remain untouched pending owner disposition.
+**Next action:** Continue broader keyboard/accessibility and deployed browser/print checks, followed by recovery cutover/RTO/RPO, deployed-log review, Google/SMTP and independent reviews. Current-source deployment still requires separate owner authorization; keep feature PRs draft and unmerged. The default local database must remain untouched pending owner disposition.
 
 ---
 
