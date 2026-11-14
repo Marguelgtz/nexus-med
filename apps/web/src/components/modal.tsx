@@ -18,7 +18,10 @@ export function Modal({ title, description, onClose, closeDisabled = false, chil
     const opener = document.activeElement;
     if (!surface) return;
     surface.showModal();
-    surface.querySelector<HTMLElement>('input:not([type="hidden"]), select, textarea')?.focus();
+    const firstAvailableField = Array.from(surface.querySelectorAll<HTMLElement>(
+      'input:not([type="hidden"]), select, textarea',
+    )).find(field => !field.matches(':disabled') && field.getClientRects().length > 0);
+    firstAvailableField?.focus();
     return () => {
       surface.close();
       if (opener instanceof HTMLElement && opener.isConnected) opener.focus();
