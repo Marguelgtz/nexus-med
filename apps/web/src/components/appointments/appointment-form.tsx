@@ -30,8 +30,8 @@ const TYPES = Object.keys(APPOINTMENT_TYPE_LABELS);
 type Props = {
   patientId: string;
   initial?: Appointment;
-  /** Called after a successful edit; the parent refreshes server data. */
-  onSaved?: () => void;
+  /** Called after a successful edit with the latest appointment record. */
+  onSaved?: (appointment: Appointment) => void;
   /** Keep the current clinical workspace mounted after an in-context create. */
   onCreated?: (appointment: Appointment) => void;
   /** Return here after a standalone follow-up appointment is saved. */
@@ -79,7 +79,7 @@ export function AppointmentForm({ patientId, initial, onSaved, onCreated, return
   useBeforeUnloadGuard(dirty && !busy);
   function cancel() {
     if (busy || (dirty && !window.confirm('Hay una cita sin guardar. ¿Descartar los cambios?'))) return;
-    (onCancel ?? onSaved)?.();
+    onCancel?.();
   }
 
   // Non-blocking overlap check, debounced: candidate [start, start+duration)
@@ -122,13 +122,13 @@ export function AppointmentForm({ patientId, initial, onSaved, onCreated, return
     const startAt = candidateStart;
     try {
       if (initial) {
-        await updateAppointment(initial.id, {
+        const updated = await updateAppointment(initial.id, {
           expectedVersion: baseline.version, doctorId: doctorId || null,
           startAt,
           durationMinutes: duration,
           type,
         });
-        onSaved?.();
+        onSaved?.(updated);
         router.refresh();
       } else {
         const appt = await createAppointment(patientId, {
@@ -219,7 +219,7 @@ export function AppointmentForm({ patientId, initial, onSaved, onCreated, return
                 ? 'Guardar cambios'
                 : 'Crear cita'}
         </button>
-        {onCancel || (initial && onSaved) ? (
+        {onCancel ? (
           <button type="button" className="btn btn-ghost" onClick={cancel} disabled={busy}>
             Cancelar
           </button>

@@ -44,10 +44,15 @@ export function AppointmentDetail({
   patientId,
   patientName,
   isArchived,
-  appointment: appt,
+  appointment: serverAppointment,
   encounters,
 }: Props) {
   const router = useRouter();
+  const [savedAppointment, setSavedAppointment] = useState<Appointment | null>(null);
+  const appt = savedAppointment?.id === serverAppointment.id &&
+    (savedAppointment.version ?? 0) > (serverAppointment.version ?? 0)
+    ? savedAppointment
+    : serverAppointment;
   const [mode, setMode] = useState<Mode>('view');
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -138,7 +143,15 @@ export function AppointmentDetail({
         {error ? <p className="error">{error}</p> : null}
 
         {mode === 'edit' ? (
-          <AppointmentForm patientId={patientId} initial={appt} onSaved={close} />
+          <AppointmentForm
+            patientId={patientId}
+            initial={appt}
+            onCancel={close}
+            onSaved={(updated) => {
+              setSavedAppointment(updated);
+              close();
+            }}
+          />
         ) : mode === 'complete' ? (
           <div className="panel">
             <h3>Completar cita</h3>
