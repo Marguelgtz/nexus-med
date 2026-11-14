@@ -1,3 +1,5 @@
+import { checkVersion } from '../../shared/version';
+import { clinicScope } from '../../shared/clinic';
 // Patient domain operations.
 //
 // Business rules (docs/WORKFLOWS.md):
@@ -27,6 +29,7 @@ const PATIENT_NOT_FOUND = 'Paciente no encontrado';
 // @nexus-med/contracts.
 interface PatientRow {
   id: string;
+  version: number;
   fullName: string;
   dateOfBirth: string | null;
   externalIdentifier: string | null;
@@ -38,6 +41,7 @@ interface PatientRow {
 function toSummary(row: PatientRow): PatientSummary {
   return {
     id: row.id,
+    version: row.version,
     fullName: row.fullName,
     dateOfBirth: row.dateOfBirth,
     externalIdentifier: row.externalIdentifier,
@@ -73,6 +77,7 @@ function toDetail(
 }
 
 const summarySelect = {
+  version: true,
   id: true,
   fullName: true,
   dateOfBirth: true,
@@ -94,7 +99,7 @@ function patientWhere(query: PatientListQuery) {
       }
     : {};
 
-  return { ...(archived === undefined ? {} : { isArchived: archived }), ...search };
+  return { ...clinicScope(), ...(archived === undefined ? {} : { isArchived: archived }), ...search };
 }
 
 export async function listPatients(query: PatientListQuery): Promise<PatientSummary[]> {
@@ -123,14 +128,14 @@ export async function listAdministrativePatients(
 }
 
 export async function getPatient(patientId: string): Promise<PatientDetail> {
-  const patient = await prisma.patient.findUnique({ where: { id: patientId } });
+  const patient = await prisma.patient.findUnique({ where: { ...clinicScope(), id: patientId } });
   if (!patient) throw new NotFoundError(PATIENT_NOT_FOUND);
   return toDetail(patient);
 }
 
 export async function createPatient(input: CreatePatientInput): Promise<PatientDetail> {
   return toDetail(await prisma.patient.create({ data: {
-    ...input,
+    ...input, ...clinicScope(),
     appointmentEmailConsentUpdatedAt: input.appointmentEmailConsent ? new Date() : null,
   } }));
 }
@@ -139,8 +144,10 @@ export async function updatePatient(
   patientId: string,
   input: UpdatePatientInput,
 ): Promise<PatientDetail> {
-  const existing = await prisma.patient.findUnique({ where: { id: patientId } });
+  const existing = await prisma.patient.findUnique({ where: { ...clinicScope(), id: patientId } });
   if (!existing) throw new NotFoundError(PATIENT_NOT_FOUND);
+  const { expectedVersion, ...fields } = input;
+  checkVersion(expectedVersion, existing.version);
   const emailChanged = input.email !== undefined &&
     (input.email?.trim().toLowerCase() ?? null) !== (existing.email?.trim().toLowerCase() ?? null);
   const requestedConsent = input.appointmentEmailConsent;
@@ -152,11 +159,11 @@ export async function updatePatient(
 
   const consentChanged = consent !== existing.appointmentEmailConsent;
   const data = {
-    ...input,
+    ...fields, version: { increment: 1 },
     appointmentEmailConsent: consent,
     ...(emailChanged || consentChanged ? { appointmentEmailConsentUpdatedAt: new Date() } : {}),
   };
-  return toDetail(await prisma.patient.update({ where: { id: patientId }, data }));
+  return toDetail(await prisma.patient.update({ where: { ...clinicScope(), id: patientId, version: existing.version }, data }));
 }
 
 /** Update current medical background. Only the provided fields change. */
@@ -164,23 +171,25 @@ export async function updateMedicalBackground(
   patientId: string,
   input: MedicalBackgroundInput,
 ): Promise<PatientDetail> {
-  const existing = await prisma.patient.findUnique({ where: { id: patientId } });
+  const existing = await prisma.patient.findUnique({ where: { ...clinicScope(), id: patientId } });
   if (!existing) throw new NotFoundError(PATIENT_NOT_FOUND);
-  return toDetail(await prisma.patient.update({ where: { id: patientId }, data: input }));
+  const { expectedVersion, ...fields } = input;
+  checkVersion(expectedVersion, existing.version);
+  return toDetail(await prisma.patient.update({ where: { ...clinicScope(), id: patientId, version: existing.version }, data: { ...fields, version: { increment: 1 } } }));
 }
 
 /** Archive a patient. Idempotent: archiving an archived patient succeeds. */
 export async function archivePatient(patientId: string): Promise<PatientDetail> {
-  const existing = await prisma.patient.findUnique({ where: { id: patientId } });
+  const existing = await prisma.patient.findUnique({ where: { ...clinicScope(), id: patientId } });
   if (!existing) throw new NotFoundError(PATIENT_NOT_FOUND);
   return toDetail(
-    await prisma.patient.update({ where: { id: patientId }, data: { isArchived: true } }),
+    await prisma.patient.update({ where: { ...clinicScope(), id: patientId }, data: { isArchived: true, version: { increment: 1 } } }),
   );
 }
 
 export async function getAdministrativePatient(patientId: string): Promise<AdministrativePatient> {
   const patient = await prisma.patient.findUnique({
-    where: { id: patientId },
+    where: { ...clinicScope(), id: patientId },
     select: { ...summarySelect, phone: true, email: true, appointmentEmailConsent: true, appointmentEmailConsentUpdatedAt: true },
   });
   if (!patient) throw new NotFoundError(PATIENT_NOT_FOUND);

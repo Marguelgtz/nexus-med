@@ -92,7 +92,7 @@ async function main() {
   await run('npx', ['prisma', 'db', 'seed'], {
     ...process.env,
     DATABASE_URL: DEMO_DATABASE_URL,
-    STUDY_FILES_DIRECTORY: path.join(rootDir, '.local', 'data', 'demo-study-files'),
+    STUDY_FILES_DIRECTORY: path.join(path.dirname(demoPath), 'demo-study-files'),
   });
 
   console.log('[dev] Inicializando identidades de demostración (idempotente)…');

@@ -14,6 +14,9 @@ const secureApp = createApp();
 function principal(role: AuthPrincipal['user']['role'], createdAt = new Date()): AuthPrincipal {
   const now = new Date();
   return {
+    clinicId: role === 'pending' ? null : 'legacy-clinic',
+    clinic: role === 'pending' ? null : { id: 'legacy-clinic', name: 'Consultorio de prueba', timezone: 'America/Mexico_City' },
+    membership: role === 'pending' || role === 'demo' ? null : { id: 'membership-fixture', clinicId: 'legacy-clinic', role, isAdmin: role === 'doctor' },
     session: { id: 'session-fixture', userId: 'user-fixture', createdAt, expiresAt: new Date(now.getTime() + 60_000), demoView: 'doctor' },
     user: {
       id: 'user-fixture',
@@ -62,6 +65,22 @@ describe('authentication and route authorization', () => {
     const body = await response.json() as Record<string, unknown>;
     expect(body).toHaveProperty('email');
     expect(body).not.toHaveProperty('medicalConditions');
+  });
+
+  it('allows secretary appointment cancellation while keeping physician-only transitions forbidden', async () => {
+    const patient = await registerPatient(uniqueName());
+    const created = await publicTestApp.request(`/api/patients/${patient.id}/appointments`, {
+      method: 'POST', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ startAt: '2026-11-16T15:00:00Z', durationMinutes: 30, type: 'consulta' }),
+    });
+    expect(created.status).toBe(201);
+    const appointment = await created.json() as { id: string };
+    const init = { method: 'POST', headers: { origin: 'http://127.0.0.1:3000', 'content-type': 'application/json' }, body: '{}' };
+    expect((await request(`/api/appointments/${appointment.id}/complete`, init, principal('secretary'))).status).toBe(403);
+    expect((await request(`/api/appointments/${appointment.id}/reception`, { ...init, body: JSON.stringify({ action: 'start' }) }, principal('secretary'))).status).toBe(403);
+    const cancelled = await request(`/api/appointments/${appointment.id}/cancel`, init, principal('secretary'));
+    expect(cancelled.status).toBe(200);
+    expect(await cancelled.json()).toMatchObject({ status: 'cancelled' });
   });
 
   it('allows only demo sessions to change the per-session view', async () => {
@@ -150,6 +169,22 @@ describe('authentication and route authorization', () => {
       body: JSON.stringify({ email: 'doctor@example.test', password: 'synthetic password' }),
     });
     expect(noOrigin.status).toBe(403);
+  });
+
+  it('does not trust loopback or request-host origins in a deployed runtime', async () => {
+    const production = runtime(null);
+    production.localRuntime = false;
+    production.appBaseUrl = 'https://clinic.example.test';
+    for (const origin of ['http://127.0.0.1:3000', 'http://localhost:3000', 'https://untrusted.example.test']) {
+      const response = await withAuthRuntime(production, () => secureApp.request('https://untrusted.example.test/api/auth/sign-in/email', {
+        method: 'POST', headers: { origin, 'content-type': 'application/json' }, body: '{}',
+      }));
+      expect(response.status).toBe(403);
+    }
+    const permitted = await withAuthRuntime(production, () => secureApp.request('https://untrusted.example.test/api/auth/sign-in/email', {
+      method: 'POST', headers: { origin: production.appBaseUrl, 'content-type': 'application/json' }, body: '{}',
+    }));
+    expect(permitted.status).toBe(404); // Reaches the fixture auth handler.
   });
 
   it('requires a recent doctor session to mutate access', async () => {

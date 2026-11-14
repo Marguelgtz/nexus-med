@@ -72,7 +72,7 @@ const worker = {
     });
 
     try {
-      const principal = await resolvePrincipal(auth, request.headers);
+      const principal = await resolvePrincipal(auth, request.headers, practicePrisma as unknown as NodePrismaClient);
       const isDemo = principal?.user.role === 'demo';
       const domainPrisma = isDemo ? demoPrisma : practicePrisma;
       const databaseBinding = isDemo ? env.DEMO_DB : env.DB;

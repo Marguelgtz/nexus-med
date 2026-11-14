@@ -51,6 +51,8 @@ export type AppointmentPatient = z.infer<typeof appointmentPatientSchema>;
  * page adds no data beyond what the row shows (patient reached by link).
  */
 export const appointmentSchema = z.object({
+  version: z.number().int().positive().optional(),
+  doctor: z.object({ id: idSchema, name: z.string() }).nullable().optional(),
   id: idSchema,
   patient: appointmentPatientSchema,
   startAt: isoDateTimeSchema,
@@ -70,6 +72,7 @@ export type Appointment = z.infer<typeof appointmentSchema>;
 /** Query params for the range listing (both bounds required, `from < to`). */
 export const appointmentRangeQuerySchema = z
   .object({
+    doctorId: idSchema.optional(),
     from: isoDateTimeSchema,
     to: isoDateTimeSchema,
   })
@@ -81,6 +84,7 @@ export type AppointmentRangeQuery = z.infer<typeof appointmentRangeQuerySchema>;
 /** Create a scheduled appointment for a patient. */
 export const createAppointmentInputSchema = z
   .object({
+    doctorId: idSchema.nullable().optional(),
     startAt: isoDateTimeSchema,
     durationMinutes: durationMinutesSchema,
     type: appointmentTypeSchema,
@@ -95,13 +99,15 @@ export type CreateAppointmentInput = z.infer<typeof createAppointmentInputSchema
  */
 export const updateAppointmentInputSchema = z
   .object({
+    expectedVersion: z.number().int().positive(),
+    doctorId: idSchema.nullable().optional(),
     startAt: isoDateTimeSchema,
     durationMinutes: durationMinutesSchema,
     type: appointmentTypeSchema,
   })
   .partial()
   .refine(
-    (v) => v.startAt !== undefined || v.durationMinutes !== undefined || v.type !== undefined,
+    (v) => v.startAt !== undefined || v.durationMinutes !== undefined || v.type !== undefined || v.doctorId !== undefined,
     { message: 'Indica al menos un campo para guardar' },
   );
 export type UpdateAppointmentInput = z.infer<typeof updateAppointmentInputSchema>;
@@ -131,3 +137,6 @@ export const receptionInputSchema = z.object({
   action: z.enum(['arrive', 'start', 'undoArrival']),
 }).strict();
 export type ReceptionInput = z.infer<typeof receptionInputSchema>;
+
+export const clinicDoctorSchema = z.object({ id: idSchema, name: z.string() });
+export type ClinicDoctor = z.infer<typeof clinicDoctorSchema>;

@@ -21,6 +21,7 @@ import {
 } from '@nexus-med/contracts';
 
 import {
+  listClinicDoctors,
   cancelAppointment,
   completeAppointment,
   createAppointment,
@@ -38,8 +39,8 @@ export const appointmentsRoutes = new Hono();
 
 appointmentsRoutes.get('/appointments', async (c) => {
   const query = Object.fromEntries(Object.entries(c.req.query()).filter(([, v]) => v !== ''));
-  const { from, to } = parseOrThrow(appointmentRangeQuerySchema, query);
-  const appointments = await listAppointmentsInRange(from, to);
+  const { from, to, doctorId } = parseOrThrow(appointmentRangeQuerySchema, query);
+  const appointments = await listAppointmentsInRange(from, to, doctorId);
   return c.json(appointments);
 });
 
@@ -88,3 +89,5 @@ appointmentsRoutes.post('/appointments/:appointmentId/reception', async (c) => {
 });
 
 appointmentsRoutes.get('/reception', async c => c.json(await listReception()));
+
+appointmentsRoutes.get('/clinic/doctors', async c => c.json(await listClinicDoctors()));

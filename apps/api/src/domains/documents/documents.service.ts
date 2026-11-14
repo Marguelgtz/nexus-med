@@ -1,3 +1,6 @@
+import { checkVersion } from '../../shared/version';
+import { executeVersionedWrite } from '../../shared/versioned-write';
+import { clinicScope, currentClinicId, currentActorId } from '../../shared/clinic';
 // Doctor-authored prescription and report operations (UI_SPEC §7.4).
 
 import type {
@@ -19,6 +22,7 @@ const DOCUMENT_NOT_FOUND: Record<'prescription' | 'report', string> = {
 };
 
 const documentInclude = {
+  author: { select: { id: true, name: true } },
   patient: { select: { id: true, fullName: true, dateOfBirth: true } },
   encounter: { select: { id: true, occurredAt: true, reason: true } },
   lines: { orderBy: { position: 'asc' as const } },
@@ -26,6 +30,8 @@ const documentInclude = {
 
 interface DocumentRow {
   id: string;
+  version: number;
+  author: { id: string; name: string } | null;
   patientId: string;
   patient: { id: string; fullName: string; dateOfBirth: string | null };
   encounter: { id: string; occurredAt: Date; reason: string | null } | null;
@@ -48,7 +54,7 @@ interface DocumentRow {
 
 function toMedicalDocument(row: DocumentRow): MedicalDocument {
   const base = {
-    id: row.id,
+    id: row.id, author: row.author, version: row.version,
     patientId: row.patientId,
     patient: row.patient,
     encounter: row.encounter
@@ -76,11 +82,11 @@ function lineData(lines: PrescriptionLineInput[]) {
 }
 
 async function validateAssociation(patientId: string, encounterId: string | null | undefined) {
-  const patient = await prisma.patient.findUnique({ where: { id: patientId }, select: { id: true } });
+  const patient = await prisma.patient.findUnique({ where: { ...clinicScope(), id: patientId }, select: { id: true } });
   if (!patient) throw new NotFoundError(PATIENT_NOT_FOUND);
   if (!encounterId) return;
   const encounter = await prisma.encounter.findUnique({
-    where: { id: encounterId },
+    where: { ...clinicScope(), id: encounterId },
     select: { id: true, patientId: true },
   });
   if (!encounter || encounter.patientId !== patientId) {
@@ -92,10 +98,10 @@ async function validateAssociation(patientId: string, encounterId: string | null
 
 /** Documents for the overview, newest first. */
 export async function listPatientDocuments(patientId: string): Promise<MedicalDocument[]> {
-  const patient = await prisma.patient.findUnique({ where: { id: patientId }, select: { id: true } });
+  const patient = await prisma.patient.findUnique({ where: { ...clinicScope(), id: patientId }, select: { id: true } });
   if (!patient) throw new NotFoundError(PATIENT_NOT_FOUND);
   const rows = await prisma.medicalDocument.findMany({
-    where: { patientId },
+    where: { ...clinicScope(), patientId },
     orderBy: [{ createdAt: 'desc' }, { id: 'asc' }],
     include: documentInclude,
   });
@@ -103,7 +109,7 @@ export async function listPatientDocuments(patientId: string): Promise<MedicalDo
 }
 
 export async function getMedicalDocument(documentId: string): Promise<MedicalDocument> {
-  const row = await prisma.medicalDocument.findUnique({ where: { id: documentId }, include: documentInclude });
+  const row = await prisma.medicalDocument.findUnique({ where: { ...clinicScope(), id: documentId }, include: documentInclude });
   if (!row) throw new NotFoundError('Documento no encontrado');
   return toMedicalDocument(row);
 }
@@ -119,9 +125,9 @@ export async function createMedicalDocument(
     await executeAtomicWrite([
       {
         sql: `INSERT INTO medical_documents (
-          id, patientId, encounterId, kind, title, body, createdAt, updatedAt
-        ) VALUES (?, ?, ?, 'prescription', ?, ?, ?, ?)`,
-        values: [id, patientId, input.encounterId || null, input.title || null, input.body || null, timestamp, timestamp],
+          id, patientId, encounterId, kind, title, body, createdAt, updatedAt, clinicId, authorId, lastEditedById
+        ) VALUES (?, ?, ?, 'prescription', ?, ?, ?, ?, ?, ?, ?)`,
+        values: [id, patientId, input.encounterId || null, input.title || null, input.body || null, timestamp, timestamp, currentClinicId(), currentActorId(), currentActorId()],
       },
       ...lineData(input.lines).map((line, position) => ({
         sql: `INSERT INTO prescription_lines (
@@ -141,13 +147,13 @@ export async function createMedicalDocument(
       })),
     ]);
 
-    const row = await prisma.medicalDocument.findUniqueOrThrow({ where: { id }, include: documentInclude });
+    const row = await prisma.medicalDocument.findUniqueOrThrow({ where: { ...clinicScope(), id }, include: documentInclude });
     return toMedicalDocument(row);
   }
 
   const row = await prisma.medicalDocument.create({
     data: {
-      patientId,
+      patientId, ...clinicScope(), authorId: currentActorId(), lastEditedById: currentActorId(),
       encounterId: input.encounterId || null,
       kind: input.kind,
       title: input.title || null,
@@ -164,29 +170,30 @@ export async function updateMedicalDocument(
   input: UpdateMedicalDocumentInput,
 ): Promise<MedicalDocument> {
   const existing = await prisma.medicalDocument.findUnique({
-    where: { id: documentId },
-    select: { id: true, kind: true, patientId: true },
+    where: { ...clinicScope(), id: documentId },
+    select: { id: true, kind: true, patientId: true, version: true },
   });
   if (!existing) throw new NotFoundError('Documento no encontrado');
+  checkVersion(input.expectedVersion, existing.version);
   if (existing.kind !== input.kind) {
     throw new ConflictError('El tipo del documento no se puede cambiar.');
   }
   await validateAssociation(existing.patientId, input.encounterId);
 
   const timestamp = new Date().toISOString();
-  await executeAtomicWrite([
+  await executeVersionedWrite('medical_documents', documentId, existing.version, [
     {
       sql: `DELETE FROM prescription_lines
         WHERE documentId = ? AND EXISTS (
-          SELECT 1 FROM medical_documents WHERE id = ? AND kind = 'prescription'
+          SELECT 1 FROM medical_documents WHERE id = ? AND clinicId = ? AND kind = 'prescription'
         )`,
-      values: [documentId, documentId],
+      values: [documentId, documentId, currentClinicId()],
     },
     {
       sql: `UPDATE medical_documents
-        SET encounterId = ?, title = ?, body = ?, updatedAt = ?
-        WHERE id = ? AND kind = ?`,
-      values: [input.encounterId || null, input.title || null, input.body || null, timestamp, documentId, input.kind],
+        SET encounterId = ?, title = ?, body = ?, updatedAt = ?, lastEditedById = ?, version = version + 1
+        WHERE id = ? AND kind = ? AND clinicId = ?`,
+      values: [input.encounterId || null, input.title || null, input.body || null, timestamp, currentActorId(), documentId, input.kind, currentClinicId()],
     },
     ...(input.kind === 'prescription'
       ? lineData(input.lines).map((line, position) => ({
@@ -194,7 +201,7 @@ export async function updateMedicalDocument(
             id, documentId, position, medication, dose, route, frequency, duration, instructions
           ) SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?
           WHERE EXISTS (
-            SELECT 1 FROM medical_documents WHERE id = ? AND kind = 'prescription'
+            SELECT 1 FROM medical_documents WHERE id = ? AND clinicId = ? AND kind = 'prescription'
           )`,
           values: [
             randomUUID(),
@@ -206,13 +213,13 @@ export async function updateMedicalDocument(
             line.frequency,
             line.duration,
             line.instructions,
-            documentId,
+            documentId, currentClinicId(),
           ],
         }))
       : []),
   ]);
 
-  const row = await prisma.medicalDocument.findUnique({ where: { id: documentId }, include: documentInclude });
+  const row = await prisma.medicalDocument.findUnique({ where: { ...clinicScope(), id: documentId }, include: documentInclude });
   if (!row) throw new NotFoundError('Documento no encontrado');
   return toMedicalDocument(row);
 }

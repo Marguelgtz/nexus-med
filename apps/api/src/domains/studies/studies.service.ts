@@ -1,3 +1,4 @@
+import { clinicScope, currentClinicId, currentActorId } from '../../shared/clinic';
 // Study request domain operations (UI_SPEC §7.3, U-15).
 //
 // Business rules:
@@ -70,7 +71,7 @@ const rowInclude = {
 } as const;
 
 async function findStudy(id: string): Promise<StudyRow> {
-  const row = await prisma.studyRequest.findUnique({ where: { id }, include: rowInclude });
+  const row = await prisma.studyRequest.findUnique({ where: { ...clinicScope(), id }, include: rowInclude });
   if (!row) throw new NotFoundError(STUDY_NOT_FOUND);
   return row;
 }
@@ -80,10 +81,10 @@ export async function listPatientStudies(
   patientId: string,
   statuses?: StudyStatus[],
 ): Promise<StudyRequest[]> {
-  const patient = await prisma.patient.findUnique({ where: { id: patientId }, select: { id: true } });
+  const patient = await prisma.patient.findUnique({ where: { ...clinicScope(), id: patientId }, select: { id: true } });
   if (!patient) throw new NotFoundError(PATIENT_NOT_FOUND);
   const rows = await prisma.studyRequest.findMany({
-    where: {
+    where: { ...clinicScope(),
       patientId,
       ...(statuses ? { status: { in: statuses } } : {}),
     },
@@ -100,7 +101,7 @@ export async function createEncounterStudies(
   studies: StudyInput[],
 ): Promise<StudyRequest[]> {
   const encounter = await prisma.encounter.findUnique({
-    where: { id: encounterId },
+    where: { ...clinicScope(), id: encounterId },
     select: { id: true, patientId: true },
   });
   if (!encounter) throw new NotFoundError(ENCOUNTER_NOT_FOUND);
@@ -112,12 +113,12 @@ export async function createPatientStudies(
   patientId: string,
   input: CreatePatientStudiesInput,
 ): Promise<StudyRequest[]> {
-  const patient = await prisma.patient.findUnique({ where: { id: patientId }, select: { id: true } });
+  const patient = await prisma.patient.findUnique({ where: { ...clinicScope(), id: patientId }, select: { id: true } });
   if (!patient) throw new NotFoundError(PATIENT_NOT_FOUND);
 
   if (input.encounterId) {
     const encounter = await prisma.encounter.findUnique({
-      where: { id: input.encounterId },
+      where: { ...clinicScope(), id: input.encounterId },
       select: { id: true, patientId: true },
     });
     if (!encounter) throw new NotFoundError(ENCOUNTER_NOT_FOUND);
@@ -147,8 +148,8 @@ async function createStudies(
       return {
         sql: `INSERT INTO study_requests (
           id, patientId, encounterId, category, name, description, status,
-          resultNote, createdAt, updatedAt
-        ) VALUES (?, ?, ?, ?, ?, ?, 'ordered', NULL, ?, ?)`,
+          resultNote, createdAt, updatedAt, clinicId, orderedById
+        ) VALUES (?, ?, ?, ?, ?, ?, 'ordered', NULL, ?, ?, ?, ?)`,
         values: [
           id,
           patientId,
@@ -157,13 +158,13 @@ async function createStudies(
           study.name,
           study.description?.trim() || null,
           createdAt,
-          createdAt,
+          createdAt, currentClinicId(), currentActorId(),
         ],
       };
     }),
   );
 
-  const rows = await prisma.studyRequest.findMany({ where: { id: { in: ids } }, include: rowInclude });
+  const rows = await prisma.studyRequest.findMany({ where: { ...clinicScope(), id: { in: ids } }, include: rowInclude });
   const rowsById = new Map(rows.map((row) => [row.id, row]));
   return ids.map((id) => {
     const row = rowsById.get(id);
@@ -174,10 +175,10 @@ async function createStudies(
 
 /** All studies ordered during one encounter (the encounter-detail section). */
 export async function listEncounterStudies(encounterId: string): Promise<StudyRequest[]> {
-  const encounter = await prisma.encounter.findUnique({ where: { id: encounterId }, select: { id: true } });
+  const encounter = await prisma.encounter.findUnique({ where: { ...clinicScope(), id: encounterId }, select: { id: true } });
   if (!encounter) throw new NotFoundError(ENCOUNTER_NOT_FOUND);
   const rows = await prisma.studyRequest.findMany({
-    where: { encounterId },
+    where: { ...clinicScope(), encounterId },
     orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
     include: rowInclude,
   });
@@ -210,9 +211,10 @@ export async function updateStudyStatus(studyId: string, input: UpdateStudyInput
     throw new ConflictError('Los estados del estudio solo avanzan: ordenada → completada → revisada.');
   }
   const row = await prisma.studyRequest.update({
-    where: { id: studyId },
+    where: { ...clinicScope(), id: studyId, status: from },
     data: {
       status: to,
+      ...(to === 'reviewed' ? { reviewedById: currentActorId() } : {}),
       ...(input.resultNote !== undefined ? { resultNote: input.resultNote } : {}),
     },
     include: rowInclude,

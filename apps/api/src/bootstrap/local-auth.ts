@@ -52,6 +52,14 @@ async function createFixtureAccount(email: string, name: string, role: 'doctor' 
     });
   }
 
+  if (role !== 'demo') {
+    await localPrisma.clinicMembership.upsert({
+      where: { clinicId_userId: { clinicId: 'legacy-clinic', userId } },
+      create: { id: `legacy-${userId}`, clinicId: 'legacy-clinic', userId, role, isAdmin: role === 'doctor', status: existingUser?.disabledAt ? 'revoked' : 'active' },
+      update: {}, // Never undo an explicit membership revocation on startup.
+    });
+  }
+
   const credential = await localPrisma.account.findFirst({
     where: { userId, providerId: 'credential', accountId: userId },
   });

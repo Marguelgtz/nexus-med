@@ -161,7 +161,7 @@ async function loadFixture(fixturePath: string = defaultFixturePath): Promise<Fi
 // few upcoming appointments are anchored to the first seed run's
 // practice-timezone date. The computed instant is stored once under a stable
 // id; later seed runs skip it, so the anchor is never recomputed or moved.
-const PRACTICE_TZ = 'America/Monterrey';
+const PRACTICE_TZ = 'America/Mexico_City';
 
 const upcomingDemoAppointments = [
   { id: 'demo-appt-up-001', patientId: 'demo-patient-002', dayOffset: 1, hour: 9, minute: 0, durationMinutes: 30, type: 'consulta' },
@@ -522,6 +522,9 @@ export async function idempotentSeed(
 async function main(): Promise<void> {
   // Imported lazily so this module stays testable without the generated client.
   const { prisma } = await import('../apps/api/src/infrastructure/database/prisma.js');
+  // The CLI is a separate process; it must initialize storage even when no
+  // custom directory is supplied. Existing DBs had hidden this first-run gap.
+  await import('../apps/api/src/infrastructure/storage/local-study-files.js');
   if (process.env.STUDY_FILES_DIRECTORY) {
     const [{ createLocalStudyFileStorage }, { setDefaultStudyFileStorage }] = await Promise.all([
       import('../apps/api/src/infrastructure/storage/local-study-files.js'),

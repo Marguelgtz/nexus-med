@@ -10,6 +10,7 @@ const secret = 'appointment-email-test-secret-'.repeat(3);
 function principal(role: AuthPrincipal['user']['role']): AuthPrincipal {
   const now = new Date();
   return {
+    clinicId: 'legacy-clinic', clinic: { id: 'legacy-clinic', name: 'Synthetic clinic', timezone: 'America/Mexico_City' }, membership: null,
     session: { id: `session-${role}`, userId: `user-${role}`, createdAt: now, expiresAt: new Date(now.getTime() + 60_000), demoView: 'doctor' },
     user: {
       id: `user-${role}`,

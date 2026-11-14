@@ -33,7 +33,7 @@ const auth = createAuth(localPrisma, {
 const app = createApp();
 
 const localFetch = async (request: Request): Promise<Response> => {
-  const principal = await resolvePrincipal(auth, request.headers);
+  const principal = await resolvePrincipal(auth, request.headers, localPrisma);
   const useDemo = principal?.user.role === 'demo';
   const domainDatabase = useDemo ? demoPrisma : localPrisma;
   const filesDirectory = path.join(path.dirname(useDemo ? demoDbPath : resolveDbPath()), useDemo ? 'demo-study-files' : 'study-files');

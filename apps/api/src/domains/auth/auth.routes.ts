@@ -2,13 +2,14 @@ import { Hono } from 'hono';
 import { z } from 'zod';
 import { parseOrThrow, readJsonBody } from '../../shared/http/parse';
 import { ConflictError, ForbiddenError, NotFoundError, UnauthenticatedError, ValidationError } from '../../shared/http/errors';
-import { createInvitationSchema, updateDemoViewSchema } from '@nexus-med/contracts';
+import { acceptInvitationSchema, createClinicSchema, createInvitationSchema, updateDemoViewSchema } from '@nexus-med/contracts';
 import { currentPrincipal, getAuthRuntime } from './auth.context';
 import { findInvitationByToken, INVITATION_COOKIE, INVITATION_LIFETIME_MS, newOpaqueToken, normalizeEmail, sha256 } from './invitations';
 import { authEmailTemplate } from '../email/templates';
 import { enqueueEmail } from '../email/outbox';
 import { DEMO_ACCOUNT_EMAIL, deriveDemoPassword, ensureDemoAccount } from './demo-password';
 import { consumeAccountRateLimit } from './auth.config';
+import { acceptClinicInvitation, bootstrapClinic, requireClinicAdmin } from './clinic-access';
 
 const invitationPrepareSchema = z.object({ token: z.string().min(32).max(128) }).strict();
 const RECENT_AUTH_MAX_AGE_MS = 10 * 60 * 1000;
@@ -26,11 +27,13 @@ function sessionResponse() {
   return {
     user: { id: principal.user.id, name: principal.user.name, role: principal.user.role },
     activeView: principal.user.role === 'demo' ? principal.session.demoView : null,
-    canManagePatients: true,
+    onboardingRequired: !principal.clinicId,
+    clinic: principal.clinic,
+    canManagePatients: Boolean(principal.clinicId),
     canReadClinical: doctorView,
-    canReceiveStudies: true,
+    canReceiveStudies: Boolean(principal.clinicId),
     canReviewStudies: doctorView,
-    canManageAccess: principal.user.role === 'doctor',
+    canManageAccess: principal.membership?.isAdmin === true,
   };
 }
 
@@ -45,7 +48,7 @@ authRoutes.post('/auth/prepare-invitation', async (c) => {
   c.header('Set-Cookie', authCookie(input.token, 10 * 60, !runtime.localRuntime));
   c.header('Cache-Control', 'no-store');
   c.header('Referrer-Policy', 'no-referrer');
-  return c.json({ email: invitation.email, expiresAt: invitation.expiresAt.toISOString() });
+  return c.json({ email: invitation.email, role: invitation.role, clinicName: invitation.clinic.name, expiresAt: invitation.expiresAt.toISOString() });
 });
 
 authRoutes.post('/demo/session', async (c) => {
@@ -105,100 +108,113 @@ authRoutes.patch('/demo/view', async (c) => {
   return c.json({ view: input.view });
 });
 
+authRoutes.post('/onboarding/clinic', async c => {
+  const input = parseOrThrow(createClinicSchema, await readJsonBody(c));
+  await bootstrapClinic(input);
+  return c.json(sessionResponse());
+});
+
+authRoutes.post('/invitations/accept', async c => {
+  const input = parseOrThrow(acceptInvitationSchema, await readJsonBody(c));
+  await acceptClinicInvitation(input.token);
+  return c.json(sessionResponse());
+});
+
+const invitationSelect = { id: true, clinicId: true, email: true, role: true, expiresAt: true, createdAt: true, acceptedAt: true, revokedAt: true } as const;
+function invitationDto(item: { id: string; clinicId: string; email: string; role: string; expiresAt: Date; createdAt: Date; acceptedAt: Date | null; revokedAt: Date | null }) {
+  return { ...item, expiresAt: item.expiresAt.toISOString(), createdAt: item.createdAt.toISOString(), acceptedAt: item.acceptedAt?.toISOString() ?? null, revokedAt: item.revokedAt?.toISOString() ?? null };
+}
+
 authRoutes.get('/access/invitations', async (c) => {
-  const principal = requireDoctor();
-  const database = getAuthRuntime().database;
-  const invitations = await database.invitation.findMany({
-    where: { createdById: principal.user.id },
-    orderBy: { createdAt: 'desc' },
-    take: 50,
-    select: { id: true, email: true, expiresAt: true, createdAt: true, acceptedAt: true, revokedAt: true },
+  const principal = requireClinicAdmin();
+  const invitations = await getAuthRuntime().database.invitation.findMany({
+    where: { clinicId: principal.clinicId }, orderBy: { createdAt: 'desc' }, take: 100, select: invitationSelect,
   });
-  c.header('Cache-Control', 'no-store');
-  return c.json(invitations.map(item => ({ ...item, expiresAt: item.expiresAt.toISOString(), createdAt: item.createdAt.toISOString(), acceptedAt: item.acceptedAt?.toISOString() ?? null, revokedAt: item.revokedAt?.toISOString() ?? null })));
+  return c.json(invitations.map(invitationDto));
 });
 
 authRoutes.post('/access/invitations', async (c) => {
-  const principal = requireDoctor();
+  const principal = requireClinicAdmin();
   requireRecentAuthentication(principal.session.createdAt);
-  const database = getAuthRuntime().database;
   const runtime = getAuthRuntime();
+  const database = runtime.database;
   const input = parseOrThrow(createInvitationSchema, await readJsonBody(c));
   const email = normalizeEmail(input.email);
   const existingUser = await database.user.findUnique({ where: { email }, select: { id: true, role: true, disabledAt: true } });
-  if (existingUser) throw new ConflictError('Ya existe una cuenta con ese correo.');
-
+  if (existingUser?.disabledAt || existingUser?.role === 'demo') throw new ConflictError('Esta cuenta no está disponible para recibir acceso.');
+  if (existingUser && await database.clinicMembership.findFirst({ where: { clinicId: principal.clinicId, userId: existingUser.id, status: 'active' } })) {
+    throw new ConflictError('La cuenta ya pertenece a esta clínica.');
+  }
   const now = new Date();
   const activeInvitation = await database.invitation.findFirst({
-    where: { email, acceptedAt: null, revokedAt: null, expiresAt: { gt: now } },
-    select: { id: true },
+    where: { clinicId: principal.clinicId, email, acceptedAt: null, revokedAt: null, expiresAt: { gt: now } }, select: { id: true },
   });
   if (activeInvitation) throw new ConflictError('Ya existe una invitación vigente para ese correo.');
-
   const token = newOpaqueToken();
   const tokenHash = await sha256(token);
-  const id = crypto.randomUUID();
-  const expiresAt = new Date(now.getTime() + INVITATION_LIFETIME_MS);
-  await database.invitation.create({
-    data: { id, email, role: 'secretary', tokenHash, expiresAt, createdById: principal.user.id },
+  const invitation = await database.invitation.create({
+    data: { email, clinicId: principal.clinicId, role: input.role, tokenHash, expiresAt: new Date(now.getTime() + INVITATION_LIFETIME_MS), createdById: principal.user.id },
+    select: invitationSelect,
   });
-
   const invitationUrl = new URL('/aceptar-invitacion', runtime.appBaseUrl);
   invitationUrl.searchParams.set('token', token);
   const message = authEmailTemplate('invitation', 'colaborador', invitationUrl.toString());
   try {
-    await enqueueEmail(database, runtime.secret, {
-      kind: 'invitation',
-      recipient: email,
-      subject: message.subject,
-      payload: message.payload,
-      idempotencyKey: `invitation:${tokenHash}`,
-    });
+    await enqueueEmail(database, runtime.secret, { kind: 'invitation', recipient: email, subject: message.subject, payload: message.payload, idempotencyKey: `invitation:${tokenHash}` });
   } catch {
-    await database.invitation.update({ where: { id }, data: { revokedAt: new Date() } });
+    await database.invitation.update({ where: { id: invitation.id }, data: { revokedAt: new Date() } });
     throw new Error('No se pudo preparar el correo de invitación.');
   }
-  await database.securityEvent.create({
-    data: { actorId: principal.user.id, event: 'invitation.created', targetId: id, outcome: 'success' },
-  });
-  return c.json({ id, email, expiresAt: expiresAt.toISOString(), createdAt: now.toISOString(), acceptedAt: null, revokedAt: null }, 201);
+  await database.securityEvent.create({ data: { actorId: principal.user.id, event: 'invitation.created', targetId: invitation.id, outcome: 'success' } });
+  return c.json(invitationDto(invitation), 201);
 });
 
 authRoutes.post('/access/invitations/:id/revoke', async (c) => {
-  const principal = requireDoctor();
+  const principal = requireClinicAdmin();
   requireRecentAuthentication(principal.session.createdAt);
   const database = getAuthRuntime().database;
-  const invitation = await database.invitation.findFirst({ where: { id: c.req.param('id'), createdById: principal.user.id, acceptedAt: null, revokedAt: null } });
-  if (!invitation) throw new NotFoundError('Invitación pendiente no encontrada.');
-  await database.invitation.update({ where: { id: invitation.id }, data: { revokedAt: new Date() } });
-  await database.securityEvent.create({ data: { actorId: principal.user.id, event: 'invitation.revoked', targetId: invitation.id, outcome: 'success' } });
+  const result = await database.invitation.updateMany({
+    where: { id: c.req.param('id'), clinicId: principal.clinicId, acceptedAt: null, revokedAt: null }, data: { revokedAt: new Date() },
+  });
+  if (result.count !== 1) throw new NotFoundError('Invitación pendiente no encontrada.');
+  await database.securityEvent.create({ data: { actorId: principal.user.id, event: 'invitation.revoked', targetId: c.req.param('id'), outcome: 'success' } });
   return c.json({ revoked: true });
 });
 
 authRoutes.get('/access/members', async (c) => {
-  requireDoctor();
-  const database = getAuthRuntime().database;
-  const users = await database.user.findMany({
-    where: { role: { in: ['doctor', 'secretary'] } },
-    orderBy: { createdAt: 'asc' },
-    select: { id: true, name: true, email: true, role: true, emailVerified: true, disabledAt: true, createdAt: true },
+  const principal = requireClinicAdmin();
+  const members = await getAuthRuntime().database.clinicMembership.findMany({
+    where: { clinicId: principal.clinicId }, orderBy: { createdAt: 'asc' },
+    include: { user: { select: { id: true, name: true, email: true, emailVerified: true, disabledAt: true } } },
   });
-  c.header('Cache-Control', 'no-store');
-  return c.json(users.map(({ disabledAt, createdAt, ...user }) => ({ ...user, active: disabledAt === null, createdAt: createdAt.toISOString() })));
+  return c.json(members.map(member => ({ id: member.user.id, membershipId: member.id, name: member.user.name, email: member.user.email,
+    role: member.role, isAdmin: member.isAdmin, emailVerified: member.user.emailVerified,
+    active: member.status === 'active' && !member.user.disabledAt, createdAt: member.createdAt.toISOString() })));
 });
 
 authRoutes.post('/access/members/:id/revoke', async (c) => {
-  const principal = requireDoctor();
+  const principal = requireClinicAdmin();
   requireRecentAuthentication(principal.session.createdAt);
-  const database = getAuthRuntime().database;
-  const target = await database.user.findUnique({ where: { id: c.req.param('id') }, select: { id: true, role: true, disabledAt: true } });
-  if (!target || target.role !== 'secretary') throw new NotFoundError('Cuenta de secretaría no encontrada.');
-  if (target.disabledAt) return c.json({ revoked: true });
-
-  const now = new Date();
-  await database.user.update({ where: { id: target.id }, data: { disabledAt: now } });
-  await database.session.deleteMany({ where: { userId: target.id } });
-  await database.securityEvent.create({ data: { actorId: principal.user.id, event: 'member.revoked', targetId: target.id, outcome: 'success' } });
+  const runtime = getAuthRuntime();
+  const userId = c.req.param('id');
+  if (userId === principal.user.id) throw new ConflictError('No puedes revocar tu propio acceso.');
+  const target = await runtime.database.clinicMembership.findUnique({ where: { clinicId_userId: { clinicId: principal.clinicId, userId } } });
+  if (!target) throw new NotFoundError('Integrante no encontrado.');
+  if (target.status === 'revoked') return c.json({ revoked: true });
+  const now = new Date().toISOString();
+  await runtime.atomicWrite([
+    { sql: `UPDATE clinic_memberships SET status = 'revoked', updatedAt = ? WHERE id = ? AND clinicId = ? AND userId <> ? AND status = 'active'
+            AND EXISTS (SELECT 1 FROM clinic_memberships actor WHERE actor.id = ? AND actor.clinicId = ? AND actor.status = 'active' AND actor.isAdmin = 1)`,
+      values: [now, target.id, principal.clinicId, principal.user.id, principal.membership.id, principal.clinicId] },
+    { sql: `DELETE FROM auth_sessions WHERE userId = ? AND (activeClinicId = ? OR activeClinicId IS NULL)
+            AND EXISTS (SELECT 1 FROM clinic_memberships WHERE id = ? AND status = 'revoked')`,
+      values: [userId, principal.clinicId, target.id] },
+    { sql: `INSERT INTO security_events (id, actorId, event, targetId, outcome, createdAt)
+            SELECT ?, ?, 'member.revoked', ?, 'success', ? WHERE EXISTS (SELECT 1 FROM clinic_memberships WHERE id = ? AND status = 'revoked')`,
+      values: [crypto.randomUUID(), principal.user.id, target.id, now, target.id] },
+  ]);
+  const updated = await runtime.database.clinicMembership.findUnique({ where: { id: target.id } });
+  if (updated?.status !== 'revoked') throw new ConflictError('El acceso cambió. Actualiza la lista.');
   return c.json({ revoked: true });
 });
 
