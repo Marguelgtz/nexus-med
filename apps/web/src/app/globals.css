@@ -2893,6 +2893,13 @@ body:has(.app-dialog[open]) { overflow: hidden; }
 .app-main .day-grid { overflow-x: auto; }
 .app-main .cal-nav a, .app-main .view-toggle .btn { min-height: 48px; font-size: 15px; }
 .app-main .workspace-empty, .app-main .empty-state { border: 1px dashed #7d8ca7; border-radius: 12px; background: #fff; }
+
+@media (max-width: 639px) {
+  .app-main .week-grid {
+    grid-template-columns: minmax(0, 1fr);
+    overflow-x: visible;
+  }
+}
 .app-main .section-label { color: #52617a; font-size: 14px; line-height: 20px; font-weight: 700; letter-spacing: .035em; }
 .app-main .field > label, .app-main .field > span, .app-main .study-field > span { color: #172947; font-size: 16px; line-height: 24px; font-weight: 650; }
 .app-main .field input:not([type='checkbox']), .app-main .field select, .app-main .field textarea, .app-main .study-field input:not([type='checkbox']), .app-main .study-field select { min-height: 52px; padding: 12px; border: 1px solid #7d8ca7; border-radius: 8px; background: #fff; color: #172947; font-size: 17px; }
