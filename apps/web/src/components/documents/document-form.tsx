@@ -72,6 +72,7 @@ export function MedicalDocumentForm({
 }) {
   const router = useRouter();
   const [title, setTitle] = useState(initial?.title ?? '');
+  const [editVersion] = useState(() => initial?.version);
   const [encounterId, setEncounterId] = useState(initial?.encounter?.id ?? initialEncounterId ?? '');
   const [body, setBody] = useState(initial?.body ?? '');
   const [lines, setLines] = useState<LineValues[]>(() => initialLines(initial));
@@ -135,7 +136,7 @@ export function MedicalDocumentForm({
     setSaving(true);
     try {
       const saved = initial
-        ? await updateMedicalDocument(initial.id, { ...parsed.data, expectedVersion: initial.version })
+        ? await updateMedicalDocument(initial.id, { ...parsed.data, expectedVersion: editVersion })
         : await createMedicalDocument(patientId, parsed.data);
       setDirty(false);
       if (onSaved) onSaved(saved);

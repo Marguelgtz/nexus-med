@@ -39,22 +39,24 @@ export function BackgroundForm({
   dialogTitle?: string;
 }) {
   const router = useRouter();
-  const [values, setValues] = useState({
+  const [baseline] = useState(() => ({
     medicalConditions: initial.medicalConditions ?? '',
     previousSurgeries: initial.previousSurgeries ?? '',
     allergies: initial.allergies ?? '',
     currentMedications: initial.currentMedications ?? '',
-  });
+    version: initial.version,
+  }));
+  const [values, setValues] = useState(() => ({ medicalConditions: baseline.medicalConditions, previousSurgeries: baseline.previousSurgeries, allergies: baseline.allergies, currentMedications: baseline.currentMedications }));
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [banner, setBanner] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
   // Dirty while any field differs from the saved record the form loaded with.
   const dirty =
-    values.medicalConditions !== (initial.medicalConditions ?? '') ||
-    values.previousSurgeries !== (initial.previousSurgeries ?? '') ||
-    values.allergies !== (initial.allergies ?? '') ||
-    values.currentMedications !== (initial.currentMedications ?? '');
+    values.medicalConditions !== baseline.medicalConditions ||
+    values.previousSurgeries !== baseline.previousSurgeries ||
+    values.allergies !== baseline.allergies ||
+    values.currentMedications !== baseline.currentMedications;
   useBeforeUnloadGuard(dirty && !saving);
   const close = () => { if (!saving && (!dirty || window.confirm('Hay antecedentes sin guardar. ¿Descartar los cambios?'))) onCancel?.(); };
 
@@ -73,7 +75,7 @@ export function BackgroundForm({
     setBanner(null);
 
     const candidate: MedicalBackgroundInput = {
-      expectedVersion: initial.version,
+      expectedVersion: baseline.version,
       medicalConditions: values.medicalConditions.trim() || null,
       previousSurgeries: values.previousSurgeries.trim() || null,
       allergies: values.allergies.trim() || null,

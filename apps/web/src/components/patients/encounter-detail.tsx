@@ -156,6 +156,7 @@ export function EncounterDetail({
   appointment: Appointment | null;
 }) {
   const [editingField, setEditingField] = useState<keyof SectionValues | 'type' | null>(null);
+  const [editBaseline, setEditBaseline] = useState<{ value: string; type: EncounterType; version?: number } | null>(null);
   const [draftValue, setDraftValue] = useState('');
   const [draftType, setDraftType] = useState<EncounterType>(encounter.type);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
@@ -166,13 +167,13 @@ export function EncounterDetail({
   const router = useRouter();
   const edited = wasEdited(encounter.createdAt, encounter.updatedAt);
 
-  const originalValue = editingField && editingField !== 'type' ? encounter[editingField] ?? '' : '';
   const dirty = editingField === 'type'
-    ? draftType !== encounter.type
-    : editingField !== null && draftValue !== originalValue;
+    ? draftType !== editBaseline?.type
+    : editingField !== null && draftValue !== (editBaseline?.value ?? '');
   useBeforeUnloadGuard(dirty, 'Hay cambios sin guardar en este campo. Si sales, perderás el texto capturado.');
 
   function beginEdit(field: keyof SectionValues | 'type') {
+    setEditBaseline({ value: field === 'type' ? '' : encounter[field] ?? '', type: encounter.type, version: encounter.version });
     setEditingField(field);
     setDraftValue(field === 'type' ? '' : encounter[field] ?? '');
     setDraftType(encounter.type);
@@ -208,7 +209,7 @@ export function EncounterDetail({
     setSaving(true);
     setBanner(null);
     try {
-      await updateEncounter(encounter.id, { ...candidate, expectedVersion: encounter.version });
+      await updateEncounter(encounter.id, { ...candidate, expectedVersion: editBaseline?.version });
       const label = editingField === 'type'
         ? 'Tipo de atención'
         : SECTIONS.find(({ key }) => key === editingField)?.label ?? 'Campo';
@@ -221,7 +222,9 @@ export function EncounterDetail({
       if (err instanceof ApiError && Object.keys(err.fieldErrors).length > 0) {
         setFieldErrors(err.fieldErrors);
       } else {
-        setBanner('No se pudieron guardar los cambios. El texto sigue en este campo.');
+        setBanner(err instanceof ApiError && err.code === 'CONFLICT'
+          ? 'Otra persona modificó esta consulta. Tu texto sigue aquí; cópialo antes de actualizar y volver a editar.'
+          : 'No se pudieron guardar los cambios. El texto sigue en este campo.');
       }
       setSaving(false);
     }

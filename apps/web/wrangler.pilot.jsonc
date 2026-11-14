@@ -8,6 +8,7 @@
     "global_fetch_strictly_public"
   ],
   "workers_dev": true,
+  "observability": { "enabled": true, "redact_query_string": true, "logs": { "enabled": true, "invocation_logs": false } },
   "vars": {
     "APP_BASE_URL": "https://nexus-med-pilot-001-web.marguel-gtz.workers.dev"
   },

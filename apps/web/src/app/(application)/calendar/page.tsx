@@ -152,20 +152,21 @@ export default async function CalendarPage({
       <form className="workspace-toolbar" action="/calendar" method="get">
         <input type="hidden" name="vista" value={vista} /><input type="hidden" name="fecha" value={fecha} />
         <label>Médico
-          <select name="doctorId" defaultValue={doctorId ?? ''}>
+          <select name="doctorId" defaultValue={doctorId ?? ''} disabled={!doctors.ok}>
             <option value="">Toda la clínica</option>
+            {doctorId && doctors.ok && !doctors.data.some(doctor => doctor.id === doctorId) ? <option value={doctorId}>Médico no disponible</option> : null}
             {doctors.ok ? doctors.data.map(doctor => <option value={doctor.id} key={doctor.id}>{doctor.name}</option>) : null}
           </select>
         </label>
-        <button className="btn btn-secondary" type="submit">Ver agenda</button>
+        <button className="btn btn-secondary" type="submit" disabled={!doctors.ok}>Ver agenda</button>
         {!doctors.ok ? <p role="alert">No se pudo cargar la lista de médicos. Vuelve a intentar.</p> : null}
       </form>
       {vista === 'dia' ? (
         <DayView fecha={fecha} appointments={appointments} />
       ) : vista === 'semana' ? (
-        <WeekView fecha={fecha} appointments={appointments} />
+        <WeekView fecha={fecha} appointments={appointments} doctorId={doctorId} />
       ) : (
-        <MonthView fecha={fecha} appointments={appointments} selectedDay={selectedDay ?? fecha} />
+        <MonthView fecha={fecha} appointments={appointments} selectedDay={selectedDay ?? fecha} doctorId={doctorId} />
       )}
     </>
   );

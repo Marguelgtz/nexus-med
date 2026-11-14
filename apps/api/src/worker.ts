@@ -41,6 +41,7 @@ interface Env {
   SMTP_USERNAME?: string;
   SMTP_PASSWORD?: string;
   EMAIL_TEST_RECIPIENTS?: string;
+  EMAIL_DELIVERY_DISABLED?: string;
 }
 
 const app = createApp();
@@ -104,6 +105,10 @@ const worker = {
   },
 
   async scheduled(_controller: unknown, env: Env): Promise<void> {
+    // Synthetic environments may retain queued authentication messages.
+    // Never open the outbox when delivery is explicitly disabled, even if
+    // SMTP credentials are accidentally added later.
+    if (env.EMAIL_DELIVERY_DISABLED === 'true') return;
     if (!env.BETTER_AUTH_SECRET || env.BETTER_AUTH_SECRET.length < 32) return;
     const practicePrisma = new PrismaClient({ adapter: new PrismaD1(env.DB) });
     try {
